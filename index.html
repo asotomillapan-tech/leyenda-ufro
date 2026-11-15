@@ -175,7 +175,7 @@
                     </div>
 
                     <div>
-                        <label for="careerSelect" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Carrera Universitaria (UFRO · 40 Carreras)</label>
+                        <label for="careerSelect" class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Carrera Universitaria (UFRO)</label>
                         <select id="careerSelect" name="careerSelect" required onchange="updateCareerMetaHint()"
                             class="w-full px-4 py-3 rounded-xl bg-[#11151d] border border-[#262e3d] text-sm font-semibold text-white focus:outline-none focus:border-blue-500 cursor-pointer">
                             <optgroup label="🏛️ Educación, Cs. Sociales y Humanidades (FECSH)">
@@ -763,17 +763,77 @@
             return g === 'F' ? womenTeamsDB : menTeamsDB;
         }
 
+        function canonicalizeFaculty(rawFaculty) {
+            const clean = String(rawFaculty || '').trim();
+            const low = clean
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/^facultad\s+de\s+/i, '')
+                .replace(/\bcs\.?\b/g, 'ciencias')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (low.includes('educacion') || low.includes('sociales') || low.includes('humanidades') || low === 'fecsh') {
+                return {
+                    key: 'FECSH',
+                    name: 'Educación, Cs. Sociales y Humanidades',
+                    short: 'FECSH',
+                    icon: '🏛️'
+                };
+            }
+            if (low.includes('ingenieria') || low === 'fica') {
+                return {
+                    key: 'FICA',
+                    name: 'Ingeniería y Ciencias',
+                    short: 'FICA',
+                    icon: '⚙️'
+                };
+            }
+            if (low.includes('agropecuarias') || low.includes('medioambiente') || low.includes('medio ambiente') || low === 'fcam') {
+                return {
+                    key: 'FCAM',
+                    name: 'Cs. Agropecuarias y Medioambiente',
+                    short: 'FCAM',
+                    icon: '🌱'
+                };
+            }
+            if (low.includes('juridicas') || low.includes('empresariales') || low === 'fcje') {
+                return {
+                    key: 'FCJE',
+                    name: 'Cs. Jurídicas y Empresariales',
+                    short: 'FCJE',
+                    icon: '⚖️'
+                };
+            }
+            if (low.includes('medicina') || low === 'med') {
+                return {
+                    key: 'MED',
+                    name: 'Medicina',
+                    short: 'Medicina',
+                    icon: '🩺'
+                };
+            }
+            if (low.includes('odontologia') || low === 'odo') {
+                return {
+                    key: 'ODO',
+                    name: 'Odontología',
+                    short: 'Odontología',
+                    icon: '🦷'
+                };
+            }
+
+            const fallbackName = clean.replace(/^Facultad\s+de\s+/i, '').trim() || 'Facultad UFRO';
+            return {
+                key: fallbackName.toUpperCase(),
+                name: fallbackName,
+                short: fallbackName,
+                icon: '🎓'
+            };
+        }
+
         function getFacultyShortByName(facultyFullName) {
-            const clean = (facultyFullName || '').trim();
-            const found = UFRO_CAREERS_CATALOG.find(c => c.faculty.toLowerCase() === clean.toLowerCase());
-            if (found) return found.facultyShort;
-            if (clean.toLowerCase().includes('educación')) return 'FECSH';
-            if (clean.toLowerCase().includes('ingeniería')) return 'FICA';
-            if (clean.toLowerCase().includes('agropecuarias')) return 'FCAM';
-            if (clean.toLowerCase().includes('jurídicas')) return 'FCJE';
-            if (clean.toLowerCase().includes('medicina')) return 'Medicina';
-            if (clean.toLowerCase().includes('odontología')) return 'Odontología';
-            return clean || 'UFRO';
+            return canonicalizeFaculty(facultyFullName).short;
         }
 
         function normalizeDivisionValue(rawDiv, isFemale) {
@@ -808,6 +868,38 @@
             return { league, faculty, inter };
         }
 
+        function extractCareerCodeFromUniqueCode(code, careerRaw) {
+            const cleanCode = String(code || '').trim().toUpperCase();
+            // Soporta tanto FEM-FECSH-EFI-01 como FEM-EFI-01 o códigos personalizados
+            const tokens = cleanCode.split('-').filter(Boolean);
+            const filtered = tokens[0] === 'FEM' ? tokens.slice(1) : tokens;
+            if (filtered.length >= 3) {
+                return filtered[1]; // Ej: FECSH-EFI-01 -> "EFI"
+            }
+            if (filtered.length === 2) {
+                // Si el primer token es una facultad conocida (ej. FICA-IIN), toma el segundo; si no (ej. IIN-01), toma el primero
+                const knownFacs = ['FECSH', 'FICA', 'MED', 'FCAM', 'FCJE', 'ODO'];
+                return knownFacs.includes(filtered[0]) ? filtered[1] : filtered[0];
+            }
+            if (filtered.length === 1 && filtered[0].length >= 2) {
+                return filtered[0];
+            }
+            return String(careerRaw || 'UFRO')
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^A-Za-z0-9]/g, '')
+                .slice(0, 8)
+                .toUpperCase();
+        }
+
+        function inferCareerYears(careerName, explicitYearsCol) {
+            const parsed = Number(explicitYearsCol);
+            if (!isNaN(parsed) && parsed >= 3 && parsed <= 9) return parsed;
+            const key = String(careerName || '').toLowerCase();
+            if (key.includes('medicina')) return 7;
+            if (key.includes('civil') || key.includes('odontología') || key.includes('odontologia')) return 6;
+            return 5;
+        }
+
         function buildFlatTeamsDB() {
             const menList = [];
             const womenList = [];
@@ -820,6 +912,7 @@
                         career: c.career,
                         faculty: c.faculty,
                         facultyShort: c.facultyShort,
+                        years: c.years,
                         division: t.division,
                         ovr: t.ovr,
                         titles: { ...t.titles }
@@ -833,6 +926,7 @@
                         career: c.career,
                         faculty: c.faculty,
                         facultyShort: c.facultyShort,
+                        years: c.years,
                         division: 1,
                         ovr: c.femaleTeam.ovr,
                         titles: { ...c.femaleTeam.titles }
@@ -867,19 +961,27 @@
                 });
             });
 
-            // Incorporar cualquier carrera nueva agregada manualmente en el Google Sheet
+            // Incorporar cualquier carrera nueva agregada manualmente en el Google Sheet (Masculino o Femenino)
             [...menTeamsDB, ...womenTeamsDB].forEach(t => {
                 const key = (t.career || '').toLowerCase().trim();
                 if (!key) return;
+                const canonFac = canonicalizeFaculty(t.faculty);
+                t.faculty = canonFac.name;
+                t.facultyShort = canonFac.short;
+
                 if (!map.has(key)) {
-                    const defaultYears = key.includes('medicina') ? 7 : (key.includes('civil') || key.includes('odontología') || key.includes('odontologia')) ? 6 : 5;
                     map.set(key, {
-                        id: t.careerId || t.code.split('-')[0] || key.slice(0, 6).toUpperCase(),
+                        id: t.careerId || extractCareerCodeFromUniqueCode(t.code, t.career),
                         career: t.career.trim(),
-                        faculty: t.faculty.trim() || 'Facultad UFRO',
-                        facultyShort: t.facultyShort || getFacultyShortByName(t.faculty),
-                        years: defaultYears
+                        faculty: canonFac.name,
+                        facultyShort: canonFac.short,
+                        years: inferCareerYears(t.career, t.years)
                     });
+                } else {
+                    const existing = map.get(key);
+                    existing.faculty = canonFac.name;
+                    existing.facultyShort = canonFac.short;
+                    if (t.years) existing.years = inferCareerYears(t.career, t.years);
                 }
             });
 
@@ -888,7 +990,12 @@
 
         function findCareerObjBySelection(selectedValue) {
             const catalog = dynamicCareersCatalog.length > 0 ? dynamicCareersCatalog : UFRO_CAREERS_CATALOG;
-            return catalog.find(c => c.id === selectedValue || c.career === selectedValue) || catalog[0];
+            const norm = String(selectedValue || '').toLowerCase().trim();
+            return catalog.find(c =>
+                c.id === selectedValue ||
+                c.career === selectedValue ||
+                c.career.toLowerCase().trim() === norm
+            ) || catalog[0];
         }
 
         // Poblar el selector de carreras inmediatamente de forma síncrona y tras sincronizar Sheets
@@ -899,37 +1006,31 @@
             const catalog = dynamicCareersCatalog.length > 0 ? dynamicCareersCatalog : UFRO_CAREERS_CATALOG;
             const currentVal = select.value || 'EFI';
             const byFaculty = {};
-            const facIcons = {
-                'FECSH': '🏛️',
-                'FICA': '⚙️',
-                'Medicina': '🩺',
-                'FCAM': '🌱',
-                'FCJE': '⚖️',
-                'Odontología': '🦷'
-            };
 
             catalog.forEach(c => {
-                if (!byFaculty[c.faculty]) {
-                    byFaculty[c.faculty] = { short: c.facultyShort, items: [] };
+                const canonFac = canonicalizeFaculty(c.faculty);
+                if (!byFaculty[canonFac.key]) {
+                    byFaculty[canonFac.key] = {
+                        name: canonFac.name,
+                        short: canonFac.short,
+                        icon: canonFac.icon,
+                        items: []
+                    };
                 }
-                byFaculty[c.faculty].items.push(c);
+                byFaculty[canonFac.key].items.push(c);
             });
 
-            select.innerHTML = Object.keys(byFaculty).map(fac => {
-                const group = byFaculty[fac];
-                const icon = facIcons[group.short] || '🎓';
+            select.innerHTML = Object.keys(byFaculty).map(facKey => {
+                const group = byFaculty[facKey];
                 return `
-                    <optgroup label="${icon} ${fac} (${group.short})">
-                        ${group.items.map(c => `<option value="${c.id}">${c.career} (${c.years} años)</option>`).join('')}
+                    <optgroup label="${group.icon} ${group.name} (${group.short})">
+                        ${group.items.map(c => `<option value="${c.career}">${c.career} (${c.years} años)</option>`).join('')}
                     </optgroup>
                 `;
             }).join('');
 
-            if (catalog.some(c => c.id === currentVal)) {
-                select.value = currentVal;
-            } else {
-                select.value = catalog[0] ? catalog[0].id : 'EFI';
-            }
+            const matchedOption = catalog.find(c => c.career === currentVal || c.id === currentVal);
+            select.value = matchedOption ? matchedOption.career : (catalog[0] ? catalog[0].career : '');
 
             updateCareerMetaHint();
         }
@@ -1019,6 +1120,7 @@
                     const idxDiv = headers.findIndex(h => h.includes('division'));
                     const idxOvr = headers.findIndex(h => h.includes('media') || h.includes('ovr'));
                     const idxLogros = headers.findIndex(h => h.includes('logros'));
+                    const idxYears = headers.findIndex(h => h.includes('duracion') || h.includes('anos') || h.includes('years'));
                     const idxL = headers.findIndex(h => h.includes('intercarreras') || h.includes('liga'));
                     const idxF = headers.findIndex(h => h.includes('facultad_titulos') || h.includes('copa'));
                     const idxI = headers.findIndex(h => h.includes('interfacultades'));
@@ -1034,16 +1136,19 @@
 
                         const careerRaw = idxCareer !== -1 && cols[idxCareer] ? cols[idxCareer].trim() : 'Carrera UFRO';
                         const facRaw = idxFac !== -1 && cols[idxFac] ? cols[idxFac].trim() : 'Facultad UFRO';
-                        const matchedCat = UFRO_CAREERS_CATALOG.find(c => c.career.toLowerCase() === careerRaw.toLowerCase());
-                        const derivedCareerId = matchedCat ? matchedCat.id : (code.split('-')[1] || code.split('-')[0] || careerRaw.slice(0, 6).toUpperCase());
+                        const canonFac = canonicalizeFaculty(facRaw);
+                        const matchedCat = UFRO_CAREERS_CATALOG.find(c => c.career.toLowerCase().trim() === careerRaw.toLowerCase().trim());
+                        const derivedCareerId = matchedCat ? matchedCat.id : extractCareerCodeFromUniqueCode(code, careerRaw);
+                        const explicitYears = idxYears !== -1 ? cols[idxYears] : undefined;
 
                         synced.push({
                             code,
                             name,
                             careerId: derivedCareerId,
                             career: careerRaw,
-                            faculty: facRaw,
-                            facultyShort: getFacultyShortByName(facRaw),
+                            faculty: canonFac.name,
+                            facultyShort: canonFac.short,
+                            years: inferCareerYears(careerRaw, explicitYears),
                             division: normalizeDivisionValue(idxDiv !== -1 ? cols[idxDiv] : 3, isFemale),
                             ovr: idxOvr !== -1 ? (Number(cols[idxOvr]) || 70) : 70,
                             titles: parseTitlesFromSheetText(
@@ -1055,7 +1160,9 @@
                         });
                     }
 
-                    if (synced.length >= 10) {
+                    // Permitir cualquier cantidad válida de filas (incluso si la hoja femenina tiene pocos equipos aún)
+                    const minValidRows = isFemale ? 1 : 5;
+                    if (synced.length >= minValidRows) {
                         return synced;
                     }
                 } catch (_) {}
@@ -1306,10 +1413,15 @@
             if (!name || !careerObj) return;
 
             if (gender === 'F') {
+                const normCareer = careerObj.career.toLowerCase().trim();
                 const femaleTeams = womenTeamsDB.filter(t =>
-                    t.careerId === careerObj.id || t.career.toLowerCase().trim() === careerObj.career.toLowerCase().trim()
+                    t.career.toLowerCase().trim() === normCareer ||
+                    (t.careerId && careerObj.id && t.careerId === careerObj.id && t.career.toLowerCase().includes(normCareer.slice(0, 8)))
                 );
-                if (femaleTeams.length === 0) return;
+                if (femaleTeams.length === 0) {
+                    showToast(`⚠️ Aún no hay equipos femeninos cargados para "${careerObj.career}" en la hoja Equipos_UFRO_Femenino.`, 'info');
+                    return;
+                }
                 const options = femaleTeams.map(ft => ({ team: ft, available: true }));
                 pendingCreationData = { name, gender, pos, careerObj, options };
                 renderPickTeamStep();
@@ -1657,12 +1769,13 @@
             // B) Copa de Facultad (EXCLUSIVO SEMESTRE 1 -> Clasifica al Torneo Interfacultades de S2)
             let facCupLabel = null;
             if (sem === 1) {
-                const allFaculties = [...new Set(db.map(t => t.faculty))];
-                allFaculties.forEach(facName => {
-                    const fPool = db.filter(t => t.faculty === facName);
+                const playerFacKey = canonicalizeFaculty(team.faculty).key;
+                const allFacultyKeys = [...new Set(db.map(t => canonicalizeFaculty(t.faculty).key))];
+                allFacultyKeys.forEach(facKey => {
+                    const fPool = db.filter(t => canonicalizeFaculty(t.faculty).key === facKey);
                     if (fPool.length === 0) return;
 
-                    if (facName === team.faculty) {
+                    if (facKey === playerFacKey) {
                         const facTable = rankTeams(fPool, team.code, careerState.ovr, playRatio, false);
                         let facPos = facTable.findIndex(t => t.code === team.code) + 1;
                         if (extraCupFromEvent) facPos = 1;
