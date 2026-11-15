@@ -73,6 +73,11 @@
             </div>
 
             <div class="flex items-center gap-2">
+                <button onclick="manualRefreshSheets()" id="btn-live-db-status" title="Sincronizar cambios desde Google Sheets" class="px-2.5 py-1.5 rounded-xl bg-[#11151d] hover:bg-[#1c222e] border border-[#262e3d] text-[11px] font-bold text-slate-300 transition flex items-center gap-1.5">
+                    <span id="live-db-dot" class="w-2 h-2 rounded-full bg-sky-400"></span>
+                    <span id="live-db-label">BD UFRO</span>
+                    <span id="live-db-icon" class="text-sky-400 font-black">↻</span>
+                </button>
                 <button onclick="openTrophyDrawer()" id="btn-header-palmares" class="hidden px-3 py-1.5 rounded-xl bg-[#161b24] hover:bg-[#1e2532] border border-[#262e3d] text-sky-400 text-xs font-extrabold transition flex items-center gap-1.5">
                     <span>🏆</span>
                     <span id="header-trophy-count">0</span>
@@ -370,8 +375,9 @@
         // =========================================================================
         // 1. CATÁLOGO MAESTRO DE 40 CARRERAS (6 FACULTADES UFRO): 120 MASC + 40 FEM
         // =========================================================================
-        const GOOGLE_SHEET_MEN_URL = 'https://docs.google.com/spreadsheets/d/1qgwNRN8AyiXRCUeJ82nMq2wG0eEjPnRKEgJp5irYBMI/gviz/tq?tqx=out:csv&sheet=Equipos_UFRO';
-        const GOOGLE_SHEET_WOMEN_URL = 'https://docs.google.com/spreadsheets/d/1qgwNRN8AyiXRCUeJ82nMq2wG0eEjPnRKEgJp5irYBMI/gviz/tq?tqx=out:csv&sheet=Equipos_UFRO_Femenino';
+        const GOOGLE_SHEET_ID = '1qgwNRN8AyiXRCUeJ82nMq2wG0eEjPnRKEgJp5irYBMI';
+        const DB_CACHE_MEN_KEY = 'leyenda_ufro_sheets_men_cache_v1';
+        const DB_CACHE_WOMEN_KEY = 'leyenda_ufro_sheets_women_cache_v1';
 
         const UFRO_CAREERS_CATALOG = [
             // 1. Facultad de Educación, Ciencias Sociales y Humanidades (FECSH) - 10 carreras
@@ -749,6 +755,7 @@
 
         let menTeamsDB = [];
         let womenTeamsDB = [];
+        let dynamicCareersCatalog = [];
 
         function getActiveTeamsDB(gender = null) {
             const gInput = document.getElementById('input-gender');
@@ -757,8 +764,48 @@
         }
 
         function getFacultyShortByName(facultyFullName) {
-            const found = UFRO_CAREERS_CATALOG.find(c => c.faculty === facultyFullName);
-            return found ? found.facultyShort : facultyFullName;
+            const clean = (facultyFullName || '').trim();
+            const found = UFRO_CAREERS_CATALOG.find(c => c.faculty.toLowerCase() === clean.toLowerCase());
+            if (found) return found.facultyShort;
+            if (clean.toLowerCase().includes('educación')) return 'FECSH';
+            if (clean.toLowerCase().includes('ingeniería')) return 'FICA';
+            if (clean.toLowerCase().includes('agropecuarias')) return 'FCAM';
+            if (clean.toLowerCase().includes('jurídicas')) return 'FCJE';
+            if (clean.toLowerCase().includes('medicina')) return 'Medicina';
+            if (clean.toLowerCase().includes('odontología')) return 'Odontología';
+            return clean || 'UFRO';
+        }
+
+        function normalizeDivisionValue(rawDiv, isFemale) {
+            if (isFemale) return 1;
+            const s = String(rawDiv || '').toLowerCase().trim();
+            if (s.includes('1') || s.includes('primera')) return 1;
+            if (s.includes('2') || s.includes('segunda')) return 2;
+            return 3;
+        }
+
+        function parseTitlesFromSheetText(rawText, leagueCol, facCol, interCol) {
+            if (leagueCol !== undefined || facCol !== undefined || interCol !== undefined) {
+                return {
+                    league: Number(leagueCol) || 0,
+                    faculty: Number(facCol) || 0,
+                    inter: Number(interCol) || 0
+                };
+            }
+            const txt = String(rawText || '').toLowerCase();
+            if (!txt || txt === 'sin títulos aún' || txt === 'ninguno' || txt === '0') {
+                return { league: 0, faculty: 0, inter: 0 };
+            }
+            let league = 0, faculty = 0, inter = 0;
+            const parts = txt.split(/[,;|]+/);
+            parts.forEach(p => {
+                const numMatch = p.match(/(\d+)/);
+                const qty = numMatch ? Number(numMatch[1]) : 1;
+                if (p.includes('interfacultad')) inter += qty;
+                else if (p.includes('intercarrera') || p.includes('liga') || p.includes('división') || p.includes('division')) league += qty;
+                else if (p.includes('copa') || p.includes('facultad')) faculty += qty;
+            });
+            return { league, faculty, inter };
         }
 
         function buildFlatTeamsDB() {
@@ -794,13 +841,62 @@
             });
             menTeamsDB = menList;
             womenTeamsDB = womenList;
+
+            // Cargar respaldo en localStorage si existe de una sincronización previa
+            try {
+                const cachedMen = JSON.parse(localStorage.getItem(DB_CACHE_MEN_KEY) || 'null');
+                const cachedWomen = JSON.parse(localStorage.getItem(DB_CACHE_WOMEN_KEY) || 'null');
+                if (Array.isArray(cachedMen) && cachedMen.length >= 10) menTeamsDB = cachedMen;
+                if (Array.isArray(cachedWomen) && cachedWomen.length >= 10) womenTeamsDB = cachedWomen;
+            } catch (_) {}
+
+            rebuildDynamicCareersCatalog();
         }
 
-        // Poblar el selector de carreras inmediatamente de forma síncrona
+        function rebuildDynamicCareersCatalog() {
+            const map = new Map();
+
+            // Primero registrar catálogo base para conservar duraciones conocidas
+            UFRO_CAREERS_CATALOG.forEach(c => {
+                map.set(c.career.toLowerCase().trim(), {
+                    id: c.id,
+                    career: c.career,
+                    faculty: c.faculty,
+                    facultyShort: c.facultyShort,
+                    years: c.years
+                });
+            });
+
+            // Incorporar cualquier carrera nueva agregada manualmente en el Google Sheet
+            [...menTeamsDB, ...womenTeamsDB].forEach(t => {
+                const key = (t.career || '').toLowerCase().trim();
+                if (!key) return;
+                if (!map.has(key)) {
+                    const defaultYears = key.includes('medicina') ? 7 : (key.includes('civil') || key.includes('odontología') || key.includes('odontologia')) ? 6 : 5;
+                    map.set(key, {
+                        id: t.careerId || t.code.split('-')[0] || key.slice(0, 6).toUpperCase(),
+                        career: t.career.trim(),
+                        faculty: t.faculty.trim() || 'Facultad UFRO',
+                        facultyShort: t.facultyShort || getFacultyShortByName(t.faculty),
+                        years: defaultYears
+                    });
+                }
+            });
+
+            dynamicCareersCatalog = Array.from(map.values());
+        }
+
+        function findCareerObjBySelection(selectedValue) {
+            const catalog = dynamicCareersCatalog.length > 0 ? dynamicCareersCatalog : UFRO_CAREERS_CATALOG;
+            return catalog.find(c => c.id === selectedValue || c.career === selectedValue) || catalog[0];
+        }
+
+        // Poblar el selector de carreras inmediatamente de forma síncrona y tras sincronizar Sheets
         function populateCareerSelector() {
             const select = document.getElementById('careerSelect');
             if (!select) return;
 
+            const catalog = dynamicCareersCatalog.length > 0 ? dynamicCareersCatalog : UFRO_CAREERS_CATALOG;
             const currentVal = select.value || 'EFI';
             const byFaculty = {};
             const facIcons = {
@@ -812,7 +908,7 @@
                 'Odontología': '🦷'
             };
 
-            UFRO_CAREERS_CATALOG.forEach(c => {
+            catalog.forEach(c => {
                 if (!byFaculty[c.faculty]) {
                     byFaculty[c.faculty] = { short: c.facultyShort, items: [] };
                 }
@@ -829,10 +925,10 @@
                 `;
             }).join('');
 
-            if (UFRO_CAREERS_CATALOG.some(c => c.id === currentVal)) {
+            if (catalog.some(c => c.id === currentVal)) {
                 select.value = currentVal;
             } else {
-                select.value = 'EFI';
+                select.value = catalog[0] ? catalog[0].id : 'EFI';
             }
 
             updateCareerMetaHint();
@@ -846,7 +942,7 @@
 
             const cid = select.value;
             const gender = gInput ? gInput.value : 'M';
-            const cObj = UFRO_CAREERS_CATALOG.find(c => c.id === cid) || UFRO_CAREERS_CATALOG[0];
+            const cObj = findCareerObjBySelection(cid);
             if (!cObj) return;
 
             const branchNote = gender === 'F'
@@ -855,74 +951,173 @@
             hint.textContent = `Facultad de ${cObj.faculty} (${cObj.facultyShort}) · ${cObj.years} años · ${branchNote}`;
         }
 
-        // Sincronización silenciosa en segundo plano con Google Sheets
-        async function fetchSheetIntoDB(url, isFemale) {
-            try {
-                const res = await fetch(url, { cache: 'no-store' });
-                if (!res.ok) return;
-                const csv = await res.text();
-                const lines = csv.split(/\r?\n/).filter(l => l.trim().length > 0);
-                if (lines.length < 10) return;
+        // Parser CSV robusto (soporta comillas dobles, comas internas en nombres de carreras y CRLF/LF)
+        function parseRobustCSV(csvText) {
+            const rows = [];
+            let currentRow = [];
+            let currentVal = '';
+            let inQuotes = false;
 
-                const parseRow = (row) => {
-                    const out = [];
-                    let cur = '', inQ = false;
-                    for (let i = 0; i < row.length; i++) {
-                        const ch = row[i];
-                        if (ch === '"') inQ = !inQ;
-                        else if (ch === ',' && !inQ) { out.push(cur.trim()); cur = ''; }
-                        else cur += ch;
+            for (let i = 0; i < csvText.length; i++) {
+                const ch = csvText[i];
+                const nextCh = csvText[i + 1];
+
+                if (ch === '"') {
+                    if (inQuotes && nextCh === '"') {
+                        currentVal += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
                     }
-                    out.push(cur.trim());
-                    return out.map(s => s.replace(/^"|"$/g, ''));
-                };
-
-                const headers = parseRow(lines[0]).map(h => h.toLowerCase());
-                const idxCode = headers.findIndex(h => h.includes('codigo') || h.includes('code'));
-                const idxName = headers.findIndex(h => h.includes('nombre') || h.includes('equipo'));
-                const idxCareer = headers.findIndex(h => h.includes('carrera'));
-                const idxFac = headers.findIndex(h => h.includes('facultad'));
-                const idxDiv = headers.findIndex(h => h.includes('division'));
-                const idxOvr = headers.findIndex(h => h.includes('media') || h.includes('ovr'));
-                const idxL = headers.findIndex(h => h.includes('intercarreras') || h.includes('liga'));
-                const idxF = headers.findIndex(h => h.includes('facultad_titulos') || h.includes('copa'));
-                const idxI = headers.findIndex(h => h.includes('interfacultades'));
-
-                if (idxCode === -1 || idxName === -1) return;
-
-                const synced = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const cols = parseRow(lines[i]);
-                    if (!cols[idxCode] || !cols[idxName]) continue;
-                    const facName = idxFac !== -1 ? cols[idxFac] : 'Facultad UFRO';
-                    synced.push({
-                        code: cols[idxCode],
-                        name: cols[idxName],
-                        careerId: cols[idxCode].split('-')[0],
-                        career: idxCareer !== -1 ? cols[idxCareer] : 'Carrera UFRO',
-                        faculty: facName,
-                        facultyShort: getFacultyShortByName(facName),
-                        division: isFemale ? 1 : (idxDiv !== -1 ? (Number(cols[idxDiv]) || 3) : 3),
-                        ovr: idxOvr !== -1 ? (Number(cols[idxOvr]) || 70) : 70,
-                        titles: {
-                            league: idxL !== -1 ? (Number(cols[idxL]) || 0) : 0,
-                            faculty: idxF !== -1 ? (Number(cols[idxF]) || 0) : 0,
-                            inter: idxI !== -1 ? (Number(cols[idxI]) || 0) : 0
-                        }
-                    });
+                } else if (ch === ',' && !inQuotes) {
+                    currentRow.push(currentVal.trim());
+                    currentVal = '';
+                } else if ((ch === '\r' || ch === '\n') && !inQuotes) {
+                    if (ch === '\r' && nextCh === '\n') i++;
+                    currentRow.push(currentVal.trim());
+                    if (currentRow.some(cell => cell.length > 0)) {
+                        rows.push(currentRow);
+                    }
+                    currentRow = [];
+                    currentVal = '';
+                } else {
+                    currentVal += ch;
                 }
-                if (synced.length >= 25) {
-                    if (isFemale) womenTeamsDB = synced;
-                    else menTeamsDB = synced;
+            }
+            if (currentVal.length > 0 || currentRow.length > 0) {
+                currentRow.push(currentVal.trim());
+                if (currentRow.some(cell => cell.length > 0)) {
+                    rows.push(currentRow);
                 }
-            } catch (_) {}
+            }
+            return rows;
         }
 
-        async function silentSyncGoogleSheet() {
-            await Promise.all([
-                fetchSheetIntoDB(GOOGLE_SHEET_MEN_URL, false),
-                fetchSheetIntoDB(GOOGLE_SHEET_WOMEN_URL, true)
+        // Descarga fresca sin caché con respaldo automático entre gviz/tq y export?format=csv
+        async function fetchSheetWithFallback(sheetName, fallbackGid, isFemale) {
+            const ts = Date.now();
+            const urls = [
+                `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&t=${ts}`,
+                `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=${fallbackGid}&t=${ts}`
+            ];
+
+            for (const url of urls) {
+                try {
+                    const res = await fetch(url, { cache: 'no-store' });
+                    if (!res.ok) continue;
+                    const csv = await res.text();
+                    if (!csv || csv.trim().startsWith('<!DOCTYPE') || csv.trim().startsWith('<html')) continue;
+
+                    const rows = parseRobustCSV(csv);
+                    if (rows.length < 5) continue;
+
+                    const headers = rows[0].map(h => h.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim());
+                    const idxCode = headers.findIndex(h => h.includes('codigo') || h.includes('code') || h === 'id');
+                    const idxName = headers.findIndex(h => h.includes('nombre') || h.includes('equipo'));
+                    const idxCareer = headers.findIndex(h => h.includes('carrera'));
+                    const idxFac = headers.findIndex(h => h.includes('facultad'));
+                    const idxDiv = headers.findIndex(h => h.includes('division'));
+                    const idxOvr = headers.findIndex(h => h.includes('media') || h.includes('ovr'));
+                    const idxLogros = headers.findIndex(h => h.includes('logros'));
+                    const idxL = headers.findIndex(h => h.includes('intercarreras') || h.includes('liga'));
+                    const idxF = headers.findIndex(h => h.includes('facultad_titulos') || h.includes('copa'));
+                    const idxI = headers.findIndex(h => h.includes('interfacultades'));
+
+                    if (idxCode === -1 || idxName === -1) continue;
+
+                    const synced = [];
+                    for (let i = 1; i < rows.length; i++) {
+                        const cols = rows[i];
+                        const code = (cols[idxCode] || '').trim();
+                        const name = (cols[idxName] || '').trim();
+                        if (!code || !name) continue;
+
+                        const careerRaw = idxCareer !== -1 && cols[idxCareer] ? cols[idxCareer].trim() : 'Carrera UFRO';
+                        const facRaw = idxFac !== -1 && cols[idxFac] ? cols[idxFac].trim() : 'Facultad UFRO';
+                        const matchedCat = UFRO_CAREERS_CATALOG.find(c => c.career.toLowerCase() === careerRaw.toLowerCase());
+                        const derivedCareerId = matchedCat ? matchedCat.id : (code.split('-')[1] || code.split('-')[0] || careerRaw.slice(0, 6).toUpperCase());
+
+                        synced.push({
+                            code,
+                            name,
+                            careerId: derivedCareerId,
+                            career: careerRaw,
+                            faculty: facRaw,
+                            facultyShort: getFacultyShortByName(facRaw),
+                            division: normalizeDivisionValue(idxDiv !== -1 ? cols[idxDiv] : 3, isFemale),
+                            ovr: idxOvr !== -1 ? (Number(cols[idxOvr]) || 70) : 70,
+                            titles: parseTitlesFromSheetText(
+                                idxLogros !== -1 ? cols[idxLogros] : '',
+                                idxL !== -1 ? cols[idxL] : undefined,
+                                idxF !== -1 ? cols[idxF] : undefined,
+                                idxI !== -1 ? cols[idxI] : undefined
+                            )
+                        });
+                    }
+
+                    if (synced.length >= 10) {
+                        return synced;
+                    }
+                } catch (_) {}
+            }
+            return null;
+        }
+
+        function updateLiveDBIndicator(status, text) {
+            const dot = document.getElementById('live-db-dot');
+            const lbl = document.getElementById('live-db-label');
+            if (!dot || !lbl) return;
+
+            if (status === 'loading') {
+                dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+                lbl.textContent = text || 'Sincronizando...';
+            } else if (status === 'live') {
+                dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+                lbl.textContent = text || `BD en vivo (${menTeamsDB.length}M / ${womenTeamsDB.length}F)`;
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-sky-400';
+                lbl.textContent = text || `BD UFRO (${menTeamsDB.length}M / ${womenTeamsDB.length}F)`;
+            }
+        }
+
+        async function silentSyncGoogleSheet(showFeedback = false) {
+            updateLiveDBIndicator('loading', 'Sincronizando...');
+            const [freshMen, freshWomen] = await Promise.all([
+                fetchSheetWithFallback('Equipos_UFRO', '0', false),
+                fetchSheetWithFallback('Equipos_UFRO_Femenino', '1', true)
             ]);
+
+            let updatedAny = false;
+            if (freshMen) {
+                menTeamsDB = freshMen;
+                localStorage.setItem(DB_CACHE_MEN_KEY, JSON.stringify(freshMen));
+                updatedAny = true;
+            }
+            if (freshWomen) {
+                womenTeamsDB = freshWomen;
+                localStorage.setItem(DB_CACHE_WOMEN_KEY, JSON.stringify(freshWomen));
+                updatedAny = true;
+            }
+
+            rebuildDynamicCareersCatalog();
+            populateCareerSelector();
+
+            if (updatedAny) {
+                updateLiveDBIndicator('live', `BD en vivo (${menTeamsDB.length}M / ${womenTeamsDB.length}F)`);
+                if (careerState) renderCurrentScreen();
+                if (showFeedback) {
+                    showToast(`✅ Google Sheets sincronizado (${menTeamsDB.length} masc. / ${womenTeamsDB.length} fem.)`, 'success');
+                }
+            } else {
+                updateLiveDBIndicator('local', `BD local (${menTeamsDB.length}M / ${womenTeamsDB.length}F)`);
+                if (showFeedback) {
+                    showToast('⚠️ No se pudo conectar con Google Sheets. Verifica que el archivo esté compartido como público.', 'info');
+                }
+            }
+        }
+
+        async function manualRefreshSheets() {
+            await silentSyncGoogleSheet(true);
         }
 
         // =========================================================================
@@ -1072,12 +1267,9 @@
                 : { DEL: '⚽ Delantero', MED: '🎯 Medio', DEF: '🛡️ Defensa', ARQ: '🧤 Arquero' };
 
             document.querySelectorAll('.pos-btn').forEach(btn => {
-                btn.textContent = posLabels[btn.dataset.pos];
+                const posCode = btn.dataset.pos;
+                if (posLabels[posCode]) btn.textContent = posLabels[posCode];
             });
-
-            document.getElementById('btn-submit-step1').textContent = gender === 'F'
-                ? 'Ver Equipo Femenino de mi Carrera →'
-                : 'Ver Equipos Disponibles de mi Carrera →';
 
             updateCareerMetaHint();
         }
@@ -1085,34 +1277,58 @@
         function selectPosition(pos) {
             document.getElementById('input-pos').value = pos;
             document.querySelectorAll('.pos-btn').forEach(btn => {
-                btn.className = btn.dataset.pos === pos
+                const isSelected = btn.dataset.pos === pos;
+                btn.className = isSelected
                     ? 'pos-btn py-2.5 px-3 rounded-xl border border-blue-500 bg-blue-600/20 text-xs font-extrabold text-white transition'
                     : 'pos-btn py-2.5 px-3 rounded-xl border border-[#262e3d] bg-[#11151d] text-xs font-bold text-slate-300 hover:border-blue-500/60 transition';
             });
         }
 
-        document.getElementById('form-step-1').addEventListener('submit', function (e) {
+        document.getElementById('form-step-1').addEventListener('submit', async function (e) {
             e.preventDefault();
             if (menTeamsDB.length === 0 || womenTeamsDB.length === 0) buildFlatTeamsDB();
+
+            const submitBtn = document.getElementById('btn-submit-step1');
+            const prevBtnText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Cargando equipos actualizados...';
+
+            await silentSyncGoogleSheet(false);
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = prevBtnText;
 
             const name = document.getElementById('input-name').value.trim();
             const gender = document.getElementById('input-gender').value;
             const pos = document.getElementById('input-pos').value;
             const careerId = document.getElementById('careerSelect').value;
-            const careerObj = UFRO_CAREERS_CATALOG.find(c => c.id === careerId) || UFRO_CAREERS_CATALOG[0];
+            const careerObj = findCareerObjBySelection(careerId);
             if (!name || !careerObj) return;
 
             if (gender === 'F') {
-                const femaleTeam = womenTeamsDB.find(t => t.careerId === careerObj.id || t.career === careerObj.career);
-                if (!femaleTeam) return;
-                pendingCreationData = { name, gender, pos, careerObj, options: [{ team: femaleTeam, available: true }] };
+                const femaleTeams = womenTeamsDB.filter(t =>
+                    t.careerId === careerObj.id || t.career.toLowerCase().trim() === careerObj.career.toLowerCase().trim()
+                );
+                if (femaleTeams.length === 0) return;
+                const options = femaleTeams.map(ft => ({ team: ft, available: true }));
+                pendingCreationData = { name, gender, pos, careerObj, options };
                 renderPickTeamStep();
             } else {
                 const careerTeams = menTeamsDB
-                    .filter(t => t.careerId === careerObj.id || t.career === careerObj.career)
+                    .filter(t => t.careerId === careerObj.id || t.career.toLowerCase().trim() === careerObj.career.toLowerCase().trim())
                     .sort((a, b) => b.division - a.division);
 
-                const options = careerTeams.map(team => {
+                // Si agregaste más de 3 equipos en el Sheet para una carrera, selecciona 3 representativos
+                const candidatePool = careerTeams.length <= 3
+                    ? careerTeams
+                    : [
+                        ...careerTeams.filter(t => t.division === 3).sort(() => Math.random() - 0.5).slice(0, 1),
+                        ...careerTeams.filter(t => t.division === 2).sort(() => Math.random() - 0.5).slice(0, 1),
+                        ...careerTeams.filter(t => t.division === 1).sort(() => Math.random() - 0.5).slice(0, 1),
+                        ...careerTeams.sort(() => Math.random() - 0.5)
+                    ].filter((v, idx, arr) => arr.findIndex(x => x.code === v.code) === idx).slice(0, 3).sort((a, b) => b.division - a.division);
+
+                const options = candidatePool.map(team => {
                     let prob = 0.92;
                     if (team.division === 2) prob = 0.42;
                     if (team.division === 1) prob = 0.14;
@@ -1141,11 +1357,11 @@
                 : 'Pruebas Mechonas · Rama Masculina · Año 1';
             document.getElementById('pick-team-header').textContent = `${careerObj.career}`;
             document.getElementById('pick-team-subheader').textContent = isFem
-                ? `Jugadora: ${name} (${pos}) · Equipo exclusivo de tu carrera en División Única.`
+                ? `Jugadora: ${name} (${pos}) · Equipo(s) de tu carrera en División Única.`
                 : `Jugador: ${name} (${pos}) · Selecciona uno de los clubes habilitados de tu carrera.`;
 
             const grid = document.getElementById('three-teams-grid');
-            grid.className = isFem ? 'max-w-md mx-auto' : 'grid grid-cols-1 md:grid-cols-3 gap-4';
+            grid.className = options.length === 1 ? 'max-w-md mx-auto' : 'grid grid-cols-1 md:grid-cols-3 gap-4';
 
             grid.innerHTML = options.map(opt => {
                 const t = opt.team;
