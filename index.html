@@ -1260,21 +1260,21 @@
 
             const selectedCodes = [];
 
-            // 1. Garantizar alta probabilidad de oferta de tu misma carrera (100% en fin de año S2, 75% en S1)
+            // 1. Oferta de tu misma carrera: 50% en fin de año (S2) y 35% en mitad de año (S1)
             const sameCareerPool = pool.filter(t => String(t.career || '').trim().toLowerCase() === studied);
-            const guaranteeSameCareer = careerState.currentSemester === 2 || Math.random() < 0.75;
+            const sameCareerChance = careerState.currentSemester === 2 ? 0.50 : 0.35;
 
-            if (sameCareerPool.length > 0 && guaranteeSameCareer) {
-                // Priorizar equipos de tu carrera cercanos a tu media actual
+            if (sameCareerPool.length > 0 && Math.random() < sameCareerChance) {
                 const sortedSame = [...sameCareerPool].sort((a, b) =>
                     (Math.abs(a.ovr - pOvr) + Math.random() * 8) - (Math.abs(b.ovr - pOvr) + Math.random() * 8)
                 );
                 selectedCodes.push(sortedSame[0].code);
             }
 
-            // 2. Dar oportunidad de aparecer a un clásico rival (derby) si existe en la BD
+            // 2. Oferta de clásico rival (Traición): 10% normal, 50% si OVR > 85
             const derbyPool = pool.filter(t => !selectedCodes.includes(t.code) && isDerbyRival(currentTeam, t));
-            if (derbyPool.length > 0 && Math.random() < 0.45) {
+            const derbyChance = pOvr > 85 ? 0.50 : 0.10;
+            if (derbyPool.length > 0 && Math.random() < derbyChance) {
                 const pickedDerby = derbyPool[Math.floor(Math.random() * derbyPool.length)];
                 selectedCodes.push(pickedDerby.code);
             }
@@ -2108,19 +2108,21 @@
                     if (forceElimination && facPos === 1) facPos = 3;
 
                     if (facPos === 1) {
-                        facultyCupResult = '🏆 Campeón Copa Facultad (Clasificado a Interfacultades)';
+                        facultyCupResult = isFemale
+                            ? '🏆 Campeona Copa Facultad (Clasificada a Interfacultades)'
+                            : '🏆 Campeón Copa Facultad (Clasificado a Interfacultades)';
                         careerState.interfacultadesQualified = true;
                         team.ovr = Math.min(89, team.ovr + 1);
                         semesterTrophies.push({ type: 'FACULTY', title: `Copa Facultad ${team.faculty.split('(')[0].trim()}`, teamName: team.name, teamCode: team.code, year, sem });
                     } else if (facPos === 2) {
-                        facultyCupResult = 'Subcampeón Copa Facultad';
+                        facultyCupResult = isFemale ? 'Subcampeona Copa Facultad' : 'Subcampeón Copa Facultad';
                         careerState.interfacultadesQualified = false;
                     } else {
                         facultyCupResult = `Copa Facultad: #${facPos}`;
                         careerState.interfacultadesQualified = false;
                     }
                 } else {
-                    facultyCupResult = 'Clasificado directo a Interfacultades';
+                    facultyCupResult = isFemale ? 'Clasificada directa a Interfacultades' : 'Clasificado directo a Interfacultades';
                     careerState.interfacultadesQualified = true;
                 }
             } else {
@@ -2136,18 +2138,20 @@
                     if (forceElimination && interPos === 1) interPos = 4;
 
                     if (interPos === 1) {
-                        interfacultadesResult = '🌍 ¡CAMPEÓN TORNEO INTERFACULTADES!';
+                        interfacultadesResult = isFemale
+                            ? '🌍 ¡CAMPEONA TORNEO INTERFACULTADES!'
+                            : '🌍 ¡CAMPEÓN TORNEO INTERFACULTADES!';
                         team.ovr = Math.min(89, team.ovr + 2);
                         semesterTrophies.push({ type: 'INTERFACULTADES', title: 'Torneo Interfacultades UFRO', teamName: team.name, teamCode: team.code, year, sem });
                     } else if (interPos === 2) {
-                        interfacultadesResult = '🥈 Subcampeón Interfacultades';
+                        interfacultadesResult = isFemale ? '🥈 Subcampeona Interfacultades' : '🥈 Subcampeón Interfacultades';
                     } else if (interPos <= 4) {
                         interfacultadesResult = 'Semifinalista Interfacultades';
                     } else {
                         interfacultadesResult = `Interfacultades: #${interPos}`;
                     }
                 } else {
-                    interfacultadesResult = 'No clasificado a Interfacultades';
+                    interfacultadesResult = isFemale ? 'No clasificada a Interfacultades' : 'No clasificó a Interfacultades';
                 }
                 careerState.interfacultadesQualified = false;
             }
@@ -2180,16 +2184,37 @@
                     const achievementsSel = [];
                     if (selScore >= 81) {
                         achievementsSel.push('LDES');
-                        semesterTrophies.push({ type: 'SELECCION', title: 'Campeón LDES (Sel. UFRO)', teamName: 'Selección UFRO', teamCode: 'SEL-UFRO', year, sem });
+                        semesterTrophies.push({
+                            type: 'SELECCION',
+                            title: isFemale ? 'Campeona LDES (Sel. UFRO)' : 'Campeón LDES (Sel. UFRO)',
+                            teamName: 'Selección UFRO',
+                            teamCode: 'SEL-UFRO',
+                            year,
+                            sem
+                        });
                     }
                     if (selScore >= 83 && Math.random() < 0.65) {
                         achievementsSel.push('Univerciudad');
-                        semesterTrophies.push({ type: 'SELECCION', title: 'Campeón Univerciudad (Sel. UFRO)', teamName: 'Selección UFRO', teamCode: 'SEL-UFRO', year, sem });
+                        semesterTrophies.push({
+                            type: 'SELECCION',
+                            title: isFemale ? 'Campeona Univerciudad (Sel. UFRO)' : 'Campeón Univerciudad (Sel. UFRO)',
+                            teamName: 'Selección UFRO',
+                            teamCode: 'SEL-UFRO',
+                            year,
+                            sem
+                        });
                     }
                     if (careerState.fenaudeQualified) {
                         if (careerState.ovr > 90 && Math.random() < 0.45) {
-                            achievementsSel.push('🏆 ¡HISTÓRICO NACIONAL FENAUDE!');
-                            semesterTrophies.push({ type: 'SELECCION', title: 'Histórico Nacional FENAUDE (Sel. UFRO)', teamName: 'Selección UFRO', teamCode: 'SEL-UFRO', year, sem });
+                            achievementsSel.push(isFemale ? '🏆 ¡HISTÓRICA NACIONAL FENAUDE!' : '🏆 ¡HISTÓRICO NACIONAL FENAUDE!');
+                            semesterTrophies.push({
+                                type: 'SELECCION',
+                                title: isFemale ? 'Histórica Nacional FENAUDE (Sel. UFRO)' : 'Histórico Nacional FENAUDE (Sel. UFRO)',
+                                teamName: 'Selección UFRO',
+                                teamCode: 'SEL-UFRO',
+                                year,
+                                sem
+                            });
                         } else {
                             achievementsSel.push('Participó Nacional FENAUDE');
                         }
@@ -2276,6 +2301,7 @@
             const heading = document.getElementById('modal-trophy-heading');
             const sub = document.getElementById('modal-trophy-sub');
             const list = document.getElementById('modal-trophy-list');
+            const isFemale = careerState && careerState.gender === 'F';
 
             if (awards.length > 0 && !promotionInfo && trophies.length === 0) {
                 iconEl.textContent = '🎖️';
@@ -2287,7 +2313,7 @@
                 heading.textContent = `¡Ascendiste a ${getDivisionLabel(promotionInfo.newDiv, 'M')}!`;
             } else if (promotionInfo && trophies.length > 0) {
                 iconEl.textContent = '🏆';
-                badgeEl.textContent = '¡Campeón y Ascenso!';
+                badgeEl.textContent = isFemale ? '¡Campeona y Ascenso!' : '¡Campeón y Ascenso!';
                 heading.textContent = `¡Título y Ascenso a ${getDivisionLabel(promotionInfo.newDiv, 'M')}!`;
             } else {
                 iconEl.textContent = '🏆';
@@ -2444,17 +2470,17 @@
             let badge = '';
 
             if (best.titles >= 8) {
-                badge = isFem ? '👑 Máxima Leyenda' : '👑 Máxima Leyenda';
-                headline = `El GOAT de ${best.teamName}`;
+                badge = '👑 Máxima Leyenda';
+                headline = isFem ? `La GOAT de ${best.teamName}` : `El GOAT de ${best.teamName}`;
             } else if (best.titles >= 4) {
                 badge = isFem ? '⭐ Ídola Histórica' : '⭐ Ídolo Histórico';
-                headline = isFem ? `Leyenda Eterna de ${best.teamName}` : `Leyenda Eterna de ${best.teamName}`;
+                headline = `Leyenda Eterna de ${best.teamName}`;
             } else if (best.semesters >= 6) {
                 badge = '🛡️ Emblema del Club';
                 headline = isFem ? `Capitana Histórica de ${best.teamName}` : `Capitán Histórico de ${best.teamName}`;
             } else {
                 badge = isFem ? '🎓 Egresada UFRO' : '🎓 Egresado UFRO';
-                headline = isFem ? `Referente de ${best.teamName}` : `Referente de ${best.teamName}`;
+                headline = `Referente de ${best.teamName}`;
             }
 
             const detailParts = [
@@ -2835,7 +2861,7 @@
             if (Number(semStats.avgRating) >= 8.4 && semStats.matches >= 9) {
                 awards.push({
                     icon: '🌟',
-                    title: 'Mejor Jugador del Año (MVP)',
+                    title: isFemale ? 'Mejor Jugadora del Año (MVP)' : 'Mejor Jugador del Año (MVP)',
                     detail: `Nota media ${semStats.avgRating}`,
                     teamName: semStats.teamName,
                     year
