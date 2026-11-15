@@ -2075,7 +2075,8 @@
                 return {
                     badge: isFem ? 'Egresada UFRO' : 'Egresado UFRO',
                     headline: `Promesa de ${cur.name}`,
-                    subline: `${careerState.studiedCareer || cur.career} · ${careerState.history.length} Semestres disputados`
+                    subline: `${careerState.studiedCareer || cur.career} · ${careerState.history.length} Semestres disputados`,
+                    teamCode: cur.code
                 };
             }
 
@@ -2089,24 +2090,18 @@
             let headline = '';
             let badge = '';
 
-            if (best.titles >= 6) {
-                badge = '👑 Máxima Leyenda';
-                headline = isFem ? `La GOAT de ${best.teamName}` : `El GOAT de ${best.teamName}`;
+            if (best.titles >= 8) {
+                badge = isFem ? '👑 Máxima Leyenda' : '👑 Máxima Leyenda';
+                headline = `El GOAT de ${best.teamName}`;
             } else if (best.titles >= 4) {
-                badge = '🏆 Emblema Absoluto';
-                headline = isFem ? `Eterna Capitana de ${best.teamName}` : `Histórico de ${best.teamName}`;
-            } else if (best.titles >= 2) {
-                badge = '⭐ Figura Inolvidable';
-                headline = isFem ? `Ídola de ${best.teamName}` : `Ídolo de ${best.teamName}`;
-            } else if (best.titles === 1) {
-                badge = '🎖️ Campeón Universitario';
-                headline = isFem ? `Referente de ${best.teamName}` : `Referente de ${best.teamName}`;
+                badge = isFem ? '⭐ Ídola Histórica' : '⭐ Ídolo Histórico';
+                headline = isFem ? `Leyenda Eterna de ${best.teamName}` : `Leyenda Eterna de ${best.teamName}`;
             } else if (best.semesters >= 6) {
-                badge = '🛡️ Lealtad Total';
-                headline = isFem ? `Incombustible de ${best.teamName}` : `Incombustible de ${best.teamName}`;
+                badge = '🛡️ Emblema del Club';
+                headline = isFem ? `Capitana Histórica de ${best.teamName}` : `Capitán Histórico de ${best.teamName}`;
             } else {
-                badge = '🎓 Carrera Completada';
-                headline = isFem ? `Exjugadora de ${best.teamName}` : `Exjugador de ${best.teamName}`;
+                badge = isFem ? '🎓 Egresada UFRO' : '🎓 Egresado UFRO';
+                headline = isFem ? `Referente de ${best.teamName}` : `Referente de ${best.teamName}`;
             }
 
             const detailParts = [
@@ -2118,76 +2113,59 @@
             return {
                 badge,
                 headline,
-                subline: detailParts.join(' · ')
+                subline: detailParts.join(' · '),
+                teamCode: best.teamCode
             };
         }
 
         function renderApp() {
             const creationScreen = document.getElementById('creation-screen');
-            const activeScreen = document.getElementById('active-career-screen');
-
             const hofSection = document.getElementById('hof-section');
+            const activeScreen = document.getElementById('active-career-screen');
 
             if (!careerState) {
                 creationScreen.classList.remove('hidden');
+                hofSection.classList.remove('hidden');
                 activeScreen.classList.add('hidden');
-                if (hofSection) hofSection.classList.remove('hidden');
                 renderHallOfFame();
                 return;
             }
 
             creationScreen.classList.add('hidden');
+            hofSection.classList.add('hidden');
             activeScreen.classList.remove('hidden');
-            if (hofSection) hofSection.classList.add('hidden');
 
-            const isRetired = careerState.phase === 'RETIRED';
             const team = findTeamByCode(careerState.teamCode);
+            const isFemale = careerState.gender === 'F';
             const role = getPlayingRoleProjection(careerState.ovr, team.ovr);
 
             document.getElementById('hud-ovr').textContent = formatOvr(careerState.ovr);
             document.getElementById('hud-pos').textContent = careerState.position;
             document.getElementById('hud-name').textContent = careerState.playerName;
-
-            const ovrBox = document.getElementById('hud-ovr-box');
-            ovrBox.className = `w-14 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg ${
-                careerState.ovr > OVR_DISPLAY_MAX
-                    ? 'bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 text-white shadow-amber-500/40 border border-amber-200/60'
-                    : careerState.ovr >= 82
-                        ? 'bg-gradient-to-br from-[#8b96ff] to-[#717fff] text-white'
-                        : careerState.ovr >= 72
-                            ? 'bg-[#717fff] text-white'
-                            : 'bg-[#242424] text-white border border-[#333333]'
-            }`;
-
-            const branchBadge = document.getElementById('hud-branch-badge');
-            branchBadge.textContent = careerState.gender === 'F' ? 'Femenino' : 'Masculino';
+            document.getElementById('hud-branch-badge').textContent = isFemale ? 'Femenino' : 'Masculino';
 
             const starBadge = document.getElementById('hud-star-badge');
             if (careerState.isProdigy) starBadge.classList.remove('hidden');
             else starBadge.classList.add('hidden');
 
-            const restartBtn = document.getElementById('hud-restart-btn');
-            if (isRetired) restartBtn.classList.add('hidden');
-            else restartBtn.classList.remove('hidden');
-
             document.getElementById('hud-career-info').innerHTML = `
                 ${getTeamBadgeHTML(team, 'w-5 h-5', 'text-[8px]')}
                 <strong class="text-white">${escapeHtml(team.name)}</strong>
-                <span>·</span>
-                <span class="text-[#8b96ff] font-semibold">${getDivisionLabel(team.division, careerState.gender)}</span>
+                <span class="text-gray-500">·</span>
+                <span class="text-[#a3adff]">${escapeHtml(careerState.studiedCareer || team.career)}</span>
+                <span class="text-gray-500">·</span>
+                <span class="text-gray-400">${getDivisionLabel(team.division, careerState.gender)}</span>
             `;
 
             const totalSem = careerState.maxYears * 2;
             const doneSem = careerState.history.length;
             const pct = Math.min(100, Math.round((doneSem / totalSem) * 100));
 
-            document.getElementById('hud-timeline-label').textContent = isRetired
-                ? 'Carrera Universitaria Finalizada'
+            document.getElementById('hud-timeline-label').textContent = careerState.phase === 'RETIRED'
+                ? 'Carrera Titulada'
                 : `Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}`;
-            document.getElementById('hud-timeline-sub').textContent = isRetired
-                ? `${doneSem} Semestres jugados`
-                : `Sem ${Math.min(totalSem, doneSem + 1)} / ${totalSem}`;
-            document.getElementById('hud-progress-bar').style.width = `${isRetired ? 100 : Math.max(8, pct)}%`;
+            document.getElementById('hud-timeline-sub').textContent = `Sem ${Math.min(totalSem, doneSem + 1)} / ${totalSem}`;
+            document.getElementById('hud-progress-bar').style.width = `${Math.max(8, pct)}%`;
 
             document.getElementById('stat-total-matches').textContent = careerState.stats.matches;
             if (careerState.position === 'ARQ') {
@@ -2203,34 +2181,20 @@
             }
             document.getElementById('stat-total-titles').textContent = careerState.trophies.length;
 
-            const inUfroTeam = careerState.ovr >= 76;
             document.getElementById('hud-role-projection').innerHTML = `
-                <div class="flex items-center gap-2">
-                    <span class="text-gray-500">Rol:</span>
-                    <span class="px-2 py-0.5 rounded font-bold ${role.badgeClass}">${role.label}</span>
-                </div>
-                <span class="text-[11px] font-bold ${inUfroTeam ? 'text-[#8b96ff]' : 'text-gray-500'}">
-                    ${inUfroTeam ? '🇨🇱 Seleccionado UFRO' : 'Sel. UFRO (76+)'}
-                </span>
+                <span class="text-gray-400">Rol en plantel:</span>
+                <span class="px-2 py-0.5 rounded font-bold ${role.badgeClass}">${role.label}</span>
             `;
 
-            const newCareerBar = document.getElementById('retired-new-career-bar');
-            const activeTimelineWrap = document.getElementById('active-timeline-wrapper');
-            const retiredSummarySec = document.getElementById('retired-summary-section');
+            const isRetired = careerState.phase === 'RETIRED';
+            document.getElementById('hud-restart-btn').classList.toggle('hidden', isRetired);
+            document.getElementById('retired-new-career-bar').classList.toggle('hidden', !isRetired);
+            document.getElementById('active-timeline-wrapper').classList.toggle('hidden', isRetired);
+            document.getElementById('retired-summary-section').classList.toggle('hidden', !isRetired);
 
             renderActionPanel(team);
-
-            if (isRetired) {
-                newCareerBar.classList.remove('hidden');
-                activeTimelineWrap.classList.add('hidden');
-                retiredSummarySec.classList.remove('hidden');
-                renderPalmaresView();
-            } else {
-                newCareerBar.classList.add('hidden');
-                activeTimelineWrap.classList.remove('hidden');
-                retiredSummarySec.classList.add('hidden');
-                renderTimeline();
-            }
+            if (isRetired) renderRetiredSummary();
+            else renderTimeline();
         }
 
         function renderActionPanel(team) {
@@ -2238,31 +2202,19 @@
 
             if (careerState.phase === 'PLAY_SEMESTER') {
                 const isS2 = careerState.currentSemester === 2;
-                const isInjuredOut = (careerState.forcedOutSemesters || 0) > 0;
-                const ufroCompLabel = isS2
-                    ? (careerState.fenaudeQualified ? 'LDES · Univerciudad · Nacional FENAUDE' : 'LDES · Univerciudad')
-                    : 'Clasificatorio CNU';
-
                 panel.innerHTML = `
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                            <div class="flex items-center gap-2 flex-wrap">
+                            <div class="flex items-center gap-2">
                                 <span class="text-xs font-extrabold uppercase text-[#8b96ff]">Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}</span>
-                                ${isInjuredOut
-                                    ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/35">🏥 En rehabilitación por lesión anual</span>'
-                                    : isS2
-                                        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">🌍 Final Intercarreras + Interfacultades</span>'
-                                        : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#151515] text-gray-300 border border-[#2b2b2b]">🏆 Copa Facultad + 1ª Rueda</span>'}
+                                ${isS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/20 text-[#d0d5ff]">🌍 Interfacultades</span>' : ''}
                             </div>
                             <h3 class="text-lg font-black text-white mt-1">
-                                ${isInjuredOut ? 'Semestre en Recuperación Médica' : isS2 ? 'Cierre Anual Intercarreras + Interfacultades' : 'Copa de Facultad + Inicio Intercarreras'}
+                                ${isS2 ? 'Clausura Intercarreras + Interfacultades' : 'Apertura Intercarreras + Copa Facultad'}
                             </h3>
-                            <p class="text-xs text-gray-400 mt-0.5">
-                                Selección UFRO: <span class="text-gray-200 font-semibold">${ufroCompLabel}</span>
-                            </p>
                         </div>
                         <button onclick="triggerPlaySemester()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition transform active:scale-95">
-                            ${isInjuredOut ? `⏭ Avanzar Rehabilitación S${careerState.currentSemester}` : `▶ Jugar Semestre ${careerState.currentSemester}`}
+                            ▶ Simular Semestre ${careerState.currentSemester}
                         </button>
                     </div>
                 `;
@@ -2270,99 +2222,42 @@
                 const ev = careerState.activeEvent;
                 const res = careerState.eventResult;
 
-                if (!res) {
-                    if (ev.type === 'INJURY_EVENT') {
-                        panel.innerHTML = `
-                            <div class="animate-pop space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-500/15 text-rose-300 border border-rose-500/30">
-                                        ${ev.badge}
-                                    </span>
-                                    <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
-                                </div>
-                                <div class="p-4 rounded-xl bg-rose-950/25 border border-rose-500/30 space-y-1.5">
-                                    <h3 class="text-lg sm:text-xl font-black text-white">${ev.title}</h3>
-                                    <p class="text-sm text-gray-300">${ev.desc}</p>
-                                    <div class="pt-1 text-xs font-bold text-rose-300">
-                                        ⏳ Tiempo estimado de baja: ${ev.injurySemesters === 2 ? 'Año completo (2 semestres)' : '1 semestre'}
-                                    </div>
-                                </div>
-                                <button onclick="continueAfterEvent()" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-extrabold text-sm transition">
-                                    Iniciar recuperación médica →
-                                </button>
+                if (ev.type === 'ACADEMIC_FAIL' || ev.type === 'INJURY_EVENT') {
+                    panel.innerHTML = `
+                        <div class="animate-pop space-y-4">
+                            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/35">
+                                ${ev.badge}
+                            </span>
+                            <div>
+                                <h3 class="text-xl font-black text-white">${escapeHtml(ev.title)}</h3>
+                                <p class="text-sm text-gray-300 mt-1">${escapeHtml(ev.desc)}</p>
                             </div>
-                        `;
-                    } else if (ev.type === 'ACADEMIC_FAIL') {
-                        panel.innerHTML = `
-                            <div class="animate-pop space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                                        ${ev.badge}
-                                    </span>
-                                    <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
-                                </div>
-                                <div class="p-4 rounded-xl bg-amber-950/25 border border-amber-500/30 space-y-1.5">
-                                    <h3 class="text-lg sm:text-xl font-black text-white">${ev.title}</h3>
-                                    <p class="text-sm text-gray-300">${ev.desc}</p>
-                                    <div class="pt-1 text-xs font-bold text-amber-300">
-                                        📅 Nueva duración regular: ${careerState.maxYears} años (${careerState.maxYears * 2} semestres)
-                                    </div>
-                                </div>
-                                <button onclick="continueAfterEvent()" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-extrabold text-sm transition">
-                                    Continuar Semestre →
-                                </button>
-                            </div>
-                        `;
-                    } else if (ev.type === 'TRIUMPHANT_RETURN') {
+                            <button onclick="continueAfterEvent()" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-extrabold text-sm transition">
+                                Continuar Semestre →
+                            </button>
+                        </div>
+                    `;
+                } else if (ev.type === 'TRIUMPHANT_RETURN' || ev.type === 'ICO_MONEY') {
+                    if (!res) {
                         const targetTeam = findTeamByCode(ev.targetTeamCode);
                         panel.innerHTML = `
                             <div class="animate-pop space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">
-                                        ${ev.badge}
-                                    </span>
-                                    <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
-                                </div>
+                                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">
+                                    ${ev.badge}
+                                </span>
                                 <div class="flex items-center gap-3.5">
-                                    ${getTeamBadgeHTML(targetTeam, 'w-12 h-12', 'text-xs')}
+                                    ${targetTeam ? getTeamBadgeHTML(targetTeam, 'w-12 h-12', 'text-xs') : ''}
                                     <div>
                                         <h3 class="text-xl font-black text-white">${escapeHtml(ev.title)}</h3>
                                         <p class="text-sm text-gray-300 mt-1">${escapeHtml(ev.desc)}</p>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                    <button onclick="resolveClubSwitchEvent(false)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
-                                        Seguir en ${escapeHtml(team.name)}
-                                    </button>
                                     <button onclick="resolveClubSwitchEvent(true)" class="py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg transition">
-                                        Regreso triunfal a ${escapeHtml(ev.targetTeamName)}
+                                        ✅ Fichar por ${escapeHtml(ev.targetTeamName)}
                                     </button>
-                                </div>
-                            </div>
-                        `;
-                    } else if (ev.type === 'ICO_MONEY') {
-                        const targetTeam = findTeamByCode(ev.targetTeamCode);
-                        panel.innerHTML = `
-                            <div class="animate-pop space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">
-                                        ${ev.badge}
-                                    </span>
-                                    <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
-                                </div>
-                                <div class="flex items-center gap-3.5">
-                                    ${getTeamBadgeHTML(targetTeam, 'w-12 h-12', 'text-xs')}
-                                    <div>
-                                        <h3 class="text-xl font-black text-white">${escapeHtml(ev.title)}</h3>
-                                        <p class="text-sm text-gray-300 mt-1">${escapeHtml(ev.desc)}</p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                    <button onclick="resolveClubSwitchEvent(false)" class="py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg transition">
-                                        🏆 Continuar por la gloria
-                                    </button>
-                                    <button onclick="resolveClubSwitchEvent(true)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
-                                        💸 Irse por plata (${escapeHtml(ev.targetTeamName)})
+                                    <button onclick="resolveClubSwitchEvent(false)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
+                                        🛡️ Quedarme en ${escapeHtml(team.name)}
                                     </button>
                                 </div>
                             </div>
@@ -2370,91 +2265,93 @@
                     } else {
                         panel.innerHTML = `
                             <div class="animate-pop space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">
-                                        ⚡ ${ev.badge}
-                                    </span>
-                                    <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
+                                <div class="p-4 rounded-xl surface-sub border-[#717fff]/40">
+                                    <p class="text-sm font-bold text-white">${escapeHtml(res.text)}</p>
                                 </div>
-                                <div>
-                                    <h3 class="text-xl font-black text-white">${ev.title}</h3>
-                                    <p class="text-sm text-gray-300 mt-1">${ev.desc}</p>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                    <button onclick="resolveRandomEvent(true)" class="py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg transition">
-                                        🎲 ${ev.riskLabel}
-                                    </button>
-                                    <button onclick="resolveRandomEvent(false)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
-                                        🛡️ ${ev.safeLabel}
-                                    </button>
-                                </div>
+                                <button onclick="continueAfterEvent()" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-extrabold text-sm transition">
+                                    Continuar Simulación del Semestre →
+                                </button>
                             </div>
                         `;
                     }
                 } else {
-                    const boxStyle = res.neutral
-                        ? 'surface-sub text-gray-200'
-                        : res.success
-                            ? 'bg-[#717fff]/15 border-[#717fff]/45 text-[#d0d5ff]'
-                            : 'bg-rose-950/40 border-rose-500/40 text-rose-200';
-
-                    panel.innerHTML = `
-                        <div class="animate-pop space-y-4">
-                            <div class="p-4 rounded-xl border ${boxStyle}">
-                                <div class="text-xs font-black uppercase tracking-wider mb-1">
-                                    ${res.neutral ? 'Decisión Tomada' : res.success ? '✅ Resultado Positivo' : '❌ Contratiempo'}
+                    if (!res) {
+                        panel.innerHTML = `
+                            <div class="animate-pop space-y-4">
+                                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">
+                                    ${ev.badge}
+                                </span>
+                                <div>
+                                    <h3 class="text-xl font-black text-white">${escapeHtml(ev.title)}</h3>
+                                    <p class="text-sm text-gray-300 mt-1">${escapeHtml(ev.desc)}</p>
                                 </div>
-                                <p class="text-sm font-bold">${res.text}</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                    <button onclick="resolveRandomEvent(true)" class="py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg transition">
+                                        🎲 ${escapeHtml(ev.riskLabel)}
+                                    </button>
+                                    <button onclick="resolveRandomEvent(false)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
+                                        🛡️ ${escapeHtml(ev.safeLabel)}
+                                    </button>
+                                </div>
                             </div>
-                            <button onclick="continueAfterEvent()" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-extrabold text-sm transition">
-                                Continuar Semestre →
-                            </button>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        const boxStyle = res.neutral
+                            ? 'surface-sub text-gray-200'
+                            : res.success
+                                ? 'bg-emerald-950/35 border-emerald-500/40 text-emerald-200'
+                                : 'bg-rose-950/35 border-rose-500/40 text-rose-200';
+                        panel.innerHTML = `
+                            <div class="animate-pop space-y-4">
+                                <div class="p-4 rounded-xl border ${boxStyle}">
+                                    <p class="text-sm font-bold">${escapeHtml(res.text)}</p>
+                                </div>
+                                <button onclick="continueAfterEvent()" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-extrabold text-sm transition">
+                                    Continuar Simulación del Semestre →
+                                </button>
+                            </div>
+                        `;
+                    }
                 }
             } else if (careerState.phase === 'TRANSFER_MARKET') {
-                const offers = careerState.pendingOffers.map(c => findTeamByCode(c)).filter(Boolean);
+                const offers = (careerState.pendingOffers || []).map(c => findTeamByCode(c)).filter(Boolean);
                 const stayRole = getPlayingRoleProjection(careerState.ovr, team.ovr);
 
                 panel.innerHTML = `
-                    <div class="space-y-3.5">
+                    <div class="space-y-3">
                         <div class="flex items-center justify-between border-b border-[#262626] pb-2.5">
-                            <h3 class="text-base font-black text-white">Mercado de Pases (Fin S${careerState.currentSemester})</h3>
-                            <span class="text-xs text-gray-400">Tu Media: <strong class="text-[#8b96ff]">${formatOvr(careerState.ovr)}</strong></span>
+                            <h3 class="text-base font-black text-white">🔄 Mercado de Pases UFRO (Fin S${careerState.currentSemester})</h3>
+                            <span class="text-xs text-gray-400">Tu Media: <strong class="text-white">${formatOvr(careerState.ovr)}</strong></span>
                         </div>
-
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                            <div class="p-3.5 rounded-xl surface-sub border-[#717fff]/50 flex flex-col justify-between gap-3">
+                            <div class="p-3.5 rounded-xl surface-sub border-2 border-[#717fff]/50 flex flex-col justify-between gap-3">
                                 <div>
                                     <div class="flex items-center justify-between gap-2 mb-1.5">
                                         <span class="text-[10px] font-bold uppercase text-[#8b96ff]">Club Actual</span>
                                         ${getTeamBadgeHTML(team, 'w-9 h-9', 'text-[10px]')}
                                     </div>
-                                    <div class="font-extrabold text-white text-sm mt-0.5">${escapeHtml(team.name)}</div>
-                                    <div class="text-[11px] text-[#a3adff] font-medium mt-0.5">${escapeHtml(team.career)}</div>
-                                    <div class="text-[11px] text-gray-500 mt-0.5">${getDivisionLabel(team.division, careerState.gender)}</div>
-                                    <span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded font-bold ${stayRole.badgeClass}">${stayRole.label}</span>
+                                    <div class="font-extrabold text-white text-sm">${escapeHtml(team.name)}</div>
+                                    <div class="text-xs text-gray-400">${escapeHtml(team.career)} · ${getDivisionLabel(team.division, careerState.gender)}</div>
+                                    <span class="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded font-bold ${stayRole.badgeClass}">${stayRole.label}</span>
                                 </div>
-                                <button onclick="resolveTransferDecision('${team.code}')" class="w-full py-2 rounded-lg bg-[#717fff] hover:bg-[#828eff] text-white text-xs font-bold transition">
+                                <button onclick="resolveTransferDecision('${team.code}')" class="w-full py-2 rounded-lg bg-[#717fff] hover:bg-[#828eff] text-white text-xs font-bold">
                                     Seguir Aquí
                                 </button>
                             </div>
-
                             ${offers.map(o => {
                                 const oRole = getPlayingRoleProjection(careerState.ovr, o.ovr);
                                 return `
-                                    <div class="p-3.5 rounded-xl surface-sub hover:border-[#717fff]/45 flex flex-col justify-between gap-3 transition">
+                                    <div class="p-3.5 rounded-xl surface-sub hover:border-[#717fff]/50 flex flex-col justify-between gap-3 transition">
                                         <div>
                                             <div class="flex items-center justify-between gap-2 mb-1.5">
-                                                <span class="text-[10px] font-bold uppercase text-gray-400">Oferta Fichaje</span>
+                                                <span class="text-[10px] font-bold uppercase text-emerald-400">Oferta Fichaje</span>
                                                 ${getTeamBadgeHTML(o, 'w-9 h-9', 'text-[10px]')}
                                             </div>
-                                            <div class="font-extrabold text-white text-sm mt-0.5">${escapeHtml(o.name)}</div>
-                                            <div class="text-[11px] text-[#8b96ff] font-medium mt-0.5">${escapeHtml(o.career)}</div>
-                                            <div class="text-[11px] text-gray-500 mt-0.5">${getDivisionLabel(o.division, careerState.gender)}</div>
-                                            <span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded font-bold ${oRole.badgeClass}">${oRole.label}</span>
+                                            <div class="font-extrabold text-white text-sm">${escapeHtml(o.name)}</div>
+                                            <div class="text-xs text-gray-400">${escapeHtml(o.career)} · ${getDivisionLabel(o.division, careerState.gender)}</div>
+                                            <span class="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded font-bold ${oRole.badgeClass}">${oRole.label}</span>
                                         </div>
-                                        <button onclick="resolveTransferDecision('${o.code}')" class="w-full py-2 rounded-lg bg-[#222222] hover:bg-[#717fff] text-white text-xs font-bold border border-[#303030] transition">
+                                        <button onclick="resolveTransferDecision('${o.code}')" class="w-full py-2 rounded-lg bg-[#222222] hover:bg-[#717fff] text-white text-xs font-bold transition">
                                             Fichar
                                         </button>
                                     </div>
@@ -2467,23 +2364,24 @@
                 const rem = 2 - careerState.extensionUsed;
                 panel.innerHTML = `
                     <div class="space-y-3">
-                        <h3 class="text-lg font-black text-white">🎓 Completaste tus ${careerState.maxYears} años en la UFRO</h3>
-                        <p class="text-xs text-gray-400">¿Egresas hoy o extiendes tu carrera universitaria para seguir compitiendo?</p>
+                        <h3 class="text-lg font-black text-white">🎓 Completaste tus ${careerState.maxYears} años universitarios</h3>
+                        <p class="text-xs text-gray-400">¿Te titulas hoy o extiendes tu etapa universitaria para ganar más copas?</p>
                         <div class="flex flex-wrap gap-2.5 pt-1">
                             <button onclick="graduateAndRetire()" class="px-4 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm">
                                 🎓 Titularse y Finalizar
                             </button>
-                            ${rem >= 1 ? `<button onclick="extendUniversityCareer(1, 'Magíster')" class="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#222222] text-[#a3adff] border border-[#2b2b2b] font-bold text-xs sm:text-sm">+1 Año (Magíster)</button>` : ''}
-                            ${rem >= 2 ? `<button onclick="extendUniversityCareer(2, 'Doble Titulación')" class="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#222222] text-[#a3adff] border border-[#2b2b2b] font-bold text-xs sm:text-sm">+2 Años (Doble Título)</button>` : ''}
+                            ${rem >= 1 ? `<button onclick="extendUniversityCareer(1, 'Magíster')" class="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#222222] border border-[#2b2b2b] text-white font-bold text-xs sm:text-sm">+1 Año (Magíster)</button>` : ''}
+                            ${rem >= 2 ? `<button onclick="extendUniversityCareer(2, 'Doble Título')" class="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#222222] border border-[#2b2b2b] text-white font-bold text-xs sm:text-sm">+2 Años (Doble Título)</button>` : ''}
                         </div>
                     </div>
                 `;
             } else if (careerState.phase === 'RETIRED') {
                 const legacy = computeCreativeLegacyBanner();
+                const legacyTeam = findTeamByCode(legacy.teamCode || careerState.teamCode) || team;
                 panel.innerHTML = `
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div class="flex items-center gap-3.5">
-                            ${getTeamBadgeHTML(team, 'w-14 h-14', 'text-sm')}
+                            ${getTeamBadgeHTML(legacyTeam, 'w-14 h-14', 'text-sm')}
                             <div>
                                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35 mb-1.5">
                                     ${legacy.badge}
@@ -2504,421 +2402,239 @@
         function renderTimeline() {
             const container = document.getElementById('timeline-container');
             if (!careerState || careerState.history.length === 0) {
-                container.innerHTML = `<div class="surface-card rounded-xl p-6 text-center text-xs text-gray-500">Juega tu primer semestre para ver tu historial aquí.</div>`;
+                container.innerHTML = `<div class="surface-card rounded-xl p-6 text-center text-xs text-gray-500">Simula tu primer semestre para ver tu historial aquí.</div>`;
                 return;
             }
 
-            const grouped = {};
-            careerState.history.forEach(h => {
-                if (!grouped[h.year]) grouped[h.year] = [];
-                grouped[h.year].push(h);
-            });
-
-            const years = Object.keys(grouped).map(Number).sort((a, b) => b - a);
-            container.innerHTML = years.map(yr => {
-                const sems = grouped[yr].sort((a, b) => b.sem - a.sem);
+            container.innerHTML = careerState.history.map(s => {
+                const hTeam = findTeamByCode(s.teamCode);
                 return `
-                    <div class="surface-card rounded-2xl p-4 space-y-3">
-                        <div class="text-xs font-black uppercase tracking-wider text-gray-500 border-b border-[#262626] pb-2">
-                            Año ${yr}
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            ${sems.map(s => {
-                                const histTeam = findTeamByCode(s.teamCode, careerState.gender) || { code: s.teamCode, name: s.teamName };
-                                return `
-                                <div class="p-3.5 rounded-xl surface-sub space-y-2 text-xs">
-                                    <div class="flex justify-between items-start gap-2">
-                                        <div class="flex items-center gap-2.5">
-                                            ${getTeamBadgeHTML(histTeam, 'w-9 h-9', 'text-[10px]')}
-                                            <div>
-                                                <span class="font-bold text-[#8b96ff]">Semestre ${s.sem}</span> · <span class="text-gray-500">${getDivisionLabel(s.divisionPlayed, careerState.gender)}</span>
-                                                <div class="font-extrabold text-white text-sm">${escapeHtml(s.teamName)}</div>
-                                                <div class="text-[11px] text-gray-500">${escapeHtml(s.careerName)}</div>
-                                            </div>
-                                        </div>
-                                        <div class="text-right shrink-0">
-                                            <span class="px-2 py-0.5 rounded bg-[#222222] font-bold text-white border border-[#2b2b2b]">
-                                                OVR ${formatOvr(s.ovrAfter)} ${s.ovrAfter > OVR_DISPLAY_MAX ? '' : `<span class="text-[#8b96ff]">(+${s.ovrDelta})</span>`}
-                                            </span>
-                                            <div class="text-[11px] text-gray-500 mt-0.5">Nota: <strong class="text-white">${s.avgRating}</strong></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex justify-between bg-[#101010] px-3 py-1.5 rounded-lg text-gray-300">
-                                        <span>PJ: <strong class="text-white">${s.matches}</strong></span>
-                                        <span>${careerState.position === 'ARQ' ? 'VI' : 'Goles'}: <strong class="text-[#8b96ff]">${careerState.position === 'ARQ' ? s.cleanSheets : s.goals}</strong></span>
-                                        <span>Asist: <strong class="text-[#717fff]">${s.assists}</strong></span>
-                                        <span>${s.leagueSummaryText || `Liga: #${s.leaguePosition}`} ${s.promoted ? '⬆' : s.relegated ? '⬇' : ''}</span>
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-1.5 text-[11px]">
-                                        ${s.facultyCupResult ? `<span class="px-2 py-0.5 rounded bg-[#222222] text-gray-300 border border-[#2b2b2b]">${s.facultyCupResult}</span>` : ''}
-                                        ${s.interfacultadesResult ? `<span class="px-2 py-0.5 rounded bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/25">${s.interfacultadesResult}</span>` : ''}
-                                        ${s.ufroSelectionInfo ? `<span class="px-2 py-0.5 rounded bg-[#717fff]/10 text-[#a3adff] border border-[#717fff]/20">${s.ufroSelectionInfo}</span>` : ''}
-                                    </div>
-
-                                    ${s.trophies && s.trophies.length > 0 ? `
-                                        <div class="flex flex-wrap gap-1 pt-1">
-                                            ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/20 text-[#d0d5ff] font-bold text-[11px]">🏆 ${escapeHtml(t.title)}</span>`).join('')}
-                                        </div>
-                                    ` : ''}
-
-                                    ${s.awards && s.awards.length > 0 ? `
-                                        <div class="flex flex-wrap gap-1 pt-1">
-                                            ${s.awards.map(a => `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-200 border border-amber-400/30 font-bold text-[11px]">${a.icon} ${escapeHtml(a.title)}</span>`).join('')}
-                                        </div>
-                                    ` : ''}
+                    <div class="surface-card rounded-2xl p-4 space-y-2.5 text-xs">
+                        <div class="flex justify-between items-start gap-2">
+                            <div class="flex items-center gap-2.5">
+                                ${getTeamBadgeHTML(hTeam, 'w-10 h-10', 'text-[10px]')}
+                                <div>
+                                    <span class="font-bold text-[#8b96ff]">Año ${s.year} · Semestre ${s.sem}</span> · <span class="text-gray-400">${getDivisionLabel(s.divisionPlayed, careerState.gender)}</span>
+                                    <div class="font-extrabold text-white text-sm">${escapeHtml(s.teamName)}</div>
                                 </div>
-                                `;
-                            }).join('')}
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="px-2 py-0.5 rounded bg-[#151515] border border-[#2b2b2b] font-bold text-white">
+                                    OVR ${formatOvr(s.ovrAfter)} <span class="text-emerald-400">(+${s.ovrDelta})</span>
+                                </span>
+                                <div class="text-[11px] text-gray-400 mt-0.5">Nota: <strong class="text-[#a3adff]">${s.avgRating}</strong></div>
+                            </div>
                         </div>
+
+                        <div class="flex justify-between surface-sub px-3 py-2 rounded-xl">
+                            <span>PJ: <strong>${s.matches}</strong></span>
+                            <span>${careerState.position === 'ARQ' ? 'VI' : 'Goles'}: <strong class="text-emerald-400">${careerState.position === 'ARQ' ? s.cleanSheets : s.goals}</strong></span>
+                            <span>Asist: <strong class="text-[#8b96ff]">${s.assists}</strong></span>
+                            <span>${s.leagueSummaryText} ${s.promoted ? '⬆️' : s.relegated ? '⬇️' : ''}</span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1.5 text-[11px]">
+                            ${s.facultyCupResult ? `<span class="px-2 py-0.5 rounded surface-sub text-gray-300">${escapeHtml(s.facultyCupResult)}</span>` : ''}
+                            ${s.interfacultadesResult ? `<span class="px-2 py-0.5 rounded bg-[#717fff]/15 text-[#d0d5ff]">${escapeHtml(s.interfacultadesResult)}</span>` : ''}
+                            ${s.ufroSelectionInfo ? `<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300">${escapeHtml(s.ufroSelectionInfo)}</span>` : ''}
+                        </div>
+
+                        ${s.trophies && s.trophies.length > 0 ? `
+                            <div class="flex flex-wrap gap-1 pt-0.5">
+                                ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[11px]">🏆 ${escapeHtml(t.title)}</span>`).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             }).join('');
         }
 
         // =========================================================================
-        // 11. RESUMEN FINAL / PALMARÉS
+        // 11. PREMIOS INDIVIDUALES, RESUMEN FINAL Y SALÓN DE LA FAMA UFRO
         // =========================================================================
-        function renderPalmaresView() {
-            renderIndividualAwardsCard();
-            const trophies = careerState.trophies || [];
-            const isFem = careerState.gender === 'F';
+        function computeIndividualAwards(year, semStats, isFemale) {
+            const awards = [];
+            if (semStats.matches === 0) return awards;
 
-            const countInter = trophies.filter(t => t.type === 'INTERFACULTADES').length;
+            if (careerState.position !== 'ARQ' && semStats.goals >= 9 && Number(semStats.avgRating) >= 7.8) {
+                awards.push({
+                    icon: '⚽',
+                    title: isFemale ? 'Goleadora del Torneo UFRO' : `Goleador ${getDivisionLabel(semStats.divisionPlayed, 'M')}`,
+                    detail: `${semStats.goals} goles en el Clausura`,
+                    teamName: semStats.teamName,
+                    year
+                });
+            }
+            if (Number(semStats.avgRating) >= 8.4 && semStats.matches >= 9) {
+                awards.push({
+                    icon: '🌟',
+                    title: 'Mejor Jugador del Año (MVP)',
+                    detail: `Nota media ${semStats.avgRating}`,
+                    teamName: semStats.teamName,
+                    year
+                });
+            }
+            return awards;
+        }
+
+        function renderRetiredSummary() {
+            const trophies = careerState.trophies || [];
+            const awards = careerState.awards || [];
+
             const countLeague = trophies.filter(t => t.type === 'LEAGUE').length;
             const countFac = trophies.filter(t => t.type === 'FACULTY').length;
+            const countInter = trophies.filter(t => t.type === 'INTERFACULTADES').length;
             const countSel = trophies.filter(t => t.type === 'SELECCION').length;
 
-            const cats = [
-                { icon: '🌍', label: 'Interfacultades', count: countInter },
-                { icon: '🏆', label: isFem ? 'Liga Femenina' : 'Intercarreras', count: countLeague },
-                { icon: '🏛️', label: 'Copa Facultad', count: countFac },
-                { icon: '🇨🇱', label: 'Selección UFRO', count: countSel }
-            ];
-
-            document.getElementById('trophies-grid').innerHTML = cats.map(c => `
+            document.getElementById('trophies-grid').innerHTML = [
+                { icon: '🏆', label: 'Intercarreras', val: countLeague },
+                { icon: '🏛️', label: 'Copa Facultad', val: countFac },
+                { icon: '🌍', label: 'Interfacultades', val: countInter },
+                { icon: '🇨🇱', label: 'Selección UFRO', val: countSel }
+            ].map(c => `
                 <div class="surface-card rounded-2xl p-4 text-center">
-                    <div class="text-2xl mb-1">${c.icon}</div>
-                    <div class="text-2xl font-black ${c.count > 0 ? 'text-[#8b96ff]' : 'text-gray-600'}">${c.count}</div>
-                    <div class="text-[10px] font-bold uppercase text-gray-400 mt-0.5">${c.label}</div>
+                    <div class="text-xl">${c.icon}</div>
+                    <div class="text-2xl font-black text-white mt-1">${c.val}</div>
+                    <div class="text-[11px] font-bold text-gray-400 uppercase">${c.label}</div>
                 </div>
             `).join('');
 
-            const ufroCard = document.getElementById('ufro-selection-summary-card');
-            const selTrophies = trophies.filter(t => t.type === 'SELECCION');
-            const citations = careerState.ufroCitations || [];
-            const uStats = careerState.ufroStats || { matches: 0, goals: 0, assists: 0 };
-
-            ufroCard.innerHTML = `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                        <h3 class="text-sm font-black uppercase tracking-wider text-white">🇨🇱 Selección Universitaria UFRO</h3>
-                        <p class="text-xs text-gray-400">
-                            ${citations.length > 0
-                                ? `Citado en ${citations.length} semestre(s) · ${uStats.matches} PJ, ${uStats.goals} Goles, ${uStats.assists} Asist.`
-                                : 'No alcanzó citaciones oficiales a la Selección UFRO'}
-                        </p>
-                    </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30 self-start sm:self-auto">
-                        ${selTrophies.length} Logro(s)
-                    </span>
+            document.getElementById('individual-awards-card').innerHTML = `
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-black uppercase tracking-wider text-white">🎖️ Distinciones Individuales</h3>
+                    ${careerState.hofRank ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/35">🏛️ Top #${careerState.hofRank} Salón de la Fama</span>` : ''}
                 </div>
-                ${selTrophies.length > 0 ? `
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        ${selTrophies.map(s => `<span class="px-2.5 py-1 rounded-lg surface-sub text-xs font-bold text-[#d0d5ff]">🏅 ${escapeHtml(s.title)} (Año ${s.year})</span>`).join('')}
-                    </div>
-                ` : ''}
-            `;
-
-            const stints = [];
-            const chronological = [...(careerState.history || [])].reverse();
-            chronological.forEach(h => {
-                const clubTitles = (h.trophies || []).filter(t => t.type !== 'SELECCION');
-                const last = stints[stints.length - 1];
-                if (last && last.teamCode === h.teamCode) {
-                    last.semesters += 1;
-                    last.matches += h.matches || 0;
-                    last.goals += h.goals || 0;
-                    last.assists += h.assists || 0;
-                    last.cleanSheets += h.cleanSheets || 0;
-                    last.endYear = h.year;
-                    last.trophies.push(...clubTitles);
-                } else {
-                    stints.push({
-                        teamCode: h.teamCode,
-                        teamName: h.teamName,
-                        careerName: h.careerName,
-                        startYear: h.year,
-                        endYear: h.year,
-                        semesters: 1,
-                        matches: h.matches || 0,
-                        goals: h.goals || 0,
-                        assists: h.assists || 0,
-                        cleanSheets: h.cleanSheets || 0,
-                        trophies: [...clubTitles]
-                    });
-                }
-            });
-
-            document.getElementById('career-stints-list').innerHTML = stints.map(st => {
-                const stintTeam = findTeamByCode(st.teamCode, careerState.gender) || { code: st.teamCode, name: st.teamName };
-                return `
-                <div class="p-3.5 rounded-xl surface-sub flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                    <div class="flex items-start gap-3">
-                        ${getTeamBadgeHTML(stintTeam, 'w-10 h-10', 'text-[10px]')}
-                        <div>
-                            <div class="font-black text-white text-sm">${escapeHtml(st.teamName)}</div>
-                            <div class="text-gray-400">${escapeHtml(st.careerName)} · Año ${st.startYear}${st.endYear > st.startYear ? ` - ${st.endYear}` : ''} (${st.semesters} sem.)</div>
-                            ${st.trophies.length > 0 ? `
-                                <div class="flex flex-wrap gap-1 mt-1.5">
-                                    ${st.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/15 text-[#a3adff] font-bold text-[10px]">🏆 ${escapeHtml(t.title)}</span>`).join('')}
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3 text-gray-300 font-bold shrink-0">
-                        <span>${st.matches} PJ</span>
-                        <span>${careerState.position === 'ARQ' ? `${st.cleanSheets} VI` : `${st.goals} G`}</span>
-                        <span>${st.assists} A</span>
-                    </div>
-                </div>
-                `;
-            }).join('');
-
-            const fullWrap = document.getElementById('full-career-details');
-            const toggleBtn = document.getElementById('btn-toggle-full-career');
-            if (showFullHistoryFlag) {
-                fullWrap.classList.remove('hidden');
-                toggleBtn.textContent = 'Ocultar detalle por semestre ↑';
-            } else {
-                fullWrap.classList.add('hidden');
-                toggleBtn.textContent = 'Ver detalle por semestre ↓';
-            }
-
-            document.getElementById('full-career-semesters-list').innerHTML = (careerState.history || []).map(s => {
-                const sTeam = findTeamByCode(s.teamCode, careerState.gender) || { code: s.teamCode, name: s.teamName };
-                return `
-                <div class="p-3 rounded-xl surface-sub flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                    <div class="flex items-center gap-2.5">
-                        ${getTeamBadgeHTML(sTeam, 'w-8 h-8', 'text-[9px]')}
-                        <div>
-                            <span class="font-bold text-[#8b96ff]">Año ${s.year} · S${s.sem}</span> — <strong class="text-white">${escapeHtml(s.teamName)}</strong>
-                            <span class="text-gray-500 ml-1">(${getDivisionLabel(s.divisionPlayed, careerState.gender)})</span>
-                            <div class="text-[11px] text-gray-400 mt-0.5">
-                                ${s.suspended ? 'Baja por lesión / suspensión' : `${s.matches} PJ · ${careerState.position === 'ARQ' ? `${s.cleanSheets} VI` : `${s.goals}G`} · ${s.assists}A · Nota ${s.avgRating}`}
-                                ${s.facultyCupResult ? ` · ${s.facultyCupResult}` : ''}
-                                ${s.interfacultadesResult ? ` · ${s.interfacultadesResult}` : ''}
+                ${awards.length === 0
+                    ? `<p class="text-xs text-gray-500">Sin premios individuales anuales registrados.</p>`
+                    : `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${awards.map(a => `
+                        <div class="p-3 rounded-xl surface-sub flex items-center gap-2.5 text-xs">
+                            <span class="text-xl">${a.icon}</span>
+                            <div>
+                                <div class="font-bold text-white">${escapeHtml(a.title)} (Año ${a.year})</div>
+                                <div class="text-gray-400">${escapeHtml(a.detail)} · ${escapeHtml(a.teamName)}</div>
                             </div>
                         </div>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <span class="px-2 py-0.5 rounded bg-[#1c1c1c] border border-[#2b2b2b] font-bold text-white">OVR ${formatOvr(s.ovrAfter)}</span>
-                    </div>
+                    `).join('')}</div>`
+                }
+            `;
+
+            const selTrophies = trophies.filter(t => t.type === 'SELECCION');
+            document.getElementById('ufro-selection-summary-card').innerHTML = `
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-black uppercase tracking-wider text-white">🇨🇱 Selección Universitaria UFRO</h3>
+                    <span class="text-xs text-gray-400">${(careerState.ufroCitations || []).length} nominaciones · ${careerState.ufroStats.matches} PJ</span>
                 </div>
+                ${selTrophies.length === 0
+                    ? `<p class="text-xs text-gray-500">No se registraron títulos con la Selección UFRO.</p>`
+                    : `<div class="flex flex-wrap gap-1.5">${selTrophies.map(t => `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-xs font-bold">🏅 ${escapeHtml(t.title)} (Año ${t.year})</span>`).join('')}</div>`
+                }
+            `;
+
+            // Agrupar trayectoria por equipo
+            const stintsMap = new Map();
+            [...careerState.history].reverse().forEach(h => {
+                if (!stintsMap.has(h.teamCode)) {
+                    stintsMap.set(h.teamCode, { teamCode: h.teamCode, teamName: h.teamName, careerName: h.careerName, sems: 0, goals: 0, assists: 0, titles: 0 });
+                }
+                const st = stintsMap.get(h.teamCode);
+                st.sems += 1;
+                st.goals += h.goals;
+                st.assists += h.assists;
+                st.titles += (h.trophies || []).filter(t => t.type !== 'SELECCION').length;
+            });
+
+            document.getElementById('career-stints-list').innerHTML = Array.from(stintsMap.values()).map(st => {
+                const stTeam = findTeamByCode(st.teamCode);
+                return `
+                    <div class="p-3.5 rounded-xl surface-sub flex items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center gap-3">
+                            ${getTeamBadgeHTML(stTeam, 'w-10 h-10', 'text-[10px]')}
+                            <div>
+                                <div class="font-black text-white text-sm">${escapeHtml(st.teamName)}</div>
+                                <div class="text-gray-400">${escapeHtml(st.careerName)} · ${st.sems} semestres</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-amber-300">🏆 ${st.titles} títulos</div>
+                            <div class="text-gray-400">${st.goals}G · ${st.assists}A</div>
+                        </div>
+                    </div>
                 `;
             }).join('');
+
+            document.getElementById('full-career-semesters-list').innerHTML = careerState.history.map(h => `
+                <div class="p-2.5 rounded-lg surface-sub flex items-center justify-between text-xs">
+                    <span><strong>Año ${h.year} S${h.sem}</strong> · ${escapeHtml(h.teamName)} (${h.leagueSummaryText})</span>
+                    <span class="text-gray-400">OVR ${formatOvr(h.ovrAfter)} · Nota ${h.avgRating}</span>
+                </div>
+            `).join('');
         }
 
         function toggleFullCareerHistory() {
             showFullHistoryFlag = !showFullHistoryFlag;
-            renderPalmaresView();
-        }
-
-        // =========================================================================
-        // 11B. PREMIOS INDIVIDUALES Y SALÓN DE LA FAMA (LOCAL · TOP 5)
-        // =========================================================================
-        const INDIVIDUAL_AWARD_META = {
-            MVP:        { icon: '⭐', title: 'MVP Intercarreras' },
-            GOLEADOR:   { icon: '⚽', title: 'Máximo Goleador' },
-            ASISTENTE:  { icon: '🎯', title: 'Máximo Asistente' },
-            PORTERO:    { icon: '🧤', title: 'Mejor Portero' }
-        };
-        const HOF_MAX_ENTRIES = 5;
-
-        function escapeHtml(str) {
-            return String(str == null ? '' : str)
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        }
-
-        function computeIndividualAwards(year, cur, isFemale) {
-            const entries = (careerState.history || []).filter(h => h.year === year).concat([cur]);
-            const sum = key => entries.reduce((acc, h) => acc + (Number(h[key]) || 0), 0);
-
-            const matches = sum('matches');
-            if (matches < 8) return [];
-
-            const goals = sum('goals');
-            const assists = sum('assists');
-            const cleanSheets = sum('cleanSheets');
-            const ratings = entries.map(h => Number(h.avgRating)).filter(n => !isNaN(n) && n > 0);
-            const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
-
-            const divAdj = isFemale ? 2 : ({ 1: 0, 2: 2, 3: 4 }[Number(cur.divisionPlayed)] ?? 0);
-            const pos = careerState.position;
-            const found = [];
-
-            const add = (type, detail) => found.push({
-                type,
-                icon: INDIVIDUAL_AWARD_META[type].icon,
-                title: INDIVIDUAL_AWARD_META[type].title,
-                year,
-                sem: 2,
-                teamName: cur.teamName,
-                detail
-            });
-
-            const contrib = pos === 'ARQ' ? cleanSheets * 2.0
-                : pos === 'DEF' ? goals + assists + cleanSheets * 1.8
-                : goals + assists;
-            const posBonus = cur.leaguePosition === 1 ? 6 : cur.leaguePosition <= 3 ? 3 : 0;
-            const mvpScore = avgRating * 8 + contrib * 0.9 + posBonus;
-            const mvpThreshold = 86 + Math.random() * 14 - divAdj;
-            if (mvpScore >= mvpThreshold) add('MVP', `Nota media ${avgRating.toFixed(1)}`);
-
-            if (pos !== 'ARQ') {
-                const goalThreshold = 17 + Math.random() * 9 - divAdj * 0.8;
-                if (goals >= goalThreshold) add('GOLEADOR', `${goals} goles en el año`);
-
-                const assistThreshold = 13 + Math.random() * 8 - divAdj * 0.6;
-                if (assists >= assistThreshold) add('ASISTENTE', `${assists} asistencias en el año`);
-            } else {
-                const gkThreshold = 9 + Math.random() * 5 - divAdj * 0.4;
-                if (cleanSheets >= gkThreshold) add('PORTERO', `${cleanSheets} vallas invictas en el año`);
-            }
-
-            return found;
-        }
-
-        function renderIndividualAwardsCard() {
-            const card = document.getElementById('individual-awards-card');
-            if (!card) return;
-            const awards = careerState.awards || [];
-            const hofRank = careerState.hofRank;
-
-            const counts = ['MVP', 'GOLEADOR', 'ASISTENTE', 'PORTERO'].map(type => ({
-                type,
-                ...INDIVIDUAL_AWARD_META[type],
-                count: awards.filter(a => a.type === type).length
-            }));
-
-            card.innerHTML = `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                        <h3 class="text-sm font-black uppercase tracking-wider text-white">🎖️ Premios Individuales</h3>
-                        <p class="text-xs text-gray-400">
-                            ${awards.length > 0
-                                ? `${awards.length} distinción(es) anual(es) obtenida(s) durante tu carrera`
-                                : 'No obtuviste premios individuales anuales en esta carrera'}
-                        </p>
-                    </div>
-                    ${hofRank ? `
-                        <span class="px-3 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-400/40 self-start sm:self-auto">
-                            🏛️ Salón de la Fama #${hofRank}
-                        </span>
-                    ` : ''}
-                </div>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    ${counts.map(c => `
-                        <div class="p-3 rounded-xl surface-sub text-center">
-                            <div class="text-xl">${c.icon}</div>
-                            <div class="text-xl font-black ${c.count > 0 ? 'text-amber-300' : 'text-gray-600'}">${c.count}</div>
-                            <div class="text-[10px] font-bold uppercase text-gray-400 mt-0.5">${c.title}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                ${awards.length > 0 ? `
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        ${awards.map(a => `
-                            <span class="px-2.5 py-1 rounded-lg surface-sub border-amber-400/30 text-xs font-bold text-amber-200">
-                                ${a.icon} ${escapeHtml(a.title)} · Año ${a.year} (${escapeHtml(a.detail)})
-                            </span>
-                        `).join('')}
-                    </div>
-                ` : ''}
-            `;
-        }
-
-        function loadHallOfFame() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEYS.HOF);
-                const arr = raw ? JSON.parse(raw) : [];
-                return Array.isArray(arr) ? arr : [];
-            } catch (e) {
-                return [];
-            }
-        }
-
-        function saveHallOfFame(list) {
-            try { localStorage.setItem(STORAGE_KEYS.HOF, JSON.stringify(list)); } catch (e) {}
-        }
-
-        function computeHallOfFameScore(st) {
-            const titles = (st.trophies || []).length;
-            const awards = (st.awards || []).length;
-            const s = st.stats || {};
-            return (titles * 100) + (awards * 45) + (st.ovr * 4) + (s.goals || 0) + (s.assists || 0) + ((s.cleanSheets || 0) * 2);
+            const box = document.getElementById('full-career-details');
+            const btn = document.getElementById('btn-toggle-full-career');
+            box.classList.toggle('hidden', !showFullHistoryFlag);
+            btn.textContent = showFullHistoryFlag ? 'Ocultar detalle por semestre ↑' : 'Ver detalle por semestre ↓';
         }
 
         function inductHallOfFame() {
-            if (!careerState || careerState.hofProcessed) return;
-            careerState.hofProcessed = true;
+            let hof = [];
+            try {
+                hof = JSON.parse(localStorage.getItem(STORAGE_KEYS.HOF) || '[]');
+            } catch (e) { hof = []; }
 
-            const team = findTeamByCode(careerState.teamCode, careerState.gender);
+            const legacy = computeCreativeLegacyBanner();
+            const score = (careerState.trophies.length * 15) + careerState.ovr + Math.round((careerState.stats.goals + careerState.stats.assists) * 0.5);
             const entry = {
-                id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+                id: Date.now(),
                 playerName: careerState.playerName,
-                gender: careerState.gender,
                 position: careerState.position,
-                studiedCareer: careerState.studiedCareer,
-                teamCode: careerState.teamCode,
-                teamName: team ? team.name : '',
+                gender: careerState.gender,
                 ovr: careerState.ovr,
-                titlesCount: (careerState.trophies || []).length,
-                awardsCount: (careerState.awards || []).length,
-                matches: careerState.stats?.matches || 0,
-                goals: careerState.stats?.goals || 0,
-                assists: careerState.stats?.assists || 0,
-                cleanSheets: careerState.stats?.cleanSheets || 0,
-                score: computeHallOfFameScore(careerState)
+                titles: careerState.trophies.length,
+                headline: legacy.headline,
+                teamCode: legacy.teamCode,
+                score
             };
 
-            const list = loadHallOfFame();
-            list.push(entry);
-            list.sort((a, b) => b.score - a.score);
-            const trimmed = list.slice(0, HOF_MAX_ENTRIES);
-            saveHallOfFame(trimmed);
+            hof.push(entry);
+            hof.sort((a, b) => b.score - a.score);
+            const top5 = hof.slice(0, 5);
+            localStorage.setItem(STORAGE_KEYS.HOF, JSON.stringify(top5));
 
-            const idx = trimmed.findIndex(e => e.id === entry.id);
-            careerState.hofRank = idx !== -1 ? idx + 1 : null;
+            const rankIdx = top5.findIndex(x => x.id === entry.id);
+            careerState.hofRank = rankIdx !== -1 ? rankIdx + 1 : null;
         }
 
         function renderHallOfFame() {
             const listEl = document.getElementById('hof-list');
             if (!listEl) return;
-            const list = loadHallOfFame();
+            let hof = [];
+            try {
+                hof = JSON.parse(localStorage.getItem(STORAGE_KEYS.HOF) || '[]');
+            } catch (e) { hof = []; }
 
-            if (list.length === 0) {
-                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Aún no hay leyendas tituladas en este dispositivo. ¡Completa una carrera para inaugurar el Salón de la Fama!</div>`;
+            if (hof.length === 0) {
+                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Aún no hay leyendas tituladas. Completa una carrera para inaugurar el Salón de la Fama.</div>`;
                 return;
             }
 
-            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-            listEl.innerHTML = list.map((item, idx) => {
-                const hofTeam = item.teamCode ? findTeamByCode(item.teamCode, item.gender) : null;
+            listEl.innerHTML = hof.map((item, idx) => {
+                const hofTeam = findTeamByCode(item.teamCode);
                 return `
                     <div class="p-3.5 rounded-2xl surface-sub flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <span class="text-xl shrink-0">${medals[idx] || `#${idx + 1}`}</span>
-                            ${hofTeam ? getTeamBadgeHTML(hofTeam, 'w-9 h-9', 'text-[10px]') : ''}
-                            <div class="min-w-0">
-                                <div class="font-black text-white text-sm truncate">${escapeHtml(item.playerName)} <span class="text-[11px] font-bold text-[#8b96ff]">(${item.position})</span></div>
-                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.teamName || item.studiedCareer)} · 🏆 ${item.titlesCount} títulos · 🎖️ ${item.awardsCount} premios</div>
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 text-center font-black text-sm ${idx === 0 ? 'text-amber-400' : 'text-gray-400'}">#${idx + 1}</span>
+                            ${hofTeam ? getTeamBadgeHTML(hofTeam, 'w-10 h-10', 'text-[10px]') : ''}
+                            <div>
+                                <div class="font-black text-white text-sm">${escapeHtml(item.playerName)} <span class="text-[11px] font-bold text-[#8b96ff]">(${item.position})</span></div>
+                                <div class="text-xs text-gray-400">${escapeHtml(item.headline)}</div>
                             </div>
                         </div>
-                        <div class="px-2.5 py-1 rounded-xl bg-[#717fff]/15 border border-[#717fff]/30 text-xs font-black text-[#a3adff] shrink-0">
-                            OVR ${formatOvr(item.ovr)}
+                        <div class="text-right shrink-0">
+                            <div class="text-xs font-black text-amber-300">🏆 ${item.titles}</div>
+                            <div class="text-[11px] font-bold text-gray-400">OVR ${formatOvr(item.ovr)}</div>
                         </div>
                     </div>
                 `;
@@ -2926,17 +2642,28 @@
         }
 
         // =========================================================================
-        // 12. TOASTS
+        // 12. SEGURIDAD HTML Y NOTIFICACIONES TOAST
         // =========================================================================
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function showToast(msg, type = 'info') {
             const container = document.getElementById('toast-container');
+            if (!container) return;
             const toast = document.createElement('div');
             const colors = {
-                success: 'bg-[#1c1c1c] border-[#717fff]/60 text-[#d0d5ff]',
+                success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
                 error: 'bg-rose-950/95 border-rose-500/50 text-rose-200',
-                info: 'bg-[#1c1c1c] border-[#333333] text-gray-200'
+                info: 'bg-[#1c1c1c]/95 border-[#717fff]/50 text-gray-100'
             };
-            toast.className = `pointer-events-auto p-3.5 rounded-xl border shadow-xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+            toast.className = `pointer-events-auto p-3 rounded-xl border shadow-xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
             toast.textContent = msg;
             container.appendChild(toast);
             requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
