@@ -2144,6 +2144,19 @@
             document.getElementById('hud-name').textContent = careerState.playerName;
             document.getElementById('hud-branch-badge').textContent = isFemale ? 'Femenino' : 'Masculino';
 
+            const ovrBox = document.getElementById('hud-ovr-box');
+            const ovrPos = document.getElementById('hud-pos');
+            if (careerState.ovr > OVR_DISPLAY_MAX) {
+                ovrBox.className = 'w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex flex-col items-center justify-center shrink-0 shadow-lg shadow-amber-500/35 border border-yellow-200/60';
+                ovrPos.className = 'text-[9px] font-black text-amber-950';
+            } else if (careerState.ovr >= 90) {
+                ovrBox.className = 'w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 flex flex-col items-center justify-center shrink-0 shadow-lg shadow-amber-500/20 border border-amber-300/40';
+                ovrPos.className = 'text-[9px] font-extrabold text-amber-100';
+            } else {
+                ovrBox.className = 'w-14 h-14 rounded-2xl bg-[#717fff] flex flex-col items-center justify-center shrink-0 shadow-lg';
+                ovrPos.className = 'text-[9px] font-bold text-[#d0d5ff]';
+            }
+
             const starBadge = document.getElementById('hud-star-badge');
             if (careerState.isProdigy) starBadge.classList.remove('hidden');
             else starBadge.classList.add('hidden');
