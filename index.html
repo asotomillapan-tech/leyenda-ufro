@@ -94,7 +94,7 @@
                     <h1 class="text-base sm:text-xl font-black tracking-wider text-white leading-none uppercase">
                         LEYENDAS
                     </h1>
-                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.1.2</span>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.1.3</span>
                 </div>
             </div>
 
@@ -554,6 +554,214 @@
                     text: 'La Profe Vane te dijo que no hay fondos este semestre. El bajón anímico te pega en la cancha y pierdes -1 de Media.',
                     ovrDelta: -1,
                     allowNegativeOvr: true,
+                    suspend: false
+                }
+            },
+            {
+                id: 'med_turno_urgencias',
+                type: 'CAREER_EXCLUSIVE',
+                careerMatch: ['medicina', 'enfermería', 'enfermeria', 'obstetricia'],
+                badge: '🩺 Exclusivo Salud · Turno Clínico',
+                title: 'Turno de 24 horas en el Hospital Hernán Henríquez',
+                desc: 'Sales de un turno eterno en el hospital justo antes de la semifinal universitaria. ¿Te tomas dos energéticas y vas directo a la cancha o pides cambio de turno?',
+                riskLabel: 'Ir directo del turno a jugar (55% / 45%)',
+                safeLabel: 'Canjear turno con un compañero (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'Lograste cambiar el turno a tiempo y llegaste fresco al partido. +1 de Media.' },
+                winProb: 0.55,
+                win: {
+                    text: '¡Adrenalina pura! Llegaste con delantal al camarín, entraste y fuiste figura absoluta. +3 de Media y envión al plantel.',
+                    ovrDelta: 3,
+                    teamBoost: 3.5,
+                    suspend: false
+                },
+                lose: {
+                    text: 'El cansancio te pasó la cuenta: calambre al minuto 20 y bajas -1 de Media por fatiga extrema.',
+                    ovrDelta: -1,
+                    allowNegativeOvr: true,
+                    suspend: false
+                }
+            },
+            {
+                id: 'kine_vendaje_pro',
+                type: 'CAREER_EXCLUSIVE',
+                careerMatch: ['kinesiología', 'kinesiologia', 'terapia ocupacional'],
+                badge: '🩹 Exclusivo Kine & Rehabilitación',
+                title: 'Protocolo de recuperación de élite en el gimnasio',
+                desc: 'Aplicas tus conocimientos de fisiología deportiva para diseñar un plan de vendaje neuromuscular y descarga para todo el equipo antes del clásico.',
+                riskLabel: 'Aplicar protocolo intensivo al plantel (60% / 40%)',
+                safeLabel: 'Solo hacer descarga personal (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'Te recuperaste impecable sin sobrecargar al resto. +1 de Media.' },
+                winProb: 0.60,
+                win: {
+                    text: '¡El equipo vuela en el segundo tiempo! Nadie se acalambra, subes +2 de Media y el equipo recibe un gran impulso.',
+                    ovrDelta: 2,
+                    teamBoost: 5.0,
+                    suspend: false
+                },
+                lose: {
+                    text: 'Un vendaje mal calibrado te dejó rígido en el calentamiento. Sin cambios esta fecha.',
+                    ovrDelta: 0,
+                    suspend: false
+                }
+            },
+            {
+                id: 'ing_algoritmo_tactico',
+                type: 'CAREER_EXCLUSIVE',
+                careerMatch: ['ingeniería', 'ingenieria', 'plan común', 'plan comun'],
+                badge: '⚙️ Exclusivo FICA · Análisis de Datos',
+                title: 'Modelar las jugadas del rival en el D1',
+                desc: 'Pasaste la noche en el laboratorio de computación armando un modelo estadístico de los penales y tiros libres del próximo rival.',
+                riskLabel: 'Presentar la pizarra analítica al DT (60% / 40%)',
+                safeLabel: 'Usar los datos solo para tu juego (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'Anticipaste cada movimiento en tu zona. +1 de Media.' },
+                winProb: 0.60,
+                win: {
+                    text: '¡El modelo acertó todo! Neutralizaron al goleador rival, subes +2 de Media y el equipo juega como reloj.',
+                    ovrDelta: 2,
+                    teamBoost: 4.5,
+                    suspend: false
+                },
+                lose: {
+                    text: 'El rival cambió de esquema a última hora y el algoritmo quedó obsoleto.',
+                    ovrDelta: 0,
+                    suspend: false
+                }
+            },
+            {
+                id: 'der_apelacion_tribunal',
+                type: 'CAREER_EXCLUSIVE',
+                careerMatch: ['derecho'],
+                badge: '⚖️ Exclusivo Derecho · Tribunal de Disciplina',
+                title: 'Apelación express por tarjeta roja injusta',
+                desc: 'Expulsaron injustamente al capitán del equipo antes del partido decisivo. Redactas un recurso reglamentario invocando el artículo 14 de la Liga UFRO.',
+                riskLabel: 'Litigar ante la mesa organizadora (65% / 35%)',
+                safeLabel: 'Acatar el fallo y asumir la capitanía (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'Tomaste la jineta con liderazgo ejemplar. +1 de Media.' },
+                winProb: 0.65,
+                win: {
+                    text: '¡Fallo a favor! Habilitaron al capitán 10 minutos antes del pitazo inicial. +2 de Media y moral por las nubes.',
+                    ovrDelta: 2,
+                    teamBoost: 4.5,
+                    suspend: false
+                },
+                lose: {
+                    text: 'La mesa rechazó el escrito por presentarse fuera de plazo.',
+                    ovrDelta: 0,
+                    suspend: false
+                }
+            },
+            {
+                id: 'ico_auspicio_startup',
+                type: 'CAREER_EXCLUSIVE',
+                careerMatch: ['comercial', 'contador', 'auditor'],
+                badge: '💼 Exclusivo FCJE · Gestión Comercial',
+                title: 'Cerrar auspicio de bebidas isotónicas y balones',
+                desc: 'Armaste un pitch comercial impecable para que una marca deportiva local auspicie al equipo durante todo el semestre.',
+                riskLabel: 'Negociar bono extra por salir campeones (55% / 45%)',
+                safeLabel: 'Cerrar el auspicio estándar seguro (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'Hidratación y balones nuevos asegurados todo el año. +1 de Media.' },
+                winProb: 0.55,
+                win: {
+                    text: '¡Acuerdo histórico! El plantel juega motivadísimo por los premios, subes +2 de Media y el equipo gana potencia.',
+                    ovrDelta: 2,
+                    teamBoost: 4.0,
+                    suspend: false
+                },
+                lose: {
+                    text: 'La marca se bajó a última hora por exigir exclusividad de indumentaria.',
+                    ovrDelta: 0,
+                    suspend: false
+                }
+            },
+            {
+                id: 'psi_charla_mental',
+                type: 'CAREER_EXCLUSIVE',
+                careerMatch: ['psicología', 'psicologia', 'trabajo social', 'sociología', 'sociologia'],
+                badge: '🧠 Exclusivo Cs. Sociales · Cohesión Grupal',
+                title: 'Dinámica de camarín antes del clásico',
+                desc: 'El plantel viene tenso tras dos empates seguidos. Lideras una sesión de enfoque mental y cohesión grupal en los pastos del campus.',
+                riskLabel: 'Hacer dinámica profunda de liderazgo (65% / 35%)',
+                safeLabel: 'Charla motivacional breve (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'El grupo entró más tranquilo y enfocado. +1 de Media.' },
+                winProb: 0.65,
+                win: {
+                    text: '¡Química total! El equipo jugó con una confianza imparable, subes +2 de Media y el plantel rinde al máximo.',
+                    ovrDelta: 2,
+                    teamBoost: 4.5,
+                    suspend: false
+                },
+                lose: {
+                    text: 'Salieron a relucir viejas discusiones de camarín y costó conectar en el primer tiempo.',
+                    ovrDelta: 0,
+                    suspend: false
+                }
+            },
+            {
+                id: 'per_transmision_vivo',
+                type: 'CAREER_EXCLUSIVE',
+                careerMatch: ['periodismo', 'castellano', 'historia', 'inglés', 'ingles', 'matemática', 'matematica', 'ciencias'],
+                badge: '🎙️ Exclusivo Pedagogías & Periodismo',
+                title: 'Relato en vivo y previa mediática del clásico',
+                desc: 'Organizaron transmisión por Instagram Live con relato en vivo y entrevistas post-partido en la cancha sintética de la UFRO.',
+                riskLabel: 'Calentar la previa con declaraciones picantes (55% / 45%)',
+                safeLabel: 'Dar declaraciones mesuradas a la prensa (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'Manejo escénico impecable frente a las cámaras. +1 de Media.' },
+                winProb: 0.55,
+                win: {
+                    text: '¡Cumpliste tu palabra en la cancha! Partidazo viral, subes +2 de Media y la hinchada llenó el borde de la cancha.',
+                    ovrDelta: 2,
+                    teamBoost: 4.0,
+                    suspend: false
+                },
+                lose: {
+                    text: 'El rival usó tus declaraciones como motivación extra y salió con todo desde el minuto 1.',
+                    ovrDelta: 0,
+                    suspend: false
+                }
+            },
+            {
+                id: 'agro_cancha_maquehue',
+                type: 'CAREER_EXCLUSIVE',
+                careerMatch: ['agronomía', 'agronomia', 'recursos naturales', 'biotecnología', 'biotecnologia'],
+                badge: '🌱 Exclusivo FCAM · Campo Experimental Maquehue',
+                title: 'Entrenamiento táctico en las canchas de Maquehue',
+                desc: 'Aprovechas una salida a terreno en Maquehue para organizar un entrenamiento secreto en pasto natural bajo la lluvia.',
+                riskLabel: 'Entrenar bajo el temporal del sur (60% / 40%)',
+                safeLabel: 'Práctica ligera de balón detenido (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'Perfeccionaste los tiros libres con viento sur. +1 de Media.' },
+                winProb: 0.60,
+                win: {
+                    text: '¡Dominio total en cancha pesada! Mientras los rivales resbalaban, ustedes volaban. +2 de Media y gran impulso.',
+                    ovrDelta: 2,
+                    teamBoost: 4.5,
+                    suspend: false
+                },
+                lose: {
+                    text: 'Un resfrío post-lluvia te dejó a media máquina toda la semana.',
+                    ovrDelta: 0,
+                    suspend: false
+                }
+            },
+            {
+                id: 'odo_protector_bucal',
+                type: 'CAREER_EXCLUSIVE',
+                careerMatch: ['odontología', 'odontologia', 'bioquímica', 'bioquimica', 'farmacia', 'nutrición', 'nutricion', 'tecnología médica', 'tecnologia medica', 'fonoaudiología', 'fonoaudiologia'],
+                badge: '🦷 Exclusivo Salud & Laboratorio',
+                title: 'Protectores bucales a medida y suplementación',
+                desc: 'Preparas protectores bucales personalizados y un plan de hidratación isotónica en laboratorio para todo el equipo.',
+                riskLabel: 'Probar fórmula isotónica avanzada (60% / 40%)',
+                safeLabel: 'Entregar solo protectores personalizados (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'Seguridad total en cada balón dividido. +1 de Media.' },
+                winProb: 0.60,
+                win: {
+                    text: '¡Rendimiento físico superior! El equipo presionó los 90 minutos sin bajar el ritmo. +2 de Media y gran empuje.',
+                    ovrDelta: 2,
+                    teamBoost: 4.5,
+                    suspend: false
+                },
+                lose: {
+                    text: 'El sabor de la fórmula no le gustó al plantel y nadie quiso tomarla en el entretiempo.',
+                    ovrDelta: 0,
                     suspend: false
                 }
             }
