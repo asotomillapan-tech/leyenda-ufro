@@ -94,7 +94,7 @@
                     <h1 class="text-base sm:text-xl font-black tracking-wider text-white leading-none uppercase">
                         LEYENDAS
                     </h1>
-                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.1.3</span>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.1.4</span>
                 </div>
             </div>
 
@@ -279,10 +279,42 @@
                 <div id="action-panel" class="surface-card rounded-2xl p-5 sm:p-6 border-[#717fff]/35 shadow-xl"></div>
 
                 <!-- BOTÓN INICIAR CARRERA NUEVA (VISIBLE SOLO AL TERMINAR LA CARRERA) -->
-                <div id="retired-new-career-bar" class="hidden flex justify-center">
+                <div id="retired-new-career-bar" class="hidden flex flex-wrap items-center justify-center gap-3">
+                    <button onclick="openSummaryCardModal()" class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#1c1c1c] hover:bg-[#242424] text-white font-black text-sm border border-[#717fff]/50 hover:border-[#717fff] shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <span>📸</span> Tarjeta Final
+                    </button>
                     <button onclick="resetCareer()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition transform active:scale-95">
                         🎓 Iniciar Carrera Nueva
                     </button>
+                </div>
+
+                <!-- MODAL VISTA PREVIA Y DESCARGA DE TARJETA FINAL (1080x1920 PNG) -->
+                <div id="summary-card-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+                    <div class="surface-card border-[#2b2b2b] rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl animate-pop space-y-4 my-auto">
+                        <div class="flex items-center justify-between border-b border-[#262626] pb-3">
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Formato Historia · 1080×1920 px</span>
+                                <h3 class="text-base font-black text-white">Tarjeta Final</h3>
+                            </div>
+                            <button onclick="closeSummaryCardModal()" class="w-8 h-8 rounded-lg bg-[#151515] hover:bg-[#242424] border border-[#2b2b2b] text-gray-400 hover:text-white font-bold text-sm transition">
+                                ✕
+                            </button>
+                        </div>
+
+                        <!-- Vista previa renderizada en Canvas 1080x1920 escalada -->
+                        <div class="flex justify-center bg-[#121212] rounded-2xl p-3 border border-[#262626]">
+                            <canvas id="summary-poster-canvas" width="1080" height="1920" class="w-full max-w-[260px] h-auto rounded-xl shadow-2xl border border-[#2b2b2b]"></canvas>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-2.5">
+                            <button onclick="downloadSummaryCardPNG()" class="flex-1 py-3.5 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition flex items-center justify-center gap-2">
+                                <span>⬇️</span> Descargar PNG
+                            </button>
+                            <button onclick="closeSummaryCardModal()" class="py-3.5 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-300 font-bold text-xs border border-[#2b2b2b] transition">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- HISTORIAL SEMESTRAL (DURANTE CARRERA ACTIVA) -->
@@ -838,9 +870,9 @@
         ];
 
         const STORAGE_KEYS = {
-            TEAMS_M: 'leyenda_ufro_teams_m_v7',
-            TEAMS_F: 'leyenda_ufro_teams_f_v7',
-            CAREER: 'leyenda_ufro_career_v7',
+            TEAMS_M: 'leyenda_ufro_teams_m_v8',
+            TEAMS_F: 'leyenda_ufro_teams_f_v8',
+            CAREER: 'leyenda_ufro_career_v8',
             HOF: 'leyenda_ufro_hof_v1'
         };
 
@@ -1033,6 +1065,30 @@
             await syncSheetsInBackground(false);
         }
 
+        function splitCSVLine(line) {
+            const res = [];
+            let cur = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        cur += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (ch === ',' && !inQuotes) {
+                    res.push(cur);
+                    cur = '';
+                } else {
+                    cur += ch;
+                }
+            }
+            res.push(cur);
+            return res;
+        }
+
         function parseSheetCSV(csvText, gender, minValidRows = 1) {
             const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
             if (lines.length < 2) return [];
@@ -1052,6 +1108,7 @@
             const idxLogo = headers.findIndex(h =>
                 h.includes('escudo') || h.includes('logo') || h.includes('imagen') || h.includes('badge') || h.includes('url')
             );
+            const idxDerby = headers.findIndex(h => h.includes('derby') || h.includes('rival') || h.includes('clasico'));
 
             if (idxName === -1 || idxCareer === -1) return [];
 
@@ -1060,24 +1117,20 @@
                 const cols = splitCSVLine(lines[i]);
                 if (cols.length < 3) continue;
 
-                const code = (idxCode !== -1 && cols[idxCode]) ? cols[idxCode].trim() : `${gender}-${i}`;
-                const name = (cols[idxName] || '').trim();
-                const career = (cols[idxCareer] || '').trim();
+                const name = cols[idxName] ? cols[idxName].trim() : '';
+                const career = cols[idxCareer] ? cols[idxCareer].trim() : '';
                 if (!name || !career) continue;
 
-                const rawFaculty = (idxFaculty !== -1 && cols[idxFaculty]) ? cols[idxFaculty].trim() : 'Otras Carreras UFRO';
-                const fac = canonicalizeFaculty(rawFaculty);
+                const code = idxCode !== -1 && cols[idxCode] ? cols[idxCode].trim() : `UFRO-${i}`;
+                const rawFac = idxFaculty !== -1 && cols[idxFaculty] ? cols[idxFaculty].trim() : career;
+                const fac = canonicalizeFaculty(rawFac);
 
-                const rawDiv = (idxDiv !== -1 && cols[idxDiv]) ? cols[idxDiv].trim() : '3';
-                let divNum = 3;
-                if (gender === 'F' || rawDiv.toLowerCase().includes('única') || rawDiv.toLowerCase().includes('unica')) {
-                    divNum = 1;
-                } else if (rawDiv.includes('1')) {
-                    divNum = 1;
-                } else if (rawDiv.includes('2')) {
-                    divNum = 2;
-                } else {
-                    divNum = 3;
+                let divNum = 1;
+                if (gender === 'M' && idxDiv !== -1 && cols[idxDiv]) {
+                    const dStr = cols[idxDiv].toLowerCase();
+                    if (dStr.includes('3') || dStr.includes('tercera')) divNum = 3;
+                    else if (dStr.includes('2') || dStr.includes('segunda')) divNum = 2;
+                    else divNum = 1;
                 }
 
                 const ovr = idxOvr !== -1 ? (parseInt(cols[idxOvr], 10) || 68) : 68;
@@ -1090,6 +1143,7 @@
                     ? cols[idxColor].trim()
                     : (FACULTY_COLORS[fac.key] || '#717fff');
                 const logo = (idxLogo !== -1 && cols[idxLogo]) ? cols[idxLogo].trim() : '';
+                const derby = (idxDerby !== -1 && cols[idxDerby]) ? cols[idxDerby].trim() : '';
 
                 const codeParts = code.split('-');
                 const careerId = codeParts.length >= 3
@@ -1109,35 +1163,172 @@
                     years,
                     color,
                     logo,
+                    derby,
                     hasExplicitDuration: rawDur !== ''
                 });
             }
             return parsed.length >= minValidRows ? parsed : [];
         }
 
-        function splitCSVLine(line) {
-            const res = [];
-            let cur = '', inQ = false;
-            for (let i = 0; i < line.length; i++) {
-                const c = line[i];
-                if (c === '"') {
-                    if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
-                    else inQ = !inQ;
-                } else if (c === ',' && !inQ) {
-                    res.push(cur);
-                    cur = '';
-                } else {
-                    cur += c;
-                }
+        function loadCareerState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEYS.CAREER);
+                if (raw) careerState = JSON.parse(raw);
+            } catch (e) {
+                careerState = null;
             }
-            res.push(cur);
-            return res.map(s => s.replace(/^"|"$/g, '').trim());
         }
 
-        function loadCareerState() {
-            const saved = localStorage.getItem(STORAGE_KEYS.CAREER);
-            if (saved) {
-                try { careerState = JSON.parse(saved); } catch (e) { careerState = null; }
+        function isDerbyRival(teamA, teamB) {
+            if (!teamA || !teamB || teamA.code === teamB.code) return false;
+            const codeA = String(teamA.code || '').trim().toUpperCase();
+            const codeB = String(teamB.code || '').trim().toUpperCase();
+            const derbyA = String(teamA.derby || '').trim().toUpperCase();
+            const derbyB = String(teamB.derby || '').trim().toUpperCase();
+            return (derbyA !== '' && derbyA === codeB) || (derbyB !== '' && derbyB === codeA);
+        }
+
+        function getOfferTag(offerTeam, currentTeam) {
+            const studied = String(careerState.studiedCareer || '').trim().toLowerCase();
+            const offerCareer = String(offerTeam.career || '').trim().toLowerCase();
+            const isSameCareer = studied !== '' && offerCareer === studied;
+
+            // 1. Prioridad máxima: Clásico Rival configurado en columna "derby"
+            if (isDerbyRival(currentTeam, offerTeam)) {
+                return {
+                    label: '🔥 Traición',
+                    badgeClass: 'text-rose-400',
+                    cardBorder: 'border-rose-500/45 hover:border-rose-400',
+                    btnClass: 'bg-rose-950/60 hover:bg-rose-600 text-rose-100 hover:text-white',
+                    isTraicion: true
+                };
+            }
+
+            // 2. Equipo de la misma carrera estudiada
+            if (isSameCareer) {
+                return {
+                    label: '🎓 Juega con los tuyos',
+                    badgeClass: 'text-[#8b96ff]',
+                    cardBorder: 'border-[#717fff]/45 hover:border-[#717fff]',
+                    btnClass: 'bg-[#717fff]/20 hover:bg-[#717fff] text-[#d0d5ff] hover:text-white',
+                    isTraicion: false
+                };
+            }
+
+            // 3. Salto de categoría en rama masculina
+            if (careerState.gender === 'M' && Number(offerTeam.division) < Number(currentTeam.division)) {
+                return {
+                    label: '⬆️ Salto de División',
+                    badgeClass: 'text-amber-300',
+                    cardBorder: 'border-[#2b2b2b] hover:border-amber-400/60',
+                    btnClass: 'bg-[#222222] hover:bg-[#717fff] text-white',
+                    isTraicion: false
+                };
+            }
+
+            // 4. Oferta externa estándar
+            return {
+                label: '📩 Oferta Fichaje',
+                badgeClass: 'text-emerald-400',
+                cardBorder: 'border-[#2b2b2b] hover:border-[#717fff]/50',
+                btnClass: 'bg-[#222222] hover:bg-[#717fff] text-white',
+                isTraicion: false
+            };
+        }
+
+        function generateTransferOffers() {
+            const db = getActiveDB();
+            const currentTeam = findTeamByCode(careerState.teamCode);
+            const pOvr = careerState.ovr;
+            const isMathiasBello = careerState.playerName.toLowerCase() === 'mathias bello';
+            const studied = String(careerState.studiedCareer || '').trim().toLowerCase();
+
+            const pool = db.filter(t => t.code !== currentTeam.code);
+            if (pool.length === 0) return [];
+
+            if (isMathiasBello) {
+                const sameCareerTop = pool.filter(t => t.career.toLowerCase() === studied).sort((a, b) => b.ovr - a.ovr);
+                const othersTop = pool.filter(t => t.career.toLowerCase() !== studied).sort((a, b) => b.ovr - a.ovr);
+                const result = [];
+                if (sameCareerTop.length > 0) result.push(sameCareerTop[0].code);
+                for (const t of othersTop) {
+                    if (result.length >= 3) break;
+                    if (!result.includes(t.code)) result.push(t.code);
+                }
+                return result;
+            }
+
+            const selectedCodes = [];
+
+            // 1. Garantizar alta probabilidad de oferta de tu misma carrera (100% en fin de año S2, 75% en S1)
+            const sameCareerPool = pool.filter(t => String(t.career || '').trim().toLowerCase() === studied);
+            const guaranteeSameCareer = careerState.currentSemester === 2 || Math.random() < 0.75;
+
+            if (sameCareerPool.length > 0 && guaranteeSameCareer) {
+                // Priorizar equipos de tu carrera cercanos a tu media actual
+                const sortedSame = [...sameCareerPool].sort((a, b) =>
+                    (Math.abs(a.ovr - pOvr) + Math.random() * 8) - (Math.abs(b.ovr - pOvr) + Math.random() * 8)
+                );
+                selectedCodes.push(sortedSame[0].code);
+            }
+
+            // 2. Dar oportunidad de aparecer a un clásico rival (derby) si existe en la BD
+            const derbyPool = pool.filter(t => !selectedCodes.includes(t.code) && isDerbyRival(currentTeam, t));
+            if (derbyPool.length > 0 && Math.random() < 0.45) {
+                const pickedDerby = derbyPool[Math.floor(Math.random() * derbyPool.length)];
+                selectedCodes.push(pickedDerby.code);
+            }
+
+            // 3. Completar hasta 3 ofertas con clubes acordes a tu nivel de OVR
+            const remainingPool = pool.filter(t => !selectedCodes.includes(t.code));
+            const levelCandidates = remainingPool.filter(t => t.ovr <= pOvr + 10 && t.ovr >= pOvr - 12);
+            const sourcePool = levelCandidates.length >= 2 ? levelCandidates : remainingPool;
+            const shuffled = [...sourcePool].sort(() => 0.5 - Math.random());
+
+            for (const candidate of shuffled) {
+                if (selectedCodes.length >= 3) break;
+                selectedCodes.push(candidate.code);
+            }
+
+            return selectedCodes;
+        }
+
+        function resolveTransferDecision(chosenCode) {
+            const previousTeam = findTeamByCode(careerState.teamCode);
+            const chosen = findTeamByCode(chosenCode);
+            if (!chosen) return;
+
+            const changed = chosen.code !== careerState.teamCode;
+            const wasTraicion = changed && isDerbyRival(previousTeam, chosen);
+
+            careerState.teamCode = chosen.code;
+            if (!careerState.pastTeamCodes) careerState.pastTeamCodes = [];
+            if (!careerState.pastTeamCodes.includes(chosen.code)) {
+                careerState.pastTeamCodes.push(chosen.code);
+            }
+            careerState.pendingOffers = [];
+
+            if (careerState.currentSemester === 1) {
+                careerState.currentSemester = 2;
+            } else {
+                careerState.currentSemester = 1;
+                careerState.currentYear += 1;
+            }
+
+            careerState.phase = 'PLAY_SEMESTER';
+            saveCareerState();
+            renderApp();
+
+            if (wasTraicion) {
+                showToast(`🔥 ¡TRAICIÓN HISTÓRICA! Dejaste ${previousTeam.name} para fichar por su clásico rival ${chosen.name}.`, 'error');
+            } else if (changed) {
+                const isOwn = String(chosen.career || '').toLowerCase() === String(careerState.studiedCareer || '').toLowerCase();
+                showToast(
+                    isOwn
+                        ? `🎓 ¡Juegas con los tuyos! Fichaste por ${chosen.name} (${chosen.career})`
+                        : `✍️ Fichaste por ${chosen.name} (${chosen.career})`,
+                    'success'
+                );
             }
         }
 
@@ -1615,52 +1806,6 @@
             } else {
                 executeSemesterSimulation(null);
             }
-        }
-
-        function generateTransferOffers() {
-            const db = getActiveDB();
-            const currentTeam = findTeamByCode(careerState.teamCode);
-            const pOvr = careerState.ovr;
-            const isMathiasBello = careerState.playerName.toLowerCase() === 'mathias bello';
-
-            let pool = db.filter(t => t.code !== currentTeam.code);
-
-            if (isMathiasBello) {
-                pool.sort((a, b) => b.ovr - a.ovr);
-                return pool.slice(0, 3).map(t => t.code);
-            }
-
-            const candidates = pool.filter(t => t.ovr <= pOvr + 10 && t.ovr >= pOvr - 12);
-            const sourcePool = candidates.length >= 3 ? candidates : pool;
-
-            const shuffled = [...sourcePool].sort(() => 0.5 - Math.random());
-            return shuffled.slice(0, 3).map(t => t.code);
-        }
-
-        function resolveTransferDecision(chosenCode) {
-            const chosen = findTeamByCode(chosenCode);
-            if (!chosen) return;
-
-            const changed = chosen.code !== careerState.teamCode;
-            careerState.teamCode = chosen.code;
-            if (!careerState.pastTeamCodes) careerState.pastTeamCodes = [];
-            if (!careerState.pastTeamCodes.includes(chosen.code)) {
-                careerState.pastTeamCodes.push(chosen.code);
-            }
-            careerState.pendingOffers = [];
-
-            if (careerState.currentSemester === 1) {
-                careerState.currentSemester = 2;
-            } else {
-                careerState.currentSemester = 1;
-                careerState.currentYear += 1;
-            }
-
-            careerState.phase = 'PLAY_SEMESTER';
-            saveCareerState();
-            renderApp();
-
-            if (changed) showToast(`✍️ Fichaste por ${chosen.name} (${chosen.career})`, 'success');
         }
 
         function extendUniversityCareer(extraYears, label) {
@@ -2561,19 +2706,20 @@
                             </div>
                             ${offers.map(o => {
                                 const oRole = getPlayingRoleProjection(careerState.ovr, o.ovr);
+                                const tag = getOfferTag(o, team);
                                 return `
-                                    <div class="p-3.5 rounded-xl surface-sub hover:border-[#717fff]/50 flex flex-col justify-between gap-3 transition">
+                                    <div class="p-3.5 rounded-xl surface-sub border ${tag.cardBorder} flex flex-col justify-between gap-3 transition">
                                         <div>
                                             <div class="flex items-center justify-between gap-2 mb-1.5">
-                                                <span class="text-[10px] font-bold uppercase text-emerald-400">Oferta Fichaje</span>
+                                                <span class="text-[10px] font-black uppercase ${tag.badgeClass}">${tag.label}</span>
                                                 ${getTeamBadgeHTML(o, 'w-9 h-9', 'text-[10px]')}
                                             </div>
                                             <div class="font-extrabold text-white text-sm">${escapeHtml(o.name)}</div>
                                             <div class="text-xs text-gray-400">${escapeHtml(o.career)} · ${getDivisionLabel(o.division, careerState.gender)}</div>
                                             <span class="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded font-bold ${oRole.badgeClass}">${oRole.label}</span>
                                         </div>
-                                        <button onclick="resolveTransferDecision('${o.code}')" class="w-full py-2 rounded-lg bg-[#222222] hover:bg-[#717fff] text-white text-xs font-bold transition">
-                                            Fichar
+                                        <button onclick="resolveTransferDecision('${o.code}')" class="w-full py-2 rounded-lg ${tag.btnClass} text-xs font-bold transition">
+                                            ${tag.isTraicion ? 'Traicionar y Fichar' : 'Fichar'}
                                         </button>
                                     </div>
                                 `;
@@ -2860,6 +3006,355 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        // =========================================================================
+        // 11B. PESTAÑA / TARJETA FINAL ULTRA RESUMIDA (1080x1920 PNG DESCARGABLE)
+        // =========================================================================
+        function openSummaryCardModal() {
+            if (!careerState) return;
+            const modal = document.getElementById('summary-card-modal');
+            modal.classList.remove('hidden');
+            renderSummaryPosterCanvas();
+        }
+
+        function closeSummaryCardModal() {
+            document.getElementById('summary-card-modal').classList.add('hidden');
+        }
+
+        function drawRoundedRect(ctx, x, y, w, h, r) {
+            const radius = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.arcTo(x + w, y, x + w, y + h, radius);
+            ctx.arcTo(x + w, y + h, x, y + h, radius);
+            ctx.arcTo(x, y + h, x, y, radius);
+            ctx.arcTo(x, y, x + w, y, radius);
+            ctx.closePath();
+        }
+
+        function drawWrappedText(ctx, text, centerX, startY, maxWidth, lineHeight, maxLines = 3) {
+            const words = String(text || '').split(/\s+/);
+            const lines = [];
+            let currentLine = '';
+
+            for (const word of words) {
+                const testLine = currentLine ? `${currentLine} ${word}` : word;
+                if (ctx.measureText(testLine).width <= maxWidth) {
+                    currentLine = testLine;
+                } else {
+                    if (currentLine) lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            if (currentLine) lines.push(currentLine);
+
+            const finalLines = lines.slice(0, maxLines);
+            finalLines.forEach((line, idx) => {
+                ctx.fillText(line, centerX, startY + idx * lineHeight);
+            });
+            return finalLines.length;
+        }
+
+        function loadImageWithTimeout(url, timeoutMs = 3500) {
+            return new Promise((resolve) => {
+                if (!url) return resolve(null);
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                let done = false;
+                const finish = (res) => {
+                    if (done) return;
+                    done = true;
+                    resolve(res);
+                };
+                const timer = setTimeout(() => finish(null), timeoutMs);
+                img.onload = () => { clearTimeout(timer); finish(img); };
+                img.onerror = () => { clearTimeout(timer); finish(null); };
+                img.src = url;
+            });
+        }
+
+        async function renderSummaryPosterCanvas() {
+            const canvas = document.getElementById('summary-poster-canvas');
+            if (!canvas || !careerState) return;
+            const ctx = canvas.getContext('2d');
+            const W = 1080;
+            const H = 1920;
+
+            const legacy = computeCreativeLegacyBanner();
+            const legacyTeam = findTeamByCode(legacy.teamCode || careerState.teamCode) || findTeamByCode(careerState.teamCode);
+            const isGoat = careerState.ovr > OVR_DISPLAY_MAX;
+            const trophies = careerState.trophies || [];
+            const awards = careerState.awards || [];
+
+            const countLeague = trophies.filter(t => t.type === 'LEAGUE').length;
+            const countFac = trophies.filter(t => t.type === 'FACULTY').length;
+            const countInter = trophies.filter(t => t.type === 'INTERFACULTADES').length;
+            const countSel = trophies.filter(t => t.type === 'SELECCION').length;
+
+            // 1. Fondo minimalista idéntico a la web (#151515)
+            ctx.fillStyle = '#151515';
+            ctx.fillRect(0, 0, W, H);
+
+            // Halo sutil superior en #717fff
+            const topGlow = ctx.createRadialGradient(W / 2, 220, 20, W / 2, 220, 620);
+            topGlow.addColorStop(0, 'rgba(113, 127, 255, 0.14)');
+            topGlow.addColorStop(1, 'rgba(21, 21, 21, 0)');
+            ctx.fillStyle = topGlow;
+            ctx.fillRect(0, 0, W, 850);
+
+            // Borde limpio de tarjeta (#2b2b2b)
+            ctx.strokeStyle = '#2b2b2b';
+            ctx.lineWidth = 3;
+            drawRoundedRect(ctx, 48, 48, W - 96, H - 96, 48);
+            ctx.stroke();
+
+            // 2. HEADER MINIMALISTA CENTRADO (Logo + LEYENDAS)
+            const logoScale = 0.34;
+            const logoW = 200 * logoScale;
+            ctx.font = '900 44px Inter, sans-serif';
+            const titleText = 'LEYENDAS';
+            const titleW = ctx.measureText(titleText).width;
+            const headerGap = 20;
+            const headerTotalW = logoW + headerGap + titleW;
+            const headerStartX = (W - headerTotalW) / 2;
+
+            ctx.save();
+            ctx.translate(headerStartX, 118);
+            ctx.scale(logoScale, logoScale);
+            const logoPath = new Path2D('M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z');
+            ctx.fillStyle = '#717fff';
+            ctx.fill(logoPath);
+            ctx.restore();
+
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(titleText, headerStartX + logoW + headerGap, 168);
+
+            // Línea divisoria superior sutil
+            ctx.strokeStyle = '#262626';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(110, 224);
+            ctx.lineTo(W - 110, 224);
+            ctx.stroke();
+
+            // 3. BLOQUE PRINCIPAL DE IDENTIDAD (OVR + NOMBRE + CARRERA)
+            const ovrBoxSize = 210;
+            const ovrBoxX = (W - ovrBoxSize) / 2;
+            const ovrBoxY = 276;
+
+            if (isGoat) {
+                const goatGrad = ctx.createLinearGradient(ovrBoxX, ovrBoxY, ovrBoxX + ovrBoxSize, ovrBoxY + ovrBoxSize);
+                goatGrad.addColorStop(0, '#fbbf24');
+                goatGrad.addColorStop(1, '#d97706');
+                ctx.fillStyle = goatGrad;
+            } else {
+                ctx.fillStyle = '#717fff';
+            }
+            drawRoundedRect(ctx, ovrBoxX, ovrBoxY, ovrBoxSize, ovrBoxSize, 42);
+            ctx.fill();
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = isGoat ? 'rgba(69, 26, 3, 0.8)' : 'rgba(255, 255, 255, 0.82)';
+            ctx.font = '800 22px Inter, sans-serif';
+            ctx.fillText('MEDIA', W / 2, ovrBoxY + 42);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 92px Inter, sans-serif';
+            ctx.fillText(String(formatOvr(careerState.ovr)), W / 2, ovrBoxY + 138);
+
+            ctx.fillStyle = isGoat ? '#451a03' : '#d0d5ff';
+            ctx.font = '800 24px Inter, sans-serif';
+            ctx.fillText(`${careerState.position} · ${careerState.gender === 'F' ? 'FEM' : 'MASC'}`, W / 2, ovrBoxY + 182);
+
+            // Nombre completo
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 62px Inter, sans-serif';
+            const nameLines = drawWrappedText(ctx, careerState.playerName, W / 2, 568, W - 180, 70, 2);
+
+            // Carrera universitaria
+            const careerY = 568 + (nameLines - 1) * 70 + 44;
+            ctx.fillStyle = '#8b96ff';
+            ctx.font = '600 28px Inter, sans-serif';
+            const careerLines = drawWrappedText(ctx, careerState.studiedCareer || legacyTeam?.career || 'Universidad de La Frontera', W / 2, careerY, W - 200, 36, 2);
+
+            // 4. TARJETA DEL TÍTULO DE LEGADO (Surface #1c1c1c + Borde #2b2b2b)
+            const legacyCardY = careerY + (careerLines - 1) * 36 + 56;
+            const legacyCardH = 264;
+            const cardX = 96;
+            const cardW = W - 192;
+
+            ctx.fillStyle = '#1c1c1c';
+            drawRoundedRect(ctx, cardX, legacyCardY, cardW, legacyCardH, 32);
+            ctx.fill();
+            ctx.strokeStyle = '#2b2b2b';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Escudo del club protagonista centrado en la parte superior de la tarjeta
+            const badgeSize = 96;
+            const badgeX = W / 2 - badgeSize / 2;
+            const badgeY = legacyCardY + 26;
+            const logoUrl = legacyTeam ? normalizeLogoUrl(legacyTeam.logo) : '';
+            const loadedLogo = await loadImageWithTimeout(logoUrl, 2500);
+
+            if (loadedLogo) {
+                try {
+                    ctx.drawImage(loadedLogo, badgeX, badgeY, badgeSize, badgeSize);
+                } catch (e) {
+                    drawCanvasFallbackBadge(ctx, legacyTeam, badgeX, badgeY, badgeSize);
+                }
+            } else {
+                drawCanvasFallbackBadge(ctx, legacyTeam, badgeX, badgeY, badgeSize);
+            }
+
+            // Rango de legado limpio
+            const cleanBadgeLabel = legacy.badge.replace(/[^\p{L}\p{N}\s·-]/gu, '').trim().toUpperCase();
+            ctx.fillStyle = '#8b96ff';
+            ctx.font = '800 21px Inter, sans-serif';
+            ctx.fillText(cleanBadgeLabel, W / 2, legacyCardY + 156);
+
+            // Título final obtenido
+            ctx.fillStyle = '#f3f4f6';
+            ctx.font = '900 40px Inter, sans-serif';
+            drawWrappedText(ctx, legacy.headline, W / 2, legacyCardY + 208, cardW - 80, 46, 2);
+
+            // 5. FILA PROPORCIONAL DE 4 ESTADÍSTICAS CLAVE
+            const statsY = legacyCardY + legacyCardH + 34;
+            const statGap = 18;
+            const statBoxW = (cardW - statGap * 3) / 4;
+            const statBoxH = 148;
+            const isArq = careerState.position === 'ARQ';
+
+            const statItems = [
+                { label: 'PJ', val: careerState.stats.matches, color: '#f3f4f6' },
+                { label: isArq ? 'VALLAS' : 'GOLES', val: isArq ? careerState.stats.cleanSheets : careerState.stats.goals, color: '#8b96ff' },
+                { label: isArq ? 'G + A' : 'ASIST.', val: isArq ? (careerState.stats.goals + careerState.stats.assists) : careerState.stats.assists, color: '#a3adff' },
+                { label: 'TÍTULOS', val: trophies.length, color: '#ffffff' }
+            ];
+
+            statItems.forEach((st, i) => {
+                const bx = cardX + i * (statBoxW + statGap);
+                ctx.fillStyle = '#1c1c1c';
+                drawRoundedRect(ctx, bx, statsY, statBoxW, statBoxH, 24);
+                ctx.fill();
+                ctx.strokeStyle = '#2b2b2b';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = st.color;
+                ctx.font = '900 50px Inter, sans-serif';
+                ctx.fillText(String(st.val), bx + statBoxW / 2, statsY + 78);
+
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '800 20px Inter, sans-serif';
+                ctx.fillText(st.label, bx + statBoxW / 2, statsY + 118);
+            });
+
+            // 6. BLOQUE MINIMALISTA DE LOGROS Y PALMARÉS
+            const logrosY = statsY + statBoxH + 34;
+            const logrosH = 380;
+            ctx.fillStyle = '#1c1c1c';
+            drawRoundedRect(ctx, cardX, logrosY, cardW, logrosH, 32);
+            ctx.fill();
+            ctx.strokeStyle = '#2b2b2b';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '800 21px Inter, sans-serif';
+            ctx.fillText('RESUMEN DE LOGROS', cardX + 44, logrosY + 52);
+
+            const trophyRows = [
+                { label: 'Intercarreras UFRO', count: countLeague },
+                { label: 'Copa de Facultad', count: countFac },
+                { label: 'Torneo Interfacultades', count: countInter },
+                { label: 'Selección UFRO / FENAUDE', count: countSel },
+                { label: 'Distinciones Individuales', count: awards.length }
+            ];
+
+            trophyRows.forEach((row, idx) => {
+                const ry = logrosY + 108 + idx * 54;
+
+                if (idx > 0) {
+                    ctx.strokeStyle = '#262626';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(cardX + 44, ry - 34);
+                    ctx.lineTo(cardX + cardW - 44, ry - 34);
+                    ctx.stroke();
+                }
+
+                ctx.textAlign = 'left';
+                ctx.fillStyle = row.count > 0 ? '#f3f4f6' : '#6b7280';
+                ctx.font = '600 26px Inter, sans-serif';
+                ctx.fillText(row.label, cardX + 44, ry);
+
+                ctx.textAlign = 'right';
+                ctx.fillStyle = row.count > 0 ? '#8b96ff' : '#4b5563';
+                ctx.font = '900 28px Inter, sans-serif';
+                ctx.fillText(String(row.count), cardX + cardW - 44, ry);
+            });
+
+            // 7. PIE MINIMALISTA CON ENLACE OFICIAL
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '700 24px Inter, sans-serif';
+            ctx.fillText('https://leyenda-ufro.vercel.app/', W / 2, H - 102);
+        }
+
+        function drawCanvasFallbackBadge(ctx, team, x, y, size) {
+            const bgColor = (team && team.color) || '#717fff';
+            const rawParts = ((team && team.code) || '').split('-');
+            const initials = (rawParts.length >= 2 && rawParts[1].length <= 4
+                ? rawParts[1]
+                : ((team && team.name) || 'UFR').replace(/[^A-Za-zÁÉÍÓÚÑ]/g, '').slice(0, 3)
+            ).toUpperCase().slice(0, 4);
+
+            const grad = ctx.createLinearGradient(x, y, x + size, y + size);
+            grad.addColorStop(0, bgColor);
+            grad.addColorStop(1, '#151515');
+
+            ctx.fillStyle = grad;
+            drawRoundedRect(ctx, x, y, size, size, 28);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 34px Inter, sans-serif';
+            ctx.fillText(initials, x + size / 2, y + size / 2 + 12);
+        }
+
+        async function downloadSummaryCardPNG() {
+            const canvas = document.getElementById('summary-poster-canvas');
+            if (!canvas || !careerState) return;
+
+            await renderSummaryPosterCanvas();
+
+            try {
+                const safeSlug = careerState.playerName
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-|-$/g, '') || 'jugador';
+
+                const dataUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `leyendas-ufro-${safeSlug}.png`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                showToast('📸 ¡Tarjeta descargada en PNG (1080×1920)!', 'success');
+            } catch (err) {
+                showToast('No se pudo exportar la imagen. Intenta nuevamente.', 'error');
+            }
         }
 
         // =========================================================================
