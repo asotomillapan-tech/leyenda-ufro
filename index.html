@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leyenda UFRO - Simulador de Carrera Universitaria</title>
+    <title>LEYENDAS - Simulador de Carrera Universitaria</title>
     <script>
         window.tailwind = window.tailwind || {};
         window.tailwind.config = {
@@ -61,15 +61,15 @@
     <!-- CANVAS DE CONFETI PARA CELEBRACIÓN DE TÍTULOS -->
     <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 hidden"></canvas>
 
-    <!-- MODAL DE CELEBRACIÓN DE TÍTULOS -->
+    <!-- MODAL DE CELEBRACIÓN DE TÍTULOS Y ASCENSOS -->
     <div id="trophy-celebration-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="surface-card border-[#717fff]/40 rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl animate-pop space-y-5 relative overflow-hidden">
             <div class="absolute inset-0 bg-gradient-to-b from-[#717fff]/15 via-transparent to-transparent pointer-events-none"></div>
             <div class="relative">
-                <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#717fff] to-[#8b96ff] flex items-center justify-center text-4xl shadow-lg animate-trophy">
+                <div id="modal-trophy-icon" class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#717fff] to-[#8b96ff] flex items-center justify-center text-4xl shadow-lg animate-trophy">
                     🏆
                 </div>
-                <span class="inline-block mt-4 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">
+                <span id="modal-trophy-badge" class="inline-block mt-4 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">
                     ¡Nuevo Título UFRO!
                 </span>
                 <h2 id="modal-trophy-heading" class="text-2xl font-black text-white mt-2">¡Campeón Universitario!</h2>
@@ -82,38 +82,28 @@
         </div>
     </div>
 
-    <!-- ==================== HEADER MINIMALISTA ==================== -->
+    <!-- ==================== HEADER MINIMALISTA CENTRADO ==================== -->
     <header class="sticky top-0 z-40 bg-[#151515]/90 backdrop-blur-md border-b border-[#262626]">
-        <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="w-9 h-9 shrink-0">
+        <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-center">
+            <div class="flex items-center justify-center gap-2.5">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="w-8 h-8 sm:w-9 sm:h-9 shrink-0">
                     <path fill="#717fff" d="M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z"/>
                 </svg>
-                <div>
-                    <h1 class="text-base sm:text-lg font-black tracking-tight text-white leading-none">
-                        Leyenda <span class="text-[#717fff]">UFRO</span>
+                <div class="flex items-baseline gap-2">
+                    <h1 class="text-base sm:text-xl font-black tracking-wider text-white leading-none uppercase">
+                        LEYENDAS
                     </h1>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.1.1</span>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
-                <!-- Botón de actualización en vivo oculto por solicitud -->
-                <button onclick="manualRefreshSheets()" id="sheets-sync-indicator" title="Sincronizar equipos desde Google Sheets"
-                    class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] text-gray-400 hover:text-gray-200 transition">
-                    <span id="sheets-sync-dot" class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-                    <span id="sheets-sync-text">BD Local</span>
-                    <span class="text-[#717fff] font-bold">↻</span>
-                </button>
-
-                <nav id="main-nav" class="hidden flex items-center bg-[#1c1c1c] p-1 rounded-xl border border-[#2b2b2b]">
-                    <button onclick="switchTab('carrera')" id="nav-carrera" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#717fff] text-white">
-                        Carrera
-                    </button>
-                    <button onclick="switchTab('palmares')" id="nav-palmares" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white">
-                        Resumen
-                    </button>
-                </nav>
-            </div>
+            <!-- Botón de actualización en vivo oculto -->
+            <button onclick="manualRefreshSheets()" id="sheets-sync-indicator" title="Sincronizar equipos desde Google Sheets"
+                class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] text-gray-400 hover:text-gray-200 transition">
+                <span id="sheets-sync-dot" class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+                <span id="sheets-sync-text">BD Local</span>
+                <span class="text-[#717fff] font-bold">↻</span>
+            </button>
         </div>
     </header>
 
@@ -124,7 +114,7 @@
     <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
 
         <!-- ================================================================ -->
-        <!-- VISTA 1: CARRERA                                                 -->
+        <!-- VISTA ÚNICA: CREACIÓN / CARRERA ACTIVA / RESUMEN FINAL           -->
         <!-- ================================================================ -->
         <section id="view-carrera" class="space-y-5">
 
@@ -157,21 +147,21 @@
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
                             <label class="block text-xs font-bold text-gray-400">Nombre Completo</label>
-                            <button type="button" onclick="applyRandomPlayerName(true)" class="text-[11px] font-bold text-[#8b96ff] hover:text-white transition">
+                            <button type="button" onclick="applyRandomPlayerName(true)" class="text-[11px] font-bold text-[#8b96ff] hover:text-white active:scale-95 transition">
                                 🎲 Nombre aleatorio
                             </button>
                         </div>
                         <input type="text" id="input-player-name" required placeholder="Nombre Apellido"
-                            class="w-full px-3.5 py-3 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                            class="w-full px-3.5 py-3 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff] transition-colors">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-gray-400 mb-1.5">Posición en Cancha</label>
                         <div class="grid grid-cols-4 gap-2">
-                            <button type="button" onclick="selectPosition('DEL')" id="pos-btn-DEL" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition">DEL</button>
-                            <button type="button" onclick="selectPosition('MED')" id="pos-btn-MED" class="pos-btn py-2.5 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-xs font-bold text-white transition">MED</button>
-                            <button type="button" onclick="selectPosition('DEF')" id="pos-btn-DEF" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition">DEF</button>
-                            <button type="button" onclick="selectPosition('ARQ')" id="pos-btn-ARQ" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition">ARQ</button>
+                            <button type="button" onclick="selectPosition('DEL')" id="pos-btn-DEL" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition-all duration-150">DEL</button>
+                            <button type="button" onclick="selectPosition('MED')" id="pos-btn-MED" class="pos-btn py-2.5 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-xs font-bold text-white scale-[1.03] shadow-md shadow-[#717fff]/20 transition-all duration-150">MED</button>
+                            <button type="button" onclick="selectPosition('DEF')" id="pos-btn-DEF" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition-all duration-150">DEF</button>
+                            <button type="button" onclick="selectPosition('ARQ')" id="pos-btn-ARQ" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition-all duration-150">ARQ</button>
                         </div>
                     </div>
 
@@ -240,7 +230,7 @@
                     </button>
                 </form>
 
-                <!-- Paso 1B: Elección de equipo disponible -->
+                <!-- Paso 1B: Elección de equipo disponible / Pruebas Mechonas -->
                 <div id="step2-team-options" class="hidden space-y-4 animate-pop">
                     <div class="flex items-center justify-between border-b border-[#2b2b2b] pb-3">
                         <div>
@@ -254,111 +244,117 @@
                 </div>
             </div>
 
-            <!-- DASHBOARD CARRERA ACTIVA -->
+            <!-- DASHBOARD CARRERA ACTIVA / RETIRADA -->
             <div id="active-career-screen" class="hidden space-y-5">
 
-                <!-- HUD SUPERIOR -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                    <div class="lg:col-span-7 surface-card rounded-2xl p-5 flex flex-col justify-between">
+                <!-- HUD SUPERIOR (SE MANTIENE SIEMPRE EN CARRERA Y AL TERMINAR) -->
+                <!-- HUD SUPERIOR COMPACTO -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
+                    <div class="lg:col-span-7 surface-card rounded-2xl p-4 flex flex-col justify-between">
                         <div class="flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-3.5">
-                                <div id="hud-ovr-box" class="w-16 h-16 rounded-2xl bg-[#717fff] flex flex-col items-center justify-center shrink-0 shadow-lg">
-                                    <span class="text-[9px] font-bold uppercase text-white/80">MEDIA</span>
-                                    <span id="hud-ovr" class="text-2xl font-black text-white leading-none">58</span>
-                                    <span id="hud-pos" class="text-[10px] font-bold text-[#d0d5ff]">MED</span>
+                            <div class="flex items-center gap-3">
+                                <div id="hud-ovr-box" class="w-14 h-14 rounded-2xl bg-[#717fff] flex flex-col items-center justify-center shrink-0 shadow-lg">
+                                    <span class="text-[8px] font-bold uppercase text-white/80">MEDIA</span>
+                                    <span id="hud-ovr" class="text-xl font-black text-white leading-none">58</span>
+                                    <span id="hud-pos" class="text-[9px] font-bold text-[#d0d5ff]">MED</span>
                                 </div>
                                 <div>
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <h2 id="hud-name" class="text-lg sm:text-xl font-black text-white">Jugador</h2>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <h2 id="hud-name" class="text-base sm:text-lg font-black text-white leading-tight">Jugador</h2>
                                         <span id="hud-branch-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#151515] text-gray-300 border border-[#2b2b2b]">Masculino</span>
                                         <span id="hud-star-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">
-                                            ⭐ Estrella UFRO
+                                            ⭐ Estrella
                                         </span>
                                     </div>
-                                    <p id="hud-career-info" class="text-xs sm:text-sm text-gray-300 mt-0.5"></p>
-                                    <p id="hud-faculty-info" class="text-[11px] text-gray-500"></p>
+                                    <p id="hud-career-info" class="text-xs text-gray-300 mt-1"></p>
                                 </div>
                             </div>
-                            <button onclick="confirmNewCareer()" class="px-2.5 py-1.5 rounded-lg bg-[#151515] hover:bg-rose-950/50 text-gray-400 hover:text-rose-300 border border-[#2b2b2b] text-xs font-bold transition">
+                            <button id="hud-restart-btn" onclick="confirmNewCareer()" class="px-2.5 py-1.5 rounded-lg bg-[#151515] hover:bg-rose-950/50 text-gray-400 hover:text-rose-300 border border-[#2b2b2b] text-xs font-bold transition shrink-0">
                                 ↺ Reiniciar
                             </button>
                         </div>
 
-                        <div class="mt-4 pt-3 border-t border-[#262626]">
-                            <div class="flex justify-between text-xs mb-1.5">
+                        <div class="mt-3 pt-2.5 border-t border-[#262626]">
+                            <div class="flex justify-between text-[11px] mb-1">
                                 <span id="hud-timeline-label" class="font-bold text-[#8b96ff]">Año 1 · Semestre 1</span>
                                 <span id="hud-timeline-sub" class="text-gray-500">1 / 12</span>
                             </div>
-                            <div class="w-full h-2 bg-[#151515] rounded-full overflow-hidden">
+                            <div class="w-full h-1.5 bg-[#151515] rounded-full overflow-hidden">
                                 <div id="hud-progress-bar" class="h-full bg-gradient-to-r from-[#717fff] to-[#98a2ff] transition-all duration-300" style="width: 8%"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Stats Rápidos -->
-                    <div class="lg:col-span-5 surface-card rounded-2xl p-5 flex flex-col justify-between">
+                    <div class="lg:col-span-5 surface-card rounded-2xl p-4 flex flex-col justify-between">
                         <div class="grid grid-cols-4 gap-2 text-center">
-                            <div class="p-2.5 rounded-xl surface-sub">
-                                <div id="stat-total-matches" class="text-xl font-black text-white">0</div>
+                            <div class="p-2 rounded-xl surface-sub">
+                                <div id="stat-total-matches" class="text-lg font-black text-white">0</div>
                                 <div class="text-[10px] text-gray-500 uppercase font-bold">PJ</div>
                             </div>
-                            <div class="p-2.5 rounded-xl surface-sub">
-                                <div id="stat-total-goals" class="text-xl font-black text-[#8b96ff]">0</div>
+                            <div class="p-2 rounded-xl surface-sub">
+                                <div id="stat-total-goals" class="text-lg font-black text-[#8b96ff]">0</div>
                                 <div id="stat-label-goals" class="text-[10px] text-gray-500 uppercase font-bold">Goles</div>
                             </div>
-                            <div class="p-2.5 rounded-xl surface-sub">
-                                <div id="stat-total-assists" class="text-xl font-black text-[#717fff]">0</div>
+                            <div class="p-2 rounded-xl surface-sub">
+                                <div id="stat-total-assists" class="text-lg font-black text-[#717fff]">0</div>
                                 <div id="stat-label-assists" class="text-[10px] text-gray-500 uppercase font-bold">Asist.</div>
                             </div>
-                            <div class="p-2.5 rounded-xl surface-sub">
-                                <div id="stat-total-titles" class="text-xl font-black text-white">0</div>
+                            <div class="p-2 rounded-xl surface-sub">
+                                <div id="stat-total-titles" class="text-lg font-black text-white">0</div>
                                 <div class="text-[10px] text-gray-500 uppercase font-bold">Títulos</div>
                             </div>
                         </div>
 
-                        <div id="hud-role-projection" class="mt-3 p-2.5 rounded-xl surface-sub flex items-center justify-between text-xs"></div>
+                        <div id="hud-role-projection" class="mt-2.5 px-3 py-2 rounded-xl surface-sub flex items-center justify-between text-xs"></div>
                     </div>
                 </div>
 
-                <!-- PANEL DE ACCIÓN PRINCIPAL -->
+                <!-- PANEL DE ACCIÓN PRINCIPAL (EN RETIRO MUESTRA LA CONSIGNA CREATIVA DEL CLUB) -->
                 <div id="action-panel" class="surface-card rounded-2xl p-5 sm:p-6 border-[#717fff]/35 shadow-xl"></div>
 
-                <!-- HISTORIAL SEMESTRAL -->
-                <div class="space-y-3">
-                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Historial por Semestre</h3>
-                    <div id="timeline-container" class="space-y-3"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================================ -->
-        <!-- VISTA 2: RESUMEN DE CARRERA (SIMPLIFICADO POR ETAPA)             -->
-        <!-- ================================================================ -->
-        <section id="view-palmares" class="hidden space-y-5">
-            <div id="palmares-player-card" class="surface-card rounded-2xl p-6 border-[#717fff]/30"></div>
-
-            <!-- Contadores de Títulos -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="trophies-grid"></div>
-
-            <!-- Resumen Simplificado por Equipo -->
-            <div class="surface-card rounded-2xl p-5 space-y-4">
-                <div class="flex items-center justify-between gap-2 border-b border-[#262626] pb-3">
-                    <div>
-                        <h3 class="text-sm font-black uppercase tracking-wider text-white">Trayectoria por Equipo</h3>
-                        <p class="text-xs text-gray-500">Resumen de etapas y títulos conquistados en cada club</p>
-                    </div>
-                    <button onclick="toggleFullCareerHistory()" id="btn-toggle-full-career"
-                        class="px-3.5 py-2 rounded-xl bg-[#717fff]/15 hover:bg-[#717fff]/25 text-[#a3adff] border border-[#717fff]/30 text-xs font-bold transition">
-                        Ver carrera completa ↓
+                <!-- BOTÓN INICIAR CARRERA NUEVA (VISIBLE SOLO AL TERMINAR LA CARRERA) -->
+                <div id="retired-new-career-bar" class="hidden flex justify-center">
+                    <button onclick="resetCareer()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition transform active:scale-95">
+                        🎓 Iniciar Carrera Nueva
                     </button>
                 </div>
 
-                <div id="career-stints-list" class="space-y-2.5"></div>
+                <!-- HISTORIAL SEMESTRAL (DURANTE CARRERA ACTIVA) -->
+                <div id="active-timeline-wrapper" class="space-y-3">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Historial por Semestre</h3>
+                    <div id="timeline-container" class="space-y-3"></div>
+                </div>
 
-                <!-- Detalle completo semestre a semestre (Oculto por defecto) -->
-                <div id="full-career-details" class="hidden pt-4 border-t border-[#262626] space-y-2.5 animate-pop">
-                    <h4 class="text-xs font-extrabold uppercase tracking-wider text-gray-400">Detalle Semestre a Semestre</h4>
-                    <div id="full-career-semesters-list" class="space-y-2"></div>
+                <!-- RESUMEN FINAL AUTOMÁTICO AL TERMINAR LA CARRERA -->
+                <div id="retired-summary-section" class="hidden space-y-5 animate-pop">
+                    <!-- Contadores de Títulos -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="trophies-grid"></div>
+
+                    <!-- Logros Selección UFRO (Separados de los clubes) -->
+                    <div id="ufro-selection-summary-card" class="surface-card rounded-2xl p-5 space-y-3 border-[#717fff]/30"></div>
+
+                    <!-- Resumen Simplificado por Equipo + Desplegable Semestre a Semestre -->
+                    <div class="surface-card rounded-2xl p-5 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-[#262626] pb-3">
+                            <div>
+                                <h3 class="text-sm font-black uppercase tracking-wider text-white">Trayectoria por Equipo</h3>
+                                <p class="text-xs text-gray-500">Resumen de etapas y títulos conquistados en cada club universitario</p>
+                            </div>
+                            <button onclick="toggleFullCareerHistory()" id="btn-toggle-full-career"
+                                class="px-3.5 py-2 rounded-xl bg-[#717fff]/15 hover:bg-[#717fff]/25 text-[#a3adff] border border-[#717fff]/30 text-xs font-bold transition shrink-0">
+                                Ver detalle por semestre ↓
+                            </button>
+                        </div>
+
+                        <div id="career-stints-list" class="space-y-2.5"></div>
+
+                        <!-- Detalle completo semestre a semestre (Oculto por defecto) -->
+                        <div id="full-career-details" class="hidden pt-4 border-t border-[#262626] space-y-2.5 animate-pop">
+                            <h4 class="text-xs font-extrabold uppercase tracking-wider text-gray-400">Detalle Semestre a Semestre</h4>
+                            <div id="full-career-semesters-list" class="space-y-2"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -479,6 +475,24 @@
                 title: 'Reprobaste una asignatura clave',
                 desc: 'Te confiaste con las asistencias y los certámenes por priorizar el campeonato. Reprobaste un ramo requisito y te atrasas 1 año en la malla (+2 semestres extra sin gastar tu cupo de Magíster).',
                 extraYears: 1
+            },
+            {
+                id: 'lesion_semestral',
+                type: 'INJURY_EVENT',
+                injurySemesters: 1,
+                badge: '🚑 Parte Médico · Desgarro Muscular',
+                title: 'Lesión muscular en entrenamiento',
+                desc: 'Sufres un desgarro grado II en el isquiotibial durante un partido amistoso. El cuerpo médico te ordena rehabilitación completa durante todo este semestre (0 PJ).',
+                ovrPenalty: 0
+            },
+            {
+                id: 'lesion_anual',
+                type: 'INJURY_EVENT',
+                injurySemesters: 2,
+                badge: '🏥 Parte Médico Grave · Rotura de Ligamentos',
+                title: 'Grave lesión de rodilla en pleno clásico',
+                desc: 'Una mala caída te provoca rotura parcial de ligamentos. Quedarás fuera de las canchas por todo el año académico (2 semestres completos sin jugar).',
+                ovrPenalty: -1
             }
         ];
 
@@ -592,6 +606,8 @@
         let selectedGender = 'M';
         let selectedPosition = 'MED';
         let showFullHistoryFlag = false;
+        let currentTrialTeams = [];
+        let failedTrialCodes = [];
 
         // =========================================================================
         // 4. INICIALIZACIÓN Y SINCRONIZACIÓN SILENCIOSA CON GOOGLE SHEETS
@@ -605,7 +621,6 @@
             applyRandomPlayerName(true);
             renderApp();
 
-            // Sincronizar con Google Sheets en segundo plano sin bloquear la UI
             syncSheetsInBackground(true);
         };
 
@@ -923,6 +938,12 @@
             input.placeholder = 'Nombre Apellido';
             if (forceOverwrite || !current || RANDOM_NAMES_MALE.includes(current) || RANDOM_NAMES_FEMALE.includes(current)) {
                 input.value = picked;
+                input.classList.remove('border-[#2b2b2b]');
+                input.classList.add('border-[#717fff]');
+                setTimeout(() => {
+                    input.classList.remove('border-[#717fff]');
+                    input.classList.add('border-[#2b2b2b]');
+                }, 220);
             }
         }
 
@@ -1013,12 +1034,14 @@
             const btnM = document.getElementById('btn-gender-M');
             const btnF = document.getElementById('btn-gender-F');
 
-            if (g === 'M') {
-                btnM.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition';
-                btnF.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition';
-            } else {
-                btnF.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition';
-                btnM.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition';
+            if (btnM && btnF) {
+                if (g === 'M') {
+                    btnM.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 scale-[1.02] shadow-md shadow-[#717fff]/20 transition-all duration-150';
+                    btnF.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition-all duration-150';
+                } else {
+                    btnF.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 scale-[1.02] shadow-md shadow-[#717fff]/20 transition-all duration-150';
+                    btnM.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition-all duration-150';
+                }
             }
 
             ensureCareerSelectPopulated();
@@ -1028,151 +1051,203 @@
         function selectPosition(pos) {
             selectedPosition = pos;
             document.querySelectorAll('.pos-btn').forEach(btn => {
-                btn.className = 'pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition';
+                btn.className = 'pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition-all duration-150';
             });
             const active = document.getElementById(`pos-btn-${pos}`);
-            if (active) active.className = 'pos-btn py-2.5 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-xs font-bold text-white transition';
+            if (active) {
+                active.className = 'pos-btn py-2.5 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-xs font-bold text-white scale-[1.03] shadow-md shadow-[#717fff]/20 transition-all duration-150';
+            }
+        }
+
+        function getTrialAcceptanceChance(team, gender) {
+            if (gender === 'F') return 1.0;
+            const div = Number(team.division);
+            if (div === 1) return 0.14;
+            if (div === 2) return 0.36;
+            return 0.94;
         }
 
         document.getElementById('step1-player-form').addEventListener('submit', function (e) {
             e.preventDefault();
-            const name = document.getElementById('input-player-name').value.trim();
-            const select = document.getElementById('input-career-select');
-            const careerName = select.value;
-            const baseYears = Number(select.options[select.selectedIndex]?.dataset?.years || 5);
-            if (!name || !careerName) return;
+            const playerName = document.getElementById('input-player-name').value.trim();
+            if (!playerName) {
+                showToast('Ingresa el nombre de tu jugador/a.', 'error');
+                return;
+            }
+
+            const careerSelect = document.getElementById('input-career-select');
+            const selectedCareer = careerSelect.value;
+            const db = getActiveDB();
+
+            let careerTeams = db.filter(t => t.career.toLowerCase() === selectedCareer.toLowerCase());
+
+            if (careerTeams.length === 0) {
+                if (selectedGender === 'F') {
+                    showToast('Esta carrera aún no tiene equipo femenino registrado.', 'error');
+                    return;
+                }
+                const facKey = canonicalizeFaculty(selectedCareer).key;
+                const facTeams = db.filter(t => t.facultyKey === facKey);
+                careerTeams = facTeams.length > 0 ? facTeams.slice(0, 3) : db.filter(t => Number(t.division) === 3).slice(0, 3);
+            }
+
+            currentTrialTeams = [...careerTeams].sort((a, b) => Number(a.division) - Number(b.division));
+            failedTrialCodes = [];
+
+            document.getElementById('trial-badge').textContent = selectedGender === 'F' ? 'División Única Femenina' : 'Pruebas Mechonas · Todas las Divisiones';
+            document.getElementById('trial-title').textContent = selectedCareer;
+            document.getElementById('trial-desc').textContent = selectedGender === 'F'
+                ? 'Selecciona el plantel femenino disponible de tu carrera para debutar.'
+                : 'Elige dónde probarte: en 1ª y 2ª División los cupos son muy exigentes, mientras que en 3ª División tienes entrada casi asegurada.';
+
+            renderTrialTeamsList();
 
             document.getElementById('step1-player-form').classList.add('hidden');
             document.getElementById('step2-team-options').classList.remove('hidden');
-
-            const listEl = document.getElementById('trial-teams-list');
-
-            if (selectedGender === 'M') {
-                const careerTeams = maleTeamsDB
-                    .filter(t => t.career.toLowerCase().trim() === careerName.toLowerCase().trim())
-                    .sort((a, b) => b.division - a.division);
-                const roll = Math.random();
-                let openDivs = [3];
-                if (roll < 0.55) openDivs = [3];
-                else if (roll < 0.88) openDivs = [3, 2];
-                else openDivs = [3, 2, 1];
-
-                document.getElementById('trial-badge').textContent = 'Pruebas Mechonas · Masculino';
-                document.getElementById('trial-title').textContent = `${careerName}`;
-                document.getElementById('trial-desc').textContent = 'Disponibilidad de planteles según tu rendimiento en las pruebas de ingreso:';
-
-                listEl.innerHTML = careerTeams.map(t => {
-                    const isOpen = openDivs.includes(t.division);
-                    const divColor = t.division === 1
-                        ? 'text-[#a3adff] bg-[#717fff]/15 border-[#717fff]/30'
-                        : t.division === 2
-                            ? 'text-gray-200 bg-white/10 border-white/15'
-                            : 'text-gray-400 bg-[#151515] border-[#2b2b2b]';
-
-                    return `
-                        <div class="p-4 rounded-2xl border ${isOpen ? 'surface-sub border-[#717fff]/45' : 'bg-[#121212] border-[#222222] opacity-50'} flex items-center justify-between gap-3">
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${divColor}">${getDivisionLabel(t.division, 'M')}</span>
-                                </div>
-                                <div class="font-black text-white text-sm mt-1">${t.name}</div>
-                                <div class="text-[11px] text-gray-500">${t.achievements}</div>
-                            </div>
-                            ${isOpen
-                                ? `<button onclick="startNewCareer('${t.code}', ${baseYears})" class="px-4 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shrink-0 transition">Debutar →</button>`
-                                : `<span class="px-2.5 py-1 rounded-lg bg-[#1a1a1a] text-[11px] font-bold text-gray-500 shrink-0">Cupo Cerrado</span>`
-                            }
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                const femTeams = femaleTeamsDB.filter(t => t.career.toLowerCase().trim() === careerName.toLowerCase().trim());
-                if (femTeams.length === 0) {
-                    showToast(`Aún no hay equipo femenino registrado para ${careerName}.`, 'error');
-                    backToStep1();
-                    return;
-                }
-                document.getElementById('trial-badge').textContent = 'División Única Femenina UFRO';
-                document.getElementById('trial-title').textContent = `${careerName}`;
-                document.getElementById('trial-desc').textContent = 'Plantel(es) femenino(s) oficial(es) de tu carrera en el Campeonato Intercarreras:';
-
-                listEl.innerHTML = femTeams.map(femTeam => `
-                    <div class="p-4 rounded-2xl surface-sub border-[#717fff]/50 flex items-center justify-between gap-3">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">División Única Fem.</span>
-                            </div>
-                            <div class="font-black text-white text-base mt-1">${femTeam.name}</div>
-                            <div class="text-[11px] text-gray-500">${femTeam.achievements}</div>
-                        </div>
-                        <button onclick="startNewCareer('${femTeam.code}', ${baseYears})" class="px-4 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shrink-0 transition">
-                            Debutar →
-                        </button>
-                    </div>
-                `).join('');
-            }
         });
+
+        function renderTrialTeamsList() {
+            const listEl = document.getElementById('trial-teams-list');
+            if (!listEl) return;
+
+            listEl.innerHTML = currentTrialTeams.map(t => {
+                const chancePct = Math.round(getTrialAcceptanceChance(t, selectedGender) * 100);
+                const alreadyFailed = failedTrialCodes.includes(t.code);
+
+                let chanceBadgeClass = 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+                let chanceLabel = `Alta chance (${chancePct}%)`;
+                if (selectedGender === 'F') {
+                    chanceLabel = 'Ingreso directo';
+                } else if (Number(t.division) === 1) {
+                    chanceBadgeClass = 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+                    chanceLabel = `Cupo difícil (${chancePct}%)`;
+                } else if (Number(t.division) === 2) {
+                    chanceBadgeClass = 'bg-[#717fff]/15 text-[#a3adff] border-[#717fff]/30';
+                    chanceLabel = `Chance media (${chancePct}%)`;
+                }
+
+                return `
+                    <div class="p-4 rounded-2xl surface-sub ${alreadyFailed ? 'opacity-55 border-rose-500/30' : 'hover:border-[#717fff]/60'} flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-black text-white text-sm">${t.name}</span>
+                                <span class="px-2 py-0.5 rounded bg-[#222222] text-[10px] font-bold text-[#a3adff] border border-[#2b2b2b]">
+                                    ${getDivisionLabel(t.division, selectedGender)}
+                                </span>
+                                <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${chanceBadgeClass}">
+                                    ${chanceLabel}
+                                </span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-0.5">${t.faculty}</div>
+                            <div class="text-[11px] text-gray-500 mt-1">🏅 ${t.achievements}</div>
+                        </div>
+                        ${alreadyFailed
+                            ? `<span class="px-3.5 py-2 rounded-xl bg-rose-950/40 border border-rose-500/35 text-rose-300 font-bold text-xs shrink-0 text-center">No seleccionado</span>`
+                            : `<button type="button" onclick="attemptTryout('${t.code}')"
+                                class="px-4 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition shrink-0">
+                                ${selectedGender === 'F' ? 'Fichar y Debutar →' : 'Hacer Prueba →'}
+                            </button>`
+                        }
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function attemptTryout(teamCode) {
+            const team = findTeamByCode(teamCode, selectedGender);
+            if (!team) return;
+
+            const chance = getTrialAcceptanceChance(team, selectedGender);
+            const remainingTeams = currentTrialTeams.filter(t => !failedTrialCodes.includes(t.code));
+
+            const isLastFallback = remainingTeams.length <= 1;
+            const accepted = isLastFallback || Math.random() < chance;
+
+            if (accepted) {
+                startCareerWithTeam(team.code);
+            } else {
+                failedTrialCodes.push(team.code);
+                renderTrialTeamsList();
+                showToast(`❌ El DT de ${team.name} (${getDivisionLabel(team.division, selectedGender)}) te dijo que aún te falta roce. Prueba en otro equipo de tu carrera.`, 'error');
+            }
+        }
 
         function backToStep1() {
             document.getElementById('step2-team-options').classList.add('hidden');
             document.getElementById('step1-player-form').classList.remove('hidden');
         }
 
-        function startNewCareer(teamCode, baseYears) {
-            const name = document.getElementById('input-player-name').value.trim();
-            const startTeam = findTeamByCode(teamCode, selectedGender);
-            if (!name || !startTeam) return;
+        function startCareerWithTeam(teamCode) {
+            const playerName = document.getElementById('input-player-name').value.trim();
+            const careerSelect = document.getElementById('input-career-select');
+            const selectedOpt = careerSelect.options[careerSelect.selectedIndex];
+            const studiedCareer = careerSelect.value;
+            const baseYears = Number(selectedOpt?.dataset?.years || inferCareerYears(studiedCareer));
+            const team = findTeamByCode(teamCode, selectedGender);
 
-            const isProdigySession = Math.random() < 0.16;
-            const initialOvr = isProdigySession
+            if (!playerName || !team) return;
+
+            const divBonus = selectedGender === 'M'
+                ? (Number(team.division) === 1 ? 5 : Number(team.division) === 2 ? 2 : 0)
+                : 0;
+
+            const isProdigy = Math.random() < 0.12 || (selectedGender === 'M' && Number(team.division) === 1);
+            const initialOvr = (isProdigy
                 ? Math.floor(Math.random() * 4) + 64
-                : Math.floor(Math.random() * 4) + 58;
+                : Math.floor(Math.random() * 5) + 57) + divBonus;
 
             careerState = {
-                playerName: name,
+                playerName,
                 gender: selectedGender,
                 position: selectedPosition,
-                studiedCareer: startTeam.career,
+                studiedCareer,
                 ovr: initialOvr,
-                isProdigy: isProdigySession,
+                isProdigy,
                 baseYears,
                 maxYears: baseYears,
                 extensionUsed: 0,
                 academicDelayYears: 0,
+                forcedOutSemesters: 0,
                 currentYear: 1,
                 currentSemester: 1,
                 phase: 'PLAY_SEMESTER',
                 activeEvent: null,
                 eventResult: null,
                 eventModifiers: null,
-                teamCode: startTeam.code,
-                pastTeamCodes: [startTeam.code],
                 triggeredEventIds: [],
-                fenaudeQualified: false,
+                teamCode: team.code,
+                pastTeamCodes: [team.code],
                 pendingOffers: [],
+                interfacultadesQualified: false,
+                fenaudeQualified: false,
+                ufroCitations: [],
                 stats: { matches: 0, goals: 0, assists: 0, cleanSheets: 0 },
                 ufroStats: { matches: 0, goals: 0, assists: 0 },
                 history: [],
                 trophies: []
             };
 
+            showFullHistoryFlag = false;
             saveCareerState();
+            backToStep1();
             renderApp();
-            showToast(
-                isProdigySession
-                    ? `⭐ ¡Talento generacional! Debutas en ${startTeam.name} con ${initialOvr} de Media.`
-                    : `Debutas en ${startTeam.name} con ${initialOvr} de Media.`,
-                'success'
-            );
+
+            if (selectedGender === 'M' && Number(team.division) === 1) {
+                showToast(`🔥 ¡Hazaña Mechona! Quedaste directo en ${team.name} (1ª Div) con ${initialOvr} de Media.`, 'success');
+            } else if (isProdigy) {
+                showToast(`⭐ ¡Talento Generacional! Debutas en ${team.name} con ${initialOvr} de Media.`, 'success');
+            } else {
+                showToast(`🎓 ¡Quedaste seleccionado! Debutas en ${team.name} (${initialOvr} Media).`, 'success');
+            }
         }
 
         function confirmNewCareer() {
             const panel = document.getElementById('action-panel');
             panel.innerHTML = `
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-rose-950/30 border border-rose-500/40 p-4 rounded-xl">
-                    <span class="text-sm font-bold text-rose-300">¿Reiniciar carrera actual?</span>
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-rose-950/25 border border-rose-500/35 p-4 rounded-xl">
+                    <span class="text-sm font-bold text-rose-300">¿Seguro que deseas reiniciar tu carrera actual?</span>
                     <div class="flex gap-2">
-                        <button onclick="renderApp()" class="px-3.5 py-1.5 rounded-lg bg-[#151515] text-xs font-bold text-gray-300 border border-[#2b2b2b]">Cancelar</button>
+                        <button onclick="renderApp()" class="px-3.5 py-1.5 rounded-lg bg-[#151515] border border-[#2b2b2b] text-xs font-bold text-white">Cancelar</button>
                         <button onclick="resetCareer()" class="px-3.5 py-1.5 rounded-lg bg-rose-600 text-xs font-bold text-white">Sí, Reiniciar</button>
                     </div>
                 </div>
@@ -1181,22 +1256,36 @@
 
         function resetCareer() {
             careerState = null;
+            showFullHistoryFlag = false;
             saveCareerState();
+
+            // Restaurar divisiones y medias originales de todos los equipos
+            buildLocalCatalogTeams();
+            loadCachedDatabases();
+            ensureCareerSelectPopulated();
+
             backToStep1();
-            switchTab('carrera');
             applyRandomPlayerName(true);
             renderApp();
+
+            // Re-sincronizar en segundo plano con Google Sheets para asegurar valores originales
+            syncSheetsInBackground(true);
         }
 
         // =========================================================================
-        // 7. FLUJO DE SIMULACIÓN + EVENTOS ESPECIALES EXCLUSIVOS
+        // 7. FLUJO DE SIMULACIÓN DE SEMESTRE Y MERCADO DE PASES
         // =========================================================================
         function triggerPlaySemester() {
             if (!careerState || careerState.phase !== 'PLAY_SEMESTER') return;
 
-            if (Math.random() < 0.72) {
-                const ev = buildContextualRandomEvent();
-                careerState.activeEvent = ev;
+            if ((careerState.forcedOutSemesters || 0) > 0) {
+                careerState.forcedOutSemesters -= 1;
+                executeSemesterSimulation({ suspend: true, injuryReason: 'Rehabilitación lesión anual' });
+                return;
+            }
+
+            if (Math.random() < 0.68) {
+                careerState.activeEvent = buildContextualRandomEvent();
                 careerState.eventResult = null;
                 careerState.phase = 'RANDOM_EVENT';
                 saveCareerState();
@@ -1204,6 +1293,70 @@
             } else {
                 executeSemesterSimulation(null);
             }
+        }
+
+        function generateTransferOffers() {
+            const db = getActiveDB();
+            const currentTeam = findTeamByCode(careerState.teamCode);
+            const pOvr = careerState.ovr;
+
+            const candidates = db.filter(t => t.code !== currentTeam.code && t.ovr <= pOvr + 11 && t.ovr >= pOvr - 12);
+            const shuffled = candidates
+                .map(t => ({ team: t, sortKey: Math.abs(t.ovr - (pOvr + 2)) + Math.random() * 6 }))
+                .sort((a, b) => a.sortKey - b.sortKey)
+                .slice(0, 3)
+                .map(i => i.team.code);
+
+            if (shuffled.length < 2) {
+                db.filter(t => t.code !== currentTeam.code).slice(0, 3).forEach(t => {
+                    if (!shuffled.includes(t.code)) shuffled.push(t.code);
+                });
+            }
+            return shuffled;
+        }
+
+        function resolveTransferDecision(chosenCode) {
+            const chosen = findTeamByCode(chosenCode);
+            if (!chosen) return;
+
+            const changed = chosen.code !== careerState.teamCode;
+            careerState.teamCode = chosen.code;
+            if (!careerState.pastTeamCodes) careerState.pastTeamCodes = [];
+            if (!careerState.pastTeamCodes.includes(chosen.code)) {
+                careerState.pastTeamCodes.push(chosen.code);
+            }
+            careerState.pendingOffers = [];
+
+            if (careerState.currentSemester === 1) {
+                careerState.currentSemester = 2;
+            } else {
+                careerState.currentSemester = 1;
+                careerState.currentYear += 1;
+            }
+
+            careerState.phase = 'PLAY_SEMESTER';
+            saveCareerState();
+            renderApp();
+
+            if (changed) showToast(`✍️ Fichaste por ${chosen.name} (${chosen.career})`, 'success');
+        }
+
+        function extendUniversityCareer(extraYears, label) {
+            if (careerState.extensionUsed + extraYears > 2) return;
+            careerState.extensionUsed += extraYears;
+            careerState.maxYears += extraYears;
+            careerState.pendingOffers = generateTransferOffers();
+            careerState.phase = 'TRANSFER_MARKET';
+            saveCareerState();
+            renderApp();
+            showToast(`📚 Carrera extendida +${extraYears} año(s) (${label})`, 'success');
+        }
+
+        function graduateAndRetire() {
+            careerState.phase = 'RETIRED';
+            saveCareerState();
+            renderApp();
+            showToast('🎓 ¡Te titulaste en la UFRO! Aquí tienes el resumen de tu carrera.', 'success');
         }
 
         function buildContextualRandomEvent() {
@@ -1216,7 +1369,6 @@
 
             const roll = Math.random();
 
-            // 1. Eventos exclusivos de la carrera que estudia el jugador
             const matchingCareerEvents = CAREER_EXCLUSIVE_EVENTS.filter(ev => {
                 const matchesCareer = ev.careerMatch.some(kw => studiedLower.includes(kw));
                 const matchesSem = !ev.semesterOnly || ev.semesterOnly === careerState.currentSemester;
@@ -1224,24 +1376,38 @@
                 return matchesCareer && matchesSem && notRepeated;
             });
 
-            if (matchingCareerEvents.length > 0 && roll < 0.34) {
+            if (matchingCareerEvents.length > 0 && roll < 0.30) {
                 const chosen = matchingCareerEvents[Math.floor(Math.random() * matchingCareerEvents.length)];
                 if (!careerState.triggeredEventIds) careerState.triggeredEventIds = [];
                 careerState.triggeredEventIds.push(`${chosen.id}_y${careerState.currentYear}`);
                 return { ...chosen };
             }
 
-            // 2. Evento global repentino: Reprobar una asignatura (+1 año / 2 semestres sin gastar Magíster)
+            if (roll >= 0.30 && roll < 0.43) {
+                const isAnnual = careerState.currentSemester === 1 && Math.random() < 0.35;
+                const injuryEv = isAnnual ? GLOBAL_SUDDEN_EVENTS[2] : GLOBAL_SUDDEN_EVENTS[1];
+                if (injuryEv.ovrPenalty) {
+                    careerState.ovr = Math.max(54, careerState.ovr + injuryEv.ovrPenalty);
+                }
+                if (injuryEv.injurySemesters > 1) {
+                    careerState.forcedOutSemesters = injuryEv.injurySemesters - 1;
+                }
+                careerState.eventModifiers = {
+                    suspend: true,
+                    injuryReason: injuryEv.title
+                };
+                return { ...injuryEv };
+            }
+
             const currentAcademicDelays = careerState.academicDelayYears || 0;
-            if (currentAcademicDelays < 2 && roll >= 0.34 && roll < 0.46) {
+            if (currentAcademicDelays < 2 && roll >= 0.43 && roll < 0.54) {
                 const failEv = GLOBAL_SUDDEN_EVENTS[0];
                 careerState.academicDelayYears = currentAcademicDelays + failEv.extraYears;
                 careerState.maxYears += failEv.extraYears;
                 return { ...failEv };
             }
 
-            // 3. Regreso triunfal a un club anterior
-            if (pastCodes.length > 0 && roll >= 0.46 && roll < 0.62) {
+            if (pastCodes.length > 0 && roll >= 0.54 && roll < 0.68) {
                 const prevCode = pastCodes[Math.floor(Math.random() * pastCodes.length)];
                 const prevTeam = findTeamByCode(prevCode);
                 if (prevTeam) {
@@ -1257,8 +1423,7 @@
                 }
             }
 
-            // 4. Oferta económica desde Ingeniería Comercial
-            if (icoTeams.length > 0 && !currentTeam.career.toLowerCase().includes('comercial') && roll >= 0.62 && roll < 0.78) {
+            if (icoTeams.length > 0 && !currentTeam.career.toLowerCase().includes('comercial') && roll >= 0.68 && roll < 0.82) {
                 const targetIco = icoTeams[Math.floor(Math.random() * icoTeams.length)];
                 return {
                     type: 'ICO_MONEY',
@@ -1353,25 +1518,23 @@
         function executeSemesterSimulation(eventMods) {
             const db = getActiveDB();
             const team = findTeamByCode(careerState.teamCode);
-            const mystique = calculateTeamMystique(team);
             const role = getPlayingRoleProjection(careerState.ovr, team.ovr);
 
             const year = careerState.currentYear;
             const sem = careerState.currentSemester;
-            const div = Number(team.division);
             const isFemale = careerState.gender === 'F';
+            const div = isFemale ? 1 : Number(team.division);
 
-            const isSuspended = eventMods && eventMods.suspend;
-            const forceCupWin = eventMods && eventMods.forceCupWin;
-            const forceElimination = eventMods && eventMods.forceElimination;
-            const teamBoost = (eventMods && eventMods.teamBoost) ? eventMods.teamBoost : 0;
+            const isSuspended = Boolean(eventMods && eventMods.suspend);
+            const forceCupWin = Boolean(eventMods && eventMods.forceCupWin);
+            const forceElimination = Boolean(eventMods && eventMods.forceElimination);
+            const teamBoost = Number((eventMods && eventMods.teamBoost) || 0);
 
-            // 1. Partidos y estadísticas del semestre
             const totalTeamMatches = sem === 2 ? 14 : 11;
-            const playedRatio = isSuspended ? 0 : Math.min(1, Math.max(0.2, role.factor + (Math.random() * 0.14 - 0.07)));
-            const matchesPlayed = isSuspended ? 0 : Math.max(3, Math.round(totalTeamMatches * playedRatio));
+            const playedRatio = isSuspended ? 0 : Math.min(1, Math.max(0.20, role.factor + (Math.random() * 0.14 - 0.07)));
+            const matchesPlayed = isSuspended ? 0 : Math.max(2, Math.round(totalTeamMatches * playedRatio));
 
-            const perfFactor = (careerState.ovr / 70) * (0.85 + Math.random() * 0.45);
+            const perfFactor = (careerState.ovr / 68) * (0.88 + Math.random() * 0.44);
             let goals = 0, assists = 0, cleanSheets = 0;
 
             if (!isSuspended) {
@@ -1382,20 +1545,19 @@
                     goals = Math.round(matchesPlayed * 0.30 * perfFactor);
                     assists = Math.round(matchesPlayed * 0.50 * perfFactor);
                 } else if (careerState.position === 'DEF') {
-                    goals = Math.round(matchesPlayed * 0.10 * perfFactor);
+                    goals = Math.round(matchesPlayed * 0.11 * perfFactor);
                     assists = Math.round(matchesPlayed * 0.15 * perfFactor);
-                    cleanSheets = Math.round(matchesPlayed * 0.36 * ((team.ovr + mystique.bonusPct * 0.3) / 75));
+                    cleanSheets = Math.round(matchesPlayed * 0.36);
                 } else if (careerState.position === 'ARQ') {
                     goals = Math.random() < 0.04 ? 1 : 0;
                     assists = Math.random() < 0.12 ? 1 : 0;
-                    cleanSheets = Math.round(matchesPlayed * 0.44 * ((team.ovr + mystique.bonusPct * 0.3) / 75));
+                    cleanSheets = Math.round(matchesPlayed * 0.44);
                 }
             }
 
-            const rawRating = isSuspended ? 0 : (6.5 + (playedRatio * 1.1) + ((goals * 0.12 + assists * 0.09 + cleanSheets * 0.1) / Math.max(1, matchesPlayed)) * 2.3 + (Math.random() * 0.4 - 0.2));
-            const avgRating = isSuspended ? 'SUSP' : Number(Math.min(9.8, Math.max(6.0, rawRating)).toFixed(1));
+            const rawRating = isSuspended ? 0 : (6.4 + (playedRatio * 1.1) + ((goals * 0.12 + assists * 0.09 + cleanSheets * 0.1) / Math.max(1, matchesPlayed)) * 2.4 + (Math.random() * 0.4 - 0.2));
+            const avgRating = isSuspended ? 'BAJA' : Number(Math.min(9.8, Math.max(5.8, rawRating)).toFixed(1));
 
-            // 2. Progresión siempre ascendente (+1 mínimo)
             let ovrDelta = 1;
             if (careerState.isProdigy) {
                 ovrDelta = Number(avgRating) >= 7.8 ? 4 : 3;
@@ -1405,15 +1567,14 @@
                 else if (careerState.ovr < 66 && Math.random() < 0.55) ovrDelta = 2;
                 else ovrDelta = 1;
             }
-            if (isSuspended) ovrDelta = 1;
+            if (isSuspended) ovrDelta = 0;
 
             const oldOvr = careerState.ovr;
             careerState.ovr = Math.min(96, careerState.ovr + ovrDelta);
             const actualOvrDelta = careerState.ovr - oldOvr;
 
-            // 3. Torneos Universitarios
             const semesterTrophies = [];
-            let promoted = false, relegated = false;
+            let promoted = false, relegated = false, promotedToDiv = null;
 
             const divTeams = isFemale ? db : db.filter(t => Number(t.division) === div);
             const leagueStandings = simulateTournamentRanking(divTeams, team.code, careerState.ovr, playedRatio, false, teamBoost);
@@ -1425,14 +1586,40 @@
                 leagueSummaryText = `1ª Rueda: #${leaguePosition}`;
             } else {
                 leagueSummaryText = `Final Liga: #${leaguePosition}`;
+
+                const avgOvrDiv1 = maleTeamsDB.filter(t => Number(t.division) === 1).reduce((a, b) => a + b.ovr, 0) / Math.max(1, maleTeamsDB.filter(t => Number(t.division) === 1).length);
+                const avgOvrDiv2 = maleTeamsDB.filter(t => Number(t.division) === 2).reduce((a, b) => a + b.ovr, 0) / Math.max(1, maleTeamsDB.filter(t => Number(t.division) === 2).length);
+                const targetDivAvg = div === 1 ? avgOvrDiv1 : avgOvrDiv2;
+                const isBelowDivisionAvg = team.ovr < (targetDivAvg - 1.5);
+
                 if (leaguePosition === 1) {
                     const divTitle = isFemale ? 'Campeona Intercarreras Femenino UFRO' : `Campeón Intercarreras (${getDivisionLabel(div, 'M')})`;
                     semesterTrophies.push({ type: 'LEAGUE', division: div, title: divTitle, teamName: team.name, teamCode: team.code, year, sem });
-                    if (!isFemale && (div === 3 || div === 2)) { team.division = div - 1; promoted = true; }
+                    team.ovr = Math.min(89, team.ovr + 2);
+                    if (!isFemale && (div === 3 || div === 2)) {
+                        team.division = div - 1;
+                        promoted = true;
+                        promotedToDiv = team.division;
+                    }
                 } else if (!isFemale && leaguePosition === 2 && (div === 3 || div === 2) && Math.random() < 0.55) {
-                    team.division = div - 1; promoted = true;
-                } else if (!isFemale && leaguePosition >= Math.max(5, divTeams.length - 1) && (div === 1 || div === 2) && Math.random() < 0.35) {
-                    team.division = div + 1; relegated = true;
+                    team.division = div - 1;
+                    promoted = true;
+                    promotedToDiv = team.division;
+                    team.ovr = Math.min(89, team.ovr + 1);
+                } else if (!isFemale && (div === 1 || div === 2)) {
+                    const relegationZone = leaguePosition >= Math.max(4, divTeams.length - 1);
+                    const relegationChance = isBelowDivisionAvg
+                        ? (relegationZone ? 0.85 : 0.45)
+                        : (relegationZone ? 0.30 : 0.05);
+
+                    if (Math.random() < relegationChance) {
+                        team.division = div + 1;
+                        relegated = true;
+                    }
+                }
+
+                if (leaguePosition <= 3) {
+                    team.ovr = Math.min(89, team.ovr + 1);
                 }
             }
 
@@ -1450,6 +1637,7 @@
                     if (facPos === 1) {
                         facultyCupResult = '🏆 Campeón Copa Facultad (Clasificado a Interfacultades)';
                         careerState.interfacultadesQualified = true;
+                        team.ovr = Math.min(89, team.ovr + 1);
                         semesterTrophies.push({ type: 'FACULTY', title: `Copa Facultad ${team.faculty.split('(')[0].trim()}`, teamName: team.name, teamCode: team.code, year, sem });
                     } else if (facPos === 2) {
                         facultyCupResult = 'Subcampeón Copa Facultad';
@@ -1476,6 +1664,7 @@
 
                     if (interPos === 1) {
                         interfacultadesResult = '🌍 ¡CAMPEÓN TORNEO INTERFACULTADES!';
+                        team.ovr = Math.min(89, team.ovr + 2);
                         semesterTrophies.push({ type: 'INTERFACULTADES', title: 'Torneo Interfacultades UFRO', teamName: team.name, teamCode: team.code, year, sem });
                     } else if (interPos === 2) {
                         interfacultadesResult = '🥈 Subcampeón Interfacultades';
@@ -1490,9 +1679,11 @@
                 careerState.interfacultadesQualified = false;
             }
 
-            // 4. SELECCIÓN UFRO
             let ufroSelectionInfo = null;
             if (!isSuspended && careerState.ovr >= 76) {
+                if (!careerState.ufroCitations) careerState.ufroCitations = [];
+                careerState.ufroCitations.push({ year, sem, label: `Año ${year} S${sem}` });
+
                 const ufroMatches = sem === 1 ? 4 : 6;
                 const ufroG = careerState.position === 'DEL' ? Math.round(ufroMatches * 0.5) : careerState.position === 'MED' ? Math.round(ufroMatches * 0.25) : 0;
                 const ufroA = careerState.position === 'MED' ? Math.round(ufroMatches * 0.45) : Math.round(ufroMatches * 0.2);
@@ -1539,7 +1730,6 @@
                 }
             }
 
-            // Guardar estadísticas e historial
             careerState.stats.matches += matchesPlayed;
             careerState.stats.goals += goals;
             careerState.stats.assists += assists;
@@ -1553,7 +1743,7 @@
                 ovrAfter: careerState.ovr, ovrDelta: actualOvrDelta,
                 matches: matchesPlayed, goals, assists, cleanSheets, avgRating,
                 leaguePosition, leagueSummaryText,
-                promoted, relegated,
+                promoted, promotedToDiv, relegated,
                 facultyCupResult, interfacultadesResult, ufroSelectionInfo,
                 trophies: semesterTrophies,
                 suspended: isSuspended
@@ -1570,8 +1760,8 @@
             saveCareerState();
             renderApp();
 
-            if (semesterTrophies.length > 0) {
-                openCelebrationModal(semesterTrophies, year, sem);
+            if (semesterTrophies.length > 0 || promoted) {
+                openCelebrationModal(semesterTrophies, year, sem, promoted ? { teamName: team.name, newDiv: promotedToDiv } : null);
             }
         }
 
@@ -1590,103 +1780,62 @@
         }
 
         // =========================================================================
-        // 8. MERCADO DE PASES (EXCLUYE EQUIPOS ANTERIORES + MUESTRA CARRERA)
-        // =========================================================================
-        function generateTransferOffers() {
-            const db = getActiveDB();
-            const currentTeam = findTeamByCode(careerState.teamCode);
-            const pastCodes = careerState.pastTeamCodes || [currentTeam.code];
-            const pOvr = careerState.ovr;
-
-            let candidates = db.filter(t =>
-                !pastCodes.includes(t.code) &&
-                t.ovr <= pOvr + 11 &&
-                t.ovr >= pOvr - 12
-            );
-
-            if (candidates.length < 3) {
-                candidates = db.filter(t => !pastCodes.includes(t.code));
-            }
-
-            return candidates
-                .map(t => ({ team: t, sortKey: Math.abs(t.ovr - (pOvr + 2)) + Math.random() * 8 }))
-                .sort((a, b) => a.sortKey - b.sortKey)
-                .slice(0, 3)
-                .map(i => i.team.code);
-        }
-
-        function resolveTransferDecision(chosenCode) {
-            const chosen = findTeamByCode(chosenCode);
-            if (!chosen) return;
-
-            const changed = chosen.code !== careerState.teamCode;
-            careerState.teamCode = chosen.code;
-
-            if (!careerState.pastTeamCodes) careerState.pastTeamCodes = [];
-            if (!careerState.pastTeamCodes.includes(chosen.code)) {
-                careerState.pastTeamCodes.push(chosen.code);
-            }
-
-            careerState.pendingOffers = [];
-
-            if (careerState.currentSemester === 1) {
-                careerState.currentSemester = 2;
-            } else {
-                careerState.currentSemester = 1;
-                careerState.currentYear += 1;
-            }
-
-            careerState.phase = 'PLAY_SEMESTER';
-            saveCareerState();
-            renderApp();
-
-            if (changed) showToast(`Fichaste por ${chosen.name} (${chosen.career})`, 'success');
-        }
-
-        function extendUniversityCareer(extraYears, label) {
-            if (careerState.extensionUsed + extraYears > 2) return;
-            careerState.extensionUsed += extraYears;
-            careerState.maxYears += extraYears;
-            careerState.pendingOffers = generateTransferOffers();
-            careerState.phase = 'TRANSFER_MARKET';
-            saveCareerState();
-            renderApp();
-            showToast(`Carrera extendida +${extraYears} año(s) (${label})`, 'success');
-        }
-
-        function graduateAndRetire() {
-            careerState.phase = 'RETIRED';
-            saveCareerState();
-            renderApp();
-            switchTab('palmares');
-            showToast('¡Carrera universitaria completada!', 'success');
-        }
-
-        // =========================================================================
-        // 9. ANIMACIÓN DE CELEBRACIÓN DE TÍTULOS + CONFETI
+        // 9. ANIMACIÓN DE CELEBRACIÓN DE TÍTULOS Y ASCENSOS + CONFETI
         // =========================================================================
         let confettiAnimId = null;
 
-        function openCelebrationModal(trophies, year, sem) {
+        function openCelebrationModal(trophies, year, sem, promotionInfo = null) {
             const modal = document.getElementById('trophy-celebration-modal');
+            const iconEl = document.getElementById('modal-trophy-icon');
+            const badgeEl = document.getElementById('modal-trophy-badge');
             const heading = document.getElementById('modal-trophy-heading');
             const sub = document.getElementById('modal-trophy-sub');
             const list = document.getElementById('modal-trophy-list');
 
-            heading.textContent = trophies.length > 1
-                ? `¡${trophies.length} Títulos Conquistados!`
-                : '¡Título Conquistado!';
+            if (promotionInfo && trophies.length === 0) {
+                iconEl.textContent = '🚀';
+                badgeEl.textContent = '¡Ascenso de División!';
+                heading.textContent = `¡Ascendiste a ${getDivisionLabel(promotionInfo.newDiv, 'M')}!`;
+            } else if (promotionInfo && trophies.length > 0) {
+                iconEl.textContent = '🏆';
+                badgeEl.textContent = '¡Campeón y Ascenso!';
+                heading.textContent = `¡Título y Ascenso a ${getDivisionLabel(promotionInfo.newDiv, 'M')}!`;
+            } else {
+                iconEl.textContent = '🏆';
+                badgeEl.textContent = '¡Nuevo Título UFRO!';
+                heading.textContent = trophies.length > 1
+                    ? `¡${trophies.length} Títulos Conquistados!`
+                    : '¡Título Conquistado!';
+            }
+
             sub.textContent = `Año ${year} · Semestre ${sem} · ${careerState.playerName}`;
 
-            list.innerHTML = trophies.map(t => `
-                <div class="p-3.5 rounded-2xl surface-sub border-[#717fff]/40 flex items-center gap-3">
-                    <span class="text-2xl">🏆</span>
-                    <div>
-                        <div class="font-black text-white text-sm">${t.title}</div>
-                        <div class="text-xs text-[#a3adff]">${t.teamName}</div>
+            const itemsHtml = [];
+            if (promotionInfo) {
+                itemsHtml.push(`
+                    <div class="p-3.5 rounded-2xl bg-[#717fff]/20 border border-[#717fff]/50 flex items-center gap-3">
+                        <span class="text-2xl">⬆️</span>
+                        <div>
+                            <div class="font-black text-white text-sm">Ascenso a ${getDivisionLabel(promotionInfo.newDiv, 'M')}</div>
+                            <div class="text-xs text-[#d0d5ff]">${promotionInfo.teamName} sube de categoría</div>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `);
+            }
+
+            trophies.forEach(t => {
+                itemsHtml.push(`
+                    <div class="p-3.5 rounded-2xl surface-sub border-[#717fff]/40 flex items-center gap-3">
+                        <span class="text-2xl">🏆</span>
+                        <div>
+                            <div class="font-black text-white text-sm">${t.title}</div>
+                            <div class="text-xs text-[#a3adff]">${t.teamName}</div>
+                        </div>
+                    </div>
+                `);
+            });
+
+            list.innerHTML = itemsHtml.join('');
 
             modal.classList.remove('hidden');
             startConfetti();
@@ -1743,40 +1892,102 @@
         }
 
         // =========================================================================
-        // 10. NAVEGACIÓN Y RENDERIZADO DE INTERFAZ
+        // 10. RENDERIZADO DE INTERFAZ Y LEGADO CREATIVO POR EQUIPO
         // =========================================================================
-        function switchTab(tabName) {
-            ['carrera', 'palmares'].forEach(t => {
-                document.getElementById(`view-${t}`).classList.add('hidden');
-                const btn = document.getElementById(`nav-${t}`);
-                btn.classList.remove('bg-[#717fff]', 'text-white');
-                btn.classList.add('text-gray-400', 'hover:text-white');
+        function computeCreativeLegacyBanner() {
+            const isFem = careerState.gender === 'F';
+            const clubMap = new Map();
+
+            (careerState.history || []).forEach(h => {
+                if (!clubMap.has(h.teamCode)) {
+                    clubMap.set(h.teamCode, {
+                        teamCode: h.teamCode,
+                        teamName: h.teamName,
+                        careerName: h.careerName,
+                        semesters: 0,
+                        titles: 0,
+                        goals: 0,
+                        assists: 0,
+                        cleanSheets: 0
+                    });
+                }
+                const entry = clubMap.get(h.teamCode);
+                entry.semesters += 1;
+                entry.goals += h.goals || 0;
+                entry.assists += h.assists || 0;
+                entry.cleanSheets += h.cleanSheets || 0;
+                const clubTrophies = (h.trophies || []).filter(t => t.type !== 'SELECCION');
+                entry.titles += clubTrophies.length;
             });
 
-            document.getElementById(`view-${tabName}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`nav-${tabName}`);
-            activeBtn.classList.add('bg-[#717fff]', 'text-white');
-            activeBtn.classList.remove('text-gray-400', 'hover:text-white');
+            const clubs = Array.from(clubMap.values());
+            if (clubs.length === 0) {
+                const cur = findTeamByCode(careerState.teamCode);
+                return {
+                    badge: isFem ? 'Egresada UFRO' : 'Egresado UFRO',
+                    headline: `Promesa de ${cur.name}`,
+                    subline: `${careerState.studiedCareer || cur.career} · ${careerState.history.length} Semestres disputados`
+                };
+            }
 
-            if (tabName === 'palmares') renderPalmaresView();
+            // Elegir el equipo más emblemático según títulos obtenidos, tiempo jugado y aporte
+            clubs.sort((a, b) => {
+                const scoreA = (a.titles * 12) + (a.semesters * 3) + a.goals + a.assists + a.cleanSheets;
+                const scoreB = (b.titles * 12) + (b.semesters * 3) + b.goals + b.assists + b.cleanSheets;
+                return scoreB - scoreA;
+            });
+
+            const best = clubs[0];
+            let headline = '';
+            let badge = '';
+
+            if (best.titles >= 6) {
+                badge = '👑 Máxima Leyenda';
+                headline = isFem ? `La GOAT de ${best.teamName}` : `El GOAT de ${best.teamName}`;
+            } else if (best.titles >= 4) {
+                badge = '🏆 Emblema Absoluto';
+                headline = isFem ? `Eterna Capitana de ${best.teamName}` : `Histórico de ${best.teamName}`;
+            } else if (best.titles >= 2) {
+                badge = '⭐ Figura Inolvidable';
+                headline = isFem ? `Ídola de ${best.teamName}` : `Ídolo de ${best.teamName}`;
+            } else if (best.titles === 1) {
+                badge = '🎖️ Campeón Universitario';
+                headline = isFem ? `Referente de ${best.teamName}` : `Referente de ${best.teamName}`;
+            } else if (best.semesters >= 6) {
+                badge = '🛡️ Lealtad Total';
+                headline = isFem ? `Incombustible de ${best.teamName}` : `Incombustible de ${best.teamName}`;
+            } else {
+                badge = '🎓 Carrera Completada';
+                headline = isFem ? `Exjugadora de ${best.teamName}` : `Exjugador de ${best.teamName}`;
+            }
+
+            const detailParts = [
+                `${best.semesters} ${best.semesters === 1 ? 'semestre' : 'semestres'} en el club`,
+                best.titles > 0 ? `${best.titles} ${best.titles === 1 ? 'título' : 'títulos'} conquistados` : null,
+                careerState.trophies.length > 0 ? `${careerState.trophies.length} títulos totales en tu carrera` : null
+            ].filter(Boolean);
+
+            return {
+                badge,
+                headline,
+                subline: detailParts.join(' · ')
+            };
         }
 
         function renderApp() {
             const creationScreen = document.getElementById('creation-screen');
             const activeScreen = document.getElementById('active-career-screen');
-            const mainNav = document.getElementById('main-nav');
 
             if (!careerState) {
                 creationScreen.classList.remove('hidden');
                 activeScreen.classList.add('hidden');
-                mainNav.classList.add('hidden');
                 return;
             }
 
             creationScreen.classList.add('hidden');
             activeScreen.classList.remove('hidden');
-            mainNav.classList.remove('hidden');
 
+            const isRetired = careerState.phase === 'RETIRED';
             const team = findTeamByCode(careerState.teamCode);
             const role = getPlayingRoleProjection(careerState.ovr, team.ovr);
 
@@ -1785,7 +1996,7 @@
             document.getElementById('hud-name').textContent = careerState.playerName;
 
             const ovrBox = document.getElementById('hud-ovr-box');
-            ovrBox.className = `w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg ${
+            ovrBox.className = `w-14 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg ${
                 careerState.ovr >= 82
                     ? 'bg-gradient-to-br from-[#8b96ff] to-[#717fff] text-white'
                     : careerState.ovr >= 72
@@ -1800,18 +2011,23 @@
             if (careerState.isProdigy) starBadge.classList.remove('hidden');
             else starBadge.classList.add('hidden');
 
-            document.getElementById('hud-career-info').innerHTML = `<strong class="text-white">${team.name}</strong> · <span class="text-[#8b96ff]">${team.career}</span>`;
-            document.getElementById('hud-faculty-info').textContent = `${team.faculty} · ${getDivisionLabel(team.division, careerState.gender)} (OVR ${team.ovr})`;
+            const restartBtn = document.getElementById('hud-restart-btn');
+            if (isRetired) restartBtn.classList.add('hidden');
+            else restartBtn.classList.remove('hidden');
+
+            document.getElementById('hud-career-info').innerHTML = `<strong class="text-white">${team.name}</strong> · <span class="text-[#8b96ff] font-semibold">${getDivisionLabel(team.division, careerState.gender)}</span>`;
 
             const totalSem = careerState.maxYears * 2;
             const doneSem = careerState.history.length;
             const pct = Math.min(100, Math.round((doneSem / totalSem) * 100));
 
-            document.getElementById('hud-timeline-label').textContent = careerState.phase === 'RETIRED'
-                ? 'Leyenda Egresada UFRO'
+            document.getElementById('hud-timeline-label').textContent = isRetired
+                ? 'Carrera Universitaria Finalizada'
                 : `Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}`;
-            document.getElementById('hud-timeline-sub').textContent = `Sem ${Math.min(totalSem, doneSem + 1)} / ${totalSem}`;
-            document.getElementById('hud-progress-bar').style.width = `${Math.max(8, pct)}%`;
+            document.getElementById('hud-timeline-sub').textContent = isRetired
+                ? `${doneSem} Semestres jugados`
+                : `Sem ${Math.min(totalSem, doneSem + 1)} / ${totalSem}`;
+            document.getElementById('hud-progress-bar').style.width = `${isRetired ? 100 : Math.max(8, pct)}%`;
 
             document.getElementById('stat-total-matches').textContent = careerState.stats.matches;
             if (careerState.position === 'ARQ') {
@@ -1838,8 +2054,23 @@
                 </span>
             `;
 
+            const newCareerBar = document.getElementById('retired-new-career-bar');
+            const activeTimelineWrap = document.getElementById('active-timeline-wrapper');
+            const retiredSummarySec = document.getElementById('retired-summary-section');
+
             renderActionPanel(team);
-            renderTimeline();
+
+            if (isRetired) {
+                newCareerBar.classList.remove('hidden');
+                activeTimelineWrap.classList.add('hidden');
+                retiredSummarySec.classList.remove('hidden');
+                renderPalmaresView();
+            } else {
+                newCareerBar.classList.add('hidden');
+                activeTimelineWrap.classList.remove('hidden');
+                retiredSummarySec.classList.add('hidden');
+                renderTimeline();
+            }
         }
 
         function renderActionPanel(team) {
@@ -1848,6 +2079,7 @@
             // 1. SIMULAR SEMESTRE
             if (careerState.phase === 'PLAY_SEMESTER') {
                 const isS2 = careerState.currentSemester === 2;
+                const isInjuredOut = (careerState.forcedOutSemesters || 0) > 0;
                 const ufroCompLabel = isS2
                     ? (careerState.fenaudeQualified ? 'LDES · Univerciudad · Nacional FENAUDE' : 'LDES · Univerciudad')
                     : 'Clasificatorio CNU';
@@ -1857,17 +2089,21 @@
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="text-xs font-extrabold uppercase text-[#8b96ff]">Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}</span>
-                                ${isS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">🌍 Final Intercarreras + Interfacultades</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#151515] text-gray-300 border border-[#2b2b2b]">🏆 Copa Facultad + 1ª Rueda</span>'}
+                                ${isInjuredOut
+                                    ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/35">🏥 En rehabilitación por lesión anual</span>'
+                                    : isS2
+                                        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">🌍 Final Intercarreras + Interfacultades</span>'
+                                        : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#151515] text-gray-300 border border-[#2b2b2b]">🏆 Copa Facultad + 1ª Rueda</span>'}
                             </div>
                             <h3 class="text-lg font-black text-white mt-1">
-                                ${isS2 ? 'Cierre Anual Intercarreras + Interfacultades' : 'Copa de Facultad + Inicio Intercarreras'}
+                                ${isInjuredOut ? 'Semestre en Recuperación Médica' : isS2 ? 'Cierre Anual Intercarreras + Interfacultades' : 'Copa de Facultad + Inicio Intercarreras'}
                             </h3>
                             <p class="text-xs text-gray-400 mt-0.5">
                                 Selección UFRO: <span class="text-gray-200 font-semibold">${ufroCompLabel}</span>
                             </p>
                         </div>
                         <button onclick="triggerPlaySemester()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition transform active:scale-95">
-                            ▶ Jugar Semestre ${careerState.currentSemester}
+                            ${isInjuredOut ? `⏭ Avanzar Rehabilitación S${careerState.currentSemester}` : `▶ Jugar Semestre ${careerState.currentSemester}`}
                         </button>
                     </div>
                 `;
@@ -1878,7 +2114,28 @@
                 const res = careerState.eventResult;
 
                 if (!res) {
-                    if (ev.type === 'ACADEMIC_FAIL') {
+                    if (ev.type === 'INJURY_EVENT') {
+                        panel.innerHTML = `
+                            <div class="animate-pop space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                                        ${ev.badge}
+                                    </span>
+                                    <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
+                                </div>
+                                <div class="p-4 rounded-xl bg-rose-950/25 border border-rose-500/30 space-y-1.5">
+                                    <h3 class="text-lg sm:text-xl font-black text-white">${ev.title}</h3>
+                                    <p class="text-sm text-gray-300">${ev.desc}</p>
+                                    <div class="pt-1 text-xs font-bold text-rose-300">
+                                        ⏳ Tiempo estimado de baja: ${ev.injurySemesters === 2 ? 'Año completo (2 semestres)' : '1 semestre'}
+                                    </div>
+                                </div>
+                                <button onclick="continueAfterEvent()" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-extrabold text-sm transition">
+                                    Iniciar recuperación médica →
+                                </button>
+                            </div>
+                        `;
+                    } else if (ev.type === 'ACADEMIC_FAIL') {
                         panel.innerHTML = `
                             <div class="animate-pop space-y-4">
                                 <div class="flex items-center justify-between">
@@ -1891,11 +2148,11 @@
                                     <h3 class="text-lg sm:text-xl font-black text-white">${ev.title}</h3>
                                     <p class="text-sm text-gray-300">${ev.desc}</p>
                                     <div class="pt-1 text-xs font-bold text-amber-300">
-                                        📅 Nueva duración de carrera: ${careerState.maxYears} años (${careerState.maxYears * 2} semestres) · Cupo Magíster intacto
+                                        📅 Nueva duración regular: ${careerState.maxYears} años (${careerState.maxYears * 2} semestres)
                                     </div>
                                 </div>
                                 <button onclick="continueAfterEvent()" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-extrabold text-sm transition">
-                                    Asumir el ramo y continuar semestre →
+                                    Continuar Semestre →
                                 </button>
                             </div>
                         `;
@@ -2009,7 +2266,7 @@
                                     <span class="text-[10px] font-bold uppercase text-[#8b96ff]">Club Actual</span>
                                     <div class="font-extrabold text-white text-sm mt-0.5">${team.name}</div>
                                     <div class="text-[11px] text-[#a3adff] font-medium mt-0.5">${team.career}</div>
-                                    <div class="text-[11px] text-gray-500 mt-0.5">${getDivisionLabel(team.division, careerState.gender)} · OVR ${team.ovr}</div>
+                                    <div class="text-[11px] text-gray-500 mt-0.5">${getDivisionLabel(team.division, careerState.gender)}</div>
                                     <span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded font-bold ${stayRole.badgeClass}">${stayRole.label}</span>
                                 </div>
                                 <button onclick="resolveTransferDecision('${team.code}')" class="w-full py-2 rounded-lg bg-[#717fff] hover:bg-[#828eff] text-white text-xs font-bold transition">
@@ -2025,7 +2282,7 @@
                                             <span class="text-[10px] font-bold uppercase text-gray-400">Oferta Fichaje</span>
                                             <div class="font-extrabold text-white text-sm mt-0.5">${o.name}</div>
                                             <div class="text-[11px] text-[#8b96ff] font-medium mt-0.5">${o.career}</div>
-                                            <div class="text-[11px] text-gray-500 mt-0.5">${getDivisionLabel(o.division, careerState.gender)} · OVR ${o.ovr}</div>
+                                            <div class="text-[11px] text-gray-500 mt-0.5">${getDivisionLabel(o.division, careerState.gender)}</div>
                                             <span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded font-bold ${oRole.badgeClass}">${oRole.label}</span>
                                         </div>
                                         <button onclick="resolveTransferDecision('${o.code}')" class="w-full py-2 rounded-lg bg-[#222222] hover:bg-[#717fff] text-white text-xs font-bold border border-[#303030] transition">
@@ -2055,17 +2312,21 @@
                     </div>
                 `;
             }
-            // 5. EGRESADO
+            // 5. EGRESADO (CONSIGNA CREATIVA DEL EQUIPO EMBLEMÁTICO)
             else if (careerState.phase === 'RETIRED') {
+                const legacy = computeCreativeLegacyBanner();
                 panel.innerHTML = `
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
-                            <h3 class="text-lg font-black text-[#8b96ff]">🎓 ¡Leyenda Egresada UFRO!</h3>
-                            <p class="text-xs text-gray-300">Media Final: <strong>${careerState.ovr}</strong> · Títulos: <strong>${careerState.trophies.length}</strong></p>
+                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35 mb-1.5">
+                                ${legacy.badge}
+                            </span>
+                            <h3 class="text-xl sm:text-2xl font-black text-white">${legacy.headline}</h3>
+                            <p class="text-xs text-gray-400 mt-1">${legacy.subline}</p>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="switchTab('palmares')" class="px-4 py-2.5 rounded-xl bg-[#717fff] text-white font-black text-xs">Ver Resumen</button>
-                            <button onclick="resetCareer()" class="px-4 py-2.5 rounded-xl bg-[#151515] text-gray-300 border border-[#2b2b2b] font-bold text-xs">Nueva Carrera</button>
+                        <div class="sm:text-right shrink-0 surface-sub px-4 py-2.5 rounded-xl">
+                            <div class="text-[10px] uppercase font-bold text-gray-500">Media Final</div>
+                            <div class="text-2xl font-black text-[#8b96ff]">${careerState.ovr}</div>
                         </div>
                     </div>
                 `;
@@ -2137,7 +2398,7 @@
         }
 
         // =========================================================================
-        // 11. RESUMEN SIMPLIFICADO POR ETAPA + VER CARRERA COMPLETA
+        // 11. RESUMEN SIMPLIFICADO POR ETAPA + SELECCIÓN UFRO SEPARADA
         // =========================================================================
         function buildChronologicalClubStints() {
             if (!careerState || !careerState.history || careerState.history.length === 0) return [];
@@ -2145,12 +2406,13 @@
             const stints = [];
 
             chronological.forEach(h => {
+                const clubOnlyTrophies = (h.trophies || []).filter(t => t.type !== 'SELECCION');
                 const last = stints[stints.length - 1];
                 if (last && last.teamCode === h.teamCode) {
                     last.semesters += 1;
                     last.endLabel = `Año ${h.year} S${h.sem}`;
-                    if (h.trophies && h.trophies.length > 0) {
-                        last.trophies.push(...h.trophies);
+                    if (clubOnlyTrophies.length > 0) {
+                        last.trophies.push(...clubOnlyTrophies);
                     }
                 } else {
                     stints.push({
@@ -2160,7 +2422,7 @@
                         semesters: 1,
                         startLabel: `Año ${h.year} S${h.sem}`,
                         endLabel: `Año ${h.year} S${h.sem}`,
-                        trophies: h.trophies ? [...h.trophies] : []
+                        trophies: [...clubOnlyTrophies]
                     });
                 }
             });
@@ -2203,49 +2465,28 @@
             const btn = document.getElementById('btn-toggle-full-career');
             if (showFullHistoryFlag) {
                 box.classList.remove('hidden');
-                btn.textContent = 'Ocultar carrera completa ↑';
+                btn.textContent = 'Ocultar detalle por semestre ↑';
             } else {
                 box.classList.add('hidden');
-                btn.textContent = 'Ver carrera completa ↓';
+                btn.textContent = 'Ver detalle por semestre ↓';
             }
         }
 
         function renderPalmaresView() {
-            const cardEl = document.getElementById('palmares-player-card');
             const gridEl = document.getElementById('trophies-grid');
+            const ufroCardEl = document.getElementById('ufro-selection-summary-card');
             const stintsEl = document.getElementById('career-stints-list');
             const fullSemEl = document.getElementById('full-career-semesters-list');
 
             if (!careerState) return;
 
-            const team = findTeamByCode(careerState.teamCode);
             const trophies = careerState.trophies || [];
 
             const countInter = trophies.filter(t => t.type === 'INTERFACULTADES').length;
             const countLeague = trophies.filter(t => t.type === 'LEAGUE').length;
             const countFac = trophies.filter(t => t.type === 'FACULTY').length;
-            const countSel = trophies.filter(t => t.type === 'SELECCION').length;
-
-            cardEl.innerHTML = `
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center gap-4">
-                        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#717fff] to-[#98a2ff] flex flex-col items-center justify-center shadow-xl">
-                            <span class="text-[10px] font-bold uppercase text-white/80">MEDIA</span>
-                            <span class="text-3xl font-black text-white">${careerState.ovr}</span>
-                            <span class="text-[11px] font-bold text-white/90">${careerState.position}</span>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-black text-white">${careerState.playerName}</h3>
-                            <p class="text-xs text-gray-400 mt-0.5">${team.name} · ${careerState.history.length} Semestres · ${careerState.stats.matches} PJ</p>
-                            <p class="text-xs text-[#8b96ff] mt-0.5">🇨🇱 Selección UFRO: ${careerState.ufroStats.matches} PJ · ${careerState.ufroStats.goals} G · ${careerState.ufroStats.assists} A</p>
-                        </div>
-                    </div>
-                    <div class="text-center surface-sub px-5 py-3 rounded-xl">
-                        <div class="text-2xl font-black text-[#8b96ff]">${trophies.length}</div>
-                        <div class="text-[10px] font-bold uppercase text-gray-500">Títulos Totales</div>
-                    </div>
-                </div>
-            `;
+            const ufroTrophies = trophies.filter(t => t.type === 'SELECCION');
+            const countSel = ufroTrophies.length;
 
             const cats = [
                 { icon: '🌍', title: 'Interfacultades', count: countInter },
@@ -2264,9 +2505,53 @@
                 </div>
             `).join('');
 
+            const citations = careerState.ufroCitations || [];
+            if (citations.length === 0 && ufroTrophies.length === 0) {
+                ufroCardEl.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-black uppercase tracking-wider text-white">🇨🇱 Selección Universitaria UFRO</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">No registraste convocatorias a la selección institucional (requería Media 76+).</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const firstCit = citations[0] ? citations[0].label : `Año ${ufroTrophies[0].year} S${ufroTrophies[0].sem}`;
+                const lastCit = citations[citations.length - 1] ? citations[citations.length - 1].label : `Año ${ufroTrophies[ufroTrophies.length - 1].year} S${ufroTrophies[ufroTrophies.length - 1].sem}`;
+                const periodText = citations.length > 1 ? `${firstCit} → ${lastCit} (${citations.length} semestres citado)` : `${firstCit} (1 semestre citado)`;
+
+                const ufroGrouped = new Map();
+                ufroTrophies.forEach(t => {
+                    const cleanName = t.title.replace(' (Sel. UFRO)', '');
+                    ufroGrouped.set(cleanName, (ufroGrouped.get(cleanName) || 0) + 1);
+                });
+                const ufroSummary = ufroGrouped.size > 0
+                    ? Array.from(ufroGrouped.entries()).map(([n, c]) => `${n} x${c}`).join(' · ')
+                    : 'Sin títulos nacionales obtenidos';
+
+                ufroCardEl.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-sm font-black uppercase tracking-wider text-white">🇨🇱 Logros Selección UFRO</h3>
+                                <span class="px-2 py-0.5 rounded bg-[#717fff]/15 text-[11px] font-bold text-[#a3adff] border border-[#717fff]/30">
+                                    ${periodText}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">
+                                Convocatorias: ${citations.map(c => c.label).join(', ')} · ${careerState.ufroStats.matches} PJ (${careerState.ufroStats.goals} G · ${careerState.ufroStats.assists} A)
+                            </p>
+                        </div>
+                        <div class="text-xs font-bold ${ufroGrouped.size > 0 ? 'text-[#a3adff]' : 'text-gray-500'} sm:text-right">
+                            ${ufroGrouped.size > 0 ? `🏆 ${ufroSummary}` : ufroSummary}
+                        </div>
+                    </div>
+                `;
+            }
+
             const stints = buildChronologicalClubStints();
             if (stints.length === 0) {
-                stintsEl.innerHTML = `<p class="text-xs text-gray-500">Aún no has completado semestres en ningún equipo.</p>`;
+                stintsEl.innerHTML = `<p class="text-xs text-gray-500">Sin registros en clubes.</p>`;
             } else {
                 stintsEl.innerHTML = stints.map(st => {
                     const trophiesSummary = summarizeTrophiesGrouped(st.trophies);
@@ -2290,20 +2575,33 @@
                 }).join('');
             }
 
-            fullSemEl.innerHTML = careerState.history.length === 0
+            // Agrupar detalle completo por año para mayor claridad
+            const groupedByYear = {};
+            careerState.history.slice().reverse().forEach(h => {
+                if (!groupedByYear[h.year]) groupedByYear[h.year] = [];
+                groupedByYear[h.year].push(h);
+            });
+
+            const sortedYears = Object.keys(groupedByYear).map(Number).sort((a, b) => a - b);
+            fullSemEl.innerHTML = sortedYears.length === 0
                 ? `<p class="text-xs text-gray-500">Sin registros semestrales.</p>`
-                : careerState.history.slice().reverse().map(h => `
-                    <div class="p-3 rounded-xl bg-[#101010] border border-[#222222] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                        <div>
-                            <span class="font-bold text-[#8b96ff]">Año ${h.year} · S${h.sem}</span> — <strong class="text-white">${h.teamName}</strong> <span class="text-gray-500">(${h.careerName})</span>
-                            <div class="text-[11px] text-gray-400 mt-0.5">
-                                PJ: ${h.matches} · G: ${h.goals} · A: ${h.assists} · Nota: ${h.avgRating} · ${h.leagueSummaryText || `Liga #${h.leaguePosition}`}
+                : sortedYears.map(yr => `
+                    <div class="space-y-1.5 pt-1">
+                        <div class="text-[11px] font-black uppercase tracking-wider text-gray-500">Año ${yr}</div>
+                        ${groupedByYear[yr].map(h => `
+                            <div class="p-3 rounded-xl bg-[#101010] border border-[#222222] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                <div>
+                                    <span class="font-bold text-[#8b96ff]">Semestre ${h.sem}</span> — <strong class="text-white">${h.teamName}</strong> <span class="text-gray-500">(${h.careerName})</span>
+                                    <div class="text-[11px] text-gray-400 mt-0.5">
+                                        PJ: ${h.matches} · G: ${h.goals} · A: ${h.assists} · Nota: ${h.avgRating} · ${h.leagueSummaryText || `Liga #${h.leaguePosition}`}
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="px-2 py-0.5 rounded bg-[#1c1c1c] text-white font-bold border border-[#2b2b2b]">OVR ${h.ovrAfter}</span>
+                                    ${h.trophies && h.trophies.length > 0 ? `<div class="text-[11px] text-[#a3adff] font-bold mt-1">🏆 ${h.trophies.map(t => t.title).join(', ')}</div>` : ''}
+                                </div>
                             </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="px-2 py-0.5 rounded bg-[#1c1c1c] text-white font-bold border border-[#2b2b2b]">OVR ${h.ovrAfter}</span>
-                            ${h.trophies && h.trophies.length > 0 ? `<div class="text-[11px] text-[#a3adff] font-bold mt-1">🏆 ${h.trophies.map(t => t.title).join(', ')}</div>` : ''}
-                        </div>
+                        `).join('')}
                     </div>
                 `).join('');
         }
