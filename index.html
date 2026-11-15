@@ -3074,7 +3074,7 @@
             });
         }
 
-        async function renderSummaryPosterCanvas() {
+        async function renderSummaryPosterCanvas(forExport = false) {
             const canvas = document.getElementById('summary-poster-canvas');
             if (!canvas || !careerState) return;
             const ctx = canvas.getContext('2d');
@@ -3096,12 +3096,12 @@
             ctx.fillStyle = '#151515';
             ctx.fillRect(0, 0, W, H);
 
-            // Halo sutil superior en #717fff
-            const topGlow = ctx.createRadialGradient(W / 2, 220, 20, W / 2, 220, 620);
-            topGlow.addColorStop(0, 'rgba(113, 127, 255, 0.14)');
-            topGlow.addColorStop(1, 'rgba(21, 21, 21, 0)');
-            ctx.fillStyle = topGlow;
-            ctx.fillRect(0, 0, W, 850);
+            // Halo sutil centrado en el bloque principal
+            const centerGlow = ctx.createRadialGradient(W / 2, H * 0.34, 30, W / 2, H * 0.34, 720);
+            centerGlow.addColorStop(0, 'rgba(113, 127, 255, 0.13)');
+            centerGlow.addColorStop(1, 'rgba(21, 21, 21, 0)');
+            ctx.fillStyle = centerGlow;
+            ctx.fillRect(0, 0, W, H);
 
             // Borde limpio de tarjeta (#2b2b2b)
             ctx.strokeStyle = '#2b2b2b';
@@ -3118,9 +3118,10 @@
             const headerGap = 20;
             const headerTotalW = logoW + headerGap + titleW;
             const headerStartX = (W - headerTotalW) / 2;
+            const headerTopY = 128;
 
             ctx.save();
-            ctx.translate(headerStartX, 118);
+            ctx.translate(headerStartX, headerTopY);
             ctx.scale(logoScale, logoScale);
             const logoPath = new Path2D('M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z');
             ctx.fillStyle = '#717fff';
@@ -3129,20 +3130,37 @@
 
             ctx.textAlign = 'left';
             ctx.fillStyle = '#ffffff';
-            ctx.fillText(titleText, headerStartX + logoW + headerGap, 168);
+            ctx.fillText(titleText, headerStartX + logoW + headerGap, headerTopY + 50);
 
             // Línea divisoria superior sutil
             ctx.strokeStyle = '#262626';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(110, 224);
-            ctx.lineTo(W - 110, 224);
+            ctx.moveTo(110, 238);
+            ctx.lineTo(W - 110, 238);
             ctx.stroke();
 
+            // CÁLCULO DE ALTURAS PARA CENTRADO VERTICAL EQUILIBRADO ENTRE HEADER Y FOOTER
+            const areaTop = 260;
+            const areaBottom = H - 150;
+            const availableH = areaBottom - areaTop;
+
+            const ovrBoxSize = 216;
+            const gapAfterOvr = 76;
+            const nameBlockH = 124;
+            const gapAfterCareer = 56;
+            const legacyCardH = 276;
+            const gapAfterLegacy = 36;
+            const statBoxH = 154;
+            const gapAfterStats = 36;
+            const logrosH = 400;
+
+            const totalContentH = ovrBoxSize + gapAfterOvr + nameBlockH + gapAfterCareer + legacyCardH + gapAfterLegacy + statBoxH + gapAfterStats + logrosH;
+            const startY = areaTop + Math.max(24, Math.floor((availableH - totalContentH) / 2));
+
             // 3. BLOQUE PRINCIPAL DE IDENTIDAD (OVR + NOMBRE + CARRERA)
-            const ovrBoxSize = 210;
             const ovrBoxX = (W - ovrBoxSize) / 2;
-            const ovrBoxY = 276;
+            const ovrBoxY = startY;
 
             if (isGoat) {
                 const goatGrad = ctx.createLinearGradient(ovrBoxX, ovrBoxY, ovrBoxX + ovrBoxSize, ovrBoxY + ovrBoxSize);
@@ -3152,36 +3170,36 @@
             } else {
                 ctx.fillStyle = '#717fff';
             }
-            drawRoundedRect(ctx, ovrBoxX, ovrBoxY, ovrBoxSize, ovrBoxSize, 42);
+            drawRoundedRect(ctx, ovrBoxX, ovrBoxY, ovrBoxSize, ovrBoxSize, 44);
             ctx.fill();
 
             ctx.textAlign = 'center';
             ctx.fillStyle = isGoat ? 'rgba(69, 26, 3, 0.8)' : 'rgba(255, 255, 255, 0.82)';
             ctx.font = '800 22px Inter, sans-serif';
-            ctx.fillText('MEDIA', W / 2, ovrBoxY + 42);
+            ctx.fillText('MEDIA', W / 2, ovrBoxY + 44);
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = '900 92px Inter, sans-serif';
-            ctx.fillText(String(formatOvr(careerState.ovr)), W / 2, ovrBoxY + 138);
+            ctx.font = '900 94px Inter, sans-serif';
+            ctx.fillText(String(formatOvr(careerState.ovr)), W / 2, ovrBoxY + 142);
 
             ctx.fillStyle = isGoat ? '#451a03' : '#d0d5ff';
             ctx.font = '800 24px Inter, sans-serif';
-            ctx.fillText(`${careerState.position} · ${careerState.gender === 'F' ? 'FEM' : 'MASC'}`, W / 2, ovrBoxY + 182);
+            ctx.fillText(`${careerState.position} · ${careerState.gender === 'F' ? 'FEM' : 'MASC'}`, W / 2, ovrBoxY + 186);
 
             // Nombre completo
+            const nameY = ovrBoxY + ovrBoxSize + gapAfterOvr;
             ctx.fillStyle = '#ffffff';
             ctx.font = '900 62px Inter, sans-serif';
-            const nameLines = drawWrappedText(ctx, careerState.playerName, W / 2, 568, W - 180, 70, 2);
+            const nameLines = drawWrappedText(ctx, careerState.playerName, W / 2, nameY, W - 180, 68, 2);
 
             // Carrera universitaria
-            const careerY = 568 + (nameLines - 1) * 70 + 44;
+            const careerY = nameY + (nameLines - 1) * 68 + 46;
             ctx.fillStyle = '#8b96ff';
             ctx.font = '600 28px Inter, sans-serif';
             const careerLines = drawWrappedText(ctx, careerState.studiedCareer || legacyTeam?.career || 'Universidad de La Frontera', W / 2, careerY, W - 200, 36, 2);
 
             // 4. TARJETA DEL TÍTULO DE LEGADO (Surface #1c1c1c + Borde #2b2b2b)
-            const legacyCardY = careerY + (careerLines - 1) * 36 + 56;
-            const legacyCardH = 264;
+            const legacyCardY = careerY + (careerLines - 1) * 36 + gapAfterCareer;
             const cardX = 96;
             const cardW = W - 192;
 
@@ -3193,38 +3211,48 @@
             ctx.stroke();
 
             // Escudo del club protagonista centrado en la parte superior de la tarjeta
-            const badgeSize = 96;
+            const badgeSize = 100;
             const badgeX = W / 2 - badgeSize / 2;
-            const badgeY = legacyCardY + 26;
+            const badgeY = legacyCardY + 28;
             const logoUrl = legacyTeam ? normalizeLogoUrl(legacyTeam.logo) : '';
             const loadedLogo = await loadImageWithTimeout(logoUrl, 2500);
 
+            let drewExternalImage = false;
             if (loadedLogo) {
                 try {
+                    // Verificar en un canvas auxiliar si el servidor permite exportar sin CORS taint
+                    const probe = document.createElement('canvas');
+                    probe.width = 4;
+                    probe.height = 4;
+                    const pCtx = probe.getContext('2d');
+                    pCtx.drawImage(loadedLogo, 0, 0, 4, 4);
+                    probe.toDataURL('image/png');
+
                     ctx.drawImage(loadedLogo, badgeX, badgeY, badgeSize, badgeSize);
+                    drewExternalImage = true;
                 } catch (e) {
-                    drawCanvasFallbackBadge(ctx, legacyTeam, badgeX, badgeY, badgeSize);
+                    drewExternalImage = false;
                 }
-            } else {
+            }
+            if (!drewExternalImage) {
                 drawCanvasFallbackBadge(ctx, legacyTeam, badgeX, badgeY, badgeSize);
             }
 
             // Rango de legado limpio
             const cleanBadgeLabel = legacy.badge.replace(/[^\p{L}\p{N}\s·-]/gu, '').trim().toUpperCase();
             ctx.fillStyle = '#8b96ff';
-            ctx.font = '800 21px Inter, sans-serif';
-            ctx.fillText(cleanBadgeLabel, W / 2, legacyCardY + 156);
+            ctx.font = '800 22px Inter, sans-serif';
+            ctx.fillText(cleanBadgeLabel, W / 2, legacyCardY + 162);
 
             // Título final obtenido
             ctx.fillStyle = '#f3f4f6';
-            ctx.font = '900 40px Inter, sans-serif';
-            drawWrappedText(ctx, legacy.headline, W / 2, legacyCardY + 208, cardW - 80, 46, 2);
+            ctx.font = '900 42px Inter, sans-serif';
+            drawWrappedText(ctx, legacy.headline, W / 2, legacyCardY + 216, cardW - 80, 48, 2);
 
             // 5. FILA PROPORCIONAL DE 4 ESTADÍSTICAS CLAVE
-            const statsY = legacyCardY + legacyCardH + 34;
+            const statsY = legacyCardY + legacyCardH + gapAfterLegacy;
             const statGap = 18;
             const statBoxW = (cardW - statGap * 3) / 4;
-            const statBoxH = 148;
             const isArq = careerState.position === 'ARQ';
 
             const statItems = [
@@ -3244,17 +3272,16 @@
                 ctx.stroke();
 
                 ctx.fillStyle = st.color;
-                ctx.font = '900 50px Inter, sans-serif';
-                ctx.fillText(String(st.val), bx + statBoxW / 2, statsY + 78);
+                ctx.font = '900 52px Inter, sans-serif';
+                ctx.fillText(String(st.val), bx + statBoxW / 2, statsY + 80);
 
                 ctx.fillStyle = '#6b7280';
                 ctx.font = '800 20px Inter, sans-serif';
-                ctx.fillText(st.label, bx + statBoxW / 2, statsY + 118);
+                ctx.fillText(st.label, bx + statBoxW / 2, statsY + 122);
             });
 
             // 6. BLOQUE MINIMALISTA DE LOGROS Y PALMARÉS
-            const logrosY = statsY + statBoxH + 34;
-            const logrosH = 380;
+            const logrosY = statsY + statBoxH + gapAfterStats;
             ctx.fillStyle = '#1c1c1c';
             drawRoundedRect(ctx, cardX, logrosY, cardW, logrosH, 32);
             ctx.fill();
@@ -3264,8 +3291,8 @@
 
             ctx.textAlign = 'left';
             ctx.fillStyle = '#9ca3af';
-            ctx.font = '800 21px Inter, sans-serif';
-            ctx.fillText('RESUMEN DE LOGROS', cardX + 44, logrosY + 52);
+            ctx.font = '800 22px Inter, sans-serif';
+            ctx.fillText('RESUMEN DE LOGROS', cardX + 44, logrosY + 56);
 
             const trophyRows = [
                 { label: 'Intercarreras UFRO', count: countLeague },
@@ -3276,14 +3303,14 @@
             ];
 
             trophyRows.forEach((row, idx) => {
-                const ry = logrosY + 108 + idx * 54;
+                const ry = logrosY + 116 + idx * 56;
 
                 if (idx > 0) {
                     ctx.strokeStyle = '#262626';
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
-                    ctx.moveTo(cardX + 44, ry - 34);
-                    ctx.lineTo(cardX + cardW - 44, ry - 34);
+                    ctx.moveTo(cardX + 44, ry - 36);
+                    ctx.lineTo(cardX + cardW - 44, ry - 36);
                     ctx.stroke();
                 }
 
@@ -3302,7 +3329,7 @@
             ctx.textAlign = 'center';
             ctx.fillStyle = '#6b7280';
             ctx.font = '700 24px Inter, sans-serif';
-            ctx.fillText('https://leyenda-ufro.vercel.app/', W / 2, H - 102);
+            ctx.fillText('https://leyenda-ufro.vercel.app/', W / 2, H - 96);
         }
 
         function drawCanvasFallbackBadge(ctx, team, x, y, size) {
@@ -3334,25 +3361,52 @@
             const canvas = document.getElementById('summary-poster-canvas');
             if (!canvas || !careerState) return;
 
-            await renderSummaryPosterCanvas();
+            await renderSummaryPosterCanvas(true);
+
+            const safeSlug = careerState.playerName
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '') || 'jugador';
+            const fileName = `leyendas-ufro-${safeSlug}.png`;
 
             try {
-                const safeSlug = careerState.playerName
-                    .toLowerCase()
-                    .normalize('NFD')
-                    .replace(/[\u0300-\u036f]/g, '')
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/^-|-$/g, '') || 'jugador';
+                if (canvas.toBlob) {
+                    canvas.toBlob((blob) => {
+                        if (!blob) {
+                            fallbackDataUrlDownload(canvas, fileName);
+                            return;
+                        }
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.download = fileName;
+                        link.href = url;
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        setTimeout(() => URL.revokeObjectURL(url), 4000);
+                        showToast('📸 ¡Tarjeta descargada en PNG (1080×1920)!', 'success');
+                    }, 'image/png');
+                } else {
+                    fallbackDataUrlDownload(canvas, fileName);
+                }
+            } catch (err) {
+                fallbackDataUrlDownload(canvas, fileName);
+            }
+        }
 
+        function fallbackDataUrlDownload(canvas, fileName) {
+            try {
                 const dataUrl = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
-                link.download = `leyendas-ufro-${safeSlug}.png`;
+                link.download = fileName;
                 link.href = dataUrl;
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
                 showToast('📸 ¡Tarjeta descargada en PNG (1080×1920)!', 'success');
-            } catch (err) {
+            } catch (e) {
                 showToast('No se pudo exportar la imagen. Intenta nuevamente.', 'error');
             }
         }
