@@ -3045,32 +3045,49 @@
                 } else {
                     if (currentLine) lines.push(currentLine);
                     currentLine = word;
+                    if (lines.length >= maxLines) break;
                 }
             }
-            if (currentLine) lines.push(currentLine);
+            if (currentLine && lines.length < maxLines) {
+                lines.push(currentLine);
+            }
 
-            const finalLines = lines.slice(0, maxLines);
-            finalLines.forEach((line, idx) => {
+            lines.forEach((line, idx) => {
                 ctx.fillText(line, centerX, startY + idx * lineHeight);
             });
-            return finalLines.length;
+            return Math.max(1, lines.length);
         }
 
-        function loadImageWithTimeout(url, timeoutMs = 3500) {
+        function loadImageWithTimeout(url, timeoutMs = 4500) {
             return new Promise((resolve) => {
                 if (!url) return resolve(null);
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                let done = false;
-                const finish = (res) => {
-                    if (done) return;
-                    done = true;
-                    resolve(res);
+
+                // Construir candidatos: primero proxy CORS limpio para evitar taint en canvas, luego URL directa
+                const cleanUrl = url.replace(/^https?:\/\//, '');
+                const proxiedUrl = `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}&w=256&h=256&fit=contain&output=png`;
+                const candidates = [proxiedUrl, url];
+
+                let idx = 0;
+                const tryNext = () => {
+                    if (idx >= candidates.length) return resolve(null);
+                    const currentSrc = candidates[idx++];
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    let finished = false;
+                    const done = (res) => {
+                        if (finished) return;
+                        finished = true;
+                        clearTimeout(timer);
+                        if (res) resolve(res);
+                        else tryNext();
+                    };
+                    const timer = setTimeout(() => done(null), timeoutMs);
+                    img.onload = () => done(img);
+                    img.onerror = () => done(null);
+                    img.src = currentSrc;
                 };
-                const timer = setTimeout(() => finish(null), timeoutMs);
-                img.onload = () => { clearTimeout(timer); finish(img); };
-                img.onerror = () => { clearTimeout(timer); finish(null); };
-                img.src = url;
+
+                tryNext();
             });
         }
 
@@ -3211,16 +3228,16 @@
             ctx.stroke();
 
             // Escudo del club protagonista centrado en la parte superior de la tarjeta
-            const badgeSize = 100;
+            const badgeSize = 104;
             const badgeX = W / 2 - badgeSize / 2;
-            const badgeY = legacyCardY + 28;
+            const badgeY = legacyCardY + 26;
             const logoUrl = legacyTeam ? normalizeLogoUrl(legacyTeam.logo) : '';
-            const loadedLogo = await loadImageWithTimeout(logoUrl, 2500);
+            const loadedLogo = await loadImageWithTimeout(logoUrl, 4500);
 
             let drewExternalImage = false;
             if (loadedLogo) {
                 try {
-                    // Verificar en un canvas auxiliar si el servidor permite exportar sin CORS taint
+                    // Verificar en un canvas auxiliar si permite exportar sin CORS taint
                     const probe = document.createElement('canvas');
                     probe.width = 4;
                     probe.height = 4;
@@ -3228,7 +3245,14 @@
                     pCtx.drawImage(loadedLogo, 0, 0, 4, 4);
                     probe.toDataURL('image/png');
 
-                    ctx.drawImage(loadedLogo, badgeX, badgeY, badgeSize, badgeSize);
+                    // Mantener proporción original del escudo dentro del cuadrado de 104x104
+                    const ratio = Math.min(badgeSize / (loadedLogo.naturalWidth || badgeSize), badgeSize / (loadedLogo.naturalHeight || badgeSize));
+                    const drawW = (loadedLogo.naturalWidth || badgeSize) * ratio;
+                    const drawH = (loadedLogo.naturalHeight || badgeSize) * ratio;
+                    const offsetX = badgeX + (badgeSize - drawW) / 2;
+                    const offsetY = badgeY + (badgeSize - drawH) / 2;
+
+                    ctx.drawImage(loadedLogo, offsetX, offsetY, drawW, drawH);
                     drewExternalImage = true;
                 } catch (e) {
                     drewExternalImage = false;
