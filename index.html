@@ -94,7 +94,7 @@
                     <h1 class="text-base sm:text-xl font-black tracking-wider text-white leading-none uppercase">
                         LEYENDAS
                     </h1>
-                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.1.1</span>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.1.2</span>
                 </div>
             </div>
 
@@ -170,65 +170,18 @@
                         <label class="block text-xs font-bold text-gray-400 mb-1.5">Carrera Universitaria UFRO</label>
                         <select id="input-career-select" onchange="updateCareerDurationHint()"
                             class="w-full px-3.5 py-3 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
-                            <optgroup label="🎓 Educación, Cs. Sociales y Humanidades (FECSH)">
-                                <option value="Pedagogía en Educación Física, Deportes y Recreación">Pedagogía en Educación Física, Deportes y Recreación</option>
-                                <option value="Psicología">Psicología</option>
-                                <option value="Trabajo Social">Trabajo Social</option>
-                                <option value="Sociología">Sociología</option>
-                                <option value="Periodismo">Periodismo</option>
-                                <option value="Pedagogía en Castellano y Comunicación">Pedagogía en Castellano y Comunicación</option>
-                                <option value="Pedagogía en Historia, Geografía y Educación Cívica">Pedagogía en Historia, Geografía y Educación Cívica</option>
-                                <option value="Pedagogía en Inglés">Pedagogía en Inglés</option>
-                                <option value="Pedagogía en Ciencias mención Biología, Química o Física">Pedagogía en Ciencias mención Biología, Química o Física</option>
-                                <option value="Pedagogía en Matemática">Pedagogía en Matemática</option>
-                            </optgroup>
-                            <optgroup label="⚙️ Ingeniería y Ciencias (FICA)">
-                                <option value="Ingeniería Civil Industrial">Ingeniería Civil Industrial</option>
-                                <option value="Ingeniería Civil Informática">Ingeniería Civil Informática</option>
-                                <option value="Ingeniería Civil Mecánica">Ingeniería Civil Mecánica</option>
-                                <option value="Ingeniería Civil Electrónica">Ingeniería Civil Electrónica</option>
-                                <option value="Ingeniería Civil Eléctrica">Ingeniería Civil Eléctrica</option>
-                                <option value="Ingeniería Civil Química">Ingeniería Civil Química</option>
-                                <option value="Ingeniería Civil Ambiental">Ingeniería Civil Ambiental</option>
-                                <option value="Ingeniería Civil Matemática">Ingeniería Civil Matemática</option>
-                                <option value="Ingeniería Civil Física">Ingeniería Civil Física</option>
-                                <option value="Ingeniería Civil Telemática">Ingeniería Civil Telemática</option>
-                                <option value="Ingeniería Civil en Biotecnología">Ingeniería Civil en Biotecnología</option>
-                                <option value="Ingeniería Civil (Plan Común)">Ingeniería Civil (Plan Común)</option>
-                                <option value="Ingeniería en Construcción">Ingeniería en Construcción</option>
-                                <option value="Bioquímica">Bioquímica</option>
-                                <option value="Química y Farmacia">Química y Farmacia</option>
-                            </optgroup>
-                            <optgroup label="🩺 Medicina">
-                                <option value="Medicina">Medicina</option>
-                                <option value="Enfermería">Enfermería</option>
-                                <option value="Kinesiología">Kinesiología</option>
-                                <option value="Nutrición y Dietética">Nutrición y Dietética</option>
-                                <option value="Obstetricia y Puericultura">Obstetricia y Puericultura</option>
-                                <option value="Tecnología Médica">Tecnología Médica</option>
-                                <option value="Fonoaudiología">Fonoaudiología</option>
-                                <option value="Terapia Ocupacional">Terapia Ocupacional</option>
-                            </optgroup>
-                            <optgroup label="🌱 Cs. Agropecuarias y Medioambiente (FCAM)">
-                                <option value="Agronomía">Agronomía</option>
-                                <option value="Ingeniería en Recursos Naturales">Ingeniería en Recursos Naturales</option>
-                                <option value="Biotecnología">Biotecnología</option>
-                            </optgroup>
-                            <optgroup label="⚖️ Cs. Jurídicas y Empresariales (FCJE)">
-                                <option value="Derecho">Derecho</option>
-                                <option value="Ingeniería Comercial">Ingeniería Comercial</option>
-                                <option value="Contador Público y Auditor">Contador Público y Auditor</option>
-                            </optgroup>
-                            <optgroup label="🦷 Odontología">
-                                <option value="Odontología">Odontología</option>
-                            </optgroup>
                         </select>
                         <p id="career-duration-hint" class="text-[11px] text-gray-500 mt-1.5">Duración regular: 5 años (10 semestres)</p>
                     </div>
 
-                    <button type="submit" class="w-full py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition">
-                        Ver Equipos Disponibles →
-                    </button>
+                    <div class="space-y-2.5 pt-1">
+                        <button type="submit" class="w-full py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition">
+                            Ver Equipos Disponibles de tu carrera →
+                        </button>
+                        <button type="button" onclick="joinRandomTeam()" class="w-full py-3 rounded-xl bg-[#151515] hover:bg-[#222222] text-[#a3adff] hover:text-white font-bold text-xs sm:text-sm border border-[#2b2b2b] hover:border-[#717fff]/50 transition flex items-center justify-center gap-2">
+                            <span>🎲</span> Ir a un equipo aleatorio
+                        </button>
+                    </div>
                 </form>
 
                 <!-- Paso 1B: Elección de equipo disponible / Pruebas Mechonas -->
@@ -278,7 +231,7 @@
                                             ⭐ Estrella
                                         </span>
                                     </div>
-                                    <p id="hud-career-info" class="text-xs text-gray-300 mt-1"></p>
+                                    <div id="hud-career-info" class="text-xs text-gray-300 mt-1 flex items-center gap-1.5 flex-wrap"></div>
                                 </div>
                             </div>
                             <button id="hud-restart-btn" onclick="confirmNewCareer()" class="px-2.5 py-1.5 rounded-lg bg-[#151515] hover:bg-rose-950/50 text-gray-400 hover:text-rose-300 border border-[#2b2b2b] text-xs font-bold transition shrink-0">
@@ -386,6 +339,63 @@
 
         function formatOvr(v) {
             return v > OVR_DISPLAY_MAX ? '🐐' : v;
+        }
+
+        // =========================================================================
+        // 0B. SISTEMA UNIVERSAL DE ESCUDOS / INSIGNIAS DE EQUIPO
+        // =========================================================================
+        const FACULTY_COLORS = {
+            FECSH: '#8b5cf6',
+            FICA: '#3b82f6',
+            MED: '#10b981',
+            FCAM: '#22c55e',
+            FCJE: '#f59e0b',
+            ODO: '#ec4899',
+            OTRAS: '#717fff'
+        };
+
+        function normalizeLogoUrl(url) {
+            if (!url) return '';
+            const clean = String(url).trim();
+            // Convierte enlaces compartidos de Google Drive en URL directa de imagen
+            const driveMatch = clean.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]+)/);
+            if (driveMatch && driveMatch[1]) {
+                return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+            }
+            return clean;
+        }
+
+        function getTeamBadgeHTML(team, sizeClass = 'w-10 h-10', textClass = 'text-xs') {
+            if (!team) return '';
+            const rawParts = (team.code || '').split('-');
+            const initials = (rawParts.length >= 2 && rawParts[1].length <= 4
+                ? rawParts[1]
+                : (team.name || 'UFR').replace(/[^A-Za-zÁÉÍÓÚÑ]/g, '').slice(0, 3)
+            ).toUpperCase().slice(0, 4);
+
+            const bgColor = team.color || FACULTY_COLORS[team.facultyKey] || '#717fff';
+            const logoUrl = normalizeLogoUrl(team.logo);
+
+            const fallbackDiv = `
+                <div class="${sizeClass} rounded-xl flex items-center justify-center font-black text-white shadow-inner shrink-0 border border-white/15 select-none ${textClass}"
+                     style="background: linear-gradient(135deg, ${bgColor}, #151515);">
+                    ${escapeHtml(initials)}
+                </div>
+            `;
+
+            if (!logoUrl) return fallbackDiv;
+
+            return `
+                <div class="${sizeClass} relative shrink-0 flex items-center justify-center">
+                    <img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(team.name || '')}"
+                         class="w-full h-full object-contain drop-shadow-md rounded-lg"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="display:none; background: linear-gradient(135deg, ${bgColor}, #151515);"
+                         class="${sizeClass} rounded-xl items-center justify-center font-black text-white shadow-inner shrink-0 border border-white/15 select-none ${textClass}">
+                        ${escapeHtml(initials)}
+                    </div>
+                </div>
+            `;
         }
 
         // =========================================================================
@@ -620,9 +630,9 @@
         ];
 
         const STORAGE_KEYS = {
-            TEAMS_M: 'leyenda_ufro_teams_m_v6',
-            TEAMS_F: 'leyenda_ufro_teams_f_v6',
-            CAREER: 'leyenda_ufro_career_v6',
+            TEAMS_M: 'leyenda_ufro_teams_m_v7',
+            TEAMS_F: 'leyenda_ufro_teams_f_v7',
+            CAREER: 'leyenda_ufro_career_v7',
             HOF: 'leyenda_ufro_hof_v1'
         };
 
@@ -687,6 +697,8 @@
                         ovr: item[1],
                         achievements: item[2],
                         years: c.years,
+                        color: FACULTY_COLORS[fac.key] || '#717fff',
+                        logo: '',
                         hasExplicitDuration: true
                     });
                 });
@@ -701,6 +713,8 @@
                     ovr: c.f[1],
                     achievements: c.f[2],
                     years: c.years,
+                    color: FACULTY_COLORS[fac.key] || '#717fff',
+                    logo: '',
                     hasExplicitDuration: true
                 });
             });
@@ -717,7 +731,7 @@
                     if (Array.isArray(parsedM) && parsedM.length >= 1) {
                         maleTeamsDB = parsedM.map(t => {
                             const fac = canonicalizeFaculty(t.faculty);
-                            return { ...t, facultyKey: fac.key, faculty: fac.label };
+                            return { ...t, facultyKey: fac.key, faculty: fac.label, color: t.color || FACULTY_COLORS[fac.key] || '#717fff', logo: t.logo || '' };
                         });
                     }
                 }
@@ -726,7 +740,7 @@
                     if (Array.isArray(parsedF) && parsedF.length >= 1) {
                         femaleTeamsDB = parsedF.map(t => {
                             const fac = canonicalizeFaculty(t.faculty);
-                            return { ...t, facultyKey: fac.key, faculty: fac.label };
+                            return { ...t, facultyKey: fac.key, faculty: fac.label, color: t.color || FACULTY_COLORS[fac.key] || '#717fff', logo: t.logo || '' };
                         });
                     }
                 }
@@ -826,6 +840,10 @@
             const idxDur = headers.findIndex(h =>
                 h.includes('semestre') || h.includes('duracion') || h.includes('anos') || h.includes('años') || h === 'years'
             );
+            const idxColor = headers.findIndex(h => h.includes('color'));
+            const idxLogo = headers.findIndex(h =>
+                h.includes('escudo') || h.includes('logo') || h.includes('imagen') || h.includes('badge') || h.includes('url')
+            );
 
             if (idxName === -1 || idxCareer === -1) return [];
 
@@ -860,6 +878,11 @@
                 const rawDur = idxDur !== -1 && cols[idxDur] !== undefined ? cols[idxDur].trim() : '';
                 const years = inferCareerYears(career, rawDur);
 
+                const color = (idxColor !== -1 && cols[idxColor] && cols[idxColor].trim().startsWith('#'))
+                    ? cols[idxColor].trim()
+                    : (FACULTY_COLORS[fac.key] || '#717fff');
+                const logo = (idxLogo !== -1 && cols[idxLogo]) ? cols[idxLogo].trim() : '';
+
                 const codeParts = code.split('-');
                 const careerId = codeParts.length >= 3
                     ? codeParts[codeParts.length - 2].toUpperCase()
@@ -876,6 +899,8 @@
                     ovr,
                     achievements,
                     years,
+                    color,
+                    logo,
                     hasExplicitDuration: rawDur !== ''
                 });
             }
@@ -1154,18 +1179,21 @@
 
                 return `
                     <div class="p-4 rounded-2xl surface-sub ${alreadyFailed ? 'opacity-55 border-rose-500/30' : 'hover:border-[#717fff]/60'} flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition">
-                        <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="font-black text-white text-sm">${t.name}</span>
-                                <span class="px-2 py-0.5 rounded bg-[#222222] text-[10px] font-bold text-[#a3adff] border border-[#2b2b2b]">
-                                    ${getDivisionLabel(t.division, selectedGender)}
-                                </span>
-                                <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${chanceBadgeClass}">
-                                    ${chanceLabel}
-                                </span>
+                        <div class="flex items-start gap-3">
+                            ${getTeamBadgeHTML(t, 'w-11 h-11', 'text-xs')}
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-black text-white text-sm">${escapeHtml(t.name)}</span>
+                                    <span class="px-2 py-0.5 rounded bg-[#222222] text-[10px] font-bold text-[#a3adff] border border-[#2b2b2b]">
+                                        ${getDivisionLabel(t.division, selectedGender)}
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${chanceBadgeClass}">
+                                        ${chanceLabel}
+                                    </span>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-0.5">${escapeHtml(t.faculty)}</div>
+                                <div class="text-[11px] text-gray-500 mt-1">🏅 ${escapeHtml(t.achievements)}</div>
                             </div>
-                            <div class="text-xs text-gray-400 mt-0.5">${t.faculty}</div>
-                            <div class="text-[11px] text-gray-500 mt-1">🏅 ${t.achievements}</div>
                         </div>
                         ${alreadyFailed
                             ? `<span class="px-3.5 py-2 rounded-xl bg-rose-950/40 border border-rose-500/35 text-rose-300 font-bold text-xs shrink-0 text-center">No seleccionado</span>`
@@ -1203,7 +1231,51 @@
             document.getElementById('step1-player-form').classList.remove('hidden');
         }
 
-        function startCareerWithTeam(teamCode) {
+        function joinRandomTeam() {
+            const playerName = document.getElementById('input-player-name').value.trim();
+            if (!playerName) {
+                showToast('Ingresa el nombre de tu jugador/a.', 'error');
+                return;
+            }
+
+            const db = getActiveDB();
+            if (!db || db.length === 0) return;
+
+            const isMathiasBello = playerName.toLowerCase() === 'mathias bello';
+            let chosenTeam = null;
+
+            if (selectedGender === 'F') {
+                chosenTeam = db[Math.floor(Math.random() * db.length)];
+            } else {
+                const div1 = db.filter(t => Number(t.division) === 1);
+                const div2 = db.filter(t => Number(t.division) === 2);
+                const div3 = db.filter(t => Number(t.division) === 3);
+
+                // Probabilidades ponderadas: ~70% en 3ª Div, ~22% en 2ª Div, ~8% en 1ª Div
+                const roll = Math.random();
+                let targetPool = div3;
+
+                if (isMathiasBello && div1.length > 0) {
+                    targetPool = div1;
+                } else if (roll < 0.08 && div1.length > 0) {
+                    targetPool = div1;
+                } else if (roll < 0.30 && div2.length > 0) {
+                    targetPool = div2;
+                } else if (div3.length > 0) {
+                    targetPool = div3;
+                } else {
+                    targetPool = db;
+                }
+
+                chosenTeam = targetPool[Math.floor(Math.random() * targetPool.length)];
+            }
+
+            if (chosenTeam) {
+                startCareerWithTeam(chosenTeam.code, true);
+            }
+        }
+
+        function startCareerWithTeam(teamCode, isRandomEntry = false) {
             const playerName = document.getElementById('input-player-name').value.trim();
             const careerSelect = document.getElementById('input-career-select');
             const selectedOpt = careerSelect.options[careerSelect.selectedIndex];
@@ -1213,7 +1285,6 @@
 
             if (!playerName || !team) return;
 
-            // EASTER EGG: Mathias Bello arranca como súper estrella total
             const isMathiasBello = playerName.toLowerCase() === 'mathias bello';
 
             const divBonus = selectedGender === 'M'
@@ -1221,7 +1292,7 @@
                 : 0;
 
             const isProdigy = isMathiasBello || Math.random() < 0.12 || (selectedGender === 'M' && Number(team.division) === 1);
-            
+
             let initialOvr;
             if (isMathiasBello) {
                 initialOvr = 90;
@@ -1259,7 +1330,8 @@
                 stats: { matches: 0, goals: 0, assists: 0, cleanSheets: 0 },
                 ufroStats: { matches: 0, goals: 0, assists: 0 },
                 history: [],
-                trophies: []
+                trophies: [],
+                awards: []
             };
 
             showFullHistoryFlag = false;
@@ -1270,7 +1342,14 @@
             if (isMathiasBello) {
                 showToast(`🌟 ¡EASTER EGG ACTIVADO! Mathias Bello ha ingresado a la UFRO con 90 OVR de superestrella. ¡Todos los equipos te quieren!`, 'success');
             } else if (selectedGender === 'M' && Number(team.division) === 1) {
-                showToast(`🔥 ¡Hazaña Mechona! Quedaste directo en ${team.name} (1ª Div) con ${initialOvr} de Media.`, 'success');
+                showToast(
+                    isRandomEntry
+                        ? `🎰 ¡Golpe de suerte! Caíste directo en ${team.name} (1ª Div · ${team.career}) con ${initialOvr} de Media.`
+                        : `🔥 ¡Hazaña Mechona! Quedaste directo en ${team.name} (1ª Div) con ${initialOvr} de Media.`,
+                    'success'
+                );
+            } else if (isRandomEntry) {
+                showToast(`🎲 ¡Destino aleatorio! Debutas en ${team.name} (${getDivisionLabel(team.division, selectedGender)} · ${team.career}) con ${initialOvr} Media.`, 'success');
             } else if (isProdigy) {
                 showToast(`⭐ ¡Talento Generacional! Debutas en ${team.name} con ${initialOvr} de Media.`, 'success');
             } else {
@@ -1339,16 +1418,13 @@
             let pool = db.filter(t => t.code !== currentTeam.code);
 
             if (isMathiasBello) {
-                // Mathias Bello siempre recibe ofertas de los equipos élite / mejor valorados
                 pool.sort((a, b) => b.ovr - a.ovr);
                 return pool.slice(0, 3).map(t => t.code);
             }
 
-            // Para otros jugadores, seleccionamos equipos al azar cuyo OVR esté razonablemente cerca del jugador
             const candidates = pool.filter(t => t.ovr <= pOvr + 10 && t.ovr >= pOvr - 12);
             const sourcePool = candidates.length >= 3 ? candidates : pool;
 
-            // Mezclar aleatoriamente y tomar 3
             const shuffled = [...sourcePool].sort(() => 0.5 - Math.random());
             return shuffled.slice(0, 3).map(t => t.code);
         }
@@ -1780,7 +1856,6 @@
             careerState.stats.cleanSheets += cleanSheets;
             careerState.trophies.push(...semesterTrophies);
 
-            // Premios individuales: se entregan al cerrar el 2º semestre de cada año
             let semesterAwards = [];
             if (sem === 2) {
                 semesterAwards = computeIndividualAwards(year, {
@@ -1878,19 +1953,20 @@
                         <span class="text-2xl">⬆️</span>
                         <div>
                             <div class="font-black text-white text-sm">Ascenso a ${getDivisionLabel(promotionInfo.newDiv, 'M')}</div>
-                            <div class="text-xs text-[#d0d5ff]">${promotionInfo.teamName} sube de categoría</div>
+                            <div class="text-xs text-[#d0d5ff]">${escapeHtml(promotionInfo.teamName)} sube de categoría</div>
                         </div>
                     </div>
                 `);
             }
 
             trophies.forEach(t => {
+                const trTeam = findTeamByCode(t.teamCode);
                 itemsHtml.push(`
                     <div class="p-3.5 rounded-2xl surface-sub border-[#717fff]/40 flex items-center gap-3">
-                        <span class="text-2xl">🏆</span>
+                        ${trTeam && t.teamCode !== 'SEL-UFRO' ? getTeamBadgeHTML(trTeam, 'w-9 h-9', 'text-[10px]') : '<span class="text-2xl">🏆</span>'}
                         <div>
-                            <div class="font-black text-white text-sm">${t.title}</div>
-                            <div class="text-xs text-[#a3adff]">${t.teamName}</div>
+                            <div class="font-black text-white text-sm">${escapeHtml(t.title)}</div>
+                            <div class="text-xs text-[#a3adff]">${escapeHtml(t.teamName)}</div>
                         </div>
                     </div>
                 `);
@@ -1901,8 +1977,8 @@
                     <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 to-transparent border border-amber-400/40 flex items-center gap-3">
                         <span class="text-2xl">${a.icon}</span>
                         <div>
-                            <div class="font-black text-white text-sm">${a.title}</div>
-                            <div class="text-xs text-amber-200/90">${a.detail} · ${escapeHtml(a.teamName)}</div>
+                            <div class="font-black text-white text-sm">${escapeHtml(a.title)}</div>
+                            <div class="text-xs text-amber-200/90">${escapeHtml(a.detail)} · ${escapeHtml(a.teamName)}</div>
                         </div>
                     </div>
                 `);
@@ -2094,7 +2170,12 @@
             if (isRetired) restartBtn.classList.add('hidden');
             else restartBtn.classList.remove('hidden');
 
-            document.getElementById('hud-career-info').innerHTML = `<strong class="text-white">${team.name}</strong> · <span class="text-[#8b96ff] font-semibold">${getDivisionLabel(team.division, careerState.gender)}</span>`;
+            document.getElementById('hud-career-info').innerHTML = `
+                ${getTeamBadgeHTML(team, 'w-5 h-5', 'text-[8px]')}
+                <strong class="text-white">${escapeHtml(team.name)}</strong>
+                <span>·</span>
+                <span class="text-[#8b96ff] font-semibold">${getDivisionLabel(team.division, careerState.gender)}</span>
+            `;
 
             const totalSem = careerState.maxYears * 2;
             const doneSem = careerState.history.length;
@@ -2233,6 +2314,7 @@
                             </div>
                         `;
                     } else if (ev.type === 'TRIUMPHANT_RETURN') {
+                        const targetTeam = findTeamByCode(ev.targetTeamCode);
                         panel.innerHTML = `
                             <div class="animate-pop space-y-4">
                                 <div class="flex items-center justify-between">
@@ -2241,21 +2323,25 @@
                                     </span>
                                     <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
                                 </div>
-                                <div>
-                                    <h3 class="text-xl font-black text-white">${ev.title}</h3>
-                                    <p class="text-sm text-gray-300 mt-1">${ev.desc}</p>
+                                <div class="flex items-center gap-3.5">
+                                    ${getTeamBadgeHTML(targetTeam, 'w-12 h-12', 'text-xs')}
+                                    <div>
+                                        <h3 class="text-xl font-black text-white">${escapeHtml(ev.title)}</h3>
+                                        <p class="text-sm text-gray-300 mt-1">${escapeHtml(ev.desc)}</p>
+                                    </div>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                                     <button onclick="resolveClubSwitchEvent(false)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
-                                        Seguir en ${team.name}
+                                        Seguir en ${escapeHtml(team.name)}
                                     </button>
                                     <button onclick="resolveClubSwitchEvent(true)" class="py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg transition">
-                                        Regreso triunfal a ${ev.targetTeamName}
+                                        Regreso triunfal a ${escapeHtml(ev.targetTeamName)}
                                     </button>
                                 </div>
                             </div>
                         `;
                     } else if (ev.type === 'ICO_MONEY') {
+                        const targetTeam = findTeamByCode(ev.targetTeamCode);
                         panel.innerHTML = `
                             <div class="animate-pop space-y-4">
                                 <div class="flex items-center justify-between">
@@ -2264,16 +2350,19 @@
                                     </span>
                                     <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
                                 </div>
-                                <div>
-                                    <h3 class="text-xl font-black text-white">${ev.title}</h3>
-                                    <p class="text-sm text-gray-300 mt-1">${ev.desc}</p>
+                                <div class="flex items-center gap-3.5">
+                                    ${getTeamBadgeHTML(targetTeam, 'w-12 h-12', 'text-xs')}
+                                    <div>
+                                        <h3 class="text-xl font-black text-white">${escapeHtml(ev.title)}</h3>
+                                        <p class="text-sm text-gray-300 mt-1">${escapeHtml(ev.desc)}</p>
+                                    </div>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                                     <button onclick="resolveClubSwitchEvent(false)" class="py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg transition">
                                         🏆 Continuar por la gloria
                                     </button>
                                     <button onclick="resolveClubSwitchEvent(true)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
-                                        💸 Irse por plata (${ev.targetTeamName})
+                                        💸 Irse por plata (${escapeHtml(ev.targetTeamName)})
                                     </button>
                                 </div>
                             </div>
@@ -2337,9 +2426,12 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                             <div class="p-3.5 rounded-xl surface-sub border-[#717fff]/50 flex flex-col justify-between gap-3">
                                 <div>
-                                    <span class="text-[10px] font-bold uppercase text-[#8b96ff]">Club Actual</span>
-                                    <div class="font-extrabold text-white text-sm mt-0.5">${team.name}</div>
-                                    <div class="text-[11px] text-[#a3adff] font-medium mt-0.5">${team.career}</div>
+                                    <div class="flex items-center justify-between gap-2 mb-1.5">
+                                        <span class="text-[10px] font-bold uppercase text-[#8b96ff]">Club Actual</span>
+                                        ${getTeamBadgeHTML(team, 'w-9 h-9', 'text-[10px]')}
+                                    </div>
+                                    <div class="font-extrabold text-white text-sm mt-0.5">${escapeHtml(team.name)}</div>
+                                    <div class="text-[11px] text-[#a3adff] font-medium mt-0.5">${escapeHtml(team.career)}</div>
                                     <div class="text-[11px] text-gray-500 mt-0.5">${getDivisionLabel(team.division, careerState.gender)}</div>
                                     <span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded font-bold ${stayRole.badgeClass}">${stayRole.label}</span>
                                 </div>
@@ -2353,9 +2445,12 @@
                                 return `
                                     <div class="p-3.5 rounded-xl surface-sub hover:border-[#717fff]/45 flex flex-col justify-between gap-3 transition">
                                         <div>
-                                            <span class="text-[10px] font-bold uppercase text-gray-400">Oferta Fichaje</span>
-                                            <div class="font-extrabold text-white text-sm mt-0.5">${o.name}</div>
-                                            <div class="text-[11px] text-[#8b96ff] font-medium mt-0.5">${o.career}</div>
+                                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                                <span class="text-[10px] font-bold uppercase text-gray-400">Oferta Fichaje</span>
+                                                ${getTeamBadgeHTML(o, 'w-9 h-9', 'text-[10px]')}
+                                            </div>
+                                            <div class="font-extrabold text-white text-sm mt-0.5">${escapeHtml(o.name)}</div>
+                                            <div class="text-[11px] text-[#8b96ff] font-medium mt-0.5">${escapeHtml(o.career)}</div>
                                             <div class="text-[11px] text-gray-500 mt-0.5">${getDivisionLabel(o.division, careerState.gender)}</div>
                                             <span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded font-bold ${oRole.badgeClass}">${oRole.label}</span>
                                         </div>
@@ -2387,12 +2482,15 @@
                 const legacy = computeCreativeLegacyBanner();
                 panel.innerHTML = `
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35 mb-1.5">
-                                ${legacy.badge}
-                            </span>
-                            <h3 class="text-xl sm:text-2xl font-black text-white">${legacy.headline}</h3>
-                            <p class="text-xs text-gray-400 mt-1">${legacy.subline}</p>
+                        <div class="flex items-center gap-3.5">
+                            ${getTeamBadgeHTML(team, 'w-14 h-14', 'text-sm')}
+                            <div>
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35 mb-1.5">
+                                    ${legacy.badge}
+                                </span>
+                                <h3 class="text-xl sm:text-2xl font-black text-white">${escapeHtml(legacy.headline)}</h3>
+                                <p class="text-xs text-gray-400 mt-1">${escapeHtml(legacy.subline)}</p>
+                            </div>
                         </div>
                         <div class="sm:text-right shrink-0 surface-sub px-4 py-2.5 rounded-xl">
                             <div class="text-[10px] uppercase font-bold text-gray-500">Media Final</div>
@@ -2425,15 +2523,20 @@
                             Año ${yr}
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            ${sems.map(s => `
+                            ${sems.map(s => {
+                                const histTeam = findTeamByCode(s.teamCode, careerState.gender) || { code: s.teamCode, name: s.teamName };
+                                return `
                                 <div class="p-3.5 rounded-xl surface-sub space-y-2 text-xs">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <span class="font-bold text-[#8b96ff]">Semestre ${s.sem}</span> · <span class="text-gray-500">${getDivisionLabel(s.divisionPlayed, careerState.gender)}</span>
-                                            <div class="font-extrabold text-white text-sm">${s.teamName}</div>
-                                            <div class="text-[11px] text-gray-500">${s.careerName}</div>
+                                    <div class="flex justify-between items-start gap-2">
+                                        <div class="flex items-center gap-2.5">
+                                            ${getTeamBadgeHTML(histTeam, 'w-9 h-9', 'text-[10px]')}
+                                            <div>
+                                                <span class="font-bold text-[#8b96ff]">Semestre ${s.sem}</span> · <span class="text-gray-500">${getDivisionLabel(s.divisionPlayed, careerState.gender)}</span>
+                                                <div class="font-extrabold text-white text-sm">${escapeHtml(s.teamName)}</div>
+                                                <div class="text-[11px] text-gray-500">${escapeHtml(s.careerName)}</div>
+                                            </div>
                                         </div>
-                                        <div class="text-right">
+                                        <div class="text-right shrink-0">
                                             <span class="px-2 py-0.5 rounded bg-[#222222] font-bold text-white border border-[#2b2b2b]">
                                                 OVR ${formatOvr(s.ovrAfter)} ${s.ovrAfter > OVR_DISPLAY_MAX ? '' : `<span class="text-[#8b96ff]">(+${s.ovrDelta})</span>`}
                                             </span>
@@ -2456,17 +2559,18 @@
 
                                     ${s.trophies && s.trophies.length > 0 ? `
                                         <div class="flex flex-wrap gap-1 pt-1">
-                                            ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/20 text-[#d0d5ff] font-bold text-[11px]">🏆 ${t.title}</span>`).join('')}
+                                            ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/20 text-[#d0d5ff] font-bold text-[11px]">🏆 ${escapeHtml(t.title)}</span>`).join('')}
                                         </div>
                                     ` : ''}
 
                                     ${s.awards && s.awards.length > 0 ? `
                                         <div class="flex flex-wrap gap-1 pt-1">
-                                            ${s.awards.map(a => `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-200 border border-amber-400/30 font-bold text-[11px]">${a.icon} ${a.title}</span>`).join('')}
+                                            ${s.awards.map(a => `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-200 border border-amber-400/30 font-bold text-[11px]">${a.icon} ${escapeHtml(a.title)}</span>`).join('')}
                                         </div>
                                     ` : ''}
                                 </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
@@ -2522,7 +2626,7 @@
                 </div>
                 ${selTrophies.length > 0 ? `
                     <div class="flex flex-wrap gap-2 pt-1">
-                        ${selTrophies.map(s => `<span class="px-2.5 py-1 rounded-lg surface-sub text-xs font-bold text-[#d0d5ff]">🏅 ${s.title} (Año ${s.year})</span>`).join('')}
+                        ${selTrophies.map(s => `<span class="px-2.5 py-1 rounded-lg surface-sub text-xs font-bold text-[#d0d5ff]">🏅 ${escapeHtml(s.title)} (Año ${s.year})</span>`).join('')}
                     </div>
                 ` : ''}
             `;
@@ -2557,16 +2661,21 @@
                 }
             });
 
-            document.getElementById('career-stints-list').innerHTML = stints.map(st => `
+            document.getElementById('career-stints-list').innerHTML = stints.map(st => {
+                const stintTeam = findTeamByCode(st.teamCode, careerState.gender) || { code: st.teamCode, name: st.teamName };
+                return `
                 <div class="p-3.5 rounded-xl surface-sub flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                    <div>
-                        <div class="font-black text-white text-sm">${st.teamName}</div>
-                        <div class="text-gray-400">${st.careerName} · Año ${st.startYear}${st.endYear > st.startYear ? ` - ${st.endYear}` : ''} (${st.semesters} sem.)</div>
-                        ${st.trophies.length > 0 ? `
-                            <div class="flex flex-wrap gap-1 mt-1.5">
-                                ${st.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/15 text-[#a3adff] font-bold text-[10px]">🏆 ${t.title}</span>`).join('')}
-                            </div>
-                        ` : ''}
+                    <div class="flex items-start gap-3">
+                        ${getTeamBadgeHTML(stintTeam, 'w-10 h-10', 'text-[10px]')}
+                        <div>
+                            <div class="font-black text-white text-sm">${escapeHtml(st.teamName)}</div>
+                            <div class="text-gray-400">${escapeHtml(st.careerName)} · Año ${st.startYear}${st.endYear > st.startYear ? ` - ${st.endYear}` : ''} (${st.semesters} sem.)</div>
+                            ${st.trophies.length > 0 ? `
+                                <div class="flex flex-wrap gap-1 mt-1.5">
+                                    ${st.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/15 text-[#a3adff] font-bold text-[10px]">🏆 ${escapeHtml(t.title)}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                     <div class="flex items-center gap-3 text-gray-300 font-bold shrink-0">
                         <span>${st.matches} PJ</span>
@@ -2574,7 +2683,8 @@
                         <span>${st.assists} A</span>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
 
             const fullWrap = document.getElementById('full-career-details');
             const toggleBtn = document.getElementById('btn-toggle-full-career');
@@ -2586,22 +2696,28 @@
                 toggleBtn.textContent = 'Ver detalle por semestre ↓';
             }
 
-            document.getElementById('full-career-semesters-list').innerHTML = (careerState.history || []).map(s => `
+            document.getElementById('full-career-semesters-list').innerHTML = (careerState.history || []).map(s => {
+                const sTeam = findTeamByCode(s.teamCode, careerState.gender) || { code: s.teamCode, name: s.teamName };
+                return `
                 <div class="p-3 rounded-xl surface-sub flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                    <div>
-                        <span class="font-bold text-[#8b96ff]">Año ${s.year} · S${s.sem}</span> — <strong class="text-white">${s.teamName}</strong>
-                        <span class="text-gray-500 ml-1">(${getDivisionLabel(s.divisionPlayed, careerState.gender)})</span>
-                        <div class="text-[11px] text-gray-400 mt-0.5">
-                            ${s.suspended ? 'Baja por lesión / suspensión' : `${s.matches} PJ · ${careerState.position === 'ARQ' ? `${s.cleanSheets} VI` : `${s.goals}G`} · ${s.assists}A · Nota ${s.avgRating}`}
-                            ${s.facultyCupResult ? ` · ${s.facultyCupResult}` : ''}
-                            ${s.interfacultadesResult ? ` · ${s.interfacultadesResult}` : ''}
+                    <div class="flex items-center gap-2.5">
+                        ${getTeamBadgeHTML(sTeam, 'w-8 h-8', 'text-[9px]')}
+                        <div>
+                            <span class="font-bold text-[#8b96ff]">Año ${s.year} · S${s.sem}</span> — <strong class="text-white">${escapeHtml(s.teamName)}</strong>
+                            <span class="text-gray-500 ml-1">(${getDivisionLabel(s.divisionPlayed, careerState.gender)})</span>
+                            <div class="text-[11px] text-gray-400 mt-0.5">
+                                ${s.suspended ? 'Baja por lesión / suspensión' : `${s.matches} PJ · ${careerState.position === 'ARQ' ? `${s.cleanSheets} VI` : `${s.goals}G`} · ${s.assists}A · Nota ${s.avgRating}`}
+                                ${s.facultyCupResult ? ` · ${s.facultyCupResult}` : ''}
+                                ${s.interfacultadesResult ? ` · ${s.interfacultadesResult}` : ''}
+                            </div>
                         </div>
                     </div>
                     <div class="text-right shrink-0">
                         <span class="px-2 py-0.5 rounded bg-[#1c1c1c] border border-[#2b2b2b] font-bold text-white">OVR ${formatOvr(s.ovrAfter)}</span>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function toggleFullCareerHistory() {
@@ -2626,9 +2742,6 @@
                 .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
-        // Se evalúa al cerrar el 2º semestre con las estadísticas de TODO el año académico (S1 + S2).
-        // Cada premio compara al jugador contra un "rival" simulado: un umbral aleatorio que
-        // representa al mejor de la liga. Ajusta los números de cada umbral para hacerlo más fácil o difícil.
         function computeIndividualAwards(year, cur, isFemale) {
             const entries = (careerState.history || []).filter(h => h.year === year).concat([cur]);
             const sum = key => entries.reduce((acc, h) => acc + (Number(h[key]) || 0), 0);
@@ -2642,7 +2755,6 @@
             const ratings = entries.map(h => Number(h.avgRating)).filter(n => !isNaN(n) && n > 0);
             const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
 
-            // Ligas menos exigentes (2ª/3ª división y rama femenina) bajan un poco los umbrales
             const divAdj = isFemale ? 2 : ({ 1: 0, 2: 2, 3: 4 }[Number(cur.divisionPlayed)] ?? 0);
             const pos = careerState.position;
             const found = [];
@@ -2657,7 +2769,6 @@
                 detail
             });
 
-            // MVP: nota media + aporte ofensivo/defensivo + posición del equipo en la liga
             const contrib = pos === 'ARQ' ? cleanSheets * 2.0
                 : pos === 'DEF' ? goals + assists + cleanSheets * 1.8
                 : goals + assists;
@@ -2674,17 +2785,66 @@
                 if (assists >= assistThreshold) add('ASISTENTE', `${assists} asistencias en el año`);
             } else {
                 const gkThreshold = 9 + Math.random() * 5 - divAdj * 0.4;
-                if (cleanSheets >= gkThreshold && avgRating >= 7.7) add('PORTERO', `${cleanSheets} vallas invictas`);
+                if (cleanSheets >= gkThreshold) add('PORTERO', `${cleanSheets} vallas invictas en el año`);
             }
 
             return found;
         }
 
+        function renderIndividualAwardsCard() {
+            const card = document.getElementById('individual-awards-card');
+            if (!card) return;
+            const awards = careerState.awards || [];
+            const hofRank = careerState.hofRank;
+
+            const counts = ['MVP', 'GOLEADOR', 'ASISTENTE', 'PORTERO'].map(type => ({
+                type,
+                ...INDIVIDUAL_AWARD_META[type],
+                count: awards.filter(a => a.type === type).length
+            }));
+
+            card.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-white">🎖️ Premios Individuales</h3>
+                        <p class="text-xs text-gray-400">
+                            ${awards.length > 0
+                                ? `${awards.length} distinción(es) anual(es) obtenida(s) durante tu carrera`
+                                : 'No obtuviste premios individuales anuales en esta carrera'}
+                        </p>
+                    </div>
+                    ${hofRank ? `
+                        <span class="px-3 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-400/40 self-start sm:self-auto">
+                            🏛️ Salón de la Fama #${hofRank}
+                        </span>
+                    ` : ''}
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    ${counts.map(c => `
+                        <div class="p-3 rounded-xl surface-sub text-center">
+                            <div class="text-xl">${c.icon}</div>
+                            <div class="text-xl font-black ${c.count > 0 ? 'text-amber-300' : 'text-gray-600'}">${c.count}</div>
+                            <div class="text-[10px] font-bold uppercase text-gray-400 mt-0.5">${c.title}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${awards.length > 0 ? `
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        ${awards.map(a => `
+                            <span class="px-2.5 py-1 rounded-lg surface-sub border-amber-400/30 text-xs font-bold text-amber-200">
+                                ${a.icon} ${escapeHtml(a.title)} · Año ${a.year} (${escapeHtml(a.detail)})
+                            </span>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            `;
+        }
+
         function loadHallOfFame() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEYS.HOF);
-                const parsed = raw ? JSON.parse(raw) : [];
-                return Array.isArray(parsed) ? parsed : [];
+                const arr = raw ? JSON.parse(raw) : [];
+                return Array.isArray(arr) ? arr : [];
             } catch (e) {
                 return [];
             }
@@ -2694,153 +2854,89 @@
             try { localStorage.setItem(STORAGE_KEYS.HOF, JSON.stringify(list)); } catch (e) {}
         }
 
-        // Inmortaliza la carrera al titularse. Se guarda una sola vez por carrera y solo se conserva el Top 5.
+        function computeHallOfFameScore(st) {
+            const titles = (st.trophies || []).length;
+            const awards = (st.awards || []).length;
+            const s = st.stats || {};
+            return (titles * 100) + (awards * 45) + (st.ovr * 4) + (s.goals || 0) + (s.assists || 0) + ((s.cleanSheets || 0) * 2);
+        }
+
         function inductHallOfFame() {
-            if (!careerState || careerState.hofInducted) return;
+            if (!careerState || careerState.hofProcessed) return;
+            careerState.hofProcessed = true;
 
-            const legacy = computeCreativeLegacyBanner();
-            const trophies = careerState.trophies || [];
-            const awards = careerState.awards || [];
-            const s = careerState.stats || { matches: 0, goals: 0, assists: 0, cleanSheets: 0 };
-            const selTitles = trophies.filter(t => t.type === 'SELECCION').length;
-
-            const score = Math.round(
-                careerState.ovr
-                + trophies.length * 6
-                + awards.length * 8
-                + (s.goals + s.assists + s.cleanSheets) * 0.3
-            );
-
+            const team = findTeamByCode(careerState.teamCode, careerState.gender);
             const entry = {
-                id: `${Date.now()}-${Math.floor(Math.random() * 100000)}`,
+                id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
                 playerName: careerState.playerName,
                 gender: careerState.gender,
                 position: careerState.position,
-                career: careerState.studiedCareer,
+                studiedCareer: careerState.studiedCareer,
+                teamCode: careerState.teamCode,
+                teamName: team ? team.name : '',
                 ovr: careerState.ovr,
-                headline: legacy.headline,
-                badge: legacy.badge,
-                titles: trophies.length,
-                selTitles,
-                awards: awards.length,
-                matches: s.matches,
-                goals: s.goals,
-                assists: s.assists,
-                cleanSheets: s.cleanSheets,
-                score,
-                date: new Date().toLocaleDateString('es-CL')
+                titlesCount: (careerState.trophies || []).length,
+                awardsCount: (careerState.awards || []).length,
+                matches: careerState.stats?.matches || 0,
+                goals: careerState.stats?.goals || 0,
+                assists: careerState.stats?.assists || 0,
+                cleanSheets: careerState.stats?.cleanSheets || 0,
+                score: computeHallOfFameScore(careerState)
             };
 
             const list = loadHallOfFame();
             list.push(entry);
-            list.sort((a, b) => (b.score || 0) - (a.score || 0));
+            list.sort((a, b) => b.score - a.score);
             const trimmed = list.slice(0, HOF_MAX_ENTRIES);
             saveHallOfFame(trimmed);
 
             const idx = trimmed.findIndex(e => e.id === entry.id);
-            careerState.hofInducted = true;
-            careerState.hofRank = idx >= 0 ? idx + 1 : null;
+            careerState.hofRank = idx !== -1 ? idx + 1 : null;
         }
 
         function renderHallOfFame() {
             const listEl = document.getElementById('hof-list');
             if (!listEl) return;
-            const list = loadHallOfFame().slice(0, HOF_MAX_ENTRIES);
+            const list = loadHallOfFame();
 
             if (list.length === 0) {
-                listEl.innerHTML = `
-                    <div class="p-5 rounded-2xl surface-sub text-center text-xs text-gray-500">
-                        Aún no hay leyendas inmortalizadas. Titúlate en la UFRO para entrar al Salón de la Fama.
-                    </div>`;
+                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Aún no hay leyendas tituladas en este dispositivo. ¡Completa una carrera para inaugurar el Salón de la Fama!</div>`;
                 return;
             }
 
-            const medals = ['🥇', '🥈', '🥉'];
-            listEl.innerHTML = list.map((e, i) => {
-                const golden = e.ovr > OVR_DISPLAY_MAX;
-                const mainStat = e.position === 'ARQ'
-                    ? `${e.cleanSheets || 0} VI`
-                    : `${e.goals || 0} G · ${e.assists || 0} A`;
+            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+            listEl.innerHTML = list.map((item, idx) => {
+                const hofTeam = item.teamCode ? findTeamByCode(item.teamCode, item.gender) : null;
                 return `
-                    <div class="p-3.5 rounded-2xl surface-sub ${i === 0 ? 'border-amber-400/50' : ''} flex items-center gap-3">
-                        <div class="w-9 text-center shrink-0 text-xl font-black ${i < 3 ? '' : 'text-gray-500 text-base'}">
-                            ${medals[i] || `#${i + 1}`}
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="font-black text-white text-sm truncate">${escapeHtml(e.playerName)}</span>
-                                <span class="text-[10px] font-bold text-gray-500">${escapeHtml(e.position)} · ${e.gender === 'F' ? 'Fem.' : 'Masc.'}</span>
-                            </div>
-                            <div class="text-[11px] text-[#a3adff] font-semibold truncate">${escapeHtml(e.headline)}</div>
-                            <div class="text-[11px] text-gray-500 truncate">${escapeHtml(e.career)} · ${escapeHtml(e.date)}</div>
-                            <div class="flex flex-wrap gap-1.5 mt-1.5 text-[10px] font-bold text-gray-300">
-                                <span class="px-1.5 py-0.5 rounded bg-[#222222] border border-[#2b2b2b]">🏆 ${e.titles || 0}</span>
-                                <span class="px-1.5 py-0.5 rounded bg-[#222222] border border-[#2b2b2b]">🎖️ ${e.awards || 0}</span>
-                                <span class="px-1.5 py-0.5 rounded bg-[#222222] border border-[#2b2b2b]">${mainStat}</span>
+                    <div class="p-3.5 rounded-2xl surface-sub flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="text-xl shrink-0">${medals[idx] || `#${idx + 1}`}</span>
+                            ${hofTeam ? getTeamBadgeHTML(hofTeam, 'w-9 h-9', 'text-[10px]') : ''}
+                            <div class="min-w-0">
+                                <div class="font-black text-white text-sm truncate">${escapeHtml(item.playerName)} <span class="text-[11px] font-bold text-[#8b96ff]">(${item.position})</span></div>
+                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.teamName || item.studiedCareer)} · 🏆 ${item.titlesCount} títulos · 🎖️ ${item.awardsCount} premios</div>
                             </div>
                         </div>
-                        <div class="w-12 h-12 rounded-xl shrink-0 flex flex-col items-center justify-center ${
-                            golden
-                                ? 'bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 text-white'
-                                : 'bg-[#717fff] text-white'
-                        }">
-                            <span class="text-[7px] font-bold uppercase text-white/80">MEDIA</span>
-                            <span class="text-base font-black leading-none">${formatOvr(e.ovr)}</span>
+                        <div class="px-2.5 py-1 rounded-xl bg-[#717fff]/15 border border-[#717fff]/30 text-xs font-black text-[#a3adff] shrink-0">
+                            OVR ${formatOvr(item.ovr)}
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function renderIndividualAwardsCard() {
-            const card = document.getElementById('individual-awards-card');
-            if (!card || !careerState) return;
-
-            const awards = careerState.awards || [];
-            const hofLine = careerState.hofRank
-                ? `<div class="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-transparent border border-amber-400/40 text-xs font-bold text-amber-200">
-                        🏛️ Carrera inmortalizada en el Salón de la Fama UFRO · Puesto #${careerState.hofRank}
-                   </div>`
-                : `<div class="px-3 py-2 rounded-xl surface-sub text-xs text-gray-400">
-                        🏛️ No alcanzó el Top ${HOF_MAX_ENTRIES} del Salón de la Fama UFRO
-                   </div>`;
-
-            card.innerHTML = `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                        <h3 class="text-sm font-black uppercase tracking-wider text-white">🎖️ Premios Individuales</h3>
-                        <p class="text-xs text-gray-400">
-                            ${awards.length > 0
-                                ? 'Reconocimientos personales conquistados al cierre de cada año'
-                                : 'No ganaste premios individuales en esta carrera'}
-                        </p>
-                    </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/15 text-amber-200 border border-amber-400/30 self-start sm:self-auto">
-                        ${awards.length} Premio(s)
-                    </span>
-                </div>
-                ${awards.length > 0 ? `
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        ${awards.map(a => `<span class="px-2.5 py-1 rounded-lg surface-sub text-xs font-bold text-amber-100">${a.icon} ${a.title} <span class="text-gray-500 font-semibold">(Año ${a.year} · ${escapeHtml(a.detail)})</span></span>`).join('')}
-                    </div>
-                ` : ''}
-                ${hofLine}
-            `;
-        }
-
         // =========================================================================
-        // 12. TOAST NOTIFICATIONS
+        // 12. TOASTS
         // =========================================================================
         function showToast(msg, type = 'info') {
             const container = document.getElementById('toast-container');
-            if (!container) return;
             const toast = document.createElement('div');
             const colors = {
-                success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
+                success: 'bg-[#1c1c1c] border-[#717fff]/60 text-[#d0d5ff]',
                 error: 'bg-rose-950/95 border-rose-500/50 text-rose-200',
-                info: 'bg-[#1c1c1c]/95 border-[#717fff]/50 text-gray-100'
+                info: 'bg-[#1c1c1c] border-[#333333] text-gray-200'
             };
-            toast.className = `pointer-events-auto p-3 rounded-xl border shadow-xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+            toast.className = `pointer-events-auto p-3.5 rounded-xl border shadow-xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
             toast.textContent = msg;
             container.appendChild(toast);
             requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
