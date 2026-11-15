@@ -1,38 +1,48 @@
-<!DOCTYPE html>
-<html lang="es" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leyenda UFRO · Simulador de Carrera Universitaria</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leyenda UFRO - Simulador de Carrera Universitaria</title>
     <script>
-        tailwind.config = {
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        blue: {
+                            500: '#717fff',
+                            600: '#717fff',
+                            700: '#5d6be6',
+                            950: '#1c1f3d'
+                        },
+                        sky: {
+                            200: '#d0d5ff',
+                            300: '#a3adff',
+                            400: '#8b96ff'
+                        }
+                    }
                 }
             }
-        }
+        };
     </script>
+    <script src="https://cdn.tailwindcss.com" onerror="var s=document.createElement('script');s.src='https://unpkg.com/@tailwindcss/browser@4';document.head.appendChild(s);"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #0b0d11;
+            background-color: #151515;
             color: #f3f4f6;
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
         }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0b0d11; }
-        ::-webkit-scrollbar-thumb { background: #262c38; border-radius: 9999px; }
+        ::-webkit-scrollbar-track { background: #151515; }
+        ::-webkit-scrollbar-thumb { background: #2d2d2d; border-radius: 9999px; }
         .surface-card {
-            background-color: #131720;
-            border: 1px solid #222834;
+            background-color: #1c1c1c;
+            border: 1px solid #2b2b2b;
         }
         .surface-sub {
-            background-color: #0e1118;
-            border: 1px solid #1e2430;
+            background-color: #151515;
+            border: 1px solid #262626;
         }
         @keyframes popIn {
             0% { transform: scale(0.96); opacity: 0; }
@@ -46,42 +56,42 @@
         .animate-trophy { animation: trophyFloat 2.2s ease-in-out infinite; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col bg-[#0b0d11] text-gray-100 selection:bg-blue-600 selection:text-white">
+<body class="min-h-screen flex flex-col bg-[#151515] text-gray-100 selection:bg-[#717fff] selection:text-white">
 
     <!-- CANVAS DE CONFETI PARA CELEBRACIÓN DE TÍTULOS -->
     <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 hidden"></canvas>
 
     <!-- MODAL DE CELEBRACIÓN DE TÍTULOS -->
     <div id="trophy-celebration-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="surface-card border-blue-500/40 rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl animate-pop space-y-5 relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-b from-blue-500/10 via-transparent to-transparent pointer-events-none"></div>
+        <div class="surface-card border-[#717fff]/40 rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl animate-pop space-y-5 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-[#717fff]/15 via-transparent to-transparent pointer-events-none"></div>
             <div class="relative">
-                <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-sky-400 flex items-center justify-center text-4xl shadow-lg animate-trophy">
+                <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#717fff] to-[#8b96ff] flex items-center justify-center text-4xl shadow-lg animate-trophy">
                     🏆
                 </div>
-                <span class="inline-block mt-4 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-blue-500/15 text-sky-300 border border-blue-500/30">
+                <span class="inline-block mt-4 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">
                     ¡Nuevo Título UFRO!
                 </span>
                 <h2 id="modal-trophy-heading" class="text-2xl font-black text-white mt-2">¡Campeón Universitario!</h2>
                 <p id="modal-trophy-sub" class="text-xs text-gray-400 mt-1"></p>
             </div>
             <div id="modal-trophy-list" class="relative space-y-2 text-left max-h-60 overflow-y-auto"></div>
-            <button onclick="closeCelebrationModal()" class="relative w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm shadow-lg transition">
+            <button onclick="closeCelebrationModal()" class="relative w-full py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg transition">
                 Continuar Carrera →
             </button>
         </div>
     </div>
 
     <!-- ==================== HEADER MINIMALISTA ==================== -->
-    <header class="sticky top-0 z-40 bg-[#0b0d11]/90 backdrop-blur-md border-b border-[#1e2430]">
+    <header class="sticky top-0 z-40 bg-[#151515]/90 backdrop-blur-md border-b border-[#262626]">
         <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white text-sm tracking-tighter shadow-md shadow-blue-600/20">
-                    UFRO
-                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="w-9 h-9 shrink-0">
+                    <path fill="#717fff" d="M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z"/>
+                </svg>
                 <div>
                     <h1 class="text-base sm:text-lg font-black tracking-tight text-white leading-none">
-                        Leyenda <span class="text-sky-400">UFRO</span>
+                        Leyenda <span class="text-[#717fff]">UFRO</span>
                     </h1>
                     <span class="text-[11px] text-gray-500 font-medium">Simulador de Carrera Universitaria</span>
                 </div>
@@ -89,14 +99,14 @@
 
             <div class="flex items-center gap-2">
                 <button onclick="manualRefreshSheets()" id="sheets-sync-indicator" title="Sincronizar equipos desde Google Sheets"
-                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#131720] hover:bg-[#1a202c] border border-[#222834] text-[11px] text-gray-400 hover:text-gray-200 transition">
+                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] text-gray-400 hover:text-gray-200 transition">
                     <span id="sheets-sync-dot" class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
                     <span id="sheets-sync-text">BD Local</span>
-                    <span class="text-sky-400 font-bold">↻</span>
+                    <span class="text-[#717fff] font-bold">↻</span>
                 </button>
 
-                <nav id="main-nav" class="hidden flex items-center bg-[#131720] p-1 rounded-xl border border-[#222834]">
-                    <button onclick="switchTab('carrera')" id="nav-carrera" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-blue-600 text-white">
+                <nav id="main-nav" class="hidden flex items-center bg-[#1c1c1c] p-1 rounded-xl border border-[#2b2b2b]">
+                    <button onclick="switchTab('carrera')" id="nav-carrera" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-[#717fff] text-white">
                         Carrera
                     </button>
                     <button onclick="switchTab('palmares')" id="nav-palmares" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white">
@@ -106,23 +116,12 @@
             </div>
         </div>
     </header>
-
-    <!-- TOAST NOTIFICATIONS -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none px-4 sm:px-0"></div>
-
-    <!-- ==================== MAIN ==================== -->
-    <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
-
-        <!-- ================================================================ -->
-        <!-- VISTA 1: CARRERA                                                 -->
-        <!-- ================================================================ -->
-        <section id="view-carrera" class="space-y-5">
-
+<!-- ... existing code ... -->
             <!-- PASO 1: CREACIÓN DE JUGADOR/A -->
             <div id="creation-screen" class="max-w-lg mx-auto surface-card rounded-3xl p-6 sm:p-8 shadow-2xl">
                 <div class="text-center mb-6">
-                    <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-500/15 text-sky-400 border border-blue-500/25">
-                        Datos de tu jugador
+                    <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#717fff]/15 text-[#8b96ff] border border-[#717fff]/30">
+                        Admisión UFRO · Temuco
                     </span>
                     <h2 class="text-2xl font-black text-white mt-2.5">Crea tu Leyenda</h2>
                     <p class="text-xs text-gray-400 mt-1">Elige tu rama, posición y carrera universitaria para iniciar las pruebas.</p>
@@ -134,11 +133,11 @@
                         <label class="block text-xs font-bold text-gray-400 mb-1.5">Rama Competitiva</label>
                         <div class="grid grid-cols-2 gap-2.5">
                             <button type="button" onclick="selectGender('M')" id="btn-gender-M"
-                                class="py-2.5 px-3 rounded-xl border border-blue-500 bg-blue-600/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition">
-                                <span>👨</span> Hombre <span class="text-[10px] text-sky-300">(3 Div.)</span>
+                                class="py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition">
+                                <span>👨</span> Hombre <span class="text-[10px] text-[#a3adff]">(3 Div.)</span>
                             </button>
                             <button type="button" onclick="selectGender('F')" id="btn-gender-F"
-                                class="py-2.5 px-3 rounded-xl border border-[#222834] bg-[#0e1118] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition">
+                                class="py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition">
                                 <span>👩</span> Mujer <span class="text-[10px] text-gray-500">(Div. Única)</span>
                             </button>
                         </div>
@@ -146,90 +145,36 @@
 
                     <div>
                         <label class="block text-xs font-bold text-gray-400 mb-1.5">Nombre Completo</label>
-                        <input type="text" id="input-player-name" required placeholder="Ej: Nombre Apellido" value=""
-                            class="w-full px-3.5 py-3 rounded-xl bg-[#0e1118] border border-[#222834] text-sm text-white focus:outline-none focus:border-blue-500">
+                        <input type="text" id="input-player-name" required placeholder="Ej: Matías Millapán" value="Matías Millapán"
+                            class="w-full px-3.5 py-3 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-gray-400 mb-1.5">Posición en Cancha</label>
                         <div class="grid grid-cols-4 gap-2">
-                            <button type="button" onclick="selectPosition('DEL')" id="pos-btn-DEL" class="pos-btn py-2.5 rounded-xl border border-[#222834] bg-[#0e1118] text-xs font-bold text-gray-400 hover:text-white transition">DEL</button>
-                            <button type="button" onclick="selectPosition('MED')" id="pos-btn-MED" class="pos-btn py-2.5 rounded-xl border border-blue-500 bg-blue-600/20 text-xs font-bold text-white transition">MED</button>
-                            <button type="button" onclick="selectPosition('DEF')" id="pos-btn-DEF" class="pos-btn py-2.5 rounded-xl border border-[#222834] bg-[#0e1118] text-xs font-bold text-gray-400 hover:text-white transition">DEF</button>
-                            <button type="button" onclick="selectPosition('ARQ')" id="pos-btn-ARQ" class="pos-btn py-2.5 rounded-xl border border-[#222834] bg-[#0e1118] text-xs font-bold text-gray-400 hover:text-white transition">ARQ</button>
+                            <button type="button" onclick="selectPosition('DEL')" id="pos-btn-DEL" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition">DEL</button>
+                            <button type="button" onclick="selectPosition('MED')" id="pos-btn-MED" class="pos-btn py-2.5 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-xs font-bold text-white transition">MED</button>
+                            <button type="button" onclick="selectPosition('DEF')" id="pos-btn-DEF" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition">DEF</button>
+                            <button type="button" onclick="selectPosition('ARQ')" id="pos-btn-ARQ" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition">ARQ</button>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-gray-400 mb-1.5">Carrera Universitaria UFRO</label>
                         <select id="input-career-select" onchange="updateCareerDurationHint()"
-                            class="w-full px-3.5 py-3 rounded-xl bg-[#0e1118] border border-[#222834] text-sm text-white focus:outline-none focus:border-blue-500">
+                            class="w-full px-3.5 py-3 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
                             <optgroup label="🎓 Educación, Cs. Sociales y Humanidades (FECSH)">
-                                <option value="Pedagogía en Educación Física, Deportes y Recreación">Pedagogía en Educación Física, Deportes y Recreación (5 años)</option>
-                                <option value="Psicología">Psicología (5 años)</option>
-                                <option value="Trabajo Social">Trabajo Social (5 años)</option>
-                                <option value="Sociología">Sociología (5 años)</option>
-                                <option value="Periodismo">Periodismo (5 años)</option>
-                                <option value="Pedagogía en Castellano y Comunicación">Pedagogía en Castellano y Comunicación (5 años)</option>
-                                <option value="Pedagogía en Historia, Geografía y Educación Cívica">Pedagogía en Historia, Geografía y Educación Cívica (5 años)</option>
-                                <option value="Pedagogía en Inglés">Pedagogía en Inglés (5 años)</option>
-                                <option value="Pedagogía en Ciencias mención Biología, Química o Física">Pedagogía en Ciencias mención Biología, Química o Física (5 años)</option>
-                                <option value="Pedagogía en Matemática">Pedagogía en Matemática (5 años)</option>
-                            </optgroup>
-                            <optgroup label="⚙️ Ingeniería y Ciencias (FICA)">
-                                <option value="Ingeniería Civil Industrial">Ingeniería Civil Industrial (6 años)</option>
-                                <option value="Ingeniería Civil Informática">Ingeniería Civil Informática (6 años)</option>
-                                <option value="Ingeniería Civil Electrónica">Ingeniería Civil Electrónica (6 años)</option>
-                                <option value="Ingeniería Civil Eléctrica">Ingeniería Civil Eléctrica (6 años)</option>
-                                <option value="Ingeniería Civil Mecánica">Ingeniería Civil Mecánica (6 años)</option>
-                                <option value="Ingeniería Civil Ambiental">Ingeniería Civil Ambiental (6 años)</option>
-                                <option value="Ingeniería Civil Química">Ingeniería Civil Química (6 años)</option>
-                                <option value="Ingeniería Civil Matemática">Ingeniería Civil Matemática (6 años)</option>
-                                <option value="Ingeniería Civil Física">Ingeniería Civil Física (6 años)</option>
-                                <option value="Ingeniería Civil en Biotecnología">Ingeniería Civil en Biotecnología (6 años)</option>
-                                <option value="Ingeniería Civil Telemática">Ingeniería Civil Telemática (6 años)</option>
-                                <option value="Ingeniería Civil (Plan Común)">Ingeniería Civil (Plan Común) (6 años)</option>
-                                <option value="Ingeniería en Construcción">Ingeniería en Construcción (5 años)</option>
-                                <option value="Bioquímica">Bioquímica (5 años)</option>
-                                <option value="Química y Farmacia">Química y Farmacia (5 años)</option>
-                            </optgroup>
-                            <optgroup label="🩺 Medicina (MED)">
-                                <option value="Medicina">Medicina (7 años)</option>
-                                <option value="Enfermería">Enfermería (5 años)</option>
-                                <option value="Kinesiología">Kinesiología (5 años)</option>
-                                <option value="Nutrición y Dietética">Nutrición y Dietética (5 años)</option>
-                                <option value="Obstetricia y Puericultura">Obstetricia y Puericultura (5 años)</option>
-                                <option value="Tecnología Médica">Tecnología Médica (5 años)</option>
-                                <option value="Fonoaudiología">Fonoaudiología (5 años)</option>
-                                <option value="Terapia Ocupacional">Terapia Ocupacional (5 años)</option>
-                            </optgroup>
-                            <optgroup label="🌱 Cs. Agropecuarias y Medioambiente (FCAM)">
-                                <option value="Agronomía">Agronomía (5 años)</option>
-                                <option value="Ingeniería en Recursos Naturales">Ingeniería en Recursos Naturales (5 años)</option>
-                                <option value="Biotecnología">Biotecnología (5 años)</option>
-                            </optgroup>
-                            <optgroup label="⚖️ Cs. Jurídicas y Empresariales (FCJE)">
-                                <option value="Derecho">Derecho (5 años)</option>
-                                <option value="Ingeniería Comercial">Ingeniería Comercial (5 años)</option>
-                                <option value="Contador Público y Auditor">Contador Público y Auditor (5 años)</option>
-                            </optgroup>
-                            <optgroup label="🦷 Odontología (ODO)">
-                                <option value="Odontología">Odontología (6 años)</option>
-                            </optgroup>
-                        </select>
-                        <p id="career-duration-hint" class="text-[11px] text-gray-400 mt-1.5"></p>
-                    </div>
-
-                    <button type="submit" class="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm shadow-lg shadow-blue-600/20 transition">
+<!-- ... existing code ... -->
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition">
                         Ver Equipos Disponibles →
                     </button>
                 </form>
 
                 <!-- Paso 1B: Elección de equipo disponible -->
                 <div id="step2-team-options" class="hidden space-y-4 animate-pop">
-                    <div class="flex items-center justify-between border-b border-[#222834] pb-3">
+                    <div class="flex items-center justify-between border-b border-[#2b2b2b] pb-3">
                         <div>
-                            <span id="trial-badge" class="text-[11px] font-bold uppercase text-sky-400">Pruebas Mechonas</span>
+                            <span id="trial-badge" class="text-[11px] font-bold uppercase text-[#8b96ff]">Pruebas Mechonas</span>
                             <h3 id="trial-title" class="text-base font-black text-white">Elige tu equipo inicial</h3>
                         </div>
                         <button onclick="backToStep1()" class="text-xs text-gray-400 hover:text-white font-bold">← Volver</button>
@@ -247,16 +192,16 @@
                     <div class="lg:col-span-7 surface-card rounded-2xl p-5 flex flex-col justify-between">
                         <div class="flex items-center justify-between gap-3">
                             <div class="flex items-center gap-3.5">
-                                <div id="hud-ovr-box" class="w-16 h-16 rounded-2xl bg-blue-600 flex flex-col items-center justify-center shrink-0 shadow-lg">
+                                <div id="hud-ovr-box" class="w-16 h-16 rounded-2xl bg-[#717fff] flex flex-col items-center justify-center shrink-0 shadow-lg">
                                     <span class="text-[9px] font-bold uppercase text-white/80">MEDIA</span>
                                     <span id="hud-ovr" class="text-2xl font-black text-white leading-none">58</span>
-                                    <span id="hud-pos" class="text-[10px] font-bold text-sky-200">MED</span>
+                                    <span id="hud-pos" class="text-[10px] font-bold text-[#d0d5ff]">MED</span>
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <h2 id="hud-name" class="text-lg sm:text-xl font-black text-white">Jugador</h2>
-                                        <span id="hud-branch-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0e1118] text-gray-300 border border-[#222834]">Masculino</span>
-                                        <span id="hud-star-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                                        <span id="hud-branch-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#151515] text-gray-300 border border-[#2b2b2b]">Masculino</span>
+                                        <span id="hud-star-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">
                                             ⭐ Estrella UFRO
                                         </span>
                                     </div>
@@ -264,18 +209,18 @@
                                     <p id="hud-faculty-info" class="text-[11px] text-gray-500"></p>
                                 </div>
                             </div>
-                            <button onclick="confirmNewCareer()" class="px-2.5 py-1.5 rounded-lg bg-[#0e1118] hover:bg-rose-950/50 text-gray-400 hover:text-rose-300 border border-[#222834] text-xs font-bold transition">
+                            <button onclick="confirmNewCareer()" class="px-2.5 py-1.5 rounded-lg bg-[#151515] hover:bg-rose-950/50 text-gray-400 hover:text-rose-300 border border-[#2b2b2b] text-xs font-bold transition">
                                 ↺ Reiniciar
                             </button>
                         </div>
 
-                        <div class="mt-4 pt-3 border-t border-[#1e2430]">
+                        <div class="mt-4 pt-3 border-t border-[#262626]">
                             <div class="flex justify-between text-xs mb-1.5">
-                                <span id="hud-timeline-label" class="font-bold text-sky-400">Año 1 · Semestre 1</span>
+                                <span id="hud-timeline-label" class="font-bold text-[#8b96ff]">Año 1 · Semestre 1</span>
                                 <span id="hud-timeline-sub" class="text-gray-500">1 / 12</span>
                             </div>
-                            <div class="w-full h-2 bg-[#0e1118] rounded-full overflow-hidden">
-                                <div id="hud-progress-bar" class="h-full bg-gradient-to-r from-blue-600 to-sky-400 transition-all duration-300" style="width: 8%"></div>
+                            <div class="w-full h-2 bg-[#151515] rounded-full overflow-hidden">
+                                <div id="hud-progress-bar" class="h-full bg-gradient-to-r from-[#717fff] to-[#98a2ff] transition-all duration-300" style="width: 8%"></div>
                             </div>
                         </div>
                     </div>
@@ -288,11 +233,11 @@
                                 <div class="text-[10px] text-gray-500 uppercase font-bold">PJ</div>
                             </div>
                             <div class="p-2.5 rounded-xl surface-sub">
-                                <div id="stat-total-goals" class="text-xl font-black text-sky-400">0</div>
+                                <div id="stat-total-goals" class="text-xl font-black text-[#8b96ff]">0</div>
                                 <div id="stat-label-goals" class="text-[10px] text-gray-500 uppercase font-bold">Goles</div>
                             </div>
                             <div class="p-2.5 rounded-xl surface-sub">
-                                <div id="stat-total-assists" class="text-xl font-black text-blue-400">0</div>
+                                <div id="stat-total-assists" class="text-xl font-black text-[#717fff]">0</div>
                                 <div id="stat-label-assists" class="text-[10px] text-gray-500 uppercase font-bold">Asist.</div>
                             </div>
                             <div class="p-2.5 rounded-xl surface-sub">
@@ -306,7 +251,7 @@
                 </div>
 
                 <!-- PANEL DE ACCIÓN PRINCIPAL -->
-                <div id="action-panel" class="surface-card rounded-2xl p-5 sm:p-6 border-blue-500/30 shadow-xl"></div>
+                <div id="action-panel" class="surface-card rounded-2xl p-5 sm:p-6 border-[#717fff]/35 shadow-xl"></div>
 
                 <!-- HISTORIAL SEMESTRAL -->
                 <div class="space-y-3">
@@ -320,18 +265,18 @@
         <!-- VISTA 2: RESUMEN DE CARRERA SIMPLIFICADO + DETALLE COMPLETO      -->
         <!-- ================================================================ -->
         <section id="view-palmares" class="hidden space-y-5">
-            <div id="palmares-player-card" class="surface-card rounded-2xl p-6 border-blue-500/30"></div>
+            <div id="palmares-player-card" class="surface-card rounded-2xl p-6 border-[#717fff]/35"></div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="trophies-grid"></div>
 
             <!-- Trayectoria Simplificada por Equipo -->
             <div class="surface-card rounded-2xl p-5 space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#1e2430] pb-3">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#262626] pb-3">
                     <div>
                         <h3 class="text-sm font-black uppercase tracking-wider text-white">Trayectoria por Equipo</h3>
                         <p class="text-[11px] text-gray-500">Resumen de etapas, duración y títulos conquistados en cada club.</p>
                     </div>
                     <button onclick="toggleFullCareerDetail()" id="btn-toggle-full-career"
-                        class="px-3.5 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-sky-300 border border-blue-500/30 text-xs font-bold transition">
+                        class="px-3.5 py-2 rounded-xl bg-[#717fff]/20 hover:bg-[#717fff]/30 text-[#a3adff] border border-[#717fff]/35 text-xs font-bold transition">
                         Ver carrera completa ↓
                     </button>
                 </div>
@@ -339,781 +284,33 @@
                 <div id="career-stints-list" class="space-y-2.5"></div>
 
                 <!-- Detalle completo por semestre (Oculto por defecto) -->
-                <div id="full-career-detail-container" class="hidden pt-4 border-t border-[#1e2430] space-y-3">
+                <div id="full-career-detail-container" class="hidden pt-4 border-t border-[#262626] space-y-3">
                     <h4 class="text-xs font-extrabold uppercase tracking-wider text-gray-400">Detalle Completo Semestre a Semestre</h4>
                     <div id="full-career-semesters-list" class="space-y-2"></div>
                 </div>
             </div>
         </section>
-
-    </main>
-
-    <!-- ==================== SCRIPT PRINCIPAL ==================== -->
-    <script>
-        // =========================================================================
-        // 1. GOOGLE SHEETS ID & CATÁLOGO UFRO (6 FACULTADES · 40 CARRERAS)
-        // =========================================================================
-        const GOOGLE_SHEET_ID = '1qgwNRN8AyiXRCUeJ82nMq2wG0eEjPnRKEgJp5irYBMI';
-        const SHEET_TAB_MALE = 'Equipos_UFRO';
-        const SHEET_TAB_FEMALE = 'Equipos_UFRO_Femenino';
-
-        const UFRO_FACULTY_META = {
-            FECSH: { name: 'Educación, Cs. Sociales y Humanidades', short: 'FECSH', icon: '🎓' },
-            FICA:  { name: 'Ingeniería y Ciencias', short: 'FICA', icon: '⚙️' },
-            MED:   { name: 'Medicina', short: 'MED', icon: '🩺' },
-            FCAM:  { name: 'Cs. Agropecuarias y Medioambiente', short: 'FCAM', icon: '🌱' },
-            FCJE:  { name: 'Cs. Jurídicas y Empresariales', short: 'FCJE', icon: '⚖️' },
-            ODO:   { name: 'Odontología', short: 'ODO', icon: '🦷' }
-        };
-
-        const UFRO_CAREERS_CATALOG = [
-            // FECSH (10)
-            { id: 'EFI', career: 'Pedagogía en Educación Física, Deportes y Recreación', faculty: 'Educación, Cs. Sociales y Humanidades', facultyShort: 'FECSH', years: 5,
-              m: [{ name: 'Efiorentina', ovr: 82, l: 4, f: 3, i: 2 }, { name: 'Atlético Efis', ovr: 73, l: 1, f: 1, i: 0 }, { name: 'Juvenil Efis', ovr: 65, l: 0, f: 0, i: 0 }],
-              f: { name: 'Efiorentina Femenino', ovr: 83, l: 4, f: 4, i: 2 } },
-            { id: 'PSI', career: 'Psicología', faculty: 'Educación, Cs. Sociales y Humanidades', facultyShort: 'FECSH', years: 5,
-              m: [{ name: 'Psico United', ovr: 79, l: 2, f: 2, i: 0 }, { name: 'Deportivo Freud', ovr: 70, l: 0, f: 1, i: 0 }, { name: 'Conducta F.C.', ovr: 61, l: 0, f: 0, i: 0 }],
-              f: { name: 'Valkirias Psicología', ovr: 78, l: 2, f: 2, i: 0 } },
-            { id: 'TSO', career: 'Trabajo Social', faculty: 'Educación, Cs. Sociales y Humanidades', facultyShort: 'FECSH', years: 5,
-              m: [{ name: 'Real Comunitario', ovr: 76, l: 1, f: 1, i: 0 }, { name: 'Social F.C.', ovr: 68, l: 0, f: 0, i: 0 }, { name: 'Atlético Bienestar', ovr: 59, l: 0, f: 0, i: 0 }],
-              f: { name: 'Amazonas Social', ovr: 74, l: 1, f: 1, i: 0 } },
-            { id: 'SOC', career: 'Sociología', faculty: 'Educación, Cs. Sociales y Humanidades', facultyShort: 'FECSH', years: 5,
-              m: [{ name: 'Dinamo Sociología', ovr: 77, l: 1, f: 1, i: 0 }, { name: 'Estructura F.C.', ovr: 69, l: 0, f: 0, i: 0 }, { name: 'Cuantitativo Sporting', ovr: 58, l: 0, f: 0, i: 0 }],
-              f: { name: 'Atenea Sociología', ovr: 71, l: 0, f: 1, i: 0 } },
-            { id: 'PER', career: 'Periodismo', faculty: 'Educación, Cs. Sociales y Humanidades', facultyShort: 'FECSH', years: 5,
-              m: [{ name: 'Prensa Austral F.C.', ovr: 78, l: 2, f: 1, i: 0 }, { name: 'Crónica Central', ovr: 71, l: 1, f: 0, i: 0 }, { name: 'Deportivo Redacción', ovr: 62, l: 0, f: 0, i: 0 }],
-              f: { name: 'Prensa Femenina F.C.', ovr: 76, l: 2, f: 1, i: 0 } },
-            { id: 'CAS', career: 'Pedagogía en Castellano y Comunicación', faculty: 'Educación, Cs. Sociales y Humanidades', facultyShort: 'FECSH', years: 5,
-              m: [{ name: 'Real Gramática', ovr: 75, l: 1, f: 1, i: 0 }, { name: 'Lingüística F.C.', ovr: 67, l: 0, f: 0, i: 0 }, { name: 'Sintaxis Sporting', ovr: 57, l: 0, f: 0, i: 0 }],
-              f: { name: 'Letras Unidas Fem', ovr: 69, l: 0, f: 1, i: 0 } },
-            { id: 'HIS', career: 'Pedagogía en Historia, Geografía y Educación Cívica', faculty: 'Educación, Cs. Sociales y Humanidades', facultyShort: 'FECSH', years: 5,
-              m: [{ name: 'Esparta Histórica', ovr: 77, l: 2, f: 1, i: 0 }, { name: 'Cronos F.C.', ovr: 70, l: 0, f: 0, i: 0 }, { name: 'Deportivo Cartografía', ovr: 60, l: 0, f: 0, i: 0 }],
-              f: { name: 'Atenea Historia', ovr: 75, l: 1, f: 1, i: 0 } },
-            { id: 'ING', career: 'Pedagogía en Inglés', faculty: 'Educación, Cs. Sociales y Humanidades', facultyShort: 'FECSH', years: 5,
-              m: [{ name: 'Cambridge Wanderers', ovr: 76, l: 1, f: 1, i: 0 }, { name: 'Oxford United', ovr: 68, l: 0, f: 0, i: 0 }, { name: 'London City F.C.', ovr: 59, l: 0, f: 0, i: 0 }],
-              f: { name: 'Lionesses English F.C.', ovr: 72, l: 0, f: 1, i: 0 } },
-            { id: 'CIE', career: 'Pedagogía en Ciencias mención Biología, Química o Física', faculty: 'Educación, Cs. Sociales y Humanidades', facultyShort: 'FECSH', years: 5,
-              m: [{ name: 'Quantum Pedagogía', ovr: 75, l: 1, f: 0, i: 0 }, { name: 'Atómica F.C.', ovr: 67, l: 0, f: 0, i: 0 }, { name: 'Reacción Sporting', ovr: 58, l: 0, f: 0, i: 0 }],
-              f: { name: 'Científicas F.C.', ovr: 68, l: 0, f: 0, i: 0 } },
-            { id: 'MAT', career: 'Pedagogía en Matemática', faculty: 'Educación, Cs. Sociales y Humanidades', facultyShort: 'FECSH', years: 5,
-              m: [{ name: 'Infinito F.C.', ovr: 78, l: 2, f: 1, i: 0 }, { name: 'Pi United', ovr: 69, l: 0, f: 0, i: 0 }, { name: 'Derivada Sporting', ovr: 60, l: 0, f: 0, i: 0 }],
-              f: { name: 'Éuler Fem', ovr: 73, l: 1, f: 1, i: 0 } },
-
-            // FICA (15)
-            { id: 'IND', career: 'Ingeniería Civil Industrial', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Industrial United', ovr: 81, l: 3, f: 3, i: 3 }, { name: 'Optimización F.C.', ovr: 72, l: 0, f: 1, i: 0 }, { name: 'Cadena de Valor Sporting', ovr: 63, l: 0, f: 0, i: 0 }],
-              f: { name: 'Pioneras Civil Industrial', ovr: 81, l: 3, f: 3, i: 2 } },
-            { id: 'INF', career: 'Ingeniería Civil Informática', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Real Informática', ovr: 80, l: 2, f: 2, i: 1 }, { name: 'Deportivo Algoritmo', ovr: 73, l: 1, f: 0, i: 0 }, { name: 'Byte Juniors', ovr: 64, l: 0, f: 0, i: 0 }],
-              f: { name: 'Valkirias Informática', ovr: 79, l: 2, f: 2, i: 1 } },
-            { id: 'ELC', career: 'Ingeniería Civil Electrónica', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Voltio Central', ovr: 78, l: 1, f: 1, i: 0 }, { name: 'Resistencia F.C.', ovr: 70, l: 0, f: 0, i: 0 }, { name: 'Microchip United', ovr: 61, l: 0, f: 0, i: 0 }],
-              f: { name: 'Tesla Fem F.C.', ovr: 72, l: 0, f: 1, i: 0 } },
-            { id: 'ELE', career: 'Ingeniería Civil Eléctrica', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Alta Tensión F.C.', ovr: 79, l: 2, f: 2, i: 0 }, { name: 'Rayo Austral', ovr: 69, l: 0, f: 0, i: 0 }, { name: 'Corriente Sporting', ovr: 60, l: 0, f: 0, i: 0 }],
-              f: { name: 'Voltias Eléctrica', ovr: 75, l: 1, f: 1, i: 0 } },
-            { id: 'MEC', career: 'Ingeniería Civil Mecánica', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Torno Mecánico F.C.', ovr: 79, l: 2, f: 1, i: 0 }, { name: 'Dinamo Mecánica', ovr: 71, l: 0, f: 0, i: 0 }, { name: 'Piñón Sporting', ovr: 62, l: 0, f: 0, i: 0 }],
-              f: { name: 'Fuerza Mecánica Fem', ovr: 74, l: 1, f: 1, i: 0 } },
-            { id: 'AMB', career: 'Ingeniería Civil Ambiental', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Verde Austral F.C.', ovr: 76, l: 1, f: 1, i: 0 }, { name: 'Eco Ingeniería', ovr: 67, l: 0, f: 0, i: 0 }, { name: 'Reciclaje Sporting', ovr: 58, l: 0, f: 0, i: 0 }],
-              f: { name: 'Gaia Ambiental F.C.', ovr: 71, l: 1, f: 0, i: 0 } },
-            { id: 'QUI', career: 'Ingeniería Civil Química', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Alquimia F.C.', ovr: 77, l: 1, f: 1, i: 0 }, { name: 'Reactor United', ovr: 68, l: 0, f: 0, i: 0 }, { name: 'Catalizador F.C.', ovr: 59, l: 0, f: 0, i: 0 }],
-              f: { name: 'Alquimistas Fem', ovr: 73, l: 1, f: 1, i: 0 } },
-            { id: 'CMA', career: 'Ingeniería Civil Matemática', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Caos Matemático', ovr: 77, l: 1, f: 1, i: 0 }, { name: 'Matriz F.C.', ovr: 69, l: 0, f: 0, i: 0 }, { name: 'Fractal United', ovr: 61, l: 0, f: 0, i: 0 }],
-              f: { name: 'Matriz Polar Fem', ovr: 70, l: 0, f: 1, i: 0 } },
-            { id: 'FIS', career: 'Ingeniería Civil Física', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Gravedad Cero F.C.', ovr: 76, l: 1, f: 0, i: 0 }, { name: 'Inercia Sporting', ovr: 68, l: 0, f: 0, i: 0 }, { name: 'Entropía Juniors', ovr: 57, l: 0, f: 0, i: 0 }],
-              f: { name: 'Quantum Girls F.C.', ovr: 67, l: 0, f: 0, i: 0 } },
-            { id: 'IBT', career: 'Ingeniería Civil en Biotecnología', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Genoma F.C.', ovr: 77, l: 1, f: 1, i: 0 }, { name: 'BioTech United', ovr: 68, l: 0, f: 0, i: 0 }, { name: 'Celular Sporting', ovr: 58, l: 0, f: 0, i: 0 }],
-              f: { name: 'BioLíderes Fem', ovr: 74, l: 1, f: 1, i: 0 } },
-            { id: 'TEL', career: 'Ingeniería Civil Telemática', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Fibra Óptica F.C.', ovr: 78, l: 1, f: 1, i: 0 }, { name: 'Redes United', ovr: 70, l: 0, f: 0, i: 0 }, { name: 'Enlace Sporting', ovr: 59, l: 0, f: 0, i: 0 }],
-              f: { name: 'Cíber Redes Fem', ovr: 69, l: 0, f: 0, i: 0 } },
-            { id: 'PLC', career: 'Ingeniería Civil (Plan Común)', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 6,
-              m: [{ name: 'Fuerza Común F.C.', ovr: 75, l: 1, f: 0, i: 0 }, { name: 'Semillero Civil', ovr: 67, l: 0, f: 0, i: 0 }, { name: 'Base F.C.', ovr: 56, l: 0, f: 0, i: 0 }],
-              f: { name: 'Semillero Civil Fem', ovr: 65, l: 1, f: 0, i: 0 } },
-            { id: 'CON', career: 'Ingeniería en Construcción', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 5,
-              m: [{ name: 'Hormigón Armado F.C.', ovr: 80, l: 2, f: 2, i: 0 }, { name: 'Obra Gruesa', ovr: 72, l: 1, f: 0, i: 0 }, { name: 'Andamio Sporting', ovr: 63, l: 0, f: 0, i: 0 }],
-              f: { name: 'Constructoras Austral F.C.', ovr: 77, l: 2, f: 1, i: 0 } },
-            { id: 'BQM', career: 'Bioquímica', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 5,
-              m: [{ name: 'Enzima F.C.', ovr: 76, l: 1, f: 1, i: 0 }, { name: 'Proteína United', ovr: 68, l: 0, f: 0, i: 0 }, { name: 'Molécula Sporting', ovr: 59, l: 0, f: 0, i: 0 }],
-              f: { name: 'Químicas Australes', ovr: 72, l: 1, f: 0, i: 0 } },
-            { id: 'QYF', career: 'Química y Farmacia', faculty: 'Ingeniería y Ciencias', facultyShort: 'FICA', years: 5,
-              m: [{ name: 'Botica Real F.C.', ovr: 77, l: 1, f: 1, i: 0 }, { name: 'Dosis Perfecta', ovr: 69, l: 0, f: 0, i: 0 }, { name: 'Píldora Sporting', ovr: 60, l: 0, f: 0, i: 0 }],
-              f: { name: 'Botica Austral Fem', ovr: 76, l: 1, f: 1, i: 0 } },
-
-            // MEDICINA (8)
-            { id: 'MED', career: 'Medicina', faculty: 'Medicina', facultyShort: 'MED', years: 7,
-              m: [{ name: 'Atlético Medicina', ovr: 82, l: 4, f: 3, i: 1 }, { name: 'Clínico United', ovr: 73, l: 0, f: 1, i: 0 }, { name: 'Galenos F.C.', ovr: 65, l: 0, f: 0, i: 0 }],
-              f: { name: 'Leonesas Medicina', ovr: 82, l: 3, f: 3, i: 1 } },
-            { id: 'ENF', career: 'Enfermería', faculty: 'Medicina', facultyShort: 'MED', years: 5,
-              m: [{ name: 'Cruz Roja F.C.', ovr: 80, l: 2, f: 2, i: 0 }, { name: 'Cuidados Intensivos', ovr: 71, l: 1, f: 0, i: 0 }, { name: 'Vocación Sporting', ovr: 63, l: 0, f: 0, i: 0 }],
-              f: { name: 'Florence Fem Enfermería', ovr: 80, l: 2, f: 2, i: 0 } },
-            { id: 'KIN', career: 'Kinesiología', faculty: 'Medicina', facultyShort: 'MED', years: 5,
-              m: [{ name: 'Kine Máquina F.C.', ovr: 81, l: 3, f: 2, i: 0 }, { name: 'Muscular United', ovr: 72, l: 1, f: 0, i: 0 }, { name: 'Rehabilitación F.C.', ovr: 64, l: 0, f: 0, i: 0 }],
-              f: { name: 'Kine Power Fem', ovr: 81, l: 3, f: 2, i: 1 } },
-            { id: 'NUT', career: 'Nutrición y Dietética', faculty: 'Medicina', facultyShort: 'MED', years: 5,
-              m: [{ name: 'Caloría Cero F.C.', ovr: 77, l: 1, f: 1, i: 0 }, { name: 'Dieta Balanceada', ovr: 69, l: 0, f: 0, i: 0 }, { name: 'Proteico Sporting', ovr: 61, l: 0, f: 0, i: 0 }],
-              f: { name: 'NutriSport Fem', ovr: 73, l: 1, f: 1, i: 0 } },
-            { id: 'OBS', career: 'Obstetricia y Puericultura', faculty: 'Medicina', facultyShort: 'MED', years: 5,
-              m: [{ name: 'Matronería Real', ovr: 78, l: 2, f: 1, i: 0 }, { name: 'Neonatal F.C.', ovr: 70, l: 0, f: 0, i: 0 }, { name: 'Alumbramiento Sporting', ovr: 60, l: 0, f: 0, i: 0 }],
-              f: { name: 'Matronas United', ovr: 77, l: 2, f: 1, i: 0 } },
-            { id: 'TMED', career: 'Tecnología Médica', faculty: 'Medicina', facultyShort: 'MED', years: 5,
-              m: [{ name: 'Bioanálisis F.C.', ovr: 78, l: 1, f: 1, i: 0 }, { name: 'Rayos X United', ovr: 70, l: 0, f: 0, i: 0 }, { name: 'Microscopio Sporting', ovr: 62, l: 0, f: 0, i: 0 }],
-              f: { name: 'BioLab Femenino', ovr: 75, l: 1, f: 1, i: 0 } },
-            { id: 'FON', career: 'Fonoaudiología', faculty: 'Medicina', facultyShort: 'MED', years: 5,
-              m: [{ name: 'Voz y Ritmo F.C.', ovr: 76, l: 1, f: 0, i: 0 }, { name: 'Decibel United', ovr: 68, l: 0, f: 0, i: 0 }, { name: 'Acústica Sporting', ovr: 59, l: 0, f: 0, i: 0 }],
-              f: { name: 'Voces Australes Fem', ovr: 70, l: 1, f: 0, i: 0 } },
-            { id: 'TER', career: 'Terapia Ocupacional', faculty: 'Medicina', facultyShort: 'MED', years: 5,
-              m: [{ name: 'Ergonomía Real', ovr: 76, l: 1, f: 1, i: 0 }, { name: 'Autonomía F.C.', ovr: 68, l: 0, f: 0, i: 0 }, { name: 'Inclusión Sporting', ovr: 60, l: 0, f: 0, i: 0 }],
-              f: { name: 'Terapia Activa Fem', ovr: 72, l: 1, f: 0, i: 0 } },
-
-            // FCAM (3)
-            { id: 'AGR', career: 'Agronomía', faculty: 'Cs. Agropecuarias y Medioambiente', facultyShort: 'FCAM', years: 5,
-              m: [{ name: 'Agronomía Austral F.C.', ovr: 80, l: 2, f: 3, i: 1 }, { name: 'Cosecha United', ovr: 71, l: 1, f: 0, i: 0 }, { name: 'Semilla Sporting', ovr: 62, l: 0, f: 0, i: 0 }],
-              f: { name: 'Agrónomas del Sur F.C.', ovr: 78, l: 2, f: 2, i: 0 } },
-            { id: 'IRN', career: 'Ingeniería en Recursos Naturales', faculty: 'Cs. Agropecuarias y Medioambiente', facultyShort: 'FCAM', years: 5,
-              m: [{ name: 'Araucaria Real', ovr: 77, l: 1, f: 2, i: 0 }, { name: 'Nativo F.C.', ovr: 68, l: 0, f: 0, i: 0 }, { name: 'Bosque Sporting', ovr: 59, l: 0, f: 0, i: 0 }],
-              f: { name: 'Bosque Nativo Fem', ovr: 71, l: 1, f: 1, i: 0 } },
-            { id: 'BIO', career: 'Biotecnología', faculty: 'Cs. Agropecuarias y Medioambiente', facultyShort: 'FCAM', years: 5,
-              m: [{ name: 'BioGen F.C.', ovr: 76, l: 1, f: 1, i: 0 }, { name: 'ADN United', ovr: 67, l: 0, f: 0, i: 0 }, { name: 'Cepa Sporting', ovr: 58, l: 0, f: 0, i: 0 }],
-              f: { name: 'BioGen Fem', ovr: 74, l: 1, f: 1, i: 0 } },
-
-            // FCJE (3)
-            { id: 'DER', career: 'Derecho', faculty: 'Cs. Jurídicas y Empresariales', facultyShort: 'FCJE', years: 5,
-              m: [{ name: 'Iuris Tantum F.C.', ovr: 81, l: 3, f: 3, i: 1 }, { name: 'Litigio United', ovr: 72, l: 1, f: 0, i: 0 }, { name: 'Código Sporting', ovr: 63, l: 0, f: 0, i: 0 }],
-              f: { name: 'Iuris Fem Derecho', ovr: 80, l: 2, f: 2, i: 1 } },
-            { id: 'ICO', career: 'Ingeniería Comercial', faculty: 'Cs. Jurídicas y Empresariales', facultyShort: 'FCJE', years: 5,
-              m: [{ name: 'Mercado Capital F.C.', ovr: 80, l: 2, f: 2, i: 1 }, { name: 'Activo Fijo United', ovr: 71, l: 0, f: 1, i: 0 }, { name: 'StartUp Sporting', ovr: 62, l: 0, f: 0, i: 0 }],
-              f: { name: 'Emprendedoras F.C.', ovr: 79, l: 2, f: 2, i: 0 } },
-            { id: 'AUD', career: 'Contador Público y Auditor', faculty: 'Cs. Jurídicas y Empresariales', facultyShort: 'FCJE', years: 5,
-              m: [{ name: 'Balance Real F.C.', ovr: 77, l: 1, f: 2, i: 0 }, { name: 'Auditoría United', ovr: 69, l: 0, f: 0, i: 0 }, { name: 'Tributo Sporting', ovr: 60, l: 0, f: 0, i: 0 }],
-              f: { name: 'Auditoras Unidas', ovr: 73, l: 1, f: 1, i: 0 } },
-
-            // ODONTOLOGÍA (1)
-            { id: 'ODO', career: 'Odontología', faculty: 'Odontología', facultyShort: 'ODO', years: 6,
-              m: [{ name: 'Odonto Real F.C.', ovr: 79, l: 2, f: 3, i: 0 }, { name: 'Titanio Dental', ovr: 70, l: 0, f: 1, i: 0 }, { name: 'Esmalte Sporting', ovr: 61, l: 0, f: 0, i: 0 }],
-              f: { name: 'Odonto Star Fem', ovr: 77, l: 2, f: 2, i: 0 } }
-        ];
-
-        function canonicalizeFaculty(rawFaculty) {
-            const norm = String(rawFaculty || '').toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/\./g, '')
-                .trim();
-
-            if (norm.includes('educacion') || norm.includes('humanidades') || norm.includes('fecsh')) {
-                return { key: 'FECSH', ...UFRO_FACULTY_META.FECSH };
-            }
-            if (norm.includes('ingenieria') || norm.includes('fica')) {
-                return { key: 'FICA', ...UFRO_FACULTY_META.FICA };
-            }
-            if (norm.includes('medicina') || norm === 'med') {
-                return { key: 'MED', ...UFRO_FACULTY_META.MED };
-            }
-            if (norm.includes('agropecuarias') || norm.includes('medioambiente') || norm.includes('fcam')) {
-                return { key: 'FCAM', ...UFRO_FACULTY_META.FCAM };
-            }
-            if (norm.includes('juridicas') || norm.includes('empresariales') || norm.includes('fcje')) {
-                return { key: 'FCJE', ...UFRO_FACULTY_META.FCJE };
-            }
-            if (norm.includes('odontologia') || norm === 'odo') {
-                return { key: 'ODO', ...UFRO_FACULTY_META.ODO };
-            }
-
-            const cleanName = String(rawFaculty || 'Facultad UFRO').replace(/^Facultad\s+de\s+/i, '').trim() || 'Facultad UFRO';
-            const shortCode = cleanName.replace(/[^A-Za-z]/g, '').slice(0, 4).toUpperCase() || 'UFRO';
-            return { key: cleanName.toLowerCase(), name: cleanName, short: shortCode, icon: '🏛️' };
-        }
-
-        function extractCareerCodeFromUniqueCode(uniqueCode, careerRaw) {
-            const parts = String(uniqueCode || '').trim().toUpperCase().split('-').filter(Boolean);
-            const startIdx = parts[0] === 'FEM' ? 1 : 0;
-            if (parts.length >= startIdx + 3) {
-                return parts[startIdx + 1];
-            }
-            return String(careerRaw || 'UFRO')
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^A-Za-z0-9]/g, '')
-                .slice(0, 8)
-                .toUpperCase();
-        }
-
-        function inferCareerYears(careerName, explicitDurationCol, explicitSemestersCol) {
-            // 1. Si existe columna explícita de semestres (ej: 10, 12, 14)
-            const semParsed = Number(explicitSemestersCol);
-            if (!isNaN(semParsed) && semParsed >= 4 && semParsed <= 20) {
-                return Math.max(2, Math.round(semParsed / 2));
-            }
-
-            // 2. Si existe columna de duración, distinguir automáticamente si el número está en semestres (>= 8) o en años (<= 7)
-            const durParsed = Number(explicitDurationCol);
-            if (!isNaN(durParsed) && durParsed > 0) {
-                if (durParsed >= 8 && durParsed <= 20) {
-                    return Math.max(2, Math.round(durParsed / 2));
-                }
-                if (durParsed >= 2 && durParsed <= 7) {
-                    return Math.round(durParsed);
-                }
-            }
-
-            // 3. Respaldo solo si la celda en el Sheet está vacía
-            const key = String(careerName || '').toLowerCase();
-            if (key.includes('medicina')) return 7;
-            if (key.includes('civil') || key.includes('odontología') || key.includes('odontologia')) return 6;
-            return 5;
-        }
-
-        function buildFlatTeamsDB() {
-            const maleList = [];
-            const femaleList = [];
-            UFRO_CAREERS_CATALOG.forEach(c => {
-                c.m.forEach((team, idx) => {
-                    const div = idx + 1;
-                    maleList.push({
-                        code: `${c.facultyShort}-${c.id}-0${div}`,
-                        name: team.name,
-                        careerId: c.id,
-                        career: c.career,
-                        faculty: c.faculty,
-                        facultyShort: c.facultyShort,
-                        years: c.years,
-                        division: div,
-                        ovr: team.ovr,
-                        titles: { league: team.l, faculty: team.f, inter: team.i }
-                    });
-                });
-                if (c.f) {
-                    femaleList.push({
-                        code: `FEM-${c.facultyShort}-${c.id}-01`,
-                        name: c.f.name,
-                        careerId: c.id,
-                        career: c.career,
-                        faculty: c.faculty,
-                        facultyShort: c.facultyShort,
-                        years: c.years,
-                        division: 1,
-                        ovr: c.f.ovr,
-                        titles: { league: c.f.l, faculty: c.f.f, inter: c.f.i }
-                    });
-                }
-            });
-            return { M: maleList, F: femaleList };
-        }
-
-        let teamsDBByGender = buildFlatTeamsDB();
-        let dynamicCareersCatalog = [...UFRO_CAREERS_CATALOG];
-
-        // =========================================================================
-        // 2. EVENTOS ESPECIALES (INCLUYE REGRESO TRIUNFAL & ING. COMERCIAL)
-        // =========================================================================
-        const STANDARD_EVENTS = [
-            {
-                id: 'fichaje_estrella',
-                badge: '🕵️ Gestión de Plantel',
-                title: 'Te encargan un fichaje clave',
-                desc: 'Tu equipo te pide convencer al refuerzo estrella de otra carrera para jugar este semestre.',
-                riskLabel: 'Gestionar fichaje (50% / 50%)',
-                safeLabel: 'No arriesgar el camarín',
-                winProb: 0.50,
-                win: { text: '¡Fichaje exitoso! El refuerzo la rompe, ganas una copa y subes +2 de Media.', ovrDelta: 2, forceCupWin: true, suspend: false },
-                lose: { text: 'El fichaje salió mal, se rompió el camarín, pierden el torneo y bajas -1 de Media.', ovrDelta: -1, forceElimination: true, suspend: false }
-            },
-            {
-                id: 'pildoras_qyf',
-                badge: '🧪 Química y Farmacia',
-                title: 'Píldoras experimentales',
-                desc: 'Un jugador de Química y Farmacia te ofrece unas píldoras experimentales para rendir mejor en cancha.',
-                riskLabel: 'Tomar píldoras (50% / 50%)',
-                safeLabel: 'Rechazar y jugar limpio',
-                winProb: 0.50,
-                win: { text: '¡Rendimiento sobrenatural! Corres todo el partido sin cansarte. +3 de Media.', ovrDelta: 3, suspend: false },
-                lose: { text: '¡Te pillaron! Expulsado hasta el final de la temporada (0 PJ) y -2 de Media.', ovrDelta: -2, suspend: true }
-            },
-            {
-                id: 'carrete_mechon',
-                badge: '🍻 Vida Universitaria',
-                title: 'Previo mechón antes de la final',
-                desc: 'Tu generación organiza celebración el jueves antes del partido decisivo en cancha 1.',
-                riskLabel: 'Ir con el equipo (50% / 50%)',
-                safeLabel: 'Quedarse descansando',
-                winProb: 0.50,
-                win: { text: '¡Unión total de camarín! Entraron motivadísimos. +2 de Media.', ovrDelta: 2, suspend: false },
-                lose: { text: '¡Resaca fatal! Apenas te podías las piernas en cancha. -2 de Media.', ovrDelta: -2, suspend: false }
-            },
-            {
-                id: 'certamen_filtro',
-                badge: '📚 Carga Académica',
-                title: 'Certamen cortacabeza mismo día',
-                desc: 'Tienes prueba de un ramo filtro dos horas antes del clásico de facultad.',
-                riskLabel: 'Rendir y correr a la cancha (50% / 50%)',
-                safeLabel: 'Pedir justificativo deportivo (+1 Media)',
-                safeEffect: { ovrDelta: 1, text: 'Te organizaste bien y cumpliste sin desgaste. +1 de Media.' },
-                winProb: 0.50,
-                win: { text: '¡Aprobaste el ramo y clavaste un golazo al ángulo! +2 de Media.', ovrDelta: 2, suspend: false },
-                lose: { text: 'Te fue mal en la prueba y jugaste desconcentrado. -1 de Media.', ovrDelta: -1, suspend: false }
-            },
-            {
-                id: 'kine_vendaje',
-                badge: '🩹 Clínica Kinesiología',
-                title: 'Tratamiento relámpago de Kine',
-                desc: 'Sientes una sobrecarga muscular y en Kinesiología te ofrecen probar una terapia nueva.',
-                riskLabel: 'Probar terapia (55% / 45%)',
-                safeLabel: 'Descanso tradicional',
-                winProb: 0.55,
-                win: { text: '¡Recuperación total! Vuelves más rápido que nunca. +2 de Media.', ovrDelta: 2, suspend: false },
-                lose: { text: 'Recaída muscular. Te pierdes todo el semestre (-2 Media).', ovrDelta: -2, suspend: true }
-            },
-            {
-                id: 'jineta_capitan',
-                badge: '©️ Liderazgo',
-                title: 'Te ofrecen la jineta de capitán',
-                desc: 'El plantel te pide asumir la capitanía en los partidos bravos del semestre.',
-                riskLabel: 'Aceptar capitanía (60% / 40%)',
-                safeLabel: 'Cederla a un veterano',
-                winProb: 0.60,
-                win: { text: '¡Líder absoluto! Guiaste al equipo al título y subes +2 de Media.', ovrDelta: 2, forceCupWin: true, suspend: false },
-                lose: { text: 'Te pesó la presión en los momentos clave. -1 de Media.', ovrDelta: -1, suspend: false }
-            },
-            {
-                id: 'cancha_barro',
-                badge: '🌧️ Invierno en Temuco',
-                title: 'Diluvio y cancha pesada',
-                desc: 'Cae un temporal en Temuco justo a la hora del partido. ¿Juegas al límite o conservador?',
-                riskLabel: 'Trancar cada balón al límite (50% / 50%)',
-                safeLabel: 'Jugar simple sin arriesgar',
-                winProb: 0.50,
-                win: { text: '¡Figura bajo la lluvia! Imparable en el barro. +2 de Media.', ovrDelta: 2, suspend: false },
-                lose: { text: 'Resbalón y tarjeta roja directa. -1 de Media.', ovrDelta: -1, suspend: false }
-            }
-        ];
-
-        const STORAGE_KEY_CAREER = 'leyenda_ufro_career_v1';
-        let careerState = null;
-        let selectedGender = 'M';
-        let selectedPosition = 'MED';
-        let trialCandidates = [];
-        let showFullCareerDetail = false;
-
-        // =========================================================================
-        // 3. INICIALIZACIÓN Y SINCRONIZACIÓN EN VIVO CON GOOGLE SHEETS
-        // =========================================================================
-        function updateSyncBadge(status, label) {
-            const dot = document.getElementById('sheets-sync-dot');
-            const txt = document.getElementById('sheets-sync-text');
-            if (!dot || !txt) return;
-
-            if (status === 'syncing') {
-                dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping';
-                txt.textContent = label || 'Sincronizando...';
-            } else if (status === 'live') {
-                dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
-                txt.textContent = label || 'BD en vivo';
+<!-- ... existing code ... -->
             } else {
-                dot.className = 'w-1.5 h-1.5 rounded-full bg-sky-400';
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-[#717fff]';
                 txt.textContent = label || 'BD Local';
             }
         }
-
-        function buildSheetCsvUrls(sheetName) {
-            const bust = Date.now();
-            const encodedSheet = encodeURIComponent(sheetName);
-            return [
-                `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodedSheet}&t=${bust}`,
-                `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&sheet=${encodedSheet}&t=${bust}`
-            ];
-        }
-
-        async function fetchSheetTabCsv(sheetName) {
-            const urls = buildSheetCsvUrls(sheetName);
-            for (const url of urls) {
-                try {
-                    const res = await fetch(url, { cache: 'no-store' });
-                    if (!res.ok) continue;
-                    const text = await res.text();
-                    if (text && !text.trim().startsWith('<!DOCTYPE html') && text.includes(',')) {
-                        return text;
-                    }
-                } catch (e) {}
-            }
-            return null;
-        }
-
-        function normalizeDivisionValue(rawDiv, isFemale) {
-            if (isFemale) return 1;
-            const s = String(rawDiv || '').toLowerCase();
-            if (s.includes('1') || s.includes('primera')) return 1;
-            if (s.includes('2') || s.includes('segunda')) return 2;
-            return 3;
-        }
-
-        function parseTitlesFromSheetText(logrosStr, explicitL, explicitF, explicitI) {
-            if (explicitL !== undefined || explicitF !== undefined || explicitI !== undefined) {
-                return {
-                    league: Number(explicitL) || 0,
-                    faculty: Number(explicitF) || 0,
-                    inter: Number(explicitI) || 0
-                };
-            }
-            const txt = String(logrosStr || '').toLowerCase();
-            const countMatches = (regex) => {
-                let total = 0;
-                let m;
-                while ((m = regex.exec(txt)) !== null) {
-                    total += m[1] ? Number(m[1]) : 1;
-                }
-                return total;
-            };
-            const inter = countMatches(/(\d+)?x?\s*campe[oó]na?\s+(?:torneo\s+)?interfacultades/g);
-            const league = countMatches(/(\d+)?x?\s*campe[oó]na?\s+(?:torneo\s+ufro|liga|torneo\s+femenino\s+ufro)/g);
-            const faculty = countMatches(/(\d+)?x?\s*campe[oó]na?\s+(?:copa|trofeo)/g);
-            return { league, faculty, inter };
-        }
-
-        async function syncAllTeamsFromGoogleSheets(showNotification = false) {
-            updateSyncBadge('syncing', 'Sincronizando...');
-            let syncedAny = false;
-
-            const configs = [
-                { branch: 'M', sheetName: SHEET_TAB_MALE, isFemale: false },
-                { branch: 'F', sheetName: SHEET_TAB_FEMALE, isFemale: true }
-            ];
-
-            for (const cfg of configs) {
-                try {
-                    const csv = await fetchSheetTabCsv(cfg.sheetName);
-                    if (!csv) continue;
-                    const rows = parseCsvRows(csv);
-                    if (rows.length < 2) continue;
-
-                    const headers = rows[0].map(h => h.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim());
-                    const idxCode = headers.findIndex(h => h.includes('codigo'));
-                    const idxName = headers.findIndex(h => h.includes('nombre'));
-                    const idxCareer = headers.findIndex(h => h.includes('carrera'));
-                    const idxFac = headers.findIndex(h => h.includes('facultad'));
-                    const idxDiv = headers.findIndex(h => h.includes('division'));
-                    const idxOvr = headers.findIndex(h => h.includes('media') || h.includes('ovr'));
-                    const idxLogros = headers.findIndex(h => h.includes('logros'));
-                    const idxSemesters = headers.findIndex(h => h.includes('semestre') || h.includes('semester'));
-                    const idxYears = headers.findIndex(h => h.includes('duracion') || h.includes('anos') || h.includes('years'));
-                    const idxL = headers.findIndex(h => h.includes('intercarreras') || h.includes('liga'));
-                    const idxF = headers.findIndex(h => h.includes('facultad_titulos') || h.includes('copa'));
-                    const idxI = headers.findIndex(h => h.includes('interfacultades'));
-
-                    if (idxCode === -1 || idxName === -1) continue;
-
-                    const synced = [];
-                    for (let i = 1; i < rows.length; i++) {
-                        const cols = rows[i];
-                        const code = (cols[idxCode] || '').trim();
-                        const name = (cols[idxName] || '').trim();
-                        if (!code || !name) continue;
-
-                        const careerRaw = idxCareer !== -1 && cols[idxCareer] ? cols[idxCareer].trim() : 'Carrera UFRO';
-                        const facRaw = idxFac !== -1 && cols[idxFac] ? cols[idxFac].trim() : 'Facultad UFRO';
-                        const canonFac = canonicalizeFaculty(facRaw);
-                        const matchedCat = UFRO_CAREERS_CATALOG.find(c => c.career.toLowerCase().trim() === careerRaw.toLowerCase().trim());
-                        const derivedCareerId = matchedCat ? matchedCat.id : extractCareerCodeFromUniqueCode(code, careerRaw);
-                        const explicitYears = idxYears !== -1 ? cols[idxYears] : undefined;
-                        const explicitSems = idxSemesters !== -1 ? cols[idxSemesters] : undefined;
-                        const hasExplicitDuration = (explicitYears !== undefined && String(explicitYears).trim() !== '') ||
-                                                    (explicitSems !== undefined && String(explicitSems).trim() !== '');
-
-                        synced.push({
-                            code,
-                            name,
-                            careerId: derivedCareerId,
-                            career: careerRaw,
-                            faculty: canonFac.name,
-                            facultyShort: canonFac.short,
-                            years: inferCareerYears(careerRaw, explicitYears, explicitSems),
-                            hasExplicitDuration,
-                            division: normalizeDivisionValue(idxDiv !== -1 ? cols[idxDiv] : 3, cfg.isFemale),
-                            ovr: idxOvr !== -1 ? (Number(cols[idxOvr]) || 70) : 70,
-                            titles: parseTitlesFromSheetText(
-                                idxLogros !== -1 ? cols[idxLogros] : '',
-                                idxL !== -1 ? cols[idxL] : undefined,
-                                idxF !== -1 ? cols[idxF] : undefined,
-                                idxI !== -1 ? cols[idxI] : undefined
-                            )
-                        });
-                    }
-
-                    if (synced.length >= 1) {
-                        teamsDBByGender[cfg.branch] = synced;
-                        syncedAny = true;
-                    }
-                } catch (e) {}
-            }
-
-            rebuildDynamicCareersCatalog();
-            populateCareerSelect();
-            updateCareerDurationHint();
-
-            if (syncedAny) {
-                const totalM = teamsDBByGender.M.length;
-                const totalF = teamsDBByGender.F.length;
-                updateSyncBadge('live', `BD en vivo (${totalM}M / ${totalF}F)`);
-                if (showNotification) {
-                    showToast(`Base de datos sincronizada (${totalM} Masc. · ${totalF} Fem.)`, 'success');
-                }
-            } else {
-                updateSyncBadge('local', 'BD Local UFRO');
-                if (showNotification) {
-                    showToast('Usando catálogo UFRO integrado (verifica permisos públicos del Sheet).', 'info');
-                }
-            }
-
-            if (careerState) {
-                renderApp();
-            }
-        }
-
-        async function manualRefreshSheets() {
-            await syncAllTeamsFromGoogleSheets(true);
-        }
-
-        function rebuildDynamicCareersCatalog() {
-            const map = new Map();
-
-            UFRO_CAREERS_CATALOG.forEach(c => {
-                const canonFac = canonicalizeFaculty(c.faculty);
-                map.set(c.career.toLowerCase().trim(), {
-                    id: c.id,
-                    career: c.career,
-                    faculty: canonFac.name,
-                    facultyShort: canonFac.short,
-                    years: c.years
-                });
-            });
-
-            [...teamsDBByGender.M, ...teamsDBByGender.F].forEach(t => {
-                const key = t.career.toLowerCase().trim();
-                const canonFac = canonicalizeFaculty(t.faculty);
-                if (!map.has(key)) {
-                    map.set(key, {
-                        id: t.careerId,
-                        career: t.career,
-                        faculty: canonFac.name,
-                        facultyShort: canonFac.short,
-                        years: t.years || 5
-                    });
-                } else {
-                    const existing = map.get(key);
-                    existing.faculty = canonFac.name;
-                    existing.facultyShort = canonFac.short;
-                    if (t.hasExplicitDuration && t.years) {
-                        existing.years = t.years;
-                    }
-                }
-            });
-
-            dynamicCareersCatalog = Array.from(map.values());
-        }
-
-        function getAvailableCareersForGender(gender) {
-            const pool = teamsDBByGender[gender] || [];
-            const availableCareerNames = new Set(pool.map(t => t.career.toLowerCase().trim()));
-            const filtered = dynamicCareersCatalog.filter(c => availableCareerNames.has(c.career.toLowerCase().trim()));
-            return filtered.length > 0 ? filtered : dynamicCareersCatalog;
-        }
-
-        function populateCareerSelect() {
-            const select = document.getElementById('input-career-select');
-            if (!select) return;
-            const currentVal = select.value;
-
-            const catalog = getAvailableCareersForGender(selectedGender);
-            const byFaculty = {};
-            catalog.forEach(c => {
-                const canonFac = canonicalizeFaculty(c.faculty);
-                const facKey = canonFac.key;
-                if (!byFaculty[facKey]) {
-                    byFaculty[facKey] = { name: canonFac.name, short: canonFac.short, icon: canonFac.icon, items: [] };
-                }
-                byFaculty[facKey].items.push(c);
-            });
-
-            select.innerHTML = Object.keys(byFaculty).map(facKey => {
-                const group = byFaculty[facKey];
-                return `
-                    <optgroup label="${group.icon} ${group.name} (${group.short})">
-                        ${group.items.map(c => `<option value="${c.career}">${c.career} (${c.years} años · ${c.years * 2} sem.)</option>`).join('')}
-                    </optgroup>
-                `;
-            }).join('');
-
-            const matchedOption = catalog.find(c => c.career === currentVal || c.id === currentVal);
-            if (matchedOption) {
-                select.value = matchedOption.career;
-            }
-        }
-
-        function updateCareerDurationHint() {
-            const select = document.getElementById('input-career-select');
-            const hint = document.getElementById('career-duration-hint');
-            if (!select || !hint) return;
-            const val = select.value;
-            const cObj = dynamicCareersCatalog.find(c => c.career === val || c.id === val) || dynamicCareersCatalog[0];
-            if (!cObj) return;
-            const gender = careerState ? careerState.gender : selectedGender;
-            const branchNote = gender === 'F'
-                ? 'Rama Femenina · División Única'
-                : 'Rama Masculina · 3 Divisiones';
-            hint.textContent = `Facultad de ${cObj.faculty} (${cObj.facultyShort}) · ${cObj.years} años (${cObj.years * 2} semestres) · ${branchNote}`;
-        }
-
-        function parseCsvRows(text) {
-            const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
-            return lines.map(line => {
-                const res = [];
-                let cur = '';
-                let inQ = false;
-                for (let i = 0; i < line.length; i++) {
-                    const ch = line[i];
-                    if (ch === '"') inQ = !inQ;
-                    else if (ch === ',' && !inQ) { res.push(cur); cur = ''; }
-                    else cur += ch;
-                }
-                res.push(cur);
-                return res.map(s => s.replace(/^"|"$/g, '').trim());
-            });
-        }
-
-        window.onload = function () {
-            populateCareerSelect();
-            updateCareerDurationHint();
-            loadCareerState();
-            renderApp();
-            syncAllTeamsFromGoogleSheets(false);
-        };
-
-        function loadCareerState() {
-            const saved = localStorage.getItem(STORAGE_KEY_CAREER);
-            if (saved) {
-                try { careerState = JSON.parse(saved); } catch (e) { careerState = null; }
-            }
-        }
-
-        function saveCareerState() {
-            if (careerState) localStorage.setItem(STORAGE_KEY_CAREER, JSON.stringify(careerState));
-            else localStorage.removeItem(STORAGE_KEY_CAREER);
-        }
-
-        function getActiveDB() {
-            const gender = careerState ? careerState.gender : selectedGender;
-            return teamsDBByGender[gender] || teamsDBByGender.M;
-        }
-
-        function findTeamByCode(code) {
-            return getActiveDB().find(t => t.code === code)
-                || teamsDBByGender.M.find(t => t.code === code)
-                || teamsDBByGender.F.find(t => t.code === code);
-        }
-
-        // =========================================================================
-        // 4. ANIMACIÓN DE CONFETI Y MODAL CELEBRATORIO DE TÍTULOS
-        // =========================================================================
-        let confettiAnimId = null;
-
-        function triggerTitleCelebration(newTrophies) {
-            if (!newTrophies || newTrophies.length === 0) return;
-
-            const modal = document.getElementById('trophy-celebration-modal');
-            const heading = document.getElementById('modal-trophy-heading');
-            const sub = document.getElementById('modal-trophy-sub');
-            const list = document.getElementById('modal-trophy-list');
-
-            heading.textContent = newTrophies.length > 1
-                ? `¡${newTrophies.length} Títulos Conquistados!`
-                : '¡Título Conquistado!';
-            sub.textContent = `${careerState.playerName} · Año ${careerState.currentYear}, Semestre ${careerState.currentSemester}`;
-
-            list.innerHTML = newTrophies.map(t => `
-                <div class="p-3.5 rounded-xl surface-sub border-blue-500/30 flex items-center gap-3">
-                    <span class="text-2xl">🏆</span>
-                    <div>
-                        <div class="font-black text-white text-sm">${t.title}</div>
-                        <div class="text-xs text-sky-400">${t.teamName}</div>
-                    </div>
-                </div>
-            `).join('');
-
-            modal.classList.remove('hidden');
-            startConfettiAnimation();
-        }
-
-        function closeCelebrationModal() {
-            document.getElementById('trophy-celebration-modal').classList.add('hidden');
-            stopConfettiAnimation();
-        }
-
-        function startConfettiAnimation() {
-            const canvas = document.getElementById('confetti-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.classList.remove('hidden');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            const colors = ['#2563eb', '#38bdf8', '#f8fafc', '#60a5fa', '#fbbf24'];
+<!-- ... existing code ... -->
+            const colors = ['#717fff', '#8b96ff', '#f8fafc', '#a3adff', '#fbbf24'];
             const particles = Array.from({ length: 120 }, () => ({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height - canvas.height,
-                w: Math.random() * 9 + 5,
-                h: Math.random() * 5 + 3,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                vx: (Math.random() - 0.5) * 3,
-                vy: Math.random() * 3.5 + 2.2,
-                rot: Math.random() * 360,
-                vRot: (Math.random() - 0.5) * 8
-            }));
-
-            function renderFrame() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.rot += p.vRot;
-                    if (p.y > canvas.height) {
-                        p.y = -10;
-                        p.x = Math.random() * canvas.width;
-                    }
-                    ctx.save();
-                    ctx.translate(p.x, p.y);
-                    ctx.rotate((p.rot * Math.PI) / 180);
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-                    ctx.restore();
-                });
-                confettiAnimId = requestAnimationFrame(renderFrame);
-            }
-            renderFrame();
-        }
-
-        function stopConfettiAnimation() {
-            if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
-            const canvas = document.getElementById('confetti-canvas');
-            canvas.classList.add('hidden');
-        }
-
-        // =========================================================================
-        // 5. CREACIÓN DE PERSONAJE Y PRUEBAS INICIALES (MASCULINO Y FEMENINO)
-        // =========================================================================
+<!-- ... existing code ... -->
         function selectGender(g) {
             selectedGender = g;
             const btnM = document.getElementById('btn-gender-M');
             const btnF = document.getElementById('btn-gender-F');
 
             if (g === 'M') {
-                btnM.className = 'py-2.5 px-3 rounded-xl border border-blue-500 bg-blue-600/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition';
-                btnF.className = 'py-2.5 px-3 rounded-xl border border-[#222834] bg-[#0e1118] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition';
+                btnM.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition';
+                btnF.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition';
             } else {
-                btnF.className = 'py-2.5 px-3 rounded-xl border border-blue-500 bg-blue-600/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition';
-                btnM.className = 'py-2.5 px-3 rounded-xl border border-[#222834] bg-[#0e1118] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition';
+                btnF.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition';
+                btnM.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition';
             }
 
             populateCareerSelect();
@@ -1123,85 +320,26 @@
         function selectPosition(pos) {
             selectedPosition = pos;
             document.querySelectorAll('.pos-btn').forEach(btn => {
-                btn.className = 'pos-btn py-2.5 rounded-xl border border-[#222834] bg-[#0e1118] text-xs font-bold text-gray-400 hover:text-white transition';
+                btn.className = 'pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition';
             });
             const active = document.getElementById(`pos-btn-${pos}`);
-            if (active) active.className = 'pos-btn py-2.5 rounded-xl border border-blue-500 bg-blue-600/20 text-xs font-bold text-white transition';
+            if (active) active.className = 'pos-btn py-2.5 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-xs font-bold text-white transition';
         }
-
-        document.getElementById('step1-player-form').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const name = document.getElementById('input-player-name').value.trim();
-            const selectedCareerVal = document.getElementById('input-career-select').value;
-            if (!name) return;
-
-            const cObj = dynamicCareersCatalog.find(c => c.career === selectedCareerVal || c.id === selectedCareerVal) || dynamicCareersCatalog[0];
-            const careerKey = cObj ? cObj.career.toLowerCase().trim() : selectedCareerVal.toLowerCase().trim();
-
-            if (selectedGender === 'F') {
-                const careerFemTeams = teamsDBByGender.F.filter(t => t.career.toLowerCase().trim() === careerKey);
-                if (careerFemTeams.length === 0) {
-                    showToast('Aún no hay equipo femenino creado para esa carrera en el Sheet.', 'error');
-                    return;
-                }
-                trialCandidates = careerFemTeams.map(t => ({ ...t, accepted: true }));
-                document.getElementById('trial-badge').textContent = 'Rama Femenina · División Única UFRO';
-                document.getElementById('trial-title').textContent = `Plantel Femenino de ${cObj.career}`;
-                document.getElementById('trial-desc').textContent = 'El campeonato femenino se disputa en una División Única entre las 40 carreras de la UFRO.';
-            } else {
-                const careerTeams = teamsDBByGender.M.filter(t => t.career.toLowerCase().trim() === careerKey);
-                if (careerTeams.length === 0) {
-                    showToast('No se encontraron equipos masculinos para esta carrera.', 'error');
-                    return;
-                }
-
-                const rollAccepted = (div) => {
-                    if (div === 3) return true;
-                    if (div === 2) return Math.random() < 0.42;
-                    return Math.random() < 0.14;
-                };
-
-                const weightedPool = careerTeams.map(t => ({
-                    ...t,
-                    weight: (t.division === 3 ? 65 : t.division === 2 ? 25 : 10) + Math.random() * 20
-                })).sort((a, b) => b.weight - a.weight).slice(0, 3);
-
-                trialCandidates = weightedPool
-                    .sort((a, b) => a.division - b.division)
-                    .map(t => ({
-                        ...t,
-                        accepted: rollAccepted(t.division)
-                    }));
-
-                if (!trialCandidates.some(t => t.accepted)) {
-                    const fallback = trialCandidates.find(t => t.division === 3) || trialCandidates[trialCandidates.length - 1];
-                    if (fallback) fallback.accepted = true;
-                }
-
-                document.getElementById('trial-badge').textContent = 'Pruebas Mechonas · 3 Opciones';
-                document.getElementById('trial-title').textContent = `Equipos de ${cObj.career}`;
-                document.getElementById('trial-desc').textContent = 'Los equipos de 3ª División siempre te reciben; 2ª y 1ª dependen de tu prueba.';
-            }
-
-            renderTrialOptions();
-            document.getElementById('step1-player-form').classList.add('hidden');
-            document.getElementById('step2-team-options').classList.remove('hidden');
-        });
-
+<!-- ... existing code ... -->
         function renderTrialOptions() {
             const list = document.getElementById('trial-teams-list');
             list.innerHTML = trialCandidates.map(t => {
                 const divLabel = selectedGender === 'F' ? 'División Única' : `${t.division}ª División`;
                 const divBadge = selectedGender === 'F'
-                    ? 'bg-sky-500/20 text-sky-300'
+                    ? 'bg-[#717fff]/20 text-[#a3adff]'
                     : t.division === 1
-                        ? 'bg-blue-500/20 text-sky-300'
+                        ? 'bg-[#717fff]/20 text-[#a3adff]'
                         : t.division === 2
-                            ? 'bg-gray-700/60 text-gray-200'
+                            ? 'bg-neutral-700/60 text-gray-200'
                             : 'bg-emerald-500/20 text-emerald-300';
 
                 return `
-                    <div class="p-4 rounded-2xl border ${t.accepted ? 'surface-sub border-[#2a3242] hover:border-blue-500' : 'bg-[#0b0d11]/60 border-[#1a1f29] opacity-60'} flex items-center justify-between gap-3 transition">
+                    <div class="p-4 rounded-2xl border ${t.accepted ? 'surface-sub border-[#333333] hover:border-[#717fff]' : 'bg-[#151515]/60 border-[#222222] opacity-60'} flex items-center justify-between gap-3 transition">
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold ${divBadge}">${divLabel}</span>
@@ -1211,705 +349,69 @@
                             <div class="text-[11px] text-gray-500">${t.career} · ${t.faculty}</div>
                         </div>
                         ${t.accepted
-                            ? `<button onclick="startCareerWithTeam('${t.code}')" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shrink-0 transition">
+                            ? `<button onclick="startCareerWithTeam('${t.code}')" class="px-4 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shrink-0 transition">
                                 Debutar →
                                </button>`
-                            : `<span class="px-3 py-1.5 rounded-lg bg-[#131720] text-gray-500 text-[11px] font-bold shrink-0">Cupo lleno</span>`
+                            : `<span class="px-3 py-1.5 rounded-lg bg-[#1c1c1c] text-gray-500 text-[11px] font-bold shrink-0">Cupo lleno</span>`
                         }
                     </div>
                 `;
             }).join('');
         }
-
-        function backToStep1() {
-            document.getElementById('step2-team-options').classList.add('hidden');
-            document.getElementById('step1-player-form').classList.remove('hidden');
-        }
-
-        function startCareerWithTeam(teamCode) {
-            const name = document.getElementById('input-player-name').value.trim();
-            const startTeam = findTeamByCode(teamCode);
-            if (!name || !startTeam) return;
-
-            const isProdigySession = Math.random() < 0.22;
-            const baseOvr = startTeam.division === 1 && selectedGender === 'M'
-                ? 64
-                : selectedGender === 'F'
-                    ? (Math.floor(Math.random() * 5) + 60)
-                    : (Math.floor(Math.random() * 5) + 58);
-
-            careerState = {
-                playerName: name,
-                gender: selectedGender,
-                position: selectedPosition,
-                ovr: baseOvr,
-                isProdigySession,
-                baseYears: startTeam.years || 5,
-                maxYears: startTeam.years || 5,
-                extensionUsed: 0,
-                currentYear: 1,
-                currentSemester: 1,
-                phase: 'PLAY_SEMESTER',
-                activeEvent: null,
-                eventResult: null,
-                eventModifiers: null,
-                teamCode: startTeam.code,
-                pastTeamCodes: [startTeam.code],
-                qualifiedInterfacultades: false,
-                fenaudeQualified: false,
-                pendingOffers: [],
-                stats: { matches: 0, goals: 0, assists: 0, cleanSheets: 0 },
-                ufroStats: { matches: 0, goals: 0, assists: 0 },
-                history: [],
-                trophies: []
-            };
-
-            saveCareerState();
-            renderApp();
-            showToast(`¡Debutas en ${startTeam.name} con ${baseOvr} de Media!`, 'success');
-        }
-
-        // =========================================================================
-        // 6. CÁLCULO DE MÍSTICA, ROL Y SELECCIÓN UFRO
-        // =========================================================================
-        function calculateTeamMystique(team) {
-            if (!team || !team.titles) return { totalTitles: 0, bonusPct: 0, effectiveOvr: team ? team.ovr : 60 };
-            const l = Number(team.titles.league || 0);
-            const f = Number(team.titles.faculty || 0);
-            const i = Number(team.titles.inter || 0);
-            const totalTitles = l + f + i;
-            const points = (i * 2.5) + (l * 1.5) + (f * 1.0);
-            const bonusPct = Math.min(18, Math.round(points * 0.65));
-            const effectiveOvr = team.ovr + Math.min(5, points * 0.18);
-            return { totalTitles, bonusPct, effectiveOvr };
-        }
-
+<!-- ... existing code ... -->
         function getPlayingRoleProjection(playerOvr, teamOvr) {
             const diff = playerOvr - teamOvr;
-            if (diff >= -3) return { label: 'Titular', badgeClass: 'bg-blue-500/20 text-sky-300', factor: 1.0 };
-            if (diff >= -8) return { label: 'Rotación', badgeClass: 'bg-gray-700/70 text-gray-200', factor: 0.72 };
-            return { label: 'Suplente', badgeClass: 'bg-gray-800 text-gray-400', factor: 0.38 };
+            if (diff >= -3) return { label: 'Titular', badgeClass: 'bg-[#717fff]/20 text-[#a3adff]', factor: 1.0 };
+            if (diff >= -8) return { label: 'Rotación', badgeClass: 'bg-neutral-700/70 text-gray-200', factor: 0.72 };
+            return { label: 'Suplente', badgeClass: 'bg-neutral-800 text-gray-400', factor: 0.38 };
         }
-
-        function getDivisionLabel(div, gender = 'M') {
-            if (gender === 'F') return 'División Única';
-            if (Number(div) === 1) return '1ª Div';
-            if (Number(div) === 2) return '2ª Div';
-            return '3ª Div';
-        }
-
-        function isSelectedForUfroTeam(ovr) {
-            return ovr >= 76;
-        }
-
-        // =========================================================================
-        // 7. FLUJO DE SIMULACIÓN SEMESTRAL Y EVENTOS ESPECIALES
-        // =========================================================================
-        function triggerPlaySemester() {
-            if (!careerState || careerState.phase !== 'PLAY_SEMESTER') return;
-
-            if (Math.random() < 0.72) {
-                const ev = pickNextSpecialEvent();
-                careerState.activeEvent = ev;
-                careerState.eventResult = null;
-                careerState.phase = 'RANDOM_EVENT';
-                saveCareerState();
-                renderApp();
-            } else {
-                executeSemesterSimulation(null);
-            }
-        }
-
-        function pickNextSpecialEvent() {
-            const activeDB = getActiveDB();
-            const pastClubs = (careerState.pastTeamCodes || [])
-                .filter(c => c !== careerState.teamCode)
-                .map(c => findTeamByCode(c))
-                .filter(Boolean);
-
-            const icoTeams = activeDB.filter(t =>
-                t.career.toLowerCase().includes('ingeniería comercial') && t.code !== careerState.teamCode
-            );
-
-            // 1. Evento ocasional de Regreso Triunfal a un club del pasado (18% si tiene clubes previos)
-            if (pastClubs.length > 0 && Math.random() < 0.18) {
-                const chosenPast = pastClubs[Math.floor(Math.random() * pastClubs.length)];
-                return {
-                    type: 'TRIUMPHANT_RETURN',
-                    badge: '🏛️ Regreso Triunfal',
-                    title: `Regreso triunfal a ${chosenPast.name}`,
-                    desc: `Tu antiguo equipo de ${chosenPast.career} te abre las puertas para volver como referente del plantel.`,
-                    targetTeamCode: chosenPast.code,
-                    targetTeamName: chosenPast.name,
-                    targetCareer: chosenPast.career
-                };
-            }
-
-            // 2. Evento ocasional Ingeniería Comercial: "Suena el teléfono..." (18% si no juega ya en ICO)
-            if (icoTeams.length > 0 && Math.random() < 0.18) {
-                const randomIco = icoTeams[Math.floor(Math.random() * icoTeams.length)];
-                return {
-                    type: 'ICO_MONEY',
-                    badge: '📱 Llamada de Ingeniería Comercial',
-                    title: 'Suena el teléfono y te están ofreciendo plata por jugar',
-                    desc: `Desde ${randomIco.name} (${randomIco.career}) te ofrecen un incentivo económico directo si firmas por ellos ahora mismo.`,
-                    targetTeamCode: randomIco.code,
-                    targetTeamName: randomIco.name,
-                    targetCareer: randomIco.career
-                };
-            }
-
-            // 3. Evento estándar de riesgo / recompensa
-            const std = STANDARD_EVENTS[Math.floor(Math.random() * STANDARD_EVENTS.length)];
-            return { type: 'STANDARD', ...std };
-        }
-
-        function resolveClubSwitchEvent(acceptTransfer) {
-            const ev = careerState.activeEvent;
-            if (!ev) return;
-
-            if (acceptTransfer && ev.targetTeamCode) {
-                const target = findTeamByCode(ev.targetTeamCode);
-                if (target) {
-                    careerState.teamCode = target.code;
-                    if (!careerState.pastTeamCodes.includes(target.code)) {
-                        careerState.pastTeamCodes.push(target.code);
-                    }
-                    const bonusOvr = ev.type === 'TRIUMPHANT_RETURN' ? 1 : 0;
-                    careerState.ovr = Math.min(97, careerState.ovr + bonusOvr);
-                    careerState.eventResult = {
-                        success: true,
-                        neutral: false,
-                        text: ev.type === 'TRIUMPHANT_RETURN'
-                            ? `¡Regreso triunfal! Vuelves a vestir la camiseta de ${target.name} (+1 Media por motivación).`
-                            : `Aceptaste la oferta económica y fichaste por ${target.name} (${target.career}).`
-                    };
-                }
-            } else {
-                careerState.ovr = Math.min(97, careerState.ovr + 1);
-                careerState.eventResult = {
-                    success: true,
-                    neutral: true,
-                    text: ev.type === 'ICO_MONEY'
-                        ? 'Elegiste continuar por la gloria en tu equipo actual (+1 Media por lealtad).'
-                        : 'Decidiste seguir firme en tu equipo actual (+1 Media por compromiso).'
-                };
-            }
-
-            careerState.eventModifiers = null;
-            saveCareerState();
-            renderApp();
-        }
-
-        function resolveRandomEvent(takeRisk) {
-            const ev = careerState.activeEvent;
-            if (!ev) return;
-
-            if (!takeRisk) {
-                const safeDelta = ev.safeEffect ? ev.safeEffect.ovrDelta : 0;
-                careerState.ovr = Math.min(97, Math.max(55, careerState.ovr + safeDelta));
-                careerState.eventResult = {
-                    success: true,
-                    neutral: safeDelta === 0,
-                    text: ev.safeEffect ? ev.safeEffect.text : 'Decidiste ir a lo seguro. Sin cambios en tu Media.'
-                };
-                careerState.eventModifiers = null;
-            } else {
-                const isWin = Math.random() < ev.winProb;
-                const outcome = isWin ? ev.win : ev.lose;
-                careerState.ovr = Math.min(97, Math.max(55, careerState.ovr + (outcome.ovrDelta || 0)));
-                careerState.eventResult = {
-                    success: isWin,
-                    neutral: false,
-                    text: outcome.text
-                };
-                careerState.eventModifiers = outcome;
-            }
-
-            saveCareerState();
-            renderApp();
-        }
-
-        function continueAfterEvent() {
-            const mods = careerState.eventModifiers;
-            careerState.activeEvent = null;
-            careerState.eventResult = null;
-            careerState.eventModifiers = null;
-            executeSemesterSimulation(mods);
-        }
-
-        function executeSemesterSimulation(eventMods) {
-            const activeDB = getActiveDB();
-            const team = findTeamByCode(careerState.teamCode) || activeDB[0];
-            const mystique = calculateTeamMystique(team);
-            const role = getPlayingRoleProjection(careerState.ovr, team.ovr);
-
-            const year = careerState.currentYear;
-            const sem = careerState.currentSemester;
-            const div = Number(team.division);
-            const isFemale = careerState.gender === 'F';
-
-            const isSuspended = eventMods && eventMods.suspend;
-            const forceCupWin = eventMods && eventMods.forceCupWin;
-            const forceElimination = eventMods && eventMods.forceElimination;
-
-            // 1. Rendimiento en club
-            const totalTeamMatches = sem === 2 ? 14 : 11;
-            const playedRatio = isSuspended ? 0 : Math.min(1, Math.max(0.25, role.factor + (Math.random() * 0.14 - 0.07)));
-            const matchesPlayed = isSuspended ? 0 : Math.max(3, Math.round(totalTeamMatches * playedRatio));
-
-            const perfFactor = (careerState.ovr / 70) * (0.85 + Math.random() * 0.45);
-            let goals = 0, assists = 0, cleanSheets = 0;
-
-            if (!isSuspended) {
-                if (careerState.position === 'DEL') {
-                    goals = Math.round(matchesPlayed * 0.58 * perfFactor);
-                    assists = Math.round(matchesPlayed * 0.22 * perfFactor);
-                } else if (careerState.position === 'MED') {
-                    goals = Math.round(matchesPlayed * 0.28 * perfFactor);
-                    assists = Math.round(matchesPlayed * 0.48 * perfFactor);
-                } else if (careerState.position === 'DEF') {
-                    goals = Math.round(matchesPlayed * 0.10 * perfFactor);
-                    assists = Math.round(matchesPlayed * 0.14 * perfFactor);
-                    cleanSheets = Math.round(matchesPlayed * 0.35 * (mystique.effectiveOvr / 75));
-                } else if (careerState.position === 'ARQ') {
-                    goals = Math.random() < 0.04 ? 1 : 0;
-                    assists = Math.random() < 0.12 ? 1 : 0;
-                    cleanSheets = Math.round(matchesPlayed * 0.42 * (mystique.effectiveOvr / 75));
-                }
-            }
-
-            const rawRating = isSuspended ? 0 : (6.4 + (playedRatio * 1.1) + ((goals * 0.12 + assists * 0.09 + cleanSheets * 0.1) / Math.max(1, matchesPlayed)) * 2.4 + (Math.random() * 0.5 - 0.25));
-            const avgRating = isSuspended ? 'SUSP' : Number(Math.min(9.9, Math.max(6.0, rawRating)).toFixed(1));
-
-            // 2. Progresión siempre ascendente de Media
-            let ovrGain = 1;
-            if (!isSuspended) {
-                if (careerState.isProdigySession) {
-                    ovrGain = Number(avgRating) >= 7.8 ? 4 : 3;
-                } else {
-                    if (playedRatio >= 0.72 && Number(avgRating) >= 7.6) ovrGain = 2;
-                    else if (careerState.ovr < 70 && Math.random() < 0.55) ovrGain = 2;
-                    else ovrGain = 1;
-                }
-            } else {
-                ovrGain = 1;
-            }
-
-            const oldOvr = careerState.ovr;
-            careerState.ovr = Math.min(97, careerState.ovr + ovrGain);
-            const actualOvrDelta = careerState.ovr - oldOvr;
-
-            // 3. Torneos Universitarios (Calendario Anual / Semestral)
-            const semesterTrophies = [];
-            let promoted = false, relegated = false;
-
-            // A) Campeonato Intercarreras (Anual: S1 = 1ª Rueda parcial, S2 = Definición Final y Título)
-            const divTeams = isFemale ? activeDB : activeDB.filter(t => Number(t.division) === div);
-            const leagueStandings = simulateTournamentRanking(divTeams, team.code, careerState.ovr, playedRatio);
-            let leaguePosition = leagueStandings.findIndex(t => t.code === team.code) + 1;
-            if (forceElimination && leaguePosition === 1) leaguePosition = 3;
-
-            let leagueSummaryText = '';
-            if (sem === 1) {
-                leagueSummaryText = `1ª Rueda: #${leaguePosition} (Define en S2)`;
-            } else {
-                leagueSummaryText = `Final Anual: #${leaguePosition}`;
-                if (leaguePosition === 1) {
-                    const titleLabel = isFemale
-                        ? 'Campeona Intercarreras Femenino (Div. Única)'
-                        : `Campeón Intercarreras (${getDivisionLabel(div, 'M')})`;
-                    semesterTrophies.push({ type: 'LEAGUE', division: div, title: titleLabel, teamName: team.name, teamCode: team.code, year, sem });
-                    team.titles.league = (team.titles.league || 0) + 1;
-                    if (!isFemale && (div === 3 || div === 2)) { team.division = div - 1; promoted = true; }
-                } else if (!isFemale && leaguePosition === 2 && (div === 3 || div === 2) && Math.random() < 0.5) {
-                    team.division = div - 1; promoted = true;
-                } else if (!isFemale && leaguePosition >= Math.max(5, divTeams.length - 2) && (div === 1 || div === 2) && Math.random() < 0.4) {
-                    team.division = div + 1; relegated = true;
-                }
-            }
-
-            // B) Copa de Facultad (Solo se juega y gana en Semestre 1; clasifica al Interfacultades de S2)
-            let facultyCupResult = null;
-            if (sem === 1) {
-                const facultyTeams = activeDB.filter(t => canonicalizeFaculty(t.faculty).key === canonicalizeFaculty(team.faculty).key);
-                if (facultyTeams.length >= 2) {
-                    const facRanking = simulateTournamentRanking(facultyTeams, team.code, careerState.ovr, playedRatio);
-                    let facPos = facRanking.findIndex(t => t.code === team.code) + 1;
-                    if (forceCupWin) facPos = 1;
-                    if (forceElimination && facPos === 1) facPos = 3;
-
-                    if (facPos === 1) {
-                        facultyCupResult = '🏆 Campeón Copa Facultad (Clasifica a Interfacultades)';
-                        careerState.qualifiedInterfacultades = true;
-                        semesterTrophies.push({
-                            type: 'FACULTY',
-                            title: `Copa Facultad ${team.facultyShort}${isFemale ? ' Fem.' : ''}`,
-                            teamName: team.name,
-                            teamCode: team.code,
-                            year,
-                            sem
-                        });
-                        team.titles.faculty = (team.titles.faculty || 0) + 1;
-                    } else {
-                        careerState.qualifiedInterfacultades = false;
-                        facultyCupResult = facPos === 2 ? 'Subcampeón Facultad' : `Copa Facultad: #${facPos}`;
-                    }
-                } else {
-                    careerState.qualifiedInterfacultades = true;
-                    facultyCupResult = '🏆 Representante Único Facultad (Clasifica a Interfacultades)';
-                }
-            }
-
-            // C) Torneo Interfacultades (Solo en Semestre 2 y solo si clasificaste ganando la Copa de Facultad en S1)
-            let interfacultadesResult = null;
-            if (sem === 2) {
-                if (careerState.qualifiedInterfacultades) {
-                    const facultyChampsMap = new Map();
-                    const faculties = [...new Set(activeDB.map(t => canonicalizeFaculty(t.faculty).key))];
-                    faculties.forEach(fKey => {
-                        const fPool = activeDB.filter(t => canonicalizeFaculty(t.faculty).key === fKey).sort((a, b) => b.ovr - a.ovr);
-                        if (fPool.length > 0) facultyChampsMap.set(fKey, fPool[0]);
-                    });
-                    facultyChampsMap.set(canonicalizeFaculty(team.faculty).key, team);
-
-                    const qualifiedList = Array.from(facultyChampsMap.values());
-                    const interRanking = simulateTournamentRanking(qualifiedList, team.code, careerState.ovr, playedRatio, true);
-                    let interPos = interRanking.findIndex(t => t.code === team.code) + 1;
-                    if (forceElimination && interPos === 1) interPos = 3;
-
-                    if (interPos === 1) {
-                        interfacultadesResult = '🌍 ¡Campeón Interfacultades!';
-                        semesterTrophies.push({
-                            type: 'INTERFACULTADES',
-                            title: `Torneo Interfacultades UFRO${isFemale ? ' Fem.' : ''}`,
-                            teamName: team.name,
-                            teamCode: team.code,
-                            year,
-                            sem
-                        });
-                        team.titles.inter = (team.titles.inter || 0) + 1;
-                    } else if (interPos === 2) {
-                        interfacultadesResult = '🥈 Subcampeón Interfacultades';
-                    } else {
-                        interfacultadesResult = `Interfacultades: #${interPos}`;
-                    }
-                } else {
-                    interfacultadesResult = 'No clasificado a Interfacultades';
-                }
-                careerState.qualifiedInterfacultades = false;
-            }
-
-            // D) Selección UFRO (S1: Clasificatorio CNU | S2: LDES, Univerciudad y Nacional FENAUDE)
-            let ufroSelectionInfo = null;
-            if (isSelectedForUfroTeam(careerState.ovr) && !isSuspended) {
-                const uMatches = 5;
-                const uGoals = careerState.position === 'DEL' ? Math.floor(Math.random() * 4) + 1 : (careerState.position === 'MED' ? Math.floor(Math.random() * 3) : 0);
-                const uAssists = careerState.position === 'MED' ? Math.floor(Math.random() * 4) + 1 : Math.floor(Math.random() * 2);
-
-                careerState.ufroStats.matches += uMatches;
-                careerState.ufroStats.goals += uGoals;
-                careerState.ufroStats.assists += uAssists;
-
-                const ufroWinProb = Math.min(0.45, Math.max(0.10, (careerState.ovr - 74) * 0.025));
-
-                if (sem === 1) {
-                    const wonCnu = Math.random() < (ufroWinProb + 0.08);
-                    careerState.fenaudeQualified = wonCnu;
-                    if (wonCnu) {
-                        semesterTrophies.push({
-                            type: 'SELECCION_UFRO',
-                            title: `Clasificatorio CNU (Selección UFRO${isFemale ? ' Fem.' : ''})`,
-                            teamName: 'Selección UFRO',
-                            teamCode: 'SEL-UFRO',
-                            year,
-                            sem
-                        });
-                        ufroSelectionInfo = `🇨🇱 Selección UFRO: 🏆 Campeón Clasificatorio CNU (Clasifica a Nacional FENAUDE)`;
-                    } else {
-                        ufroSelectionInfo = `🇨🇱 Selección UFRO: Eliminado en Clasificatorio CNU`;
-                    }
-                } else {
-                    const wonUfroTitles = [];
-                    if (Math.random() < ufroWinProb) {
-                        wonUfroTitles.push('LDES');
-                        semesterTrophies.push({ type: 'SELECCION_UFRO', title: `Liga LDES (Selección UFRO${isFemale ? ' Fem.' : ''})`, teamName: 'Selección UFRO', teamCode: 'SEL-UFRO', year, sem });
-                    }
-                    if (Math.random() < ufroWinProb) {
-                        wonUfroTitles.push('Univerciudad');
-                        semesterTrophies.push({ type: 'SELECCION_UFRO', title: `Copa Univerciudad (Selección UFRO${isFemale ? ' Fem.' : ''})`, teamName: 'Selección UFRO', teamCode: 'SEL-UFRO', year, sem });
-                    }
-                    // Nacional FENAUDE: Hazaña histórica solo desbloqueable con Media > 90
-                    if (careerState.fenaudeQualified) {
-                        const canWinHistoricFenaude = careerState.ovr > 90;
-                        const historicFenaudeProb = canWinHistoricFenaude ? Math.min(0.32, (careerState.ovr - 90) * 0.05) : 0;
-                        if (canWinHistoricFenaude && Math.random() < historicFenaudeProb) {
-                            wonUfroTitles.push('Nacional FENAUDE (Histórico)');
-                            semesterTrophies.push({ type: 'SELECCION_UFRO', title: `🌟 Nacional FENAUDE Histórico (Selección UFRO${isFemale ? ' Fem.' : ''})`, teamName: 'Selección UFRO', teamCode: 'SEL-UFRO', year, sem });
-                        }
-                    }
-
-                    const fenaudeNote = careerState.fenaudeQualified
-                        ? (wonUfroTitles.some(t => t.includes('FENAUDE'))
-                            ? '¡Hazaña histórica Nacional FENAUDE!'
-                            : (careerState.ovr > 90 ? 'Subcampeón Nacional FENAUDE' : 'Eliminado en Nacional FENAUDE (Requiere +90 Media para la hazaña)'))
-                        : 'Sin cupo FENAUDE';
-
-                    ufroSelectionInfo = wonUfroTitles.length > 0
-                        ? `🇨🇱 Selección UFRO: 🏆 ${wonUfroTitles.join(' + ')} · ${fenaudeNote}`
-                        : `🇨🇱 Selección UFRO: LDES y Univerciudad disputadas · ${fenaudeNote}`;
-
-                    careerState.fenaudeQualified = false;
-                }
-            } else if (sem === 2) {
-                careerState.fenaudeQualified = false;
-            }
-
-            // E) MVP Individual
-            if (!isSuspended && Number(avgRating) >= 8.4 && playedRatio >= 0.7 && Math.random() < 0.55) {
-                semesterTrophies.push({
-                    type: 'INDIVIDUAL',
-                    title: careerState.position === 'DEL'
-                        ? `${isFemale ? 'Goleadora' : 'Goleador'} (${getDivisionLabel(div, careerState.gender)})`
-                        : `MVP (${getDivisionLabel(div, careerState.gender)})`,
-                    teamName: team.name,
-                    teamCode: team.code,
-                    year,
-                    sem
-                });
-            }
-
-            careerState.stats.matches += matchesPlayed;
-            careerState.stats.goals += goals;
-            careerState.stats.assists += assists;
-            careerState.stats.cleanSheets += cleanSheets;
-            careerState.trophies.push(...semesterTrophies);
-
-            careerState.history.unshift({
-                year, sem,
-                teamCode: team.code, teamName: team.name, careerName: team.career,
-                divisionPlayed: div,
-                ovrAfter: careerState.ovr, ovrDelta: actualOvrDelta,
-                matches: matchesPlayed, goals, assists, cleanSheets, avgRating,
-                leaguePosition, leagueSummaryText, totalDivTeams: divTeams.length,
-                promoted, relegated,
-                facultyCupResult, interfacultadesResult, ufroSelectionInfo,
-                trophies: semesterTrophies
-            });
-
-            const isFinalSemester = (careerState.currentYear === careerState.maxYears && careerState.currentSemester === 2);
-            if (isFinalSemester) {
-                careerState.phase = careerState.extensionUsed < 2 ? 'EXTENSION_CHOICE' : 'RETIRED';
-            } else {
-                careerState.pendingOffers = generateTransferOffers();
-                careerState.phase = 'TRANSFER_MARKET';
-            }
-
-            saveCareerState();
-            renderApp();
-
-            if (semesterTrophies.length > 0) {
-                triggerTitleCelebration(semesterTrophies);
-            }
-        }
-
-        function simulateTournamentRanking(teamsList, playerTeamCode, playerOvr, playedRatio, isHighStakes = false) {
-            return teamsList.map(t => {
-                const mystique = calculateTeamMystique(t);
-                const mystiqueWeight = isHighStakes ? mystique.bonusPct * 0.45 : mystique.bonusPct * 0.25;
-                let playerImpact = 0;
-                if (t.code === playerTeamCode) {
-                    const diff = playerOvr - t.ovr;
-                    playerImpact = (diff > 0 ? diff * 0.7 : 2.0) * playedRatio;
-                }
-                const randomFactor = (Math.random() * 14) - 7;
-                return { ...t, finalScore: t.ovr + mystiqueWeight + playerImpact + randomFactor };
-            }).sort((a, b) => b.finalScore - a.finalScore);
-        }
-
-        // =========================================================================
-        // 8. MERCADO DE PASES (EXCLUYE EQUIPOS ANTERIORES + MUESTRA CARRERA)
-        // =========================================================================
-        function generateTransferOffers() {
-            const activeDB = getActiveDB();
-            const currentTeam = findTeamByCode(careerState.teamCode) || activeDB[0];
-            const pastSet = new Set(careerState.pastTeamCodes || [currentTeam.code]);
-            const pOvr = careerState.ovr;
-
-            // Excluir club actual y cualquier equipo en el que ya haya jugado anteriormente
-            let candidates = activeDB.filter(t =>
-                !pastSet.has(t.code) && t.ovr <= pOvr + 11 && t.ovr >= pOvr - 12
-            );
-
-            if (candidates.length < 3) {
-                candidates = activeDB.filter(t => !pastSet.has(t.code));
-            }
-
-            return candidates
-                .map(t => ({ team: t, sortKey: Math.abs(t.ovr - (pOvr + 2)) + Math.random() * 7 }))
-                .sort((a, b) => a.sortKey - b.sortKey)
-                .slice(0, 3)
-                .map(i => i.team.code);
-        }
-
-        function resolveTransferDecision(chosenCode) {
-            const chosen = findTeamByCode(chosenCode);
-            if (!chosen) return;
-
-            const changed = chosen.code !== careerState.teamCode;
-            careerState.teamCode = chosen.code;
-            if (!careerState.pastTeamCodes) careerState.pastTeamCodes = [];
-            if (!careerState.pastTeamCodes.includes(chosen.code)) {
-                careerState.pastTeamCodes.push(chosen.code);
-            }
-            careerState.pendingOffers = [];
-
-            if (careerState.currentSemester === 1) {
-                careerState.currentSemester = 2;
-            } else {
-                careerState.currentSemester = 1;
-                careerState.currentYear += 1;
-            }
-
-            careerState.phase = 'PLAY_SEMESTER';
-            saveCareerState();
-            renderApp();
-
-            if (changed) showToast(`✍️ Fichaste por ${chosen.name} (${chosen.career})`, 'success');
-        }
-
-        function extendUniversityCareer(extraYears, label) {
-            if (careerState.extensionUsed + extraYears > 2) return;
-            careerState.extensionUsed += extraYears;
-            careerState.maxYears += extraYears;
-            careerState.pendingOffers = generateTransferOffers();
-            careerState.phase = 'TRANSFER_MARKET';
-            saveCareerState();
-            renderApp();
-            showToast(`📚 Carrera extendida +${extraYears} año(s) (${label})`, 'success');
-        }
-
-        function graduateAndRetire() {
-            careerState.phase = 'RETIRED';
-            saveCareerState();
-            renderApp();
-            showToast('🎓 ¡Te titulaste! Revisa tu resumen completo.', 'success');
-        }
-
+<!-- ... existing code ... -->
         function confirmNewCareer() {
             const panel = document.getElementById('action-panel');
             panel.innerHTML = `
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-rose-950/30 border border-rose-500/30 p-4 rounded-xl">
                     <span class="text-sm font-bold text-rose-300">¿Reiniciar carrera actual?</span>
                     <div class="flex gap-2">
-                        <button onclick="renderApp()" class="px-3.5 py-1.5 rounded-lg bg-[#0e1118] text-xs font-bold text-white border border-[#222834]">Cancelar</button>
+                        <button onclick="renderApp()" class="px-3.5 py-1.5 rounded-lg bg-[#151515] text-xs font-bold text-white border border-[#2b2b2b]">Cancelar</button>
                         <button onclick="resetCareer()" class="px-3.5 py-1.5 rounded-lg bg-rose-600 text-xs font-bold text-white">Sí, Reiniciar</button>
                     </div>
                 </div>
             `;
         }
-
-        function resetCareer() {
-            careerState = null;
-            saveCareerState();
-            backToStep1();
-            switchTab('carrera');
-            renderApp();
-        }
-
-        // =========================================================================
-        // 9. NAVEGACIÓN Y RENDERIZADO UI PRINCIPAL
-        // =========================================================================
+<!-- ... existing code ... -->
         function switchTab(tabName) {
             ['carrera', 'palmares'].forEach(t => {
                 document.getElementById(`view-${t}`).classList.add('hidden');
                 const btn = document.getElementById(`nav-${t}`);
-                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.remove('bg-[#717fff]', 'text-white');
                 btn.classList.add('text-gray-400', 'hover:text-white');
             });
 
             document.getElementById(`view-${tabName}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`nav-${tabName}`);
-            activeBtn.classList.add('bg-blue-600', 'text-white');
+            activeBtn.classList.add('bg-[#717fff]', 'text-white');
             activeBtn.classList.remove('text-gray-400', 'hover:text-white');
 
             if (tabName === 'palmares') renderPalmaresView();
         }
-
-        function renderApp() {
-            const creationScreen = document.getElementById('creation-screen');
-            const activeScreen = document.getElementById('active-career-screen');
-            const mainNav = document.getElementById('main-nav');
-
-            if (!careerState) {
-                creationScreen.classList.remove('hidden');
-                activeScreen.classList.add('hidden');
-                mainNav.classList.add('hidden');
-                return;
-            }
-
-            creationScreen.classList.add('hidden');
-            activeScreen.classList.remove('hidden');
-            mainNav.classList.remove('hidden');
-
-            const activeDB = getActiveDB();
-            const team = findTeamByCode(careerState.teamCode) || activeDB[0];
-            const role = getPlayingRoleProjection(careerState.ovr, team.ovr);
-            const inUfroTeam = isSelectedForUfroTeam(careerState.ovr);
-
-            document.getElementById('hud-ovr').textContent = careerState.ovr;
-            document.getElementById('hud-pos').textContent = careerState.position;
-            document.getElementById('hud-name').textContent = careerState.playerName;
-
+<!-- ... existing code ... -->
             const ovrBox = document.getElementById('hud-ovr-box');
             ovrBox.className = `w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-lg ${
                 careerState.ovr >= 82
-                    ? 'bg-gradient-to-br from-sky-400 to-blue-600 text-white'
+                    ? 'bg-gradient-to-br from-[#8b96ff] to-[#717fff] text-white'
                     : careerState.ovr >= 72
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-[#1b2230] text-white border border-[#2a3346]'
+                        ? 'bg-[#717fff] text-white'
+                        : 'bg-[#242424] text-white border border-[#333333]'
             }`;
-
-            const branchBadge = document.getElementById('hud-branch-badge');
-            branchBadge.textContent = careerState.gender === 'F' ? 'Femenino' : 'Masculino';
-
-            const starBadge = document.getElementById('hud-star-badge');
-            if (careerState.isProdigySession || careerState.ovr >= 82) starBadge.classList.remove('hidden');
-            else starBadge.classList.add('hidden');
-
-            document.getElementById('hud-career-info').innerHTML = `<strong class="text-white">${team.name}</strong> · <span class="text-sky-400">${team.career}</span>`;
-            document.getElementById('hud-faculty-info').textContent = `${team.faculty} · ${getDivisionLabel(team.division, careerState.gender)} (OVR ${team.ovr})`;
-
-            const totalSem = careerState.maxYears * 2;
-            const doneSem = careerState.history.length;
-            const pct = Math.min(100, Math.round((doneSem / totalSem) * 100));
-
-            document.getElementById('hud-timeline-label').textContent = careerState.phase === 'RETIRED'
-                ? 'Carrera Completada'
-                : `Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}`;
-            document.getElementById('hud-timeline-sub').textContent = `Sem ${Math.min(totalSem, doneSem + 1)} / ${totalSem}`;
-            document.getElementById('hud-progress-bar').style.width = `${Math.max(8, pct)}%`;
-
-            document.getElementById('stat-total-matches').textContent = careerState.stats.matches;
-            if (careerState.position === 'ARQ') {
-                document.getElementById('stat-total-goals').textContent = careerState.stats.cleanSheets;
-                document.getElementById('stat-label-goals').textContent = 'Vallas';
-                document.getElementById('stat-total-assists').textContent = careerState.stats.goals + careerState.stats.assists;
-                document.getElementById('stat-label-assists').textContent = 'G+A';
-            } else {
-                document.getElementById('stat-total-goals').textContent = careerState.stats.goals;
-                document.getElementById('stat-label-goals').textContent = 'Goles';
-                document.getElementById('stat-total-assists').textContent = careerState.stats.assists;
-                document.getElementById('stat-label-assists').textContent = 'Asist.';
-            }
-            document.getElementById('stat-total-titles').textContent = careerState.trophies.length;
-
+<!-- ... existing code ... -->
+            document.getElementById('hud-career-info').innerHTML = `<strong class="text-white">${team.name}</strong> · <span class="text-[#8b96ff]">${team.career}</span>`;
+<!-- ... existing code ... -->
             document.getElementById('hud-role-projection').innerHTML = `
                 <div class="flex items-center gap-2">
                     <span class="text-gray-500">Rol:</span>
                     <span class="px-2 py-0.5 rounded font-bold ${role.badgeClass}">${role.label}</span>
                 </div>
-                <span class="text-[11px] font-bold ${inUfroTeam ? 'text-sky-400' : 'text-gray-500'}">
+                <span class="text-[11px] font-bold ${inUfroTeam ? 'text-[#8b96ff]' : 'text-gray-500'}">
                     ${inUfroTeam ? '🇨🇱 Seleccionado UFRO' : 'Sel. UFRO (76+)'}
                 </span>
             `;
@@ -1932,8 +434,8 @@
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-xs font-extrabold uppercase text-sky-400">Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}</span>
-                                ${isS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-sky-300 border border-blue-500/30">🌍 Final Intercarreras + Interfacultades</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#0e1118] text-gray-300 border border-[#222834]">🏆 Copa Facultad + 1ª Rueda</span>'}
+                                <span class="text-xs font-extrabold uppercase text-[#8b96ff]">Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}</span>
+                                ${isS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">🌍 Final Intercarreras + Interfacultades</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#151515] text-gray-300 border border-[#2b2b2b]">🏆 Copa Facultad + 1ª Rueda</span>'}
                             </div>
                             <h3 class="text-lg font-black text-white mt-1">
                                 ${isS2 ? 'Cierre Anual Intercarreras + Interfacultades' : 'Copa de Facultad + Inicio Intercarreras'}
@@ -1942,7 +444,7 @@
                                 Selección UFRO: <span class="text-gray-200 font-semibold">${ufroCompLabel}</span>
                             </p>
                         </div>
-                        <button onclick="triggerPlaySemester()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm shadow-lg shadow-blue-600/20 transition transform active:scale-95">
+                        <button onclick="triggerPlaySemester()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition transform active:scale-95">
                             ▶ Jugar Semestre ${careerState.currentSemester}
                         </button>
                     </div>
@@ -1959,7 +461,7 @@
                         panel.innerHTML = `
                             <div class="animate-pop space-y-4">
                                 <div class="flex items-center justify-between">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-500/15 text-sky-300 border border-blue-500/30">
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">
                                         ${ev.badge}
                                     </span>
                                     <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
@@ -1969,10 +471,10 @@
                                     <p class="text-sm text-gray-300 mt-1">${ev.desc}</p>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                    <button onclick="resolveClubSwitchEvent(false)" class="py-3 px-4 rounded-xl bg-[#0e1118] hover:bg-[#181e2a] text-gray-200 font-bold text-xs sm:text-sm border border-[#222834] transition">
+                                    <button onclick="resolveClubSwitchEvent(false)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
                                         Seguir en ${team.name}
                                     </button>
-                                    <button onclick="resolveClubSwitchEvent(true)" class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-lg transition">
+                                    <button onclick="resolveClubSwitchEvent(true)" class="py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg transition">
                                         Regreso triunfal a ${ev.targetTeamName}
                                     </button>
                                 </div>
@@ -1984,7 +486,7 @@
                         panel.innerHTML = `
                             <div class="animate-pop space-y-4">
                                 <div class="flex items-center justify-between">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">
                                         ${ev.badge}
                                     </span>
                                     <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
@@ -1994,10 +496,10 @@
                                     <p class="text-sm text-gray-300 mt-1">${ev.desc}</p>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                    <button onclick="resolveClubSwitchEvent(false)" class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-lg transition">
+                                    <button onclick="resolveClubSwitchEvent(false)" class="py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg transition">
                                         🏆 Continuar por la gloria
                                     </button>
-                                    <button onclick="resolveClubSwitchEvent(true)" class="py-3 px-4 rounded-xl bg-[#0e1118] hover:bg-[#181e2a] text-gray-200 font-bold text-xs sm:text-sm border border-[#222834] transition">
+                                    <button onclick="resolveClubSwitchEvent(true)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
                                         💸 Irse por plata (${ev.targetTeamName})
                                     </button>
                                 </div>
@@ -2009,7 +511,7 @@
                         panel.innerHTML = `
                             <div class="animate-pop space-y-4">
                                 <div class="flex items-center justify-between">
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-500/15 text-sky-300 border border-blue-500/30">
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">
                                         ⚡ ${ev.badge}
                                     </span>
                                     <span class="text-xs text-gray-500">Año ${careerState.currentYear} · S${careerState.currentSemester}</span>
@@ -2019,10 +521,10 @@
                                     <p class="text-sm text-gray-300 mt-1">${ev.desc}</p>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                    <button onclick="resolveRandomEvent(true)" class="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-lg transition">
+                                    <button onclick="resolveRandomEvent(true)" class="py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg transition">
                                         🎲 ${ev.riskLabel}
                                     </button>
-                                    <button onclick="resolveRandomEvent(false)" class="py-3 px-4 rounded-xl bg-[#0e1118] hover:bg-[#181e2a] text-gray-200 font-bold text-xs sm:text-sm border border-[#222834] transition">
+                                    <button onclick="resolveRandomEvent(false)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
                                         🛡️ ${ev.safeLabel}
                                     </button>
                                 </div>
@@ -2033,7 +535,7 @@
                     const boxStyle = res.neutral
                         ? 'surface-sub text-gray-200'
                         : res.success
-                            ? 'bg-blue-950/40 border-blue-500/40 text-sky-200'
+                            ? 'bg-[#717fff]/15 border-[#717fff]/45 text-[#d0d5ff]'
                             : 'bg-rose-950/40 border-rose-500/40 text-rose-200';
 
                     panel.innerHTML = `
@@ -2044,7 +546,7 @@
                                 </div>
                                 <p class="text-sm font-bold">${res.text}</p>
                             </div>
-                            <button onclick="continueAfterEvent()" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm transition">
+                            <button onclick="continueAfterEvent()" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-extrabold text-sm transition">
                                 Continuar Semestre →
                             </button>
                         </div>
@@ -2058,22 +560,22 @@
 
                 panel.innerHTML = `
                     <div class="space-y-3.5">
-                        <div class="flex items-center justify-between border-b border-[#1e2430] pb-2.5">
+                        <div class="flex items-center justify-between border-b border-[#262626] pb-2.5">
                             <h3 class="text-base font-black text-white">Mercado de Pases (Fin S${careerState.currentSemester})</h3>
-                            <span class="text-xs text-gray-400">Tu Media: <strong class="text-sky-400">${careerState.ovr}</strong></span>
+                            <span class="text-xs text-gray-400">Tu Media: <strong class="text-[#8b96ff]">${careerState.ovr}</strong></span>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                             <!-- Quedarse en club actual -->
-                            <div class="p-3.5 rounded-xl surface-sub border-blue-500/50 flex flex-col justify-between gap-3">
+                            <div class="p-3.5 rounded-xl surface-sub border-[#717fff]/50 flex flex-col justify-between gap-3">
                                 <div>
-                                    <span class="text-[10px] font-bold uppercase text-sky-400">Club Actual</span>
+                                    <span class="text-[10px] font-bold uppercase text-[#8b96ff]">Club Actual</span>
                                     <div class="font-extrabold text-white text-sm mt-0.5">${team.name}</div>
-                                    <div class="text-[11px] text-sky-300/90 font-medium mt-0.5">${team.career}</div>
+                                    <div class="text-[11px] text-[#a3adff] font-medium mt-0.5">${team.career}</div>
                                     <div class="text-[11px] text-gray-500 mt-0.5">${getDivisionLabel(team.division, careerState.gender)} · OVR ${team.ovr}</div>
                                     <span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded font-bold ${stayRole.badgeClass}">${stayRole.label}</span>
                                 </div>
-                                <button onclick="resolveTransferDecision('${team.code}')" class="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition">
+                                <button onclick="resolveTransferDecision('${team.code}')" class="w-full py-2 rounded-lg bg-[#717fff] hover:bg-[#828eff] text-white text-xs font-bold transition">
                                     Seguir Aquí
                                 </button>
                             </div>
@@ -2082,15 +584,15 @@
                             ${offers.map(o => {
                                 const oRole = getPlayingRoleProjection(careerState.ovr, o.ovr);
                                 return `
-                                    <div class="p-3.5 rounded-xl surface-sub hover:border-blue-500/40 flex flex-col justify-between gap-3 transition">
+                                    <div class="p-3.5 rounded-xl surface-sub hover:border-[#717fff]/45 flex flex-col justify-between gap-3 transition">
                                         <div>
                                             <span class="text-[10px] font-bold uppercase text-gray-400">Oferta Fichaje</span>
                                             <div class="font-extrabold text-white text-sm mt-0.5">${o.name}</div>
-                                            <div class="text-[11px] text-sky-400 font-medium mt-0.5">${o.career}</div>
+                                            <div class="text-[11px] text-[#8b96ff] font-medium mt-0.5">${o.career}</div>
                                             <div class="text-[11px] text-gray-500 mt-0.5">${getDivisionLabel(o.division, careerState.gender)} · OVR ${o.ovr}</div>
                                             <span class="inline-block mt-2 text-[10px] px-2 py-0.5 rounded font-bold ${oRole.badgeClass}">${oRole.label}</span>
                                         </div>
-                                        <button onclick="resolveTransferDecision('${o.code}')" class="w-full py-2 rounded-lg bg-[#181e2a] hover:bg-blue-600 text-white text-xs font-bold border border-[#252d3d] transition">
+                                        <button onclick="resolveTransferDecision('${o.code}')" class="w-full py-2 rounded-lg bg-[#222222] hover:bg-[#717fff] text-white text-xs font-bold border border-[#303030] transition">
                                             Fichar
                                         </button>
                                     </div>
@@ -2108,11 +610,11 @@
                         <h3 class="text-lg font-black text-white">🎓 Completaste tus ${careerState.maxYears} años en la UFRO</h3>
                         <p class="text-xs text-gray-400">¿Egresas hoy o extiendes tu carrera universitaria para seguir compitiendo?</p>
                         <div class="flex flex-wrap gap-2.5 pt-1">
-                            <button onclick="graduateAndRetire()" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm">
+                            <button onclick="graduateAndRetire()" class="px-4 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm">
                                 🎓 Titularse y Finalizar
                             </button>
-                            ${rem >= 1 ? `<button onclick="extendUniversityCareer(1, 'Magíster')" class="px-4 py-2.5 rounded-xl bg-[#0e1118] hover:bg-[#181e2a] text-sky-300 border border-[#222834] font-bold text-xs sm:text-sm">+1 Año (Magíster)</button>` : ''}
-                            ${rem >= 2 ? `<button onclick="extendUniversityCareer(2, 'Doble Titulación')" class="px-4 py-2.5 rounded-xl bg-[#0e1118] hover:bg-[#181e2a] text-sky-300 border border-[#222834] font-bold text-xs sm:text-sm">+2 Años (Doble Título)</button>` : ''}
+                            ${rem >= 1 ? `<button onclick="extendUniversityCareer(1, 'Magíster')" class="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#222222] text-[#a3adff] border border-[#2b2b2b] font-bold text-xs sm:text-sm">+1 Año (Magíster)</button>` : ''}
+                            ${rem >= 2 ? `<button onclick="extendUniversityCareer(2, 'Doble Titulación')" class="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#222222] text-[#a3adff] border border-[#2b2b2b] font-bold text-xs sm:text-sm">+2 Años (Doble Título)</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -2122,12 +624,12 @@
                 panel.innerHTML = `
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div>
-                            <h3 class="text-lg font-black text-sky-400">🎓 ¡Leyenda Egresada UFRO!</h3>
+                            <h3 class="text-lg font-black text-[#8b96ff]">🎓 ¡Leyenda Egresada UFRO!</h3>
                             <p class="text-xs text-gray-300">Media Final: <strong>${careerState.ovr}</strong> · Títulos: <strong>${careerState.trophies.length}</strong></p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="switchTab('palmares')" class="px-4 py-2.5 rounded-xl bg-blue-600 text-white font-black text-xs">Ver Resumen</button>
-                            <button onclick="resetCareer()" class="px-4 py-2.5 rounded-xl bg-[#0e1118] text-gray-300 border border-[#222834] font-bold text-xs">Nueva Carrera</button>
+                            <button onclick="switchTab('palmares')" class="px-4 py-2.5 rounded-xl bg-[#717fff] text-white font-black text-xs">Ver Resumen</button>
+                            <button onclick="resetCareer()" class="px-4 py-2.5 rounded-xl bg-[#151515] text-gray-300 border border-[#2b2b2b] font-bold text-xs">Nueva Carrera</button>
                         </div>
                     </div>
                 `;
@@ -2152,7 +654,7 @@
                 const sems = grouped[yr].sort((a, b) => b.sem - a.sem);
                 return `
                     <div class="surface-card rounded-2xl p-4 space-y-3">
-                        <div class="text-xs font-black uppercase tracking-wider text-gray-500 border-b border-[#1e2430] pb-2">
+                        <div class="text-xs font-black uppercase tracking-wider text-gray-500 border-b border-[#262626] pb-2">
                             Año ${yr}
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2160,34 +662,34 @@
                                 <div class="p-3.5 rounded-xl surface-sub space-y-2 text-xs">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <span class="font-bold text-sky-400">Semestre ${s.sem}</span> · <span class="text-gray-500">${getDivisionLabel(s.divisionPlayed, careerState.gender)}</span>
+                                            <span class="font-bold text-[#8b96ff]">Semestre ${s.sem}</span> · <span class="text-gray-500">${getDivisionLabel(s.divisionPlayed, careerState.gender)}</span>
                                             <div class="font-extrabold text-white text-sm">${s.teamName}</div>
                                             <div class="text-[11px] text-gray-500">${s.careerName}</div>
                                         </div>
                                         <div class="text-right">
-                                            <span class="px-2 py-0.5 rounded bg-[#161c28] font-bold text-white border border-[#222834]">
-                                                OVR ${s.ovrAfter} <span class="text-sky-400">(+${s.ovrDelta})</span>
+                                            <span class="px-2 py-0.5 rounded bg-[#222222] font-bold text-white border border-[#2b2b2b]">
+                                                OVR ${s.ovrAfter} <span class="text-[#8b96ff]">(+${s.ovrDelta})</span>
                                             </span>
                                             <div class="text-[11px] text-gray-500 mt-0.5">Nota: <strong class="text-white">${s.avgRating}</strong></div>
                                         </div>
                                     </div>
 
-                                    <div class="flex justify-between bg-[#090b10] px-3 py-1.5 rounded-lg text-gray-300">
+                                    <div class="flex justify-between bg-[#101010] px-3 py-1.5 rounded-lg text-gray-300">
                                         <span>PJ: <strong class="text-white">${s.matches}</strong></span>
-                                        <span>${careerState.position === 'ARQ' ? 'VI' : 'Goles'}: <strong class="text-sky-400">${careerState.position === 'ARQ' ? s.cleanSheets : s.goals}</strong></span>
-                                        <span>Asist: <strong class="text-blue-400">${s.assists}</strong></span>
+                                        <span>${careerState.position === 'ARQ' ? 'VI' : 'Goles'}: <strong class="text-[#8b96ff]">${careerState.position === 'ARQ' ? s.cleanSheets : s.goals}</strong></span>
+                                        <span>Asist: <strong class="text-[#717fff]">${s.assists}</strong></span>
                                         <span>${s.leagueSummaryText || `Liga: #${s.leaguePosition}`} ${s.promoted ? '⬆' : s.relegated ? '⬇' : ''}</span>
                                     </div>
 
                                     <div class="flex flex-wrap gap-1.5 text-[11px]">
-                                        ${s.facultyCupResult ? `<span class="px-2 py-0.5 rounded bg-[#161c28] text-gray-300 border border-[#222834]">${s.facultyCupResult}</span>` : ''}
-                                        ${s.interfacultadesResult ? `<span class="px-2 py-0.5 rounded bg-blue-500/15 text-sky-300 border border-blue-500/25">${s.interfacultadesResult}</span>` : ''}
-                                        ${s.ufroSelectionInfo ? `<span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/20">${s.ufroSelectionInfo}</span>` : ''}
+                                        ${s.facultyCupResult ? `<span class="px-2 py-0.5 rounded bg-[#222222] text-gray-300 border border-[#2b2b2b]">${s.facultyCupResult}</span>` : ''}
+                                        ${s.interfacultadesResult ? `<span class="px-2 py-0.5 rounded bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/25">${s.interfacultadesResult}</span>` : ''}
+                                        ${s.ufroSelectionInfo ? `<span class="px-2 py-0.5 rounded bg-[#717fff]/10 text-[#a3adff] border border-[#717fff]/20">${s.ufroSelectionInfo}</span>` : ''}
                                     </div>
 
                                     ${s.trophies && s.trophies.length > 0 ? `
                                         <div class="flex flex-wrap gap-1 pt-1">
-                                            ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-blue-600/20 text-sky-300 border border-blue-500/30 font-bold text-[11px]">🏆 ${t.title}</span>`).join('')}
+                                            ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/30 font-bold text-[11px]">🏆 ${t.title}</span>`).join('')}
                                         </div>
                                     ` : ''}
                                 </div>
@@ -2197,96 +699,11 @@
                 `;
             }).join('');
         }
-
-        // =========================================================================
-        // 10. RESUMEN SIMPLIFICADO POR EQUIPO + CARRERA COMPLETA ALTERNABLE
-        // =========================================================================
-        function formatDurationLabel(semCount) {
-            const years = Math.floor(semCount / 2);
-            const remSems = semCount % 2;
-            const parts = [];
-            if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`);
-            if (remSems > 0) parts.push(`${remSems} sem.`);
-            return `${parts.join(' y ')} (${semCount} sem.)`;
-        }
-
-        function summarizeTrophiesGrouped(trophies) {
-            if (!trophies || trophies.length === 0) return 'Sin títulos en esta etapa';
-            const counts = {};
-            trophies.forEach(t => {
-                let shortLabel = t.title;
-                if (t.type === 'LEAGUE') shortLabel = 'Intercarreras';
-                else if (t.type === 'INTERFACULTADES') shortLabel = 'Interfacultad';
-                else if (t.type === 'FACULTY') shortLabel = t.title;
-                else if (t.type === 'SELECCION_UFRO') shortLabel = t.title.replace(' (Selección UFRO Fem.)', '').replace(' (Selección UFRO)', '');
-                counts[shortLabel] = (counts[shortLabel] || 0) + 1;
-            });
-            return Object.entries(counts)
-                .map(([label, count]) => `${label} x${count}`)
-                .join(' · ');
-        }
-
-        function buildChronologicalClubStints() {
-            if (!careerState || careerState.history.length === 0) return [];
-            const chronological = careerState.history.slice().reverse();
-            const stints = [];
-
-            chronological.forEach(entry => {
-                const last = stints[stints.length - 1];
-                if (last && last.teamCode === entry.teamCode) {
-                    last.semesters += 1;
-                    last.trophies.push(...(entry.trophies || []));
-                    last.endLabel = `Año ${entry.year} S${entry.sem}`;
-                } else {
-                    stints.push({
-                        teamCode: entry.teamCode,
-                        teamName: entry.teamName,
-                        careerName: entry.careerName,
-                        semesters: 1,
-                        startLabel: `Año ${entry.year} S${entry.sem}`,
-                        endLabel: `Año ${entry.year} S${entry.sem}`,
-                        trophies: [...(entry.trophies || [])]
-                    });
-                }
-            });
-
-            return stints;
-        }
-
-        function toggleFullCareerDetail() {
-            showFullCareerDetail = !showFullCareerDetail;
-            const container = document.getElementById('full-career-detail-container');
-            const btn = document.getElementById('btn-toggle-full-career');
-            if (showFullCareerDetail) {
-                container.classList.remove('hidden');
-                btn.textContent = 'Ocultar carrera completa ↑';
-            } else {
-                container.classList.add('hidden');
-                btn.textContent = 'Ver carrera completa ↓';
-            }
-        }
-
-        function renderPalmaresView() {
-            const cardEl = document.getElementById('palmares-player-card');
-            const gridEl = document.getElementById('trophies-grid');
-            const stintsEl = document.getElementById('career-stints-list');
-            const fullSemEl = document.getElementById('full-career-semesters-list');
-
-            if (!careerState) return;
-
-            const activeDB = getActiveDB();
-            const team = findTeamByCode(careerState.teamCode) || activeDB[0];
-            const trophies = careerState.trophies || [];
-
-            const countInter = trophies.filter(t => t.type === 'INTERFACULTADES').length;
-            const countLeague = trophies.filter(t => t.type === 'LEAGUE').length;
-            const countFac = trophies.filter(t => t.type === 'FACULTY').length;
-            const countSel = trophies.filter(t => t.type === 'SELECCION_UFRO').length;
-
+<!-- ... existing code ... -->
             cardEl.innerHTML = `
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-sky-400 flex flex-col items-center justify-center shadow-xl">
+                        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#717fff] to-[#98a2ff] flex flex-col items-center justify-center shadow-xl">
                             <span class="text-[10px] font-bold uppercase text-white/80">MEDIA</span>
                             <span class="text-3xl font-black text-white">${careerState.ovr}</span>
                             <span class="text-[11px] font-bold text-white/90">${careerState.position}</span>
@@ -2294,11 +711,11 @@
                         <div>
                             <h3 class="text-xl font-black text-white">${careerState.playerName}</h3>
                             <p class="text-xs text-gray-400 mt-0.5">${team.name} · ${careerState.history.length} Semestres · ${careerState.stats.matches} PJ</p>
-                            <p class="text-xs text-sky-400 mt-0.5">🇨🇱 Selección UFRO: ${careerState.ufroStats.matches} PJ · ${careerState.ufroStats.goals} G · ${careerState.ufroStats.assists} A</p>
+                            <p class="text-xs text-[#8b96ff] mt-0.5">🇨🇱 Selección UFRO: ${careerState.ufroStats.matches} PJ · ${careerState.ufroStats.goals} G · ${careerState.ufroStats.assists} A</p>
                         </div>
                     </div>
                     <div class="text-center surface-sub px-5 py-3 rounded-xl">
-                        <div class="text-2xl font-black text-sky-400">${trophies.length}</div>
+                        <div class="text-2xl font-black text-[#8b96ff]">${trophies.length}</div>
                         <div class="text-[10px] font-bold uppercase text-gray-500">Títulos Totales</div>
                     </div>
                 </div>
@@ -2317,7 +734,7 @@
                         <span class="text-lg">${c.icon}</span>
                         <span class="font-bold text-xs sm:text-sm text-gray-200">${c.title}</span>
                     </div>
-                    <span class="text-xl font-black ${c.count > 0 ? 'text-sky-400' : 'text-gray-600'}">${c.count}</span>
+                    <span class="text-xl font-black ${c.count > 0 ? 'text-[#8b96ff]' : 'text-gray-600'}">${c.count}</span>
                 </div>
             `).join('');
 
@@ -2334,13 +751,13 @@
                             <div>
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="font-black text-white text-sm">${st.teamName}</span>
-                                    <span class="px-2 py-0.5 rounded bg-[#161c28] text-[11px] font-bold text-sky-400 border border-[#222834]">
+                                    <span class="px-2 py-0.5 rounded bg-[#222222] text-[11px] font-bold text-[#8b96ff] border border-[#2b2b2b]">
                                         ${formatDurationLabel(st.semesters)}
                                     </span>
                                 </div>
                                 <div class="text-[11px] text-gray-500 mt-0.5">${st.careerName} · ${st.startLabel} → ${st.endLabel}</div>
                             </div>
-                            <div class="text-xs font-bold ${hasTrophies ? 'text-sky-300' : 'text-gray-500'} sm:text-right">
+                            <div class="text-xs font-bold ${hasTrophies ? 'text-[#a3adff]' : 'text-gray-500'} sm:text-right">
                                 ${hasTrophies ? `🏆 ${trophiesSummary}` : trophiesSummary}
                             </div>
                         </div>
@@ -2352,16 +769,16 @@
             fullSemEl.innerHTML = careerState.history.length === 0
                 ? `<p class="text-xs text-gray-500">Sin registros semestrales.</p>`
                 : careerState.history.slice().reverse().map(h => `
-                    <div class="p-3 rounded-xl bg-[#0a0d13] border border-[#1a202c] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div class="p-3 rounded-xl bg-[#101010] border border-[#222222] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                         <div>
-                            <span class="font-bold text-sky-400">Año ${h.year} · S${h.sem}</span> — <strong class="text-white">${h.teamName}</strong> <span class="text-gray-500">(${h.careerName})</span>
+                            <span class="font-bold text-[#8b96ff]">Año ${h.year} · S${h.sem}</span> — <strong class="text-white">${h.teamName}</strong> <span class="text-gray-500">(${h.careerName})</span>
                             <div class="text-[11px] text-gray-400 mt-0.5">
                                 PJ: ${h.matches} · G: ${h.goals} · A: ${h.assists} · Nota: ${h.avgRating} · ${h.leagueSummaryText || `Liga #${h.leaguePosition}`}
                             </div>
                         </div>
                         <div class="text-right">
-                            <span class="px-2 py-0.5 rounded bg-[#131720] text-white font-bold border border-[#222834]">OVR ${h.ovrAfter}</span>
-                            ${h.trophies && h.trophies.length > 0 ? `<div class="text-[11px] text-sky-300 font-bold mt-1">🏆 ${h.trophies.map(t => t.title).join(', ')}</div>` : ''}
+                            <span class="px-2 py-0.5 rounded bg-[#1c1c1c] text-white font-bold border border-[#2b2b2b]">OVR ${h.ovrAfter}</span>
+                            ${h.trophies && h.trophies.length > 0 ? `<div class="text-[11px] text-[#a3adff] font-bold mt-1">🏆 ${h.trophies.map(t => t.title).join(', ')}</div>` : ''}
                         </div>
                     </div>
                 `).join('');
@@ -2374,9 +791,9 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const colors = {
-                success: 'bg-[#111827] border-blue-500/50 text-sky-200',
+                success: 'bg-[#1c1c1c] border-[#717fff]/50 text-[#d0d5ff]',
                 error: 'bg-rose-950/95 border-rose-500/50 text-rose-200',
-                info: 'bg-[#131720] border-[#262c38] text-gray-200'
+                info: 'bg-[#1c1c1c] border-[#2e2e2e] text-gray-200'
             };
             toast.className = `pointer-events-auto p-3 rounded-xl border shadow-xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type]}`;
             toast.textContent = msg;
