@@ -245,6 +245,18 @@
                 </div>
             </div>
 
+            <!-- SALÓN DE LA FAMA UFRO (TOP 5 LOCAL, BAJO EL MENÚ DE CREACIÓN) -->
+            <div id="hof-section" class="max-w-lg mx-auto surface-card rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4">
+                <div class="text-center">
+                    <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#717fff]/15 text-[#8b96ff] border border-[#717fff]/30">
+                        SALÓN DE LA FAMA
+                    </span>
+                    <h2 class="text-2xl font-black text-white mt-2.5">🏛️ Salón de la Fama UFRO</h2>
+                    <p class="text-xs text-gray-400 mt-1">Las 5 carreras más legendarias tituladas en este dispositivo.</p>
+                </div>
+                <div id="hof-list" class="space-y-2.5"></div>
+            </div>
+
             <!-- DASHBOARD CARRERA ACTIVA / RETIRADA -->
             <div id="active-career-screen" class="hidden space-y-5">
 
@@ -330,6 +342,9 @@
                 <div id="retired-summary-section" class="hidden space-y-5 animate-pop">
                     <!-- Contadores de Títulos -->
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="trophies-grid"></div>
+
+                    <!-- Premios Individuales + Salón de la Fama -->
+                    <div id="individual-awards-card" class="surface-card rounded-2xl p-5 space-y-3 border-[#717fff]/30"></div>
 
                     <!-- Logros Selección UFRO (Separados de los clubes) -->
                     <div id="ufro-selection-summary-card" class="surface-card rounded-2xl p-5 space-y-3 border-[#717fff]/30"></div>
@@ -607,7 +622,8 @@
         const STORAGE_KEYS = {
             TEAMS_M: 'leyenda_ufro_teams_m_v6',
             TEAMS_F: 'leyenda_ufro_teams_f_v6',
-            CAREER: 'leyenda_ufro_career_v6'
+            CAREER: 'leyenda_ufro_career_v6',
+            HOF: 'leyenda_ufro_hof_v1'
         };
 
         let maleTeamsDB = [];
@@ -1376,9 +1392,15 @@
 
         function graduateAndRetire() {
             careerState.phase = 'RETIRED';
+            inductHallOfFame();
             saveCareerState();
             renderApp();
-            showToast('🎓 ¡Te titulaste en la UFRO! Aquí tienes el resumen de tu carrera.', 'success');
+            showToast(
+                careerState.hofRank
+                    ? `🏛️ ¡Te titulaste e ingresaste al Salón de la Fama UFRO (puesto #${careerState.hofRank})!`
+                    : '🎓 ¡Te titulaste en la UFRO! Aquí tienes el resumen de tu carrera.',
+                'success'
+            );
         }
 
         function buildContextualRandomEvent() {
@@ -1758,6 +1780,17 @@
             careerState.stats.cleanSheets += cleanSheets;
             careerState.trophies.push(...semesterTrophies);
 
+            // Premios individuales: se entregan al cerrar el 2º semestre de cada año
+            let semesterAwards = [];
+            if (sem === 2) {
+                semesterAwards = computeIndividualAwards(year, {
+                    matches: matchesPlayed, goals, assists, cleanSheets, avgRating,
+                    leaguePosition, divisionPlayed: div, teamName: team.name
+                }, isFemale);
+                if (!careerState.awards) careerState.awards = [];
+                careerState.awards.push(...semesterAwards);
+            }
+
             careerState.history.unshift({
                 year, sem,
                 teamCode: team.code, teamName: team.name, careerName: team.career,
@@ -1768,12 +1801,14 @@
                 promoted, promotedToDiv, relegated,
                 facultyCupResult, interfacultadesResult, ufroSelectionInfo,
                 trophies: semesterTrophies,
+                awards: semesterAwards,
                 suspended: isSuspended
             });
 
             const isFinalSemester = (careerState.currentYear === careerState.maxYears && careerState.currentSemester === 2);
             if (isFinalSemester) {
                 careerState.phase = careerState.extensionUsed < 2 ? 'EXTENSION_CHOICE' : 'RETIRED';
+                if (careerState.phase === 'RETIRED') inductHallOfFame();
             } else {
                 careerState.pendingOffers = generateTransferOffers();
                 careerState.phase = 'TRANSFER_MARKET';
@@ -1782,8 +1817,8 @@
             saveCareerState();
             renderApp();
 
-            if (semesterTrophies.length > 0 || promoted) {
-                openCelebrationModal(semesterTrophies, year, sem, promoted ? { teamName: team.name, newDiv: promotedToDiv } : null);
+            if (semesterTrophies.length > 0 || promoted || semesterAwards.length > 0) {
+                openCelebrationModal(semesterTrophies, year, sem, promoted ? { teamName: team.name, newDiv: promotedToDiv } : null, semesterAwards);
             }
         }
 
@@ -1806,7 +1841,7 @@
         // =========================================================================
         let confettiAnimId = null;
 
-        function openCelebrationModal(trophies, year, sem, promotionInfo = null) {
+        function openCelebrationModal(trophies, year, sem, promotionInfo = null, awards = []) {
             const modal = document.getElementById('trophy-celebration-modal');
             const iconEl = document.getElementById('modal-trophy-icon');
             const badgeEl = document.getElementById('modal-trophy-badge');
@@ -1814,7 +1849,11 @@
             const sub = document.getElementById('modal-trophy-sub');
             const list = document.getElementById('modal-trophy-list');
 
-            if (promotionInfo && trophies.length === 0) {
+            if (awards.length > 0 && !promotionInfo && trophies.length === 0) {
+                iconEl.textContent = '🎖️';
+                badgeEl.textContent = '¡Premio Individual!';
+                heading.textContent = awards.length > 1 ? `¡${awards.length} Premios Individuales!` : '¡Premio Individual!';
+            } else if (promotionInfo && trophies.length === 0) {
                 iconEl.textContent = '🚀';
                 badgeEl.textContent = '¡Ascenso de División!';
                 heading.textContent = `¡Ascendiste a ${getDivisionLabel(promotionInfo.newDiv, 'M')}!`;
@@ -1852,6 +1891,18 @@
                         <div>
                             <div class="font-black text-white text-sm">${t.title}</div>
                             <div class="text-xs text-[#a3adff]">${t.teamName}</div>
+                        </div>
+                    </div>
+                `);
+            });
+
+            awards.forEach(a => {
+                itemsHtml.push(`
+                    <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 to-transparent border border-amber-400/40 flex items-center gap-3">
+                        <span class="text-2xl">${a.icon}</span>
+                        <div>
+                            <div class="font-black text-white text-sm">${a.title}</div>
+                            <div class="text-xs text-amber-200/90">${a.detail} · ${escapeHtml(a.teamName)}</div>
                         </div>
                     </div>
                 `);
@@ -1999,14 +2050,19 @@
             const creationScreen = document.getElementById('creation-screen');
             const activeScreen = document.getElementById('active-career-screen');
 
+            const hofSection = document.getElementById('hof-section');
+
             if (!careerState) {
                 creationScreen.classList.remove('hidden');
                 activeScreen.classList.add('hidden');
+                if (hofSection) hofSection.classList.remove('hidden');
+                renderHallOfFame();
                 return;
             }
 
             creationScreen.classList.add('hidden');
             activeScreen.classList.remove('hidden');
+            if (hofSection) hofSection.classList.add('hidden');
 
             const isRetired = careerState.phase === 'RETIRED';
             const team = findTeamByCode(careerState.teamCode);
@@ -2403,6 +2459,12 @@
                                             ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/20 text-[#d0d5ff] font-bold text-[11px]">🏆 ${t.title}</span>`).join('')}
                                         </div>
                                     ` : ''}
+
+                                    ${s.awards && s.awards.length > 0 ? `
+                                        <div class="flex flex-wrap gap-1 pt-1">
+                                            ${s.awards.map(a => `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-200 border border-amber-400/30 font-bold text-[11px]">${a.icon} ${a.title}</span>`).join('')}
+                                        </div>
+                                    ` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -2415,6 +2477,7 @@
         // 11. RESUMEN FINAL / PALMARÉS
         // =========================================================================
         function renderPalmaresView() {
+            renderIndividualAwardsCard();
             const trophies = careerState.trophies || [];
             const isFem = careerState.gender === 'F';
 
@@ -2544,6 +2607,225 @@
         function toggleFullCareerHistory() {
             showFullHistoryFlag = !showFullHistoryFlag;
             renderPalmaresView();
+        }
+
+        // =========================================================================
+        // 11B. PREMIOS INDIVIDUALES Y SALÓN DE LA FAMA (LOCAL · TOP 5)
+        // =========================================================================
+        const INDIVIDUAL_AWARD_META = {
+            MVP:        { icon: '⭐', title: 'MVP Intercarreras' },
+            GOLEADOR:   { icon: '⚽', title: 'Máximo Goleador' },
+            ASISTENTE:  { icon: '🎯', title: 'Máximo Asistente' },
+            PORTERO:    { icon: '🧤', title: 'Mejor Portero' }
+        };
+        const HOF_MAX_ENTRIES = 5;
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Se evalúa al cerrar el 2º semestre con las estadísticas de TODO el año académico (S1 + S2).
+        // Cada premio compara al jugador contra un "rival" simulado: un umbral aleatorio que
+        // representa al mejor de la liga. Ajusta los números de cada umbral para hacerlo más fácil o difícil.
+        function computeIndividualAwards(year, cur, isFemale) {
+            const entries = (careerState.history || []).filter(h => h.year === year).concat([cur]);
+            const sum = key => entries.reduce((acc, h) => acc + (Number(h[key]) || 0), 0);
+
+            const matches = sum('matches');
+            if (matches < 8) return [];
+
+            const goals = sum('goals');
+            const assists = sum('assists');
+            const cleanSheets = sum('cleanSheets');
+            const ratings = entries.map(h => Number(h.avgRating)).filter(n => !isNaN(n) && n > 0);
+            const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
+
+            // Ligas menos exigentes (2ª/3ª división y rama femenina) bajan un poco los umbrales
+            const divAdj = isFemale ? 2 : ({ 1: 0, 2: 2, 3: 4 }[Number(cur.divisionPlayed)] ?? 0);
+            const pos = careerState.position;
+            const found = [];
+
+            const add = (type, detail) => found.push({
+                type,
+                icon: INDIVIDUAL_AWARD_META[type].icon,
+                title: INDIVIDUAL_AWARD_META[type].title,
+                year,
+                sem: 2,
+                teamName: cur.teamName,
+                detail
+            });
+
+            // MVP: nota media + aporte ofensivo/defensivo + posición del equipo en la liga
+            const contrib = pos === 'ARQ' ? cleanSheets * 2.0
+                : pos === 'DEF' ? goals + assists + cleanSheets * 1.8
+                : goals + assists;
+            const posBonus = cur.leaguePosition === 1 ? 6 : cur.leaguePosition <= 3 ? 3 : 0;
+            const mvpScore = avgRating * 8 + contrib * 0.9 + posBonus;
+            const mvpThreshold = 86 + Math.random() * 14 - divAdj;
+            if (mvpScore >= mvpThreshold) add('MVP', `Nota media ${avgRating.toFixed(1)}`);
+
+            if (pos !== 'ARQ') {
+                const goalThreshold = 17 + Math.random() * 9 - divAdj * 0.8;
+                if (goals >= goalThreshold) add('GOLEADOR', `${goals} goles en el año`);
+
+                const assistThreshold = 13 + Math.random() * 8 - divAdj * 0.6;
+                if (assists >= assistThreshold) add('ASISTENTE', `${assists} asistencias en el año`);
+            } else {
+                const gkThreshold = 9 + Math.random() * 5 - divAdj * 0.4;
+                if (cleanSheets >= gkThreshold && avgRating >= 7.7) add('PORTERO', `${cleanSheets} vallas invictas`);
+            }
+
+            return found;
+        }
+
+        function loadHallOfFame() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEYS.HOF);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveHallOfFame(list) {
+            try { localStorage.setItem(STORAGE_KEYS.HOF, JSON.stringify(list)); } catch (e) {}
+        }
+
+        // Inmortaliza la carrera al titularse. Se guarda una sola vez por carrera y solo se conserva el Top 5.
+        function inductHallOfFame() {
+            if (!careerState || careerState.hofInducted) return;
+
+            const legacy = computeCreativeLegacyBanner();
+            const trophies = careerState.trophies || [];
+            const awards = careerState.awards || [];
+            const s = careerState.stats || { matches: 0, goals: 0, assists: 0, cleanSheets: 0 };
+            const selTitles = trophies.filter(t => t.type === 'SELECCION').length;
+
+            const score = Math.round(
+                careerState.ovr
+                + trophies.length * 6
+                + awards.length * 8
+                + (s.goals + s.assists + s.cleanSheets) * 0.3
+            );
+
+            const entry = {
+                id: `${Date.now()}-${Math.floor(Math.random() * 100000)}`,
+                playerName: careerState.playerName,
+                gender: careerState.gender,
+                position: careerState.position,
+                career: careerState.studiedCareer,
+                ovr: careerState.ovr,
+                headline: legacy.headline,
+                badge: legacy.badge,
+                titles: trophies.length,
+                selTitles,
+                awards: awards.length,
+                matches: s.matches,
+                goals: s.goals,
+                assists: s.assists,
+                cleanSheets: s.cleanSheets,
+                score,
+                date: new Date().toLocaleDateString('es-CL')
+            };
+
+            const list = loadHallOfFame();
+            list.push(entry);
+            list.sort((a, b) => (b.score || 0) - (a.score || 0));
+            const trimmed = list.slice(0, HOF_MAX_ENTRIES);
+            saveHallOfFame(trimmed);
+
+            const idx = trimmed.findIndex(e => e.id === entry.id);
+            careerState.hofInducted = true;
+            careerState.hofRank = idx >= 0 ? idx + 1 : null;
+        }
+
+        function renderHallOfFame() {
+            const listEl = document.getElementById('hof-list');
+            if (!listEl) return;
+            const list = loadHallOfFame().slice(0, HOF_MAX_ENTRIES);
+
+            if (list.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-5 rounded-2xl surface-sub text-center text-xs text-gray-500">
+                        Aún no hay leyendas inmortalizadas. Titúlate en la UFRO para entrar al Salón de la Fama.
+                    </div>`;
+                return;
+            }
+
+            const medals = ['🥇', '🥈', '🥉'];
+            listEl.innerHTML = list.map((e, i) => {
+                const golden = e.ovr > OVR_DISPLAY_MAX;
+                const mainStat = e.position === 'ARQ'
+                    ? `${e.cleanSheets || 0} VI`
+                    : `${e.goals || 0} G · ${e.assists || 0} A`;
+                return `
+                    <div class="p-3.5 rounded-2xl surface-sub ${i === 0 ? 'border-amber-400/50' : ''} flex items-center gap-3">
+                        <div class="w-9 text-center shrink-0 text-xl font-black ${i < 3 ? '' : 'text-gray-500 text-base'}">
+                            ${medals[i] || `#${i + 1}`}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-black text-white text-sm truncate">${escapeHtml(e.playerName)}</span>
+                                <span class="text-[10px] font-bold text-gray-500">${escapeHtml(e.position)} · ${e.gender === 'F' ? 'Fem.' : 'Masc.'}</span>
+                            </div>
+                            <div class="text-[11px] text-[#a3adff] font-semibold truncate">${escapeHtml(e.headline)}</div>
+                            <div class="text-[11px] text-gray-500 truncate">${escapeHtml(e.career)} · ${escapeHtml(e.date)}</div>
+                            <div class="flex flex-wrap gap-1.5 mt-1.5 text-[10px] font-bold text-gray-300">
+                                <span class="px-1.5 py-0.5 rounded bg-[#222222] border border-[#2b2b2b]">🏆 ${e.titles || 0}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-[#222222] border border-[#2b2b2b]">🎖️ ${e.awards || 0}</span>
+                                <span class="px-1.5 py-0.5 rounded bg-[#222222] border border-[#2b2b2b]">${mainStat}</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl shrink-0 flex flex-col items-center justify-center ${
+                            golden
+                                ? 'bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 text-white'
+                                : 'bg-[#717fff] text-white'
+                        }">
+                            <span class="text-[7px] font-bold uppercase text-white/80">MEDIA</span>
+                            <span class="text-base font-black leading-none">${formatOvr(e.ovr)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderIndividualAwardsCard() {
+            const card = document.getElementById('individual-awards-card');
+            if (!card || !careerState) return;
+
+            const awards = careerState.awards || [];
+            const hofLine = careerState.hofRank
+                ? `<div class="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-transparent border border-amber-400/40 text-xs font-bold text-amber-200">
+                        🏛️ Carrera inmortalizada en el Salón de la Fama UFRO · Puesto #${careerState.hofRank}
+                   </div>`
+                : `<div class="px-3 py-2 rounded-xl surface-sub text-xs text-gray-400">
+                        🏛️ No alcanzó el Top ${HOF_MAX_ENTRIES} del Salón de la Fama UFRO
+                   </div>`;
+
+            card.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-white">🎖️ Premios Individuales</h3>
+                        <p class="text-xs text-gray-400">
+                            ${awards.length > 0
+                                ? 'Reconocimientos personales conquistados al cierre de cada año'
+                                : 'No ganaste premios individuales en esta carrera'}
+                        </p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/15 text-amber-200 border border-amber-400/30 self-start sm:self-auto">
+                        ${awards.length} Premio(s)
+                    </span>
+                </div>
+                ${awards.length > 0 ? `
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        ${awards.map(a => `<span class="px-2.5 py-1 rounded-lg surface-sub text-xs font-bold text-amber-100">${a.icon} ${a.title} <span class="text-gray-500 font-semibold">(Año ${a.year} · ${escapeHtml(a.detail)})</span></span>`).join('')}
+                    </div>
+                ` : ''}
+                ${hofLine}
+            `;
         }
 
         // =========================================================================
