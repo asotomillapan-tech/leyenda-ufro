@@ -248,7 +248,6 @@
             <!-- DASHBOARD CARRERA ACTIVA / RETIRADA -->
             <div id="active-career-screen" class="hidden space-y-5">
 
-                <!-- HUD SUPERIOR (SE MANTIENE SIEMPRE EN CARRERA Y AL TERMINAR) -->
                 <!-- HUD SUPERIOR COMPACTO -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
                     <div class="lg:col-span-7 surface-card rounded-2xl p-4 flex flex-col justify-between">
@@ -1188,14 +1187,23 @@
 
             if (!playerName || !team) return;
 
+            // EASTER EGG: Mathias Bello arranca como súper estrella total
+            const isMathiasBello = playerName.toLowerCase() === 'mathias bello';
+
             const divBonus = selectedGender === 'M'
                 ? (Number(team.division) === 1 ? 5 : Number(team.division) === 2 ? 2 : 0)
                 : 0;
 
-            const isProdigy = Math.random() < 0.12 || (selectedGender === 'M' && Number(team.division) === 1);
-            const initialOvr = (isProdigy
-                ? Math.floor(Math.random() * 4) + 64
-                : Math.floor(Math.random() * 5) + 57) + divBonus;
+            const isProdigy = isMathiasBello || Math.random() < 0.12 || (selectedGender === 'M' && Number(team.division) === 1);
+            
+            let initialOvr;
+            if (isMathiasBello) {
+                initialOvr = 90;
+            } else {
+                initialOvr = (isProdigy
+                    ? Math.floor(Math.random() * 4) + 64
+                    : Math.floor(Math.random() * 5) + 57) + divBonus;
+            }
 
             careerState = {
                 playerName,
@@ -1233,7 +1241,9 @@
             backToStep1();
             renderApp();
 
-            if (selectedGender === 'M' && Number(team.division) === 1) {
+            if (isMathiasBello) {
+                showToast(`🌟 ¡EASTER EGG ACTIVADO! Mathias Bello ha ingresado a la UFRO con 90 OVR de superestrella. ¡Todos los equipos te quieren!`, 'success');
+            } else if (selectedGender === 'M' && Number(team.division) === 1) {
                 showToast(`🔥 ¡Hazaña Mechona! Quedaste directo en ${team.name} (1ª Div) con ${initialOvr} de Media.`, 'success');
             } else if (isProdigy) {
                 showToast(`⭐ ¡Talento Generacional! Debutas en ${team.name} con ${initialOvr} de Media.`, 'success');
@@ -1260,7 +1270,6 @@
             showFullHistoryFlag = false;
             saveCareerState();
 
-            // Restaurar divisiones y medias originales de todos los equipos
             buildLocalCatalogTeams();
             loadCachedDatabases();
             ensureCareerSelectPopulated();
@@ -1269,7 +1278,6 @@
             applyRandomPlayerName(true);
             renderApp();
 
-            // Re-sincronizar en segundo plano con Google Sheets para asegurar valores originales
             syncSheetsInBackground(true);
         }
 
@@ -1300,20 +1308,23 @@
             const db = getActiveDB();
             const currentTeam = findTeamByCode(careerState.teamCode);
             const pOvr = careerState.ovr;
+            const isMathiasBello = careerState.playerName.toLowerCase() === 'mathias bello';
 
-            const candidates = db.filter(t => t.code !== currentTeam.code && t.ovr <= pOvr + 11 && t.ovr >= pOvr - 12);
-            const shuffled = candidates
-                .map(t => ({ team: t, sortKey: Math.abs(t.ovr - (pOvr + 2)) + Math.random() * 6 }))
-                .sort((a, b) => a.sortKey - b.sortKey)
-                .slice(0, 3)
-                .map(i => i.team.code);
+            let pool = db.filter(t => t.code !== currentTeam.code);
 
-            if (shuffled.length < 2) {
-                db.filter(t => t.code !== currentTeam.code).slice(0, 3).forEach(t => {
-                    if (!shuffled.includes(t.code)) shuffled.push(t.code);
-                });
+            if (isMathiasBello) {
+                // Mathias Bello siempre recibe ofertas de los equipos élite / mejor valorados
+                pool.sort((a, b) => b.ovr - a.ovr);
+                return pool.slice(0, 3).map(t => t.code);
             }
-            return shuffled;
+
+            // Para otros jugadores, seleccionamos equipos al azar cuyo OVR esté razonablemente cerca del jugador
+            const candidates = pool.filter(t => t.ovr <= pOvr + 10 && t.ovr >= pOvr - 12);
+            const sourcePool = candidates.length >= 3 ? candidates : pool;
+
+            // Mezclar aleatoriamente y tomar 3
+            const shuffled = [...sourcePool].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, 3).map(t => t.code);
         }
 
         function resolveTransferDecision(chosenCode) {
@@ -1931,7 +1942,6 @@
                 };
             }
 
-            // Elegir el equipo más emblemático según títulos obtenidos, tiempo jugado y aporte
             clubs.sort((a, b) => {
                 const scoreA = (a.titles * 12) + (a.semesters * 3) + a.goals + a.assists + a.cleanSheets;
                 const scoreB = (b.titles * 12) + (b.semesters * 3) + b.goals + b.assists + b.cleanSheets;
@@ -2077,7 +2087,6 @@
         function renderActionPanel(team) {
             const panel = document.getElementById('action-panel');
 
-            // 1. SIMULAR SEMESTRE
             if (careerState.phase === 'PLAY_SEMESTER') {
                 const isS2 = careerState.currentSemester === 2;
                 const isInjuredOut = (careerState.forcedOutSemesters || 0) > 0;
@@ -2108,9 +2117,7 @@
                         </button>
                     </div>
                 `;
-            }
-            // 2. EVENTOS ESPECIALES
-            else if (careerState.phase === 'RANDOM_EVENT' && careerState.activeEvent) {
+            } else if (careerState.phase === 'RANDOM_EVENT' && careerState.activeEvent) {
                 const ev = careerState.activeEvent;
                 const res = careerState.eventResult;
 
@@ -2248,9 +2255,7 @@
                         </div>
                     `;
                 }
-            }
-            // 3. MERCADO DE PASES
-            else if (careerState.phase === 'TRANSFER_MARKET') {
+            } else if (careerState.phase === 'TRANSFER_MARKET') {
                 const offers = careerState.pendingOffers.map(c => findTeamByCode(c)).filter(Boolean);
                 const stayRole = getPlayingRoleProjection(careerState.ovr, team.ovr);
 
@@ -2295,9 +2300,7 @@
                         </div>
                     </div>
                 `;
-            }
-            // 4. EXTENSIÓN DE CARRERA
-            else if (careerState.phase === 'EXTENSION_CHOICE') {
+            } else if (careerState.phase === 'EXTENSION_CHOICE') {
                 const rem = 2 - careerState.extensionUsed;
                 panel.innerHTML = `
                     <div class="space-y-3">
@@ -2312,9 +2315,7 @@
                         </div>
                     </div>
                 `;
-            }
-            // 5. EGRESADO (CONSIGNA CREATIVA DEL EQUIPO EMBLEMÁTICO)
-            else if (careerState.phase === 'RETIRED') {
+            } else if (careerState.phase === 'RETIRED') {
                 const legacy = computeCreativeLegacyBanner();
                 panel.innerHTML = `
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2387,7 +2388,7 @@
 
                                     ${s.trophies && s.trophies.length > 0 ? `
                                         <div class="flex flex-wrap gap-1 pt-1">
-                                            ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/30 font-bold text-[11px]">🏆 ${t.title}</span>`).join('')}
+                                            ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/20 text-[#d0d5ff] font-bold text-[11px]">🏆 ${t.title}</span>`).join('')}
                                         </div>
                                     ` : ''}
                                 </div>
@@ -2399,226 +2400,153 @@
         }
 
         // =========================================================================
-        // 11. RESUMEN SIMPLIFICADO POR ETAPA + SELECCIÓN UFRO SEPARADA
+        // 11. RESUMEN FINAL / PALMARÉS
         // =========================================================================
-        function buildChronologicalClubStints() {
-            if (!careerState || !careerState.history || careerState.history.length === 0) return [];
-            const chronological = [...careerState.history].reverse();
-            const stints = [];
+        function renderPalmaresView() {
+            const trophies = careerState.trophies || [];
+            const isFem = careerState.gender === 'F';
 
+            const countInter = trophies.filter(t => t.type === 'INTERFACULTADES').length;
+            const countLeague = trophies.filter(t => t.type === 'LEAGUE').length;
+            const countFac = trophies.filter(t => t.type === 'FACULTY').length;
+            const countSel = trophies.filter(t => t.type === 'SELECCION').length;
+
+            const cats = [
+                { icon: '🌍', label: 'Interfacultades', count: countInter },
+                { icon: '🏆', label: isFem ? 'Liga Femenina' : 'Intercarreras', count: countLeague },
+                { icon: '🏛️', label: 'Copa Facultad', count: countFac },
+                { icon: '🇨🇱', label: 'Selección UFRO', count: countSel }
+            ];
+
+            document.getElementById('trophies-grid').innerHTML = cats.map(c => `
+                <div class="surface-card rounded-2xl p-4 text-center">
+                    <div class="text-2xl mb-1">${c.icon}</div>
+                    <div class="text-2xl font-black ${c.count > 0 ? 'text-[#8b96ff]' : 'text-gray-600'}">${c.count}</div>
+                    <div class="text-[10px] font-bold uppercase text-gray-400 mt-0.5">${c.label}</div>
+                </div>
+            `).join('');
+
+            const ufroCard = document.getElementById('ufro-selection-summary-card');
+            const selTrophies = trophies.filter(t => t.type === 'SELECCION');
+            const citations = careerState.ufroCitations || [];
+            const uStats = careerState.ufroStats || { matches: 0, goals: 0, assists: 0 };
+
+            ufroCard.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-white">🇨🇱 Selección Universitaria UFRO</h3>
+                        <p class="text-xs text-gray-400">
+                            ${citations.length > 0
+                                ? `Citado en ${citations.length} semestre(s) · ${uStats.matches} PJ, ${uStats.goals} Goles, ${uStats.assists} Asist.`
+                                : 'No alcanzó citaciones oficiales a la Selección UFRO'}
+                        </p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30 self-start sm:self-auto">
+                        ${selTrophies.length} Logro(s)
+                    </span>
+                </div>
+                ${selTrophies.length > 0 ? `
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        ${selTrophies.map(s => `<span class="px-2.5 py-1 rounded-lg surface-sub text-xs font-bold text-[#d0d5ff]">🏅 ${s.title} (Año ${s.year})</span>`).join('')}
+                    </div>
+                ` : ''}
+            `;
+
+            const stints = [];
+            const chronological = [...(careerState.history || [])].reverse();
             chronological.forEach(h => {
-                const clubOnlyTrophies = (h.trophies || []).filter(t => t.type !== 'SELECCION');
+                const clubTitles = (h.trophies || []).filter(t => t.type !== 'SELECCION');
                 const last = stints[stints.length - 1];
                 if (last && last.teamCode === h.teamCode) {
                     last.semesters += 1;
-                    last.endLabel = `Año ${h.year} S${h.sem}`;
-                    if (clubOnlyTrophies.length > 0) {
-                        last.trophies.push(...clubOnlyTrophies);
-                    }
+                    last.matches += h.matches || 0;
+                    last.goals += h.goals || 0;
+                    last.assists += h.assists || 0;
+                    last.cleanSheets += h.cleanSheets || 0;
+                    last.endYear = h.year;
+                    last.trophies.push(...clubTitles);
                 } else {
                     stints.push({
                         teamCode: h.teamCode,
                         teamName: h.teamName,
                         careerName: h.careerName,
+                        startYear: h.year,
+                        endYear: h.year,
                         semesters: 1,
-                        startLabel: `Año ${h.year} S${h.sem}`,
-                        endLabel: `Año ${h.year} S${h.sem}`,
-                        trophies: [...clubOnlyTrophies]
+                        matches: h.matches || 0,
+                        goals: h.goals || 0,
+                        assists: h.assists || 0,
+                        cleanSheets: h.cleanSheets || 0,
+                        trophies: [...clubTitles]
                     });
                 }
             });
 
-            return stints;
-        }
+            document.getElementById('career-stints-list').innerHTML = stints.map(st => `
+                <div class="p-3.5 rounded-xl surface-sub flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div>
+                        <div class="font-black text-white text-sm">${st.teamName}</div>
+                        <div class="text-gray-400">${st.careerName} · Año ${st.startYear}${st.endYear > st.startYear ? ` - ${st.endYear}` : ''} (${st.semesters} sem.)</div>
+                        ${st.trophies.length > 0 ? `
+                            <div class="flex flex-wrap gap-1 mt-1.5">
+                                ${st.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-[#717fff]/15 text-[#a3adff] font-bold text-[10px]">🏆 ${t.title}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="flex items-center gap-3 text-gray-300 font-bold shrink-0">
+                        <span>${st.matches} PJ</span>
+                        <span>${careerState.position === 'ARQ' ? `${st.cleanSheets} VI` : `${st.goals} G`}</span>
+                        <span>${st.assists} A</span>
+                    </div>
+                </div>
+            `).join('');
 
-        function formatDurationLabel(semesters) {
-            const years = Math.floor(semesters / 2);
-            const remSem = semesters % 2;
-            const parts = [];
-            if (years > 0) parts.push(`${years} ${years === 1 ? 'año' : 'años'}`);
-            if (remSem > 0) parts.push(`${remSem} sem.`);
-            return `${parts.join(' y ')} (${semesters} sem.)`;
-        }
+            const fullWrap = document.getElementById('full-career-details');
+            const toggleBtn = document.getElementById('btn-toggle-full-career');
+            if (showFullHistoryFlag) {
+                fullWrap.classList.remove('hidden');
+                toggleBtn.textContent = 'Ocultar detalle por semestre ↑';
+            } else {
+                fullWrap.classList.add('hidden');
+                toggleBtn.textContent = 'Ver detalle por semestre ↓';
+            }
 
-        function summarizeTrophiesGrouped(trophiesList) {
-            if (!trophiesList || trophiesList.length === 0) return 'Sin títulos en esta etapa';
-            const counts = new Map();
-
-            trophiesList.forEach(t => {
-                let shortName = t.title;
-                if (t.type === 'LEAGUE') shortName = 'Intercarreras';
-                else if (t.type === 'INTERFACULTADES') shortName = 'Interfacultad';
-                else if (t.type === 'FACULTY') {
-                    const m = t.title.match(/\(([^)]+)\)/);
-                    shortName = m ? `Copa ${m[1]}` : t.title.replace('Copa Facultad ', 'Copa ');
-                }
-                counts.set(shortName, (counts.get(shortName) || 0) + 1);
-            });
-
-            return Array.from(counts.entries())
-                .map(([name, cnt]) => `${name} x${cnt}`)
-                .join(' · ');
+            document.getElementById('full-career-semesters-list').innerHTML = (careerState.history || []).map(s => `
+                <div class="p-3 rounded-xl surface-sub flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div>
+                        <span class="font-bold text-[#8b96ff]">Año ${s.year} · S${s.sem}</span> — <strong class="text-white">${s.teamName}</strong>
+                        <span class="text-gray-500 ml-1">(${getDivisionLabel(s.divisionPlayed, careerState.gender)})</span>
+                        <div class="text-[11px] text-gray-400 mt-0.5">
+                            ${s.suspended ? 'Baja por lesión / suspensión' : `${s.matches} PJ · ${careerState.position === 'ARQ' ? `${s.cleanSheets} VI` : `${s.goals}G`} · ${s.assists}A · Nota ${s.avgRating}`}
+                            ${s.facultyCupResult ? ` · ${s.facultyCupResult}` : ''}
+                            ${s.interfacultadesResult ? ` · ${s.interfacultadesResult}` : ''}
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <span class="px-2 py-0.5 rounded bg-[#1c1c1c] border border-[#2b2b2b] font-bold text-white">OVR ${s.ovrAfter}</span>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function toggleFullCareerHistory() {
             showFullHistoryFlag = !showFullHistoryFlag;
-            const box = document.getElementById('full-career-details');
-            const btn = document.getElementById('btn-toggle-full-career');
-            if (showFullHistoryFlag) {
-                box.classList.remove('hidden');
-                btn.textContent = 'Ocultar detalle por semestre ↑';
-            } else {
-                box.classList.add('hidden');
-                btn.textContent = 'Ver detalle por semestre ↓';
-            }
-        }
-
-        function renderPalmaresView() {
-            const gridEl = document.getElementById('trophies-grid');
-            const ufroCardEl = document.getElementById('ufro-selection-summary-card');
-            const stintsEl = document.getElementById('career-stints-list');
-            const fullSemEl = document.getElementById('full-career-semesters-list');
-
-            if (!careerState) return;
-
-            const trophies = careerState.trophies || [];
-
-            const countInter = trophies.filter(t => t.type === 'INTERFACULTADES').length;
-            const countLeague = trophies.filter(t => t.type === 'LEAGUE').length;
-            const countFac = trophies.filter(t => t.type === 'FACULTY').length;
-            const ufroTrophies = trophies.filter(t => t.type === 'SELECCION');
-            const countSel = ufroTrophies.length;
-
-            const cats = [
-                { icon: '🌍', title: 'Interfacultades', count: countInter },
-                { icon: '🏆', title: 'Intercarreras', count: countLeague },
-                { icon: '🏛️', title: 'Copas Facultad', count: countFac },
-                { icon: '🇨🇱', title: 'Selección UFRO', count: countSel }
-            ];
-
-            gridEl.innerHTML = cats.map(c => `
-                <div class="surface-card rounded-xl p-4 flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-lg">${c.icon}</span>
-                        <span class="font-bold text-xs sm:text-sm text-gray-200">${c.title}</span>
-                    </div>
-                    <span class="text-xl font-black ${c.count > 0 ? 'text-[#8b96ff]' : 'text-gray-600'}">${c.count}</span>
-                </div>
-            `).join('');
-
-            const citations = careerState.ufroCitations || [];
-            if (citations.length === 0 && ufroTrophies.length === 0) {
-                ufroCardEl.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-sm font-black uppercase tracking-wider text-white">🇨🇱 Selección Universitaria UFRO</h3>
-                            <p class="text-xs text-gray-500 mt-0.5">No registraste convocatorias a la selección institucional (requería Media 76+).</p>
-                        </div>
-                    </div>
-                `;
-            } else {
-                const firstCit = citations[0] ? citations[0].label : `Año ${ufroTrophies[0].year} S${ufroTrophies[0].sem}`;
-                const lastCit = citations[citations.length - 1] ? citations[citations.length - 1].label : `Año ${ufroTrophies[ufroTrophies.length - 1].year} S${ufroTrophies[ufroTrophies.length - 1].sem}`;
-                const periodText = citations.length > 1 ? `${firstCit} → ${lastCit} (${citations.length} semestres citado)` : `${firstCit} (1 semestre citado)`;
-
-                const ufroGrouped = new Map();
-                ufroTrophies.forEach(t => {
-                    const cleanName = t.title.replace(' (Sel. UFRO)', '');
-                    ufroGrouped.set(cleanName, (ufroGrouped.get(cleanName) || 0) + 1);
-                });
-                const ufroSummary = ufroGrouped.size > 0
-                    ? Array.from(ufroGrouped.entries()).map(([n, c]) => `${n} x${c}`).join(' · ')
-                    : 'Sin títulos nacionales obtenidos';
-
-                ufroCardEl.innerHTML = `
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <h3 class="text-sm font-black uppercase tracking-wider text-white">🇨🇱 Logros Selección UFRO</h3>
-                                <span class="px-2 py-0.5 rounded bg-[#717fff]/15 text-[11px] font-bold text-[#a3adff] border border-[#717fff]/30">
-                                    ${periodText}
-                                </span>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-1">
-                                Convocatorias: ${citations.map(c => c.label).join(', ')} · ${careerState.ufroStats.matches} PJ (${careerState.ufroStats.goals} G · ${careerState.ufroStats.assists} A)
-                            </p>
-                        </div>
-                        <div class="text-xs font-bold ${ufroGrouped.size > 0 ? 'text-[#a3adff]' : 'text-gray-500'} sm:text-right">
-                            ${ufroGrouped.size > 0 ? `🏆 ${ufroSummary}` : ufroSummary}
-                        </div>
-                    </div>
-                `;
-            }
-
-            const stints = buildChronologicalClubStints();
-            if (stints.length === 0) {
-                stintsEl.innerHTML = `<p class="text-xs text-gray-500">Sin registros en clubes.</p>`;
-            } else {
-                stintsEl.innerHTML = stints.map(st => {
-                    const trophiesSummary = summarizeTrophiesGrouped(st.trophies);
-                    const hasTrophies = st.trophies.length > 0;
-                    return `
-                        <div class="p-4 rounded-xl surface-sub flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                            <div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="font-black text-white text-sm">${st.teamName}</span>
-                                    <span class="px-2 py-0.5 rounded bg-[#222222] text-[11px] font-bold text-[#8b96ff] border border-[#2b2b2b]">
-                                        ${formatDurationLabel(st.semesters)}
-                                    </span>
-                                </div>
-                                <div class="text-[11px] text-gray-500 mt-0.5">${st.careerName} · ${st.startLabel} → ${st.endLabel}</div>
-                            </div>
-                            <div class="text-xs font-bold ${hasTrophies ? 'text-[#a3adff]' : 'text-gray-500'} sm:text-right">
-                                ${hasTrophies ? `🏆 ${trophiesSummary}` : trophiesSummary}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            // Agrupar detalle completo por año para mayor claridad
-            const groupedByYear = {};
-            careerState.history.slice().reverse().forEach(h => {
-                if (!groupedByYear[h.year]) groupedByYear[h.year] = [];
-                groupedByYear[h.year].push(h);
-            });
-
-            const sortedYears = Object.keys(groupedByYear).map(Number).sort((a, b) => a - b);
-            fullSemEl.innerHTML = sortedYears.length === 0
-                ? `<p class="text-xs text-gray-500">Sin registros semestrales.</p>`
-                : sortedYears.map(yr => `
-                    <div class="space-y-1.5 pt-1">
-                        <div class="text-[11px] font-black uppercase tracking-wider text-gray-500">Año ${yr}</div>
-                        ${groupedByYear[yr].map(h => `
-                            <div class="p-3 rounded-xl bg-[#101010] border border-[#222222] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                                <div>
-                                    <span class="font-bold text-[#8b96ff]">Semestre ${h.sem}</span> — <strong class="text-white">${h.teamName}</strong> <span class="text-gray-500">(${h.careerName})</span>
-                                    <div class="text-[11px] text-gray-400 mt-0.5">
-                                        PJ: ${h.matches} · G: ${h.goals} · A: ${h.assists} · Nota: ${h.avgRating} · ${h.leagueSummaryText || `Liga #${h.leaguePosition}`}
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <span class="px-2 py-0.5 rounded bg-[#1c1c1c] text-white font-bold border border-[#2b2b2b]">OVR ${h.ovrAfter}</span>
-                                    ${h.trophies && h.trophies.length > 0 ? `<div class="text-[11px] text-[#a3adff] font-bold mt-1">🏆 ${h.trophies.map(t => t.title).join(', ')}</div>` : ''}
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `).join('');
+            renderPalmaresView();
         }
 
         // =========================================================================
-        // 12. TOASTS
+        // 12. TOAST NOTIFICATIONS
         // =========================================================================
         function showToast(msg, type = 'info') {
             const container = document.getElementById('toast-container');
+            if (!container) return;
             const toast = document.createElement('div');
             const colors = {
-                success: 'bg-[#1c1c1c] border-[#717fff]/50 text-[#d0d5ff]',
+                success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
                 error: 'bg-rose-950/95 border-rose-500/50 text-rose-200',
-                info: 'bg-[#1c1c1c] border-[#2e2e2e] text-gray-200'
+                info: 'bg-[#1c1c1c]/95 border-[#717fff]/50 text-gray-100'
             };
-            toast.className = `pointer-events-auto p-3 rounded-xl border shadow-xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type]}`;
+            toast.className = `pointer-events-auto p-3 rounded-xl border shadow-xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
             toast.textContent = msg;
             container.appendChild(toast);
             requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
