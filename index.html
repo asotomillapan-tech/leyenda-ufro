@@ -102,15 +102,11 @@
 
             <!-- Botones de Sesión / Menú de Usuario -->
             <div class="relative flex items-center justify-end gap-1.5 sm:w-44">
-                <!-- Estado Invitado: Iniciar Sesión y Registrarse -->
-                <div id="guest-auth-buttons" class="flex items-center gap-1.5">
+                <!-- Estado Invitado: Botón único Inicio o registro -->
+                <div id="guest-auth-buttons" class="flex items-center">
                     <button type="button" onclick="openAuthModal('login')"
-                        class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] hover:border-[#717fff]/50 text-[11px] font-bold text-gray-200 hover:text-white transition">
-                        Iniciar sesión
-                    </button>
-                    <button type="button" onclick="openAuthModal('register')"
-                        class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-[11px] font-black text-white shadow transition">
-                        Registrarse
+                        class="px-3 sm:px-3.5 py-1.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-[11px] font-black text-white shadow transition whitespace-nowrap">
+                        Inicio o registro
                     </button>
                 </div>
 
@@ -4718,7 +4714,7 @@
         };
 
         function subscribeWeeklyLeaderboard() {
-            if (!db || !currentUser) return;
+            if (!db) return;
             if (unsubscribeLeaderboard) unsubscribeLeaderboard();
 
             const { weekId } = getChileWeekInfo();
@@ -4737,7 +4733,17 @@
                     .filter(item => item.weekId === weekId && typeof item.score === 'number')
                     .sort((a, b) => b.score - a.score || (b.ovr || 0) - (a.ovr || 0));
 
-                renderGlobalLeaderboardList(currentWeekEntries.slice(0, 10));
+                // Garantizar un único puesto por usuario (quedándose con su puntaje más alto de la semana)
+                const bestByUserMap = new Map();
+                for (const item of currentWeekEntries) {
+                    const userKey = item.uid || item.id;
+                    if (!bestByUserMap.has(userKey)) {
+                        bestByUserMap.set(userKey, item);
+                    }
+                }
+                const deduplicatedWeekEntries = Array.from(bestByUserMap.values());
+
+                renderGlobalLeaderboardList(deduplicatedWeekEntries.slice(0, 10));
 
                 const profileModal = document.getElementById('profile-modal');
                 if (profileModal && !profileModal.classList.contains('hidden')) {
@@ -4746,20 +4752,164 @@
             }, () => {
                 const listEl = document.getElementById('global-hof-list');
                 if (listEl) {
-                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Configura tu proyecto Firebase para ver el Top Global en vivo.</div>`;
+                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">No se pudo cargar el ranking global en este momento.</div>`;
                 }
             });
         }
 
+        function renderGlobalLeaderboardList(entries) {
+            const listEl = document.getElementById('global-hof-list');
+            if (!listEl) return;
+
+            if (!entries || entries.length === 0) {
+                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Aún no hay carreras registradas esta semana. ¡Inicia sesión y sé el primero en liderar el ranking!</div>`;
+                return;
+            }
+
+            listEl.innerHTML = entries.map((item, idx) => {
+                const entryTeam = findTeamByCode(item.teamCode);
+                const isMine = currentUser && item.uid === currentUser.uid;
+                const rankColor = idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500';
+                const safeId = escapeHtml(item.id || '');
+
+                return `
+                    <button type="button" onclick="openCareerDetailModal('${safeId}')"
+                        class="w-full text-left p-3.5 rounded-2xl surface-sub ${isMine ? 'border-[#717fff]/60 bg-[#717fff]/10' : 'hover:border-[#717fff]/45'} flex items-center justify-between gap-3 transition group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-6 text-center font-black text-sm ${rankColor} shrink-0">#${idx + 1}</span>
+                            ${entryTeam ? getTeamBadgeHTML(entryTeam, 'w-10 h-10', 'text-[10px]') : ''}
+                            <div class="min-w-0">
+                                <div class="font-black text-white text-sm truncate group-hover:text-[#a3adff] transition">
+                                    ${escapeHtml(item.playerName || 'Jugador')}
+                                    <span class="text-[11px] font-bold text-[#8b96ff]">(${escapeHtml(item.position || 'MED')})</span>
+                                </div>
+                                <div class="text-[11px] font-bold text-emerald-400 truncate">
+                                    @${escapeHtml(item.nickname || 'usuario')} ${isMine ? '(Tú)' : ''}
+                                </div>
+                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.headline || '')}</div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-xs font-black text-[#a3adff]">${item.score || 0} pts</div>
+                            <div class="text-[11px] font-bold text-gray-400">🏆 ${item.titles || 0} · OVR ${formatOvr(item.ovr || 60)}</div>
+                            <div class="text-[10px] text-gray-500 group-hover:text-gray-300">Ver ficha →</div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        window.openCareerDetailModal = function (entryId) {
+            const modal = document.getElementById('career-detail-modal');
+            const content = document.getElementById('career-detail-content');
+            const titleEl = document.getElementById('detail-modal-title');
+            if (!modal || !content) return;
+
+            const entry = cachedAllLeaderboardDocs.find(d => d.id === entryId);
+            if (!entry) return;
+
+            const mainTeam = findTeamByCode(entry.teamCode);
+            const isArq = entry.position === 'ARQ';
+            const st = entry.stats || { matches: 0, goals: 0, assists: 0, cleanSheets: 0 };
+            const trajectory = Array.isArray(entry.trajectory) ? entry.trajectory : [];
+            const trophyList = Array.isArray(entry.trophyList) ? entry.trophyList : [];
+            const awardList = Array.isArray(entry.awardList) ? entry.awardList : [];
+
+            if (titleEl) titleEl.textContent = `${entry.playerName || 'Jugador'} · @${entry.nickname || 'usuario'}`;
+
+            content.innerHTML = `
+                <!-- Cabecera Jugador y Usuario -->
+                <div class="p-4 rounded-2xl surface-sub flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        ${mainTeam ? getTeamBadgeHTML(mainTeam, 'w-12 h-12', 'text-xs') : ''}
+                        <div>
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/20 text-[#a3adff]">
+                                @${escapeHtml(entry.nickname || 'usuario')}
+                            </span>
+                            <h4 class="text-base font-black text-white mt-0.5">${escapeHtml(entry.playerName || 'Jugador')}</h4>
+                            <p class="text-xs text-gray-400">${escapeHtml(entry.studiedCareer || 'Carrera UFRO')} · ${escapeHtml(entry.position || 'MED')} (${entry.gender === 'F' ? 'Fem.' : 'Masc.'})</p>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="text-lg font-black text-[#8b96ff]">${entry.score || 0} pts</div>
+                        <div class="text-xs font-bold text-gray-300">OVR ${formatOvr(entry.ovr || 60)}</div>
+                    </div>
+                </div>
+
+                <!-- Legado -->
+                <div class="px-3.5 py-2.5 rounded-xl bg-[#717fff]/10 border border-[#717fff]/25 text-center">
+                    <span class="text-xs font-black text-white">${escapeHtml(entry.headline || 'Leyenda UFRO')}</span>
+                </div>
+
+                <!-- Estadísticas Totales -->
+                <div class="grid grid-cols-4 gap-2 text-center">
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-white">${st.matches || 0}</div>
+                        <div class="text-[10px] font-bold text-gray-500 uppercase">PJ</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-[#8b96ff]">${isArq ? (st.cleanSheets || 0) : (st.goals || 0)}</div>
+                        <div class="text-[10px] font-bold text-gray-500 uppercase">${isArq ? 'Vallas' : 'Goles'}</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-[#717fff]">${isArq ? ((st.goals || 0) + (st.assists || 0)) : (st.assists || 0)}</div>
+                        <div class="text-[10px] font-bold text-gray-500 uppercase">${isArq ? 'G+A' : 'Asist.'}</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-amber-300">${entry.titles || 0}</div>
+                        <div class="text-[10px] font-bold text-gray-500 uppercase">Títulos</div>
+                    </div>
+                </div>
+
+                <!-- Trayectoria por Equipos -->
+                <div class="space-y-2">
+                    <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🛡️ Trayectoria por Equipos</h5>
+                    ${trajectory.length === 0
+                        ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-500">Sin desglose de clubes disponible.</div>`
+                        : trajectory.map(tr => {
+                            const tObj = findTeamByCode(tr.teamCode);
+                            return `
+                                <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
+                                    <div class="flex items-center gap-2.5">
+                                        ${tObj ? getTeamBadgeHTML(tObj, 'w-8 h-8', 'text-[9px]') : ''}
+                                        <div>
+                                            <div class="font-bold text-white">${escapeHtml(tr.teamName || 'Equipo')}</div>
+                                            <div class="text-[11px] text-gray-400">${tr.sems || 1} sem. · ${tr.goals || 0}G · ${tr.assists || 0}A</div>
+                                        </div>
+                                    </div>
+                                    <span class="font-bold text-amber-300">🏆 ${tr.titles || 0}</span>
+                                </div>
+                            `;
+                        }).join('')
+                    }
+                </div>
+
+                <!-- Logros y Títulos -->
+                <div class="space-y-2">
+                    <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🏆 Logros y Títulos Conquistados</h5>
+                    ${trophyList.length === 0 && awardList.length === 0
+                        ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-500">Sin títulos oficiales registrados en esta carrera.</div>`
+                        : `<div class="flex flex-wrap gap-1.5">
+                            ${awardList.map(a => `<span class="px-2.5 py-1 rounded-lg bg-[#717fff]/15 border border-[#717fff]/30 text-[#d0d5ff] text-[11px] font-bold">${escapeHtml(a.icon || '⭐')} ${escapeHtml(a.title || '')} (Año ${a.year || 1})</span>`).join('')}
+                            ${trophyList.map(t => `<span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[11px] font-bold">🏆 ${escapeHtml(t.title || '')} (Año ${t.year || 1})</span>`).join('')}
+                        </div>`
+                    }
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        };
+
         window.renderUserProfileStats = function () {
             if (!isRealAuthenticatedUser(currentUser)) return;
             const { weekId } = getChileWeekInfo();
-            const myAllCareers = cachedAllLeaderboardDocs
+
+            const myCareers = cachedAllLeaderboardDocs
                 .filter(d => d.uid === currentUser.uid)
                 .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-            const myWeeklyCareers = myAllCareers.filter(d => d.weekId === weekId);
-            const myTop5Careers = [...myAllCareers]
+            const myWeeklyCareers = myCareers.filter(d => d.weekId === weekId);
+            const myTop5Historical = [...myCareers]
                 .sort((a, b) => (b.score || 0) - (a.score || 0) || (b.ovr || 0) - (a.ovr || 0))
                 .slice(0, 5);
 
@@ -4773,18 +4923,18 @@
 
             if (weeklyListEl) {
                 if (myWeeklyCareers.length === 0) {
-                    weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no completas carreras esta semana.</div>`;
+                    weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras esta semana.</div>`;
                 } else {
-                    weeklyListEl.innerHTML = myWeeklyCareers.map(item => `
-                        <button type="button" onclick="openCareerDetailModal('${item.id}')"
-                            class="w-full p-3 rounded-xl surface-sub hover:border-[#717fff]/50 flex items-center justify-between gap-2 text-left transition">
+                    weeklyListEl.innerHTML = myWeeklyCareers.map(c => `
+                        <button type="button" onclick="openCareerDetailModal('${escapeHtml(c.id)}')"
+                            class="w-full text-left p-3 rounded-xl surface-sub hover:border-[#717fff]/50 flex items-center justify-between gap-2 text-xs transition">
                             <div class="min-w-0">
-                                <div class="font-black text-white text-xs truncate">${escapeHtml(item.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(item.position || 'MED')})</span></div>
-                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.headline || item.studiedCareer || '')}</div>
+                                <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span></div>
+                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(c.headline || '')}</div>
                             </div>
                             <div class="text-right shrink-0">
-                                <div class="text-xs font-black text-[#8b96ff]">${item.score} pts</div>
-                                <div class="text-[10px] text-amber-300 font-bold">🏆 ${item.titles || 0} · OVR ${formatOvr(item.ovr || 60)}</div>
+                                <div class="font-black text-[#a3adff]">${c.score || 0} pts</div>
+                                <div class="text-[10px] text-gray-400">🏆 ${c.titles || 0} · OVR ${formatOvr(c.ovr || 60)}</div>
                             </div>
                         </button>
                     `).join('');
@@ -4792,192 +4942,28 @@
             }
 
             if (top5ListEl) {
-                if (myTop5Careers.length === 0) {
-                    top5ListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Completa tu primera carrera con sesión iniciada para inaugurar tu Top 5.</div>`;
+                if (myTop5Historical.length === 0) {
+                    top5ListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>`;
                 } else {
-                    top5ListEl.innerHTML = myTop5Careers.map((item, idx) => `
-                        <button type="button" onclick="openCareerDetailModal('${item.id}')"
-                            class="w-full p-3 rounded-xl surface-sub hover:border-amber-400/50 flex items-center justify-between gap-2 text-left transition">
+                    top5ListEl.innerHTML = myTop5Historical.map((c, idx) => `
+                        <button type="button" onclick="openCareerDetailModal('${escapeHtml(c.id)}')"
+                            class="w-full text-left p-3 rounded-xl surface-sub hover:border-amber-400/50 flex items-center justify-between gap-2 text-xs transition">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <span class="w-5 text-center font-black text-xs ${idx === 0 ? 'text-amber-400' : 'text-gray-400'}">#${idx + 1}</span>
+                                <span class="font-black text-amber-400 w-5 shrink-0">#${idx + 1}</span>
                                 <div class="min-w-0">
-                                    <div class="font-black text-white text-xs truncate">${escapeHtml(item.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(item.position || 'MED')})</span></div>
-                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.headline || '')}</div>
+                                    <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span></div>
+                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(c.headline || '')} · ${escapeHtml(c.weekId || '')}</div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <div class="text-xs font-black text-amber-300">${item.score} pts</div>
-                                <div class="text-[10px] text-gray-400 font-bold">🏆 ${item.titles || 0} · OVR ${formatOvr(item.ovr || 60)}</div>
+                                <div class="font-black text-amber-300">${c.score || 0} pts</div>
+                                <div class="text-[10px] text-gray-400">🏆 ${c.titles || 0} · OVR ${formatOvr(c.ovr || 60)}</div>
                             </div>
                         </button>
                     `).join('');
                 }
             }
         };
-
-        window.openCareerDetailModal = function (docId) {
-            const entry = cachedAllLeaderboardDocs.find(d => d.id === docId);
-            if (!entry) return;
-
-            const modal = document.getElementById('career-detail-modal');
-            const titleEl = document.getElementById('detail-modal-title');
-            const contentEl = document.getElementById('career-detail-content');
-            if (!modal || !contentEl) return;
-
-            const mainTeam = findTeamByCode(entry.teamCode);
-            titleEl.textContent = entry.playerName || 'Detalle de Carrera';
-
-            const stats = entry.stats || { matches: 0, goals: 0, assists: 0, cleanSheets: 0 };
-            const isArq = entry.position === 'ARQ';
-            const trajectory = Array.isArray(entry.trajectory) ? entry.trajectory : [];
-            const trophyList = Array.isArray(entry.trophyList) ? entry.trophyList : [];
-            const awardList = Array.isArray(entry.awardList) ? entry.awardList : [];
-
-            contentEl.innerHTML = `
-                <!-- Cabecera Jugador y Usuario -->
-                <div class="p-4 rounded-2xl surface-sub border-[#717fff]/35 flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3 min-w-0">
-                        ${mainTeam ? getTeamBadgeHTML(mainTeam, 'w-12 h-12', 'text-xs') : ''}
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="font-black text-white text-base truncate">${escapeHtml(entry.playerName)}</span>
-                                <span class="px-2 py-0.5 rounded bg-[#717fff]/20 text-[#a3adff] text-[10px] font-black">${escapeHtml(entry.position || 'MED')}</span>
-                            </div>
-                            <div class="text-xs text-gray-300 truncate">${escapeHtml(entry.studiedCareer || 'Universidad de La Frontera')}</div>
-                            <div class="text-[11px] text-[#8b96ff] font-bold mt-0.5">Usuario: @${escapeHtml(entry.nickname || 'Anónimo')}</div>
-                        </div>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <div class="text-lg font-black text-[#8b96ff]">${entry.score} pts</div>
-                        <div class="text-xs font-black text-amber-300">OVR ${formatOvr(entry.ovr || 60)}</div>
-                    </div>
-                </div>
-
-                <!-- Consigna de Legado -->
-                ${entry.headline ? `
-                    <div class="px-3.5 py-2.5 rounded-xl bg-[#717fff]/10 border border-[#717fff]/30 text-center">
-                        <span class="text-xs font-black text-white">👑 ${escapeHtml(entry.headline)}</span>
-                    </div>
-                ` : ''}
-
-                <!-- Estadísticas Totales -->
-                <div class="grid grid-cols-4 gap-2 text-center">
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-white">${stats.matches || 0}</div>
-                        <div class="text-[10px] text-gray-500 font-bold uppercase">PJ</div>
-                    </div>
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-[#8b96ff]">${isArq ? (stats.cleanSheets || 0) : (stats.goals || 0)}</div>
-                        <div class="text-[10px] text-gray-500 font-bold uppercase">${isArq ? 'Vallas' : 'Goles'}</div>
-                    </div>
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-[#a3adff]">${isArq ? ((stats.goals || 0) + (stats.assists || 0)) : (stats.assists || 0)}</div>
-                        <div class="text-[10px] text-gray-500 font-bold uppercase">${isArq ? 'G+A' : 'Asist.'}</div>
-                    </div>
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-amber-300">${entry.titles || 0}</div>
-                        <div class="text-[10px] text-gray-500 font-bold uppercase">Títulos</div>
-                    </div>
-                </div>
-
-                <!-- Trayectoria por Equipos -->
-                <div class="space-y-2">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🏟️ Trayectoria por Clubes</h4>
-                    ${trajectory.length === 0
-                        ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-400">Club principal: <strong class="text-white">${escapeHtml(mainTeam?.name || entry.teamCode || 'UFRO')}</strong></div>`
-                        : `<div class="space-y-1.5">${trajectory.map(st => {
-                            const stTeam = findTeamByCode(st.teamCode);
-                            return `
-                                <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
-                                    <div class="flex items-center gap-2.5 min-w-0">
-                                        ${stTeam ? getTeamBadgeHTML(stTeam, 'w-8 h-8', 'text-[9px]') : ''}
-                                        <div class="min-w-0">
-                                            <div class="font-bold text-white truncate">${escapeHtml(st.teamName)}</div>
-                                            <div class="text-[10px] text-gray-400">${st.sems} semestres · ${st.goals || 0}G · ${st.assists || 0}A</div>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs font-black text-amber-300 shrink-0">🏆 ${st.titles || 0}</span>
-                                </div>
-                            `;
-                        }).join('')}</div>`
-                    }
-                </div>
-
-                <!-- Logros y Títulos Conquistados -->
-                <div class="space-y-2">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🏆 Logros y Títulos (${trophyList.length})</h4>
-                    ${trophyList.length === 0
-                        ? `<p class="text-xs text-gray-500">Sin títulos colectivos registrados en esta carrera.</p>`
-                        : `<div class="flex flex-wrap gap-1.5">${trophyList.map(t => `
-                            <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[11px] font-bold">
-                                🏆 ${escapeHtml(t.title)} (${escapeHtml(t.teamName || '')} · A${t.year})
-                            </span>
-                        `).join('')}</div>`
-                    }
-                </div>
-
-                <!-- Premios Individuales -->
-                ${awardList.length > 0 ? `
-                    <div class="space-y-2">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🎖️ Distinciones Individuales</h4>
-                        <div class="flex flex-wrap gap-1.5">
-                            ${awardList.map(a => `
-                                <span class="px-2.5 py-1 rounded-lg bg-[#717fff]/15 border border-[#717fff]/30 text-[#d0d5ff] text-[11px] font-bold">
-                                    ${a.icon || '⭐'} ${escapeHtml(a.title)} (A${a.year})
-                                </span>
-                            `).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-            `;
-
-            modal.classList.remove('hidden');
-        };
-
-        function renderGlobalLeaderboardList(entries) {
-            const listEl = document.getElementById('global-hof-list');
-            if (!listEl) return;
-
-            if (!entries || entries.length === 0) {
-                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Nadie ha registrado una carrera esta semana todavía. ¡Inicia sesión y sé el #1!</div>`;
-                return;
-            }
-
-            listEl.innerHTML = entries.map((item, idx) => {
-                const teamObj = findTeamByCode(item.teamCode);
-                const isMine = currentUser && item.uid === currentUser.uid;
-                const rankBadge = idx === 0
-                    ? 'text-amber-400'
-                    : idx === 1
-                        ? 'text-gray-200'
-                        : idx === 2
-                            ? 'text-amber-600'
-                            : 'text-gray-500';
-
-                return `
-                    <button type="button" onclick="openCareerDetailModal('${item.id}')"
-                        class="w-full p-3.5 rounded-2xl surface-sub ${isMine ? 'border-[#717fff]/60 bg-[#717fff]/5' : 'hover:border-[#717fff]/45'} flex items-center justify-between gap-3 text-left transition group">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <span class="w-6 text-center font-black text-sm shrink-0 ${rankBadge}">#${idx + 1}</span>
-                            ${teamObj ? getTeamBadgeHTML(teamObj, 'w-10 h-10', 'text-[10px]') : ''}
-                            <div class="min-w-0">
-                                <div class="font-black text-white text-sm truncate flex items-center gap-1.5 group-hover:text-[#a3adff] transition">
-                                    <span class="truncate">${escapeHtml(item.playerName)}</span>
-                                    <span class="text-[10px] font-bold text-[#8b96ff] shrink-0">(${escapeHtml(item.position || 'MED')})</span>
-                                </div>
-                                <div class="text-[11px] text-gray-400 truncate">
-                                    ${escapeHtml(item.headline || '')} · <span class="text-[#a3adff]">@${escapeHtml(item.nickname || 'Anónimo')}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-right shrink-0">
-                            <div class="text-xs font-black text-[#8b96ff]">${item.score} pts</div>
-                            <div class="text-[10px] font-bold text-amber-300">🏆 ${item.titles || 0} · OVR ${formatOvr(item.ovr || 60)}</div>
-                        </div>
-                    </button>
-                `;
-            }).join('');
-        }
 
         window.submitCareerToCloudLeaderboard = async function (legacy, baseScore) {
             if (!db || !careerState) return;
@@ -5034,39 +5020,70 @@
                 year: a.year || 1
             }));
 
+            const careerPayload = {
+                uid: currentUser.uid,
+                nickname: String(nickname).slice(0, 18),
+                playerName: String(careerState.playerName).slice(0, 36),
+                studiedCareer: String(careerState.studiedCareer || '').slice(0, 60),
+                position: careerState.position,
+                gender: careerState.gender,
+                ovr: Math.min(104, Number(careerState.ovr) || 60),
+                titles: (careerState.trophies || []).length,
+                awards: (careerState.awards || []).length,
+                headline: String(legacy.headline || '').slice(0, 60),
+                teamCode: legacy.teamCode || careerState.teamCode,
+                stats: {
+                    matches: careerState.stats?.matches || 0,
+                    goals: careerState.stats?.goals || 0,
+                    assists: careerState.stats?.assists || 0,
+                    cleanSheets: careerState.stats?.cleanSheets || 0
+                },
+                trajectory,
+                trophyList,
+                awardList,
+                score: totalScore,
+                weekId,
+                createdAt: Date.now()
+            };
+
             try {
-                const entriesCol = collection(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard');
-                await promiseWithTimeout(addDoc(entriesCol, {
-                    uid: currentUser.uid,
-                    nickname: String(nickname).slice(0, 18),
-                    playerName: String(careerState.playerName).slice(0, 36),
-                    studiedCareer: String(careerState.studiedCareer || '').slice(0, 60),
-                    position: careerState.position,
-                    gender: careerState.gender,
-                    ovr: Math.min(104, Number(careerState.ovr) || 60),
-                    titles: (careerState.trophies || []).length,
-                    awards: (careerState.awards || []).length,
-                    headline: String(legacy.headline || '').slice(0, 60),
-                    teamCode: legacy.teamCode || careerState.teamCode,
-                    stats: {
-                        matches: careerState.stats?.matches || 0,
-                        goals: careerState.stats?.goals || 0,
-                        assists: careerState.stats?.assists || 0,
-                        cleanSheets: careerState.stats?.cleanSheets || 0
-                    },
-                    trajectory,
-                    trophyList,
-                    awardList,
-                    score: totalScore,
-                    weekId,
-                    createdAt: Date.now()
-                }), 6000);
+                // Documento único por usuario y semana para que solo figure su mejor marca semanal
+                const weeklyDocId = `${weekId}_${currentUser.uid}`;
+                const weeklyEntryRef = doc(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard', weeklyDocId);
+
+                let previousBestScore = -1;
+                const cachedExisting = cachedAllLeaderboardDocs.find(
+                    d => d.uid === currentUser.uid && d.weekId === weekId
+                );
+                if (cachedExisting && typeof cachedExisting.score === 'number') {
+                    previousBestScore = cachedExisting.score;
+                } else {
+                    const existingSnap = await promiseWithTimeout(getDoc(weeklyEntryRef), 4500);
+                    if (existingSnap.exists() && typeof existingSnap.data().score === 'number') {
+                        previousBestScore = existingSnap.data().score;
+                    }
+                }
+
+                // Guardar también en el historial personal del usuario para su perfil / Top 5 histórico
+                const userHistoryCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'careers');
+                addDoc(userHistoryCol, careerPayload).catch(() => {});
+
+                let leaderboardToastMsg = '';
+                if (previousBestScore < 0) {
+                    await promiseWithTimeout(setDoc(weeklyEntryRef, careerPayload), 6000);
+                    leaderboardToastMsg = `🌍 ¡Carrera publicada en el Top Global Semanal (${totalScore} pts)!`;
+                } else if (totalScore > previousBestScore) {
+                    await promiseWithTimeout(setDoc(weeklyEntryRef, careerPayload), 6000);
+                    leaderboardToastMsg = `🔥 ¡Nuevo récord semanal! Superaste tus ${previousBestScore} pts con ${totalScore} pts en el Top Global.`;
+                } else {
+                    leaderboardToastMsg = `📊 Obtuviste ${totalScore} pts. Se mantiene tu mejor marca semanal de ${previousBestScore} pts en el Top Global.`;
+                }
 
                 careerState.submittedToCloud = true;
                 careerState.lastSubmittedScore = totalScore;
                 saveCareerState();
                 renderApp();
-                showToast(`🌍 ¡Carrera publicada en el Top Global Semanal (${totalScore} pts)!`, 'success');
+                showToast(leaderboardToastMsg, totalScore >= previousBestScore ? 'success' : 'info');
             } catch (err) {
                 const code = err?.code || '';
                 if (code === 'permission-denied') {
@@ -5098,22 +5115,25 @@
                 // Long polling evita bloqueos y demoras de WebSocket en Vercel/iframes
                 db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
+                // Cargar el Top Global Semanal de inmediato para todos los visitantes
+                subscribeWeeklyLeaderboard();
+
                 // Esperar a que Firebase restaure la sesión persistida antes de decidir si entrar como invitado
                 if (typeof auth.authStateReady === 'function') {
                     await auth.authStateReady();
                 }
 
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                    await signInWithCustomToken(auth, __initial_auth_token).catch(() => {});
                 } else if (!auth.currentUser) {
-                    await signInAnonymously(auth);
+                    await signInAnonymously(auth).catch(() => {});
                 }
 
                 onAuthStateChanged(auth, async (user) => {
                     currentUser = user;
+                    subscribeWeeklyLeaderboard();
                     if (user) {
                         updateAuthUI(user);
-                        subscribeWeeklyLeaderboard();
                         loadUserCloudProfile(user.uid, user);
                     } else {
                         updateAuthUI(null);
