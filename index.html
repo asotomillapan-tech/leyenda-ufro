@@ -270,15 +270,20 @@
 
             <!-- Sección Cambiar Nombre de Usuario -->
             <div id="profile-change-username-box" class="p-3.5 rounded-2xl surface-sub space-y-2">
-                <label class="block text-xs font-bold text-gray-300">Cambiar nombre de usuario</label>
+                <div class="flex items-center justify-between gap-2">
+                    <label class="block text-xs font-bold text-gray-300">Cambiar nombre de usuario</label>
+                    <span id="nickname-cooldown-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                        Bloqueado (14 días)
+                    </span>
+                </div>
                 <div class="flex gap-2">
                     <input type="text" id="input-cloud-nickname" minlength="3" maxlength="18" placeholder="Nuevo usuario"
-                        class="flex-1 px-3.5 py-2 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] text-xs sm:text-sm text-white focus:outline-none focus:border-[#717fff]">
-                    <button type="button" onclick="saveCloudNickname()" class="px-4 py-2 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition shrink-0">
+                        class="flex-1 px-3.5 py-2 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] text-xs sm:text-sm text-white focus:outline-none focus:border-[#717fff] disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button type="button" id="btn-save-cloud-nickname" onclick="saveCloudNickname()" class="px-4 py-2 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
                         Guardar
                     </button>
                 </div>
-                <p class="text-[10px] text-gray-500">Solo letras, números y guion bajo (3-18 caracteres). Se actualizará en tus carreras.</p>
+                <p id="nickname-change-hint" class="text-[10px] text-gray-500">Solo letras, números y guion bajo (3-18 caracteres). Podrás cambiarlo una vez cada 14 días.</p>
             </div>
 
             <!-- Carreras de la Semana Actual -->
@@ -432,7 +437,10 @@
                             SEMANA EN CURSO
                         </span>
                         <h2 class="text-2xl font-black text-white mt-2.5">🌍 Top Global Semanal</h2>
-                        <p id="weekly-countdown-text" class="text-xs text-gray-400 mt-1">Compite con toda la UFRO · Reinicio cada lunes 00:00 hrs</p>
+                        <div class="mt-2 inline-flex flex-col items-center px-3.5 py-2 rounded-2xl surface-sub border border-[#717fff]/25">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Reinicio del ranking en</span>
+                            <span id="weekly-countdown-text" class="font-mono text-xs sm:text-sm font-black text-[#a3adff] mt-0.5">--d --h --m --s</span>
+                        </div>
                     </div>
                     <div id="global-hof-list" class="space-y-2.5">
                         <div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Cargando ranking global...</div>
@@ -3759,12 +3767,16 @@
                 nickInput.value = window.cloudProfile.nickname || '';
             }
 
+            if (window.updateNicknameCooldownUI) {
+                window.updateNicknameCooldownUI();
+            }
+
             if (window.renderUserProfileStats) {
                 window.renderUserProfileStats();
             }
 
             modal.classList.remove('hidden');
-            if (focusSection === 'username' && nickInput) {
+            if (focusSection === 'username' && nickInput && !nickInput.disabled) {
                 setTimeout(() => nickInput.focus(), 100);
             }
         }
@@ -4323,17 +4335,67 @@
         let db = null;
         let currentUser = null;
         let unsubscribeLeaderboard = null;
+        let weeklyCountdownInterval = null;
         let cachedAllLeaderboardDocs = [];
 
+        const NICKNAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+
         window.cloudProfile = {
-            nickname: ''
+            nickname: '',
+            nicknameUpdatedAt: 0
+        };
+
+        function getLocalNicknameTimestampKey(uid) {
+            return `leyenda_ufro_nick_ts_${uid}`;
+        }
+
+        function getNicknameCooldownStatus() {
+            if (!currentUser) return { locked: false, remainingMs: 0 };
+            const localTs = Number(localStorage.getItem(getLocalNicknameTimestampKey(currentUser.uid)) || 0);
+            const lastChangedAt = Math.max(Number(window.cloudProfile.nicknameUpdatedAt || 0), localTs);
+            if (!lastChangedAt) return { locked: false, remainingMs: 0 };
+
+            const elapsed = Date.now() - lastChangedAt;
+            if (elapsed >= NICKNAME_COOLDOWN_MS) {
+                return { locked: false, remainingMs: 0 };
+            }
+            return { locked: true, remainingMs: NICKNAME_COOLDOWN_MS - elapsed };
+        }
+
+        window.updateNicknameCooldownUI = function () {
+            const input = document.getElementById('input-cloud-nickname');
+            const btn = document.getElementById('btn-save-cloud-nickname');
+            const badge = document.getElementById('nickname-cooldown-badge');
+            const hint = document.getElementById('nickname-change-hint');
+            if (!input || !btn) return;
+
+            const status = getNicknameCooldownStatus();
+            if (status.locked) {
+                const days = Math.floor(status.remainingMs / (24 * 60 * 60 * 1000));
+                const hours = Math.floor((status.remainingMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                input.disabled = true;
+                btn.disabled = true;
+                if (badge) badge.classList.remove('hidden');
+                if (hint) {
+                    hint.textContent = `Podrás volver a cambiar tu nombre de usuario en ${days}d ${hours}h (límite de 1 cambio cada 14 días).`;
+                    hint.className = 'text-[10px] font-bold text-amber-300/90';
+                }
+            } else {
+                input.disabled = false;
+                btn.disabled = false;
+                if (badge) badge.classList.add('hidden');
+                if (hint) {
+                    hint.textContent = 'Solo letras, números y guion bajo (3-18 caracteres). Podrás cambiarlo una vez cada 14 días.';
+                    hint.className = 'text-[10px] text-gray-500';
+                }
+            }
         };
 
         function isRealAuthenticatedUser(user) {
             return Boolean(user && !user.isAnonymous);
         }
 
-        // Calcula el identificador de semana ISO en hora de Chile (lunes a domingo)
+        // Calcula el identificador de semana ISO y el tiempo restante exacto hasta el lunes 00:00 en Chile
         function getChileWeekInfo() {
             const now = new Date();
             const chileStr = now.toLocaleString('en-US', { timeZone: 'America/Santiago' });
@@ -4346,11 +4408,24 @@
             const weekNo = Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
             const weekId = `${target.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
 
+            const nextMonday = new Date(chileDate.getFullYear(), chileDate.getMonth(), chileDate.getDate());
             const daysUntilMonday = (8 - dayNum) % 7 || 7;
+            nextMonday.setDate(nextMonday.getDate() + daysUntilMonday);
+            nextMonday.setHours(0, 0, 0, 0);
+
+            const diffMs = Math.max(0, nextMonday.getTime() - chileDate.getTime());
+            const days = Math.floor(diffMs / 86400000);
+            const hours = Math.floor((diffMs % 86400000) / 3600000);
+            const minutes = Math.floor((diffMs % 3600000) / 60000);
+            const seconds = Math.floor((diffMs % 60000) / 1000);
+
             return {
                 weekId,
                 weekLabel: `SEMANA ${weekNo} · ${target.getUTCFullYear()}`,
-                daysLeft: daysUntilMonday
+                days,
+                hours,
+                minutes,
+                seconds
             };
         }
 
@@ -4360,8 +4435,15 @@
             const countdown = document.getElementById('weekly-countdown-text');
             if (badge) badge.textContent = info.weekLabel;
             if (countdown) {
-                countdown.textContent = `Cierre en ${info.daysLeft} ${info.daysLeft === 1 ? 'día' : 'días'} · Reinicio cada lunes 00:00 hrs`;
+                const pad = (n) => String(n).padStart(2, '0');
+                countdown.textContent = `${info.days}d ${pad(info.hours)}h ${pad(info.minutes)}m ${pad(info.seconds)}s`;
             }
+        }
+
+        function startWeeklyCountdownTimer() {
+            updateWeeklyHeaderUI();
+            if (weeklyCountdownInterval) clearInterval(weeklyCountdownInterval);
+            weeklyCountdownInterval = setInterval(updateWeeklyHeaderUI, 1000);
         }
 
         function updateAuthUI(user) {
@@ -4401,12 +4483,22 @@
                 updateAuthUI(userObj);
             }
 
+            const localTs = Number(localStorage.getItem(getLocalNicknameTimestampKey(uid)) || 0);
+            if (localTs > 0) {
+                window.cloudProfile.nicknameUpdatedAt = localTs;
+            }
+
             if (!db || !uid) return;
             try {
                 const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'main');
                 const snap = await promiseWithTimeout(getDoc(profileRef), 3500);
-                if (snap.exists() && snap.data().nickname) {
-                    window.cloudProfile.nickname = snap.data().nickname;
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.nickname) window.cloudProfile.nickname = data.nickname;
+                    if (data.nicknameUpdatedAt) {
+                        window.cloudProfile.nicknameUpdatedAt = Math.max(Number(data.nicknameUpdatedAt) || 0, localTs);
+                        localStorage.setItem(getLocalNicknameTimestampKey(uid), String(window.cloudProfile.nicknameUpdatedAt));
+                    }
                 } else if (userObj && !userObj.isAnonymous) {
                     const generatedNick = window.cloudProfile.nickname || sanitizeAutoUsername(userObj.displayName || userObj.email?.split('@')[0] || 'Jugador');
                     window.cloudProfile.nickname = generatedNick;
@@ -4418,6 +4510,7 @@
                 }
             } catch (e) {}
             updateAuthUI(currentUser);
+            if (window.updateNicknameCooldownUI) window.updateNicknameCooldownUI();
         }
 
         window.handleEmailRegister = async function (e) {
@@ -4540,6 +4633,16 @@
                 showToast('Debes iniciar sesión para cambiar tu usuario.', 'error');
                 return;
             }
+
+            const cooldown = getNicknameCooldownStatus();
+            if (cooldown.locked) {
+                const days = Math.floor(cooldown.remainingMs / (24 * 60 * 60 * 1000));
+                const hours = Math.floor((cooldown.remainingMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                showToast(`⏳ Solo puedes cambiar tu usuario cada 14 días (faltan ${days}d ${hours}h).`, 'error');
+                window.updateNicknameCooldownUI();
+                return;
+            }
+
             const input = document.getElementById('input-cloud-nickname');
             const userCheck = validateUsernameStrict(input ? input.value : '');
             if (!userCheck.valid) {
@@ -4547,15 +4650,25 @@
                 return;
             }
 
+            if (userCheck.username === window.cloudProfile.nickname) {
+                showToast('Ese ya es tu nombre de usuario actual.', 'info');
+                return;
+            }
+
+            const nowTs = Date.now();
             window.cloudProfile.nickname = userCheck.username;
+            window.cloudProfile.nicknameUpdatedAt = nowTs;
+            localStorage.setItem(getLocalNicknameTimestampKey(currentUser.uid), String(nowTs));
             updateAuthUI(currentUser);
+            window.updateNicknameCooldownUI();
 
             try {
                 updateProfile(currentUser, { displayName: userCheck.username }).catch(() => {});
                 const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
                 await promiseWithTimeout(setDoc(profileRef, {
                     nickname: userCheck.username,
-                    updatedAt: Date.now()
+                    nicknameUpdatedAt: nowTs,
+                    updatedAt: nowTs
                 }, { merge: true }), 4000);
 
                 // Actualizar también el nombre de usuario en sus entradas del ranking
@@ -4565,7 +4678,7 @@
                     updateDoc(entryRef, { nickname: userCheck.username }).catch(() => {});
                 }
 
-                showToast(`✅ Usuario cambiado a @${userCheck.username}`, 'success');
+                showToast(`✅ Usuario cambiado a @${userCheck.username}. Podrás volver a cambiarlo en 14 días.`, 'success');
             } catch (err) {
                 showToast('Usuario actualizado localmente (revisa las reglas de Firestore para sincronizar).', 'info');
             }
@@ -4965,7 +5078,7 @@
         };
 
         window.initCloudLeaderboard = async function () {
-            updateWeeklyHeaderUI();
+            startWeeklyCountdownTimer();
 
             if (!firebaseConfig || firebaseConfig.apiKey === 'TU_API_KEY') {
                 updateAuthUI(null);
