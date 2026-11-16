@@ -168,8 +168,8 @@
             <!-- Formulario Login -->
             <form id="form-auth-login" onsubmit="handleEmailLogin(event)" class="space-y-3">
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 mb-1">Correo electrónico</label>
-                    <input type="email" id="login-email" required placeholder="tu.correo@ufromail.cl"
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Correo electrónico o usuario</label>
+                    <input type="text" id="login-identifier" required placeholder="tu.correo@ufromail.cl o @usuario"
                         class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
                 </div>
                 <div>
@@ -4495,6 +4495,9 @@
                         window.cloudProfile.nicknameUpdatedAt = Math.max(Number(data.nicknameUpdatedAt) || 0, localTs);
                         localStorage.setItem(getLocalNicknameTimestampKey(uid), String(window.cloudProfile.nicknameUpdatedAt));
                     }
+                    if (window.cloudProfile.nickname && userObj && !userObj.isAnonymous && userObj.email) {
+                        registerUsernameLookup(window.cloudProfile.nickname, userObj.email, uid);
+                    }
                 } else if (userObj && !userObj.isAnonymous) {
                     const generatedNick = window.cloudProfile.nickname || sanitizeAutoUsername(userObj.displayName || userObj.email?.split('@')[0] || 'Jugador');
                     window.cloudProfile.nickname = generatedNick;
@@ -4503,10 +4506,67 @@
                         email: userObj.email || '',
                         createdAt: Date.now()
                     }, { merge: true }), 3500).catch(() => {});
+                    if (userObj.email) {
+                        registerUsernameLookup(generatedNick, userObj.email, uid);
+                    }
                 }
             } catch (e) {}
             updateAuthUI(currentUser);
             if (window.updateNicknameCooldownUI) window.updateNicknameCooldownUI();
+        }
+
+        function registerUsernameLookup(nickname, email, uid, previousNickname = '') {
+            if (!db || !nickname || !email) return;
+            const cleanNew = String(nickname).trim().replace(/^@+/, '').toLowerCase();
+            if (!cleanNew) return;
+            const newRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', cleanNew);
+            setDoc(newRef, {
+                nickname: String(nickname).trim().replace(/^@+/, ''),
+                email: String(email).trim(),
+                uid: uid || '',
+                updatedAt: Date.now()
+            }, { merge: true }).catch(() => {});
+
+            const cleanOld = String(previousNickname || '').trim().replace(/^@+/, '').toLowerCase();
+            if (cleanOld && cleanOld !== cleanNew) {
+                const oldRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', cleanOld);
+                setDoc(oldRef, { active: false, replacedBy: cleanNew, updatedAt: Date.now() }, { merge: true }).catch(() => {});
+            }
+        }
+
+        async function resolveEmailFromIdentifier(rawIdentifier) {
+            const cleaned = String(rawIdentifier || '').trim();
+            if (!cleaned) return null;
+            if (cleaned.includes('@') && !cleaned.startsWith('@')) {
+                return cleaned;
+            }
+            const usernameKey = cleaned.replace(/^@+/, '').toLowerCase();
+            if (!usernameKey) return null;
+
+            // 1. Buscar en el índice público de usuarios
+            if (db) {
+                try {
+                    const unameRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', usernameKey);
+                    const snap = await promiseWithTimeout(getDoc(unameRef), 4500);
+                    if (snap.exists() && snap.data().email && snap.data().active !== false) {
+                        return snap.data().email;
+                    }
+                } catch (e) {}
+            }
+
+            // 2. Fallback vía REST público si Firestore SDK aún requiere auth
+            try {
+                const restUrl = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/artifacts/${encodeURIComponent(appId)}/public/data/usernames/${encodeURIComponent(usernameKey)}`;
+                const res = await fetch(restUrl);
+                if (res.ok) {
+                    const json = await res.json();
+                    const emailField = json?.fields?.email?.stringValue;
+                    const activeField = json?.fields?.active?.booleanValue;
+                    if (emailField && activeField !== false) return emailField;
+                }
+            } catch (e) {}
+
+            return null;
         }
 
         window.handleEmailRegister = async function (e) {
@@ -4537,11 +4597,20 @@
             btn.textContent = 'Creando cuenta...';
 
             try {
+                // Verificar si el nombre de usuario ya está ocupado
+                const existingEmail = await resolveEmailFromIdentifier(userCheck.username);
+                if (existingEmail && existingEmail.toLowerCase() !== email.toLowerCase()) {
+                    showToast('Ese nombre de usuario ya está en uso. Elige otro.', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Crear cuenta y participar';
+                    return;
+                }
+
                 const cred = await promiseWithTimeout(createUserWithEmailAndPassword(auth, email, pass1), 8000);
                 currentUser = cred.user;
                 window.cloudProfile.nickname = userCheck.username;
 
-                // Guardar usuario en Auth y en Firestore en segundo plano para respuesta instantánea
+                // Guardar usuario en Auth, perfil y directorio público de usuarios
                 updateProfile(currentUser, { displayName: userCheck.username }).catch(() => {});
                 const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
                 setDoc(profileRef, {
@@ -4549,6 +4618,7 @@
                     email,
                     createdAt: Date.now()
                 }, { merge: true }).catch(() => {});
+                registerUsernameLookup(userCheck.username, email, currentUser.uid);
 
                 updateAuthUI(currentUser);
                 closeAuthModal();
@@ -4572,7 +4642,7 @@
             e.preventDefault();
             if (!auth) return;
 
-            const email = document.getElementById('login-email').value.trim();
+            const rawIdentifier = document.getElementById('login-identifier').value.trim();
             const pass = document.getElementById('login-password').value;
 
             const btn = document.getElementById('btn-submit-login');
@@ -4580,9 +4650,23 @@
             btn.textContent = 'Iniciando sesión...';
 
             try {
-                const cred = await promiseWithTimeout(signInWithEmailAndPassword(auth, email, pass), 8000);
+                const resolvedEmail = await resolveEmailFromIdentifier(rawIdentifier);
+                if (!resolvedEmail) {
+                    showToast('No encontramos una cuenta con ese usuario. Prueba ingresando tu correo.', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Entrar a mi cuenta';
+                    return;
+                }
+
+                const cred = await promiseWithTimeout(signInWithEmailAndPassword(auth, resolvedEmail, pass), 8000);
                 currentUser = cred.user;
-                window.cloudProfile.nickname = currentUser.displayName || sanitizeAutoUsername(email.split('@')[0]);
+                const fallbackNick = rawIdentifier.includes('@') && !rawIdentifier.startsWith('@')
+                    ? sanitizeAutoUsername(resolvedEmail.split('@')[0])
+                    : rawIdentifier.replace(/^@+/, '');
+                window.cloudProfile.nickname = currentUser.displayName || fallbackNick;
+                if (currentUser.displayName && currentUser.email) {
+                    registerUsernameLookup(currentUser.displayName, currentUser.email, currentUser.uid);
+                }
                 updateAuthUI(currentUser);
                 closeAuthModal();
                 showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}`, 'success');
@@ -4594,7 +4678,7 @@
                 if (code === 'custom/timeout' || code === 'auth/network-request-failed') {
                     showToast('Tiempo de espera agotado al conectar con Firebase.', 'error');
                 } else {
-                    showToast('Correo o contraseña incorrectos.', 'error');
+                    showToast('Usuario/correo o contraseña incorrectos.', 'error');
                 }
             } finally {
                 btn.disabled = false;
@@ -4651,6 +4735,13 @@
                 return;
             }
 
+            const existingOwnerEmail = await resolveEmailFromIdentifier(userCheck.username);
+            if (existingOwnerEmail && existingOwnerEmail.toLowerCase() !== (currentUser.email || '').toLowerCase()) {
+                showToast('Ese nombre de usuario ya está ocupado por otro jugador.', 'error');
+                return;
+            }
+
+            const previousNickname = window.cloudProfile.nickname;
             const nowTs = Date.now();
             window.cloudProfile.nickname = userCheck.username;
             window.cloudProfile.nicknameUpdatedAt = nowTs;
@@ -4660,64 +4751,96 @@
 
             try {
                 updateProfile(currentUser, { displayName: userCheck.username }).catch(() => {});
+                if (currentUser.email) {
+                    registerUsernameLookup(userCheck.username, currentUser.email, currentUser.uid, previousNickname);
+                }
                 const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
                 await promiseWithTimeout(setDoc(profileRef, {
                     nickname: userCheck.username,
                     nicknameUpdatedAt: nowTs,
                     updatedAt: nowTs
                 }, { merge: true }), 4000);
+                showToast(`✅ Nombre de usuario actualizado a @${userCheck.username}`, 'success');
+                closeProfileModal();
+            } catch (err) {
+                showToast('No se pudo guardar el nuevo usuario en la nube.', 'error');
+            }
+        };
 
-                // Actualizar también el nombre de usuario en sus entradas del ranking
-                const userDocs = cachedAllLeaderboardDocs.filter(d => d.uid === currentUser.uid);
-                for (const item of userDocs) {
-                    const entryRef = doc(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard', item.id);
-                    updateDoc(entryRef, { nickname: userCheck.username }).catch(() => {});
+        function parseFirestoreRestValue(valObj) {
+            if (!valObj || typeof valObj !== 'object') return null;
+            if ('stringValue' in valObj) return valObj.stringValue;
+            if ('integerValue' in valObj) return Number(valObj.integerValue);
+            if ('doubleValue' in valObj) return Number(valObj.doubleValue);
+            if ('booleanValue' in valObj) return Boolean(valObj.booleanValue);
+            if ('nullValue' in valObj) return null;
+            if ('mapValue' in valObj) {
+                const out = {};
+                const fields = valObj.mapValue.fields || {};
+                for (const k of Object.keys(fields)) {
+                    out[k] = parseFirestoreRestValue(fields[k]);
                 }
-
-                showToast(`✅ Usuario cambiado a @${userCheck.username}. Podrás volver a cambiarlo en 14 días.`, 'success');
-            } catch (err) {
-                showToast('Usuario actualizado localmente (revisa las reglas de Firestore para sincronizar).', 'info');
+                return out;
             }
-        };
+            if ('arrayValue' in valObj) {
+                return (valObj.arrayValue.values || []).map(parseFirestoreRestValue);
+            }
+            return null;
+        }
 
-        window.signInWithGoogleAccount = async function () {
-            if (!auth) return;
-            try {
-                const provider = new GoogleAuthProvider();
-                const res = await signInWithPopup(auth, provider);
-                if (res && res.user) {
-                    currentUser = res.user;
-                    window.cloudProfile.nickname = currentUser.displayName || sanitizeAutoUsername(currentUser.email?.split('@')[0] || 'Jugador');
-                    updateAuthUI(currentUser);
-                    closeAuthModal();
-                    showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}`, 'success');
-                    loadUserCloudProfile(currentUser.uid, currentUser);
+        function processLeaderboardDocs(allDocs) {
+            cachedAllLeaderboardDocs = allDocs;
+            const { weekId } = getChileWeekInfo();
+
+            const currentWeekEntries = allDocs
+                .filter(item => item.weekId === weekId && typeof item.score === 'number')
+                .sort((a, b) => b.score - a.score || (b.ovr || 0) - (a.ovr || 0));
+
+            const bestByUserMap = new Map();
+            for (const item of currentWeekEntries) {
+                const userKey = item.uid || item.id;
+                if (!bestByUserMap.has(userKey)) {
+                    bestByUserMap.set(userKey, item);
                 }
-            } catch (err) {
-                showToast('No se pudo completar el inicio con Google.', 'error');
             }
-        };
+            const deduplicatedWeekEntries = Array.from(bestByUserMap.values());
+            renderGlobalLeaderboardList(deduplicatedWeekEntries.slice(0, 10));
 
-        window.logoutCloudUser = async function () {
-            if (!auth) return;
-            const menu = document.getElementById('user-dropdown-menu');
-            if (menu) menu.classList.add('hidden');
+            const profileModal = document.getElementById('profile-modal');
+            if (profileModal && !profileModal.classList.contains('hidden')) {
+                window.renderUserProfileStats();
+            }
+        }
 
+        async function fetchPublicLeaderboardFallback() {
+            if (!firebaseConfig?.projectId) return false;
             try {
-                await signOut(auth);
-                window.cloudProfile.nickname = '';
-                await signInAnonymously(auth);
-                showToast('Sesión cerrada. Estás jugando como invitado.', 'info');
-            } catch (err) {
-                showToast('Error al cerrar sesión.', 'error');
+                const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/artifacts/${encodeURIComponent(appId)}/public/data/weekly_leaderboard?pageSize=200`;
+                const res = await fetch(url, { cache: 'no-store' });
+                if (!res.ok) return false;
+                const data = await res.json();
+                const docs = (data.documents || []).map(docItem => {
+                    const id = docItem.name.split('/').pop();
+                    const parsed = { id };
+                    const fields = docItem.fields || {};
+                    for (const k of Object.keys(fields)) {
+                        parsed[k] = parseFirestoreRestValue(fields[k]);
+                    }
+                    return parsed;
+                });
+                processLeaderboardDocs(docs);
+                return true;
+            } catch (e) {
+                return false;
             }
-        };
+        }
 
         function subscribeWeeklyLeaderboard() {
             if (!db) return;
             if (unsubscribeLeaderboard) unsubscribeLeaderboard();
 
-            const { weekId } = getChileWeekInfo();
+            fetchPublicLeaderboardFallback();
+
             const entriesCol = collection(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard');
 
             unsubscribeLeaderboard = onSnapshot(entriesCol, (snapshot) => {
@@ -4725,34 +4848,14 @@
                 snapshot.forEach(d => {
                     allDocs.push({ id: d.id, ...d.data() });
                 });
-
-                cachedAllLeaderboardDocs = allDocs;
-
-                // Filtrar por la semana actual en memoria y ordenar por puntaje descendente
-                const currentWeekEntries = allDocs
-                    .filter(item => item.weekId === weekId && typeof item.score === 'number')
-                    .sort((a, b) => b.score - a.score || (b.ovr || 0) - (a.ovr || 0));
-
-                // Garantizar un único puesto por usuario (quedándose con su puntaje más alto de la semana)
-                const bestByUserMap = new Map();
-                for (const item of currentWeekEntries) {
-                    const userKey = item.uid || item.id;
-                    if (!bestByUserMap.has(userKey)) {
-                        bestByUserMap.set(userKey, item);
+                processLeaderboardDocs(allDocs);
+            }, async () => {
+                const ok = await fetchPublicLeaderboardFallback();
+                if (!ok) {
+                    const listEl = document.getElementById('global-hof-list');
+                    if (listEl) {
+                        listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Para que el ranking sea visible sin iniciar sesión, publica <code>allow read: if true;</code> en tus Reglas de Firestore.</div>`;
                     }
-                }
-                const deduplicatedWeekEntries = Array.from(bestByUserMap.values());
-
-                renderGlobalLeaderboardList(deduplicatedWeekEntries.slice(0, 10));
-
-                const profileModal = document.getElementById('profile-modal');
-                if (profileModal && !profileModal.classList.contains('hidden')) {
-                    window.renderUserProfileStats();
-                }
-            }, () => {
-                const listEl = document.getElementById('global-hof-list');
-                if (listEl) {
-                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">No se pudo cargar el ranking global en este momento.</div>`;
                 }
             });
         }
@@ -4818,7 +4921,6 @@
             if (titleEl) titleEl.textContent = `${entry.playerName || 'Jugador'} · @${entry.nickname || 'usuario'}`;
 
             content.innerHTML = `
-                <!-- Cabecera Jugador y Usuario -->
                 <div class="p-4 rounded-2xl surface-sub flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         ${mainTeam ? getTeamBadgeHTML(mainTeam, 'w-12 h-12', 'text-xs') : ''}
@@ -4836,12 +4938,10 @@
                     </div>
                 </div>
 
-                <!-- Legado -->
                 <div class="px-3.5 py-2.5 rounded-xl bg-[#717fff]/10 border border-[#717fff]/25 text-center">
                     <span class="text-xs font-black text-white">${escapeHtml(entry.headline || 'Leyenda UFRO')}</span>
                 </div>
 
-                <!-- Estadísticas Totales -->
                 <div class="grid grid-cols-4 gap-2 text-center">
                     <div class="p-2.5 rounded-xl surface-sub">
                         <div class="text-base font-black text-white">${st.matches || 0}</div>
@@ -4861,7 +4961,6 @@
                     </div>
                 </div>
 
-                <!-- Trayectoria por Equipos -->
                 <div class="space-y-2">
                     <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🛡️ Trayectoria por Equipos</h5>
                     ${trajectory.length === 0
@@ -4884,7 +4983,6 @@
                     }
                 </div>
 
-                <!-- Logros y Títulos -->
                 <div class="space-y-2">
                     <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🏆 Logros y Títulos Conquistados</h5>
                     ${trophyList.length === 0 && awardList.length === 0
@@ -4968,13 +5066,11 @@
         window.submitCareerToCloudLeaderboard = async function (legacy, baseScore) {
             if (!db || !careerState) return;
 
-            // Solo los usuarios registrados participan en el Ranking Global Semanal
             if (!isRealAuthenticatedUser(currentUser)) {
                 showToast('💡 Inicia sesión o regístrate arriba para subir tus próximas carreras al Top Global Semanal.', 'info');
                 return;
             }
 
-            // Excluir Easter Egg Mathias Bello del ranking competitivo para juego limpio
             if (careerState.playerName && careerState.playerName.trim().toLowerCase() === 'mathias bello') {
                 return;
             }
@@ -4988,7 +5084,6 @@
             const nickname = window.cloudProfile.nickname
                 || sanitizeAutoUsername(currentUser.displayName || currentUser.email?.split('@')[0] || 'Jugador');
 
-            // Construir trayectoria agrupada por equipos para la ficha de detalles
             const stintsMap = new Map();
             [...(careerState.history || [])].reverse().forEach(h => {
                 if (!stintsMap.has(h.teamCode)) {
@@ -5047,7 +5142,6 @@
             };
 
             try {
-                // Documento único por usuario y semana para que solo figure su mejor marca semanal
                 const weeklyDocId = `${weekId}_${currentUser.uid}`;
                 const weeklyEntryRef = doc(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard', weeklyDocId);
 
@@ -5064,7 +5158,6 @@
                     }
                 }
 
-                // Guardar también en el historial personal del usuario para su perfil / Top 5 histórico
                 const userHistoryCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'careers');
                 addDoc(userHistoryCol, careerPayload).catch(() => {});
 
@@ -5109,16 +5202,11 @@
             try {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
-                // Mantener la sesión guardada en el navegador incluso al recargar o cerrar la pestaña
                 await setPersistence(auth, browserLocalPersistence).catch(() => {});
-
-                // Long polling evita bloqueos y demoras de WebSocket en Vercel/iframes
                 db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
-                // Cargar el Top Global Semanal de inmediato para todos los visitantes
                 subscribeWeeklyLeaderboard();
 
-                // Esperar a que Firebase restaure la sesión persistida antes de decidir si entrar como invitado
                 if (typeof auth.authStateReady === 'function') {
                     await auth.authStateReady();
                 }
