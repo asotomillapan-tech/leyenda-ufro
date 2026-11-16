@@ -85,7 +85,9 @@
 
     <!-- ==================== HEADER MINIMALISTA CENTRADO ==================== -->
     <header class="sticky top-0 z-40 bg-[#151515]/90 backdrop-blur-md border-b border-[#262626]">
-        <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-center">
+        <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between gap-2">
+            <div class="w-16 sm:w-44 hidden sm:block"></div>
+
             <div class="flex items-center justify-center gap-2.5">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="w-8 h-8 sm:w-9 sm:h-9 shrink-0">
                     <path fill="#717fff" d="M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z"/>
@@ -94,19 +96,231 @@
                     <h1 class="text-base sm:text-xl font-black tracking-wider text-white leading-none uppercase">
                         LEYENDAS
                     </h1>
-                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.1.4</span>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.2.0</span>
                 </div>
             </div>
 
-            <!-- Botón de actualización en vivo oculto -->
-            <button onclick="manualRefreshSheets()" id="sheets-sync-indicator" title="Sincronizar equipos desde Google Sheets"
-                class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] text-gray-400 hover:text-gray-200 transition">
-                <span id="sheets-sync-dot" class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-                <span id="sheets-sync-text">BD Local</span>
-                <span class="text-[#717fff] font-bold">↻</span>
-            </button>
+            <!-- Botones de Sesión / Menú de Usuario -->
+            <div class="relative flex items-center justify-end gap-1.5 sm:w-44">
+                <!-- Estado Invitado: Iniciar Sesión y Registrarse -->
+                <div id="guest-auth-buttons" class="flex items-center gap-1.5">
+                    <button type="button" onclick="openAuthModal('login')"
+                        class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] hover:border-[#717fff]/50 text-[11px] font-bold text-gray-200 hover:text-white transition">
+                        Iniciar sesión
+                    </button>
+                    <button type="button" onclick="openAuthModal('register')"
+                        class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-[11px] font-black text-white shadow transition">
+                        Registrarse
+                    </button>
+                </div>
+
+                <!-- Estado Logueado: Nombre de usuario + Menú desplegable -->
+                <div id="logged-user-menu-wrapper" class="hidden relative">
+                    <button type="button" onclick="toggleUserDropdown(event)"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-[#242424] border border-[#717fff]/45 text-[11px] font-black text-white transition">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                        <span id="header-username-label" class="max-w-[110px] truncate">@usuario</span>
+                        <span class="text-gray-400 text-[9px]">▼</span>
+                    </button>
+
+                    <!-- Menú Desplegable -->
+                    <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 rounded-2xl surface-card border-[#2b2b2b] shadow-2xl py-1.5 z-50 animate-pop">
+                        <button type="button" onclick="openProfileModal('profile')"
+                            class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-gray-200 hover:bg-[#242424] hover:text-white flex items-center gap-2 transition">
+                            <span>👤</span> Ver perfil
+                        </button>
+                        <button type="button" onclick="openProfileModal('username')"
+                            class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-gray-200 hover:bg-[#242424] hover:text-white flex items-center gap-2 transition">
+                            <span>✏️</span> Cambiar usuario
+                        </button>
+                        <div class="my-1 border-t border-[#262626]"></div>
+                        <button type="button" onclick="logoutCloudUser()"
+                            class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-rose-400 hover:bg-rose-950/30 flex items-center gap-2 transition">
+                            <span>🚪</span> Cerrar sesión
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
+
+    <!-- MODAL DE AUTENTICACIÓN (LOGIN / REGISTRO / RECUPERAR CONTRASEÑA) -->
+    <div id="auth-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="surface-card border-[#2b2b2b] rounded-3xl max-w-md w-full p-6 shadow-2xl animate-pop space-y-4 my-auto">
+            <div class="flex items-center justify-between border-b border-[#262626] pb-3">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Cuenta NotIntercarreras</span>
+                    <h3 id="auth-modal-title" class="text-base font-black text-white">Iniciar Sesión</h3>
+                </div>
+                <button type="button" onclick="closeAuthModal()" class="w-8 h-8 rounded-lg bg-[#151515] hover:bg-[#242424] border border-[#2b2b2b] text-gray-400 hover:text-white font-bold text-sm transition">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Tabs Login / Registro -->
+            <div id="auth-mode-tabs" class="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-[#151515] border border-[#262626]">
+                <button type="button" onclick="switchAuthMode('login')" id="tab-auth-login"
+                    class="py-2 rounded-lg bg-[#717fff] text-white font-black text-xs transition">
+                    Iniciar sesión
+                </button>
+                <button type="button" onclick="switchAuthMode('register')" id="tab-auth-register"
+                    class="py-2 rounded-lg text-gray-400 hover:text-white font-bold text-xs transition">
+                    Registrarse
+                </button>
+            </div>
+
+            <!-- Formulario Login -->
+            <form id="form-auth-login" onsubmit="handleEmailLogin(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Correo electrónico</label>
+                    <input type="email" id="login-email" required placeholder="tu.correo@ufromail.cl"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold text-gray-400">Contraseña</label>
+                        <button type="button" onclick="switchAuthMode('reset')" class="text-[11px] font-bold text-[#8b96ff] hover:text-white transition">
+                            ¿Olvidaste tu contraseña?
+                        </button>
+                    </div>
+                    <input type="password" id="login-password" required placeholder="••••••••"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                </div>
+                <button type="submit" id="btn-submit-login" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
+                    Entrar a mi cuenta
+                </button>
+            </form>
+
+            <!-- Formulario Registro -->
+            <form id="form-auth-register" onsubmit="handleEmailRegister(event)" class="hidden space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Nombre de usuario</label>
+                    <input type="text" id="reg-username" required minlength="3" maxlength="18" placeholder="Ej: El10DeLaUFRO"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                    <p class="text-[10px] text-gray-500 mt-1">3 a 18 caracteres (letras, números y guion bajo). Sin espacios ni garabatos.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Correo electrónico</label>
+                    <input type="email" id="reg-email" required placeholder="tu.correo@ufromail.cl"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-1">Contraseña</label>
+                        <input type="password" id="reg-password" required minlength="6" placeholder="Mín. 6 caracteres"
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-1">Repetir contraseña</label>
+                        <input type="password" id="reg-password-confirm" required minlength="6" placeholder="Confirmar clave"
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                    </div>
+                </div>
+                <button type="submit" id="btn-submit-register" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
+                    Crear cuenta y participar
+                </button>
+            </form>
+
+            <!-- Formulario Recuperar Contraseña -->
+            <form id="form-auth-reset" onsubmit="handlePasswordReset(event)" class="hidden space-y-3">
+                <p class="text-xs text-gray-400">Ingresa tu correo electrónico registrado y te enviaremos un enlace para restablecer tu contraseña.</p>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Correo electrónico</label>
+                    <input type="email" id="reset-email" required placeholder="tu.correo@ufromail.cl"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                </div>
+                <button type="submit" id="btn-submit-reset" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
+                    Enviar enlace de recuperación
+                </button>
+                <button type="button" onclick="switchAuthMode('login')" class="w-full py-2 text-xs font-bold text-gray-400 hover:text-white transition">
+                    ← Volver a Iniciar sesión
+                </button>
+            </form>
+
+            <!-- Separador y Botón Google -->
+            <div id="auth-google-section" class="pt-2 border-t border-[#262626] space-y-2.5">
+                <div class="text-center text-[10px] font-bold uppercase tracking-wider text-gray-500">O continúa con</div>
+                <button type="button" onclick="signInWithGoogleAccount()"
+                    class="w-full py-3 px-4 rounded-xl bg-white hover:bg-gray-100 text-gray-900 font-black text-xs flex items-center justify-center gap-2.5 shadow transition">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
+                        <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
+                    </svg>
+                    <span>Continuar con Google</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE PERFIL DEL USUARIO (CARRERAS SEMANALES + TOP 5 HISTÓRICO + CAMBIAR USUARIO) -->
+    <div id="profile-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="surface-card border-[#2b2b2b] rounded-3xl max-w-lg w-full p-6 shadow-2xl animate-pop space-y-5 my-auto">
+            <div class="flex items-center justify-between border-b border-[#262626] pb-3">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Perfil Competitivo</span>
+                    <h3 id="profile-modal-heading" class="text-base font-black text-white">@usuario</h3>
+                    <p id="profile-modal-email" class="text-[11px] text-gray-400"></p>
+                </div>
+                <button type="button" onclick="closeProfileModal()" class="w-8 h-8 rounded-lg bg-[#151515] hover:bg-[#242424] border border-[#2b2b2b] text-gray-400 hover:text-white font-bold text-sm transition">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Sección Cambiar Nombre de Usuario -->
+            <div id="profile-change-username-box" class="p-3.5 rounded-2xl surface-sub space-y-2">
+                <label class="block text-xs font-bold text-gray-300">Cambiar nombre de usuario</label>
+                <div class="flex gap-2">
+                    <input type="text" id="input-cloud-nickname" minlength="3" maxlength="18" placeholder="Nuevo usuario"
+                        class="flex-1 px-3.5 py-2 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] text-xs sm:text-sm text-white focus:outline-none focus:border-[#717fff]">
+                    <button type="button" onclick="saveCloudNickname()" class="px-4 py-2 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition shrink-0">
+                        Guardar
+                    </button>
+                </div>
+                <p class="text-[10px] text-gray-500">Solo letras, números y guion bajo (3-18 caracteres). Se actualizará en tus carreras.</p>
+            </div>
+
+            <!-- Carreras de la Semana Actual -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-[#8b96ff]">📅 Tus Carreras de Esta Semana</h4>
+                    <span id="profile-weekly-count" class="text-[11px] font-bold text-gray-400">0 carreras</span>
+                </div>
+                <div id="profile-weekly-list" class="space-y-2 max-h-44 overflow-y-auto pr-1">
+                    <div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Cargando carreras semanales...</div>
+                </div>
+            </div>
+
+            <!-- Top 5 Histórico Personal -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-amber-300">🏆 Tu Top 5 Histórico</h4>
+                    <span class="text-[10px] text-gray-500">Mejores puntajes</span>
+                </div>
+                <div id="profile-top5-list" class="space-y-2 max-h-52 overflow-y-auto pr-1">
+                    <div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALLES DE CARRERA DEL RANKING GLOBAL -->
+    <div id="career-detail-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="surface-card border-[#2b2b2b] rounded-3xl max-w-lg w-full p-6 shadow-2xl animate-pop space-y-4 my-auto">
+            <div class="flex items-center justify-between border-b border-[#262626] pb-3">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Ficha Oficial · Ranking Global</span>
+                    <h3 id="detail-modal-title" class="text-base font-black text-white">Detalle de Carrera</h3>
+                </div>
+                <button type="button" onclick="closeCareerDetailModal()" class="w-8 h-8 rounded-lg bg-[#151515] hover:bg-[#242424] border border-[#2b2b2b] text-gray-400 hover:text-white font-bold text-sm transition">
+                    ✕
+                </button>
+            </div>
+
+            <div id="career-detail-content" class="space-y-4 max-h-[75vh] overflow-y-auto pr-1"></div>
+        </div>
+    </div>
 
     <!-- TOAST NOTIFICATIONS -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none px-4 sm:px-0"></div>
@@ -198,16 +412,44 @@
                 </div>
             </div>
 
-            <!-- SALÓN DE LA FAMA UFRO (TOP 5 LOCAL, BAJO EL MENÚ DE CREACIÓN) -->
+            <!-- RANKING GLOBAL SEMANAL Y SALÓN DE LA FAMA UFRO -->
             <div id="hof-section" class="max-w-lg mx-auto surface-card rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4">
-                <div class="text-center">
-                    <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#717fff]/15 text-[#8b96ff] border border-[#717fff]/30">
-                        SALÓN DE LA FAMA
-                    </span>
-                    <h2 class="text-2xl font-black text-white mt-2.5">🏛️ Salón de la Fama UFRO</h2>
-                    <p class="text-xs text-gray-400 mt-1">Las 5 carreras más legendarias tituladas en este dispositivo.</p>
+                <div class="flex items-center justify-center gap-1.5 p-1 rounded-2xl bg-[#151515] border border-[#262626]">
+                    <button type="button" onclick="switchLeaderboardTab('global')" id="tab-lb-global"
+                        class="flex-1 py-2 px-3 rounded-xl bg-[#717fff] text-white font-black text-xs transition">
+                        🌍 Top Global Semanal
+                    </button>
+                    <button type="button" onclick="switchLeaderboardTab('local')" id="tab-lb-local"
+                        class="flex-1 py-2 px-3 rounded-xl text-gray-400 hover:text-white font-bold text-xs transition">
+                        🏛️ Salón de la Fama Local
+                    </button>
                 </div>
-                <div id="hof-list" class="space-y-2.5"></div>
+
+                <!-- Vista Top Global Semanal -->
+                <div id="global-leaderboard-view" class="space-y-4">
+                    <div class="text-center">
+                        <span id="weekly-season-badge" class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#717fff]/15 text-[#8b96ff] border border-[#717fff]/30">
+                            SEMANA EN CURSO
+                        </span>
+                        <h2 class="text-2xl font-black text-white mt-2.5">🌍 Top Global Semanal</h2>
+                        <p id="weekly-countdown-text" class="text-xs text-gray-400 mt-1">Compite con toda la UFRO · Reinicio cada lunes 00:00 hrs</p>
+                    </div>
+                    <div id="global-hof-list" class="space-y-2.5">
+                        <div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Cargando ranking global...</div>
+                    </div>
+                </div>
+
+                <!-- Vista Salón de la Fama Local -->
+                <div id="local-leaderboard-view" class="hidden space-y-4">
+                    <div class="text-center">
+                        <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#717fff]/15 text-[#8b96ff] border border-[#717fff]/30">
+                            RÉCORDS LOCALES
+                        </span>
+                        <h2 class="text-2xl font-black text-white mt-2.5">🏛️ Salón de la Fama UFRO</h2>
+                        <p class="text-xs text-gray-400 mt-1">Las 5 carreras más legendarias tituladas en este dispositivo.</p>
+                    </div>
+                    <div id="hof-list" class="space-y-2.5"></div>
+                </div>
             </div>
 
             <!-- DASHBOARD CARRERA ACTIVA / RETIRADA -->
@@ -229,6 +471,9 @@
                                         <span id="hud-branch-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#151515] text-gray-300 border border-[#2b2b2b]">Masculino</span>
                                         <span id="hud-star-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">
                                             ⭐ Estrella
+                                        </span>
+                                        <span id="hud-loan-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/35">
+                                            🤝 Cedido
                                         </span>
                                     </div>
                                     <div id="hud-career-info" class="text-xs text-gray-300 mt-1 flex items-center gap-1.5 flex-wrap"></div>
@@ -898,6 +1143,9 @@
             renderApp();
 
             syncSheetsInBackground(true);
+            if (window.initCloudLeaderboard) {
+                window.initCloudLeaderboard();
+            }
         };
 
         function inferCareerYears(careerName, explicitDurationRaw = '') {
@@ -1302,6 +1550,8 @@
             const wasTraicion = changed && isDerbyRival(previousTeam, chosen);
 
             careerState.teamCode = chosen.code;
+            careerState.loanInfo = null;
+            careerState.trainingOnlyS2 = false;
             if (!careerState.pastTeamCodes) careerState.pastTeamCodes = [];
             if (!careerState.pastTeamCodes.includes(chosen.code)) {
                 careerState.pastTeamCodes.push(chosen.code);
@@ -1330,6 +1580,82 @@
                     'success'
                 );
             }
+        }
+
+        function buildLoanDecisionOptions() {
+            const db = getActiveDB();
+            const currentTeam = findTeamByCode(careerState.teamCode);
+            const qualifiedSet = new Set(careerState.s1QualifiedCodes || []);
+            const studied = String(careerState.studiedCareer || '').trim().toLowerCase();
+
+            const aliveTeams = db.filter(t => t.code !== currentTeam.code && qualifiedSet.has(t.code));
+            const fallbackAlive = aliveTeams.length > 0
+                ? aliveTeams
+                : [...db].filter(t => t.code !== currentTeam.code).sort((a, b) => b.ovr - a.ovr).slice(0, Math.max(4, Math.floor(db.length * 0.4)));
+
+            // 1. Equipo de la misma carrera que sigue disputando campeonato (cualquier división)
+            const sameCareerAlive = fallbackAlive
+                .filter(t => String(t.career || '').trim().toLowerCase() === studied)
+                .sort((a, b) => b.ovr - a.ovr);
+            const sameCareerLoan = sameCareerAlive.length > 0 ? sameCareerAlive[0] : null;
+
+            // 2. Equipo aleatorio que sigue en competencia (distinto al anterior si existe)
+            const randomPool = fallbackAlive.filter(t => !sameCareerLoan || t.code !== sameCareerLoan.code);
+            const poolToPick = randomPool.length > 0 ? randomPool : fallbackAlive;
+            const randomLoan = poolToPick.length > 0
+                ? poolToPick[Math.floor(Math.random() * poolToPick.length)]
+                : null;
+
+            return {
+                sameCareerCode: sameCareerLoan ? sameCareerLoan.code : null,
+                randomCode: randomLoan ? randomLoan.code : null
+            };
+        }
+
+        function resolveLoanDecision(mode, targetCode = null) {
+            const parentTeam = findTeamByCode(careerState.teamCode);
+            if (!parentTeam) return;
+
+            if (mode === 'TRAIN_ONLY') {
+                careerState.loanInfo = null;
+                careerState.trainingOnlyS2 = true;
+                careerState.loanOptions = null;
+                careerState.currentSemester = 2;
+                careerState.phase = 'PLAY_SEMESTER';
+                saveCareerState();
+                renderApp();
+                showToast(`🏋️ Te quedas en ${parentTeam.name} entrenando este semestre. Seguirás disponible para la Selección UFRO.`, 'info');
+                return;
+            }
+
+            const loanTeam = findTeamByCode(targetCode);
+            if (!loanTeam) return;
+
+            careerState.loanInfo = {
+                parentTeamCode: parentTeam.code,
+                parentTeamName: parentTeam.name,
+                loanTeamCode: loanTeam.code,
+                loanTeamName: loanTeam.name,
+                type: mode
+            };
+            careerState.trainingOnlyS2 = false;
+            careerState.teamCode = loanTeam.code;
+            if (!careerState.pastTeamCodes) careerState.pastTeamCodes = [];
+            if (!careerState.pastTeamCodes.includes(loanTeam.code)) {
+                careerState.pastTeamCodes.push(loanTeam.code);
+            }
+            careerState.loanOptions = null;
+            careerState.currentSemester = 2;
+            careerState.phase = 'PLAY_SEMESTER';
+            saveCareerState();
+            renderApp();
+
+            showToast(
+                mode === 'SAME_CAREER'
+                    ? `🎓 ¡Cesión concretada! Jugarás los Playoffs del Semestre 2 con ${loanTeam.name} (${getDivisionLabel(loanTeam.division, careerState.gender)}).`
+                    : `🤝 ¡Cesión relámpago! Refuerzas a ${loanTeam.name} (${loanTeam.career}) en los Playoffs del Semestre 2.`,
+                'success'
+            );
         }
 
         function saveCareerState() {
@@ -1723,6 +2049,10 @@
                 teamCode: team.code,
                 pastTeamCodes: [team.code],
                 pendingOffers: [],
+                s1QualifiedCodes: [],
+                loanInfo: null,
+                loanOptions: null,
+                trainingOnlyS2: false,
                 interfacultadesQualified: false,
                 fenaudeQualified: false,
                 ufroCitations: [],
@@ -1988,6 +2318,43 @@
             executeSemesterSimulation(mods);
         }
 
+        function simulateDivisionGroupStage(divTeams, playerTeamCode, playerOvr, playedRatio, teamBoost = 0) {
+            if (!divTeams || divTeams.length === 0) {
+                return { qualifiedCodes: [], playerGroupPos: 1, groupSize: 1, groupLabel: 'A' };
+            }
+
+            // Distribución equitativa en grupos (mín. 4 equipos por grupo, 2 clasificados por grupo)
+            const numGroups = Math.max(1, Math.floor(divTeams.length / 4));
+            const shuffled = [...divTeams].sort(() => 0.5 - Math.random());
+            const groups = Array.from({ length: numGroups }, () => []);
+            shuffled.forEach((t, idx) => {
+                groups[idx % numGroups].push(t);
+            });
+
+            const qualifiedCodes = [];
+            let playerGroupPos = 1;
+            let groupSize = divTeams.length;
+            let groupLabel = 'A';
+
+            groups.forEach((grp, gIdx) => {
+                const ranked = simulateTournamentRanking(grp, playerTeamCode, playerOvr, playedRatio, false, teamBoost);
+                // Solo los 2 primeros de cada grupo avanzan a Playoffs en el Semestre 2
+                const advanceCount = Math.min(2, ranked.length);
+                for (let i = 0; i < advanceCount; i++) {
+                    qualifiedCodes.push(ranked[i].code);
+                }
+
+                const pIdx = ranked.findIndex(t => t.code === playerTeamCode);
+                if (pIdx !== -1) {
+                    playerGroupPos = pIdx + 1;
+                    groupSize = ranked.length;
+                    groupLabel = String.fromCharCode(65 + gIdx);
+                }
+            });
+
+            return { qualifiedCodes, playerGroupPos, groupSize, groupLabel };
+        }
+
         function executeSemesterSimulation(eventMods) {
             const db = getActiveDB();
             const team = findTeamByCode(careerState.teamCode);
@@ -1998,19 +2365,26 @@
             const isFemale = careerState.gender === 'F';
             const div = isFemale ? 1 : Number(team.division);
 
+            const isTrainingOnlyS2 = Boolean(sem === 2 && careerState.trainingOnlyS2);
+            const activeLoan = sem === 2 ? careerState.loanInfo : null;
+
             const isSuspended = Boolean(eventMods && eventMods.suspend);
             const forceCupWin = Boolean(eventMods && eventMods.forceCupWin);
             const forceElimination = Boolean(eventMods && eventMods.forceElimination);
             const teamBoost = Number((eventMods && eventMods.teamBoost) || 0);
 
             const totalTeamMatches = sem === 2 ? 14 : 11;
-            const playedRatio = isSuspended ? 0 : Math.min(1, Math.max(0.20, role.factor + (Math.random() * 0.14 - 0.07)));
-            const matchesPlayed = isSuspended ? 0 : Math.max(2, Math.round(totalTeamMatches * playedRatio));
+            const playedRatio = (isSuspended || isTrainingOnlyS2)
+                ? 0
+                : Math.min(1, Math.max(0.20, role.factor + (Math.random() * 0.14 - 0.07)));
+            const matchesPlayed = (isSuspended || isTrainingOnlyS2)
+                ? 0
+                : Math.max(2, Math.round(totalTeamMatches * playedRatio));
 
             const perfFactor = (careerState.ovr / 68) * (0.88 + Math.random() * 0.44);
             let goals = 0, assists = 0, cleanSheets = 0;
 
-            if (!isSuspended) {
+            if (!isSuspended && !isTrainingOnlyS2) {
                 if (careerState.position === 'DEL') {
                     goals = Math.round(matchesPlayed * 0.60 * perfFactor);
                     assists = Math.round(matchesPlayed * 0.24 * perfFactor);
@@ -2028,11 +2402,22 @@
                 }
             }
 
-            const rawRating = isSuspended ? 0 : (6.4 + (playedRatio * 1.1) + ((goals * 0.12 + assists * 0.09 + cleanSheets * 0.1) / Math.max(1, matchesPlayed)) * 2.4 + (Math.random() * 0.4 - 0.2));
-            const avgRating = isSuspended ? 'BAJA' : Number(Math.min(9.8, Math.max(5.8, rawRating)).toFixed(1));
+            const rawRating = (isSuspended || isTrainingOnlyS2)
+                ? 0
+                : (6.4 + (playedRatio * 1.1) + ((goals * 0.12 + assists * 0.09 + cleanSheets * 0.1) / Math.max(1, matchesPlayed)) * 2.4 + (Math.random() * 0.4 - 0.2));
+            const avgRating = isTrainingOnlyS2
+                ? 'ENTR.'
+                : isSuspended
+                    ? 'BAJA'
+                    : Number(Math.min(9.8, Math.max(5.8, rawRating)).toFixed(1));
 
+            // Progresión: si eligió entrenar sin equipo en S2, gana mejora por sesiones de entrenamiento
             let ovrDelta = 1;
-            if (careerState.isProdigy) {
+            if (isTrainingOnlyS2) {
+                ovrDelta = careerState.isProdigy
+                    ? (Math.random() < 0.55 ? 3 : 2)
+                    : (careerState.ovr < 74 && Math.random() < 0.55 ? 2 : 1);
+            } else if (careerState.isProdigy) {
                 ovrDelta = Number(avgRating) >= 7.8 ? 4 : 3;
                 if (careerState.ovr < 78 && Math.random() < 0.45) ovrDelta += 1;
             } else {
@@ -2048,17 +2433,64 @@
 
             const semesterTrophies = [];
             let promoted = false, relegated = false, promotedToDiv = null;
-
-            const divTeams = isFemale ? db : db.filter(t => Number(t.division) === div);
-            const leagueStandings = simulateTournamentRanking(divTeams, team.code, careerState.ovr, playedRatio, false, teamBoost);
-            let leaguePosition = leagueStandings.findIndex(t => t.code === team.code) + 1;
-            if (forceElimination && leaguePosition === 1) leaguePosition = 3;
-
+            let qualifiedForS2Playoffs = true;
+            let leaguePosition = 1;
             let leagueSummaryText = '';
+
             if (sem === 1) {
-                leagueSummaryText = `1ª Rueda: #${leaguePosition}`;
+                // FASE DE GRUPOS POR DIVISIÓN (Avanzan solo los 2 primeros de cada grupo)
+                const allQualifiedS1 = [];
+                const divisionsToRun = isFemale ? [1] : [1, 2, 3];
+
+                divisionsToRun.forEach(dNum => {
+                    const teamsInDiv = isFemale ? db : db.filter(t => Number(t.division) === dNum);
+                    const res = simulateDivisionGroupStage(
+                        teamsInDiv,
+                        dNum === div ? team.code : null,
+                        careerState.ovr,
+                        playedRatio,
+                        dNum === div ? teamBoost : 0
+                    );
+                    allQualifiedS1.push(...res.qualifiedCodes);
+
+                    if (dNum === div) {
+                        leaguePosition = res.playerGroupPos;
+                        if (forceElimination && leaguePosition <= 2 && res.groupSize > 2) {
+                            leaguePosition = 3;
+                            const idxQ = allQualifiedS1.indexOf(team.code);
+                            if (idxQ !== -1) allQualifiedS1.splice(idxQ, 1);
+                        }
+                        qualifiedForS2Playoffs = allQualifiedS1.includes(team.code);
+                        leagueSummaryText = qualifiedForS2Playoffs
+                            ? `Grupo ${res.groupLabel}: #${leaguePosition}/${res.groupSize} (✅ Playoffs)`
+                            : `Grupo ${res.groupLabel}: #${leaguePosition}/${res.groupSize} (❌ Eliminado)`;
+                    }
+                });
+
+                careerState.s1QualifiedCodes = allQualifiedS1;
+            } else if (isTrainingOnlyS2) {
+                // NO JUGÓ CAMPEONATO DE CLUBES EN S2 (SESIONES DE ENTRENAMIENTO)
+                leaguePosition = 0;
+                leagueSummaryText = '🏋️ Sesiones de entrenamiento (Sin torneo de clubes)';
             } else {
-                leagueSummaryText = `Final Liga: #${leaguePosition}`;
+                // PLAYOFFS DE INTERCARRERAS EN SEMESTRE 2 (Con los 2 clasificados por grupo)
+                const qualifiedSet = new Set(careerState.s1QualifiedCodes || []);
+                let playoffTeams = (isFemale ? db : db.filter(t => Number(t.division) === div))
+                    .filter(t => qualifiedSet.has(t.code));
+                if (!playoffTeams.some(t => t.code === team.code)) playoffTeams.push(team);
+                if (playoffTeams.length < 2) {
+                    playoffTeams = isFemale ? db.slice(0, 8) : db.filter(t => Number(t.division) === div).slice(0, 6);
+                }
+
+                const leagueStandings = simulateTournamentRanking(playoffTeams, team.code, careerState.ovr, playedRatio, false, teamBoost);
+                leaguePosition = leagueStandings.findIndex(t => t.code === team.code) + 1;
+                if (forceElimination && leaguePosition === 1) leaguePosition = 3;
+
+                leagueSummaryText = leaguePosition === 1
+                    ? '🏆 Campeón Playoffs'
+                    : leaguePosition === 2
+                        ? '🥈 Finalista Playoffs'
+                        : `Playoffs: #${leaguePosition}`;
 
                 const avgOvrDiv1 = maleTeamsDB.filter(t => Number(t.division) === 1).reduce((a, b) => a + b.ovr, 0) / Math.max(1, maleTeamsDB.filter(t => Number(t.division) === 1).length);
                 const avgOvrDiv2 = maleTeamsDB.filter(t => Number(t.division) === 2).reduce((a, b) => a + b.ovr, 0) / Math.max(1, maleTeamsDB.filter(t => Number(t.division) === 2).length);
@@ -2067,7 +2499,15 @@
 
                 if (leaguePosition === 1) {
                     const divTitle = isFemale ? 'Campeona Intercarreras Femenino UFRO' : `Campeón Intercarreras (${getDivisionLabel(div, 'M')})`;
-                    semesterTrophies.push({ type: 'LEAGUE', division: div, title: divTitle, teamName: team.name, teamCode: team.code, year, sem });
+                    semesterTrophies.push({
+                        type: 'LEAGUE',
+                        division: div,
+                        title: activeLoan ? `${divTitle} (Cedido)` : divTitle,
+                        teamName: team.name,
+                        teamCode: team.code,
+                        year,
+                        sem
+                    });
                     team.ovr = Math.min(89, team.ovr + 2);
                     if (!isFemale && (div === 3 || div === 2)) {
                         team.division = div - 1;
@@ -2079,11 +2519,11 @@
                     promoted = true;
                     promotedToDiv = team.division;
                     team.ovr = Math.min(89, team.ovr + 1);
-                } else if (!isFemale && (div === 1 || div === 2)) {
-                    const relegationZone = leaguePosition >= Math.max(4, divTeams.length - 1);
+                } else if (!isFemale && !activeLoan && (div === 1 || div === 2)) {
+                    const relegationZone = leaguePosition >= Math.max(4, playoffTeams.length - 1);
                     const relegationChance = isBelowDivisionAvg
-                        ? (relegationZone ? 0.85 : 0.45)
-                        : (relegationZone ? 0.30 : 0.05);
+                        ? (relegationZone ? 0.65 : 0.30)
+                        : (relegationZone ? 0.20 : 0.04);
 
                     if (Math.random() < relegationChance) {
                         team.division = div + 1;
@@ -2125,7 +2565,7 @@
                     facultyCupResult = isFemale ? 'Clasificada directa a Interfacultades' : 'Clasificado directo a Interfacultades';
                     careerState.interfacultadesQualified = true;
                 }
-            } else {
+            } else if (!isTrainingOnlyS2) {
                 if (careerState.interfacultadesQualified) {
                     const topPool = isFemale
                         ? [...db].sort((a, b) => b.ovr - a.ovr).slice(0, 10)
@@ -2142,7 +2582,14 @@
                             ? '🌍 ¡CAMPEONA TORNEO INTERFACULTADES!'
                             : '🌍 ¡CAMPEÓN TORNEO INTERFACULTADES!';
                         team.ovr = Math.min(89, team.ovr + 2);
-                        semesterTrophies.push({ type: 'INTERFACULTADES', title: 'Torneo Interfacultades UFRO', teamName: team.name, teamCode: team.code, year, sem });
+                        semesterTrophies.push({
+                            type: 'INTERFACULTADES',
+                            title: activeLoan ? 'Torneo Interfacultades UFRO (Cedido)' : 'Torneo Interfacultades UFRO',
+                            teamName: team.name,
+                            teamCode: team.code,
+                            year,
+                            sem
+                        });
                     } else if (interPos === 2) {
                         interfacultadesResult = isFemale ? '🥈 Subcampeona Interfacultades' : '🥈 Subcampeón Interfacultades';
                     } else if (interPos <= 4) {
@@ -2156,6 +2603,7 @@
                 careerState.interfacultadesQualified = false;
             }
 
+            // SELECCIÓN UFRO: sigue activa incluso si no tienes equipo en S2
             let ufroSelectionInfo = null;
             if (!isSuspended && careerState.ovr >= 76) {
                 if (!careerState.ufroCitations) careerState.ufroCitations = [];
@@ -2235,7 +2683,7 @@
             careerState.trophies.push(...semesterTrophies);
 
             let semesterAwards = [];
-            if (sem === 2) {
+            if (sem === 2 && !isTrainingOnlyS2) {
                 semesterAwards = computeIndividualAwards(year, {
                     matches: matchesPlayed, goals, assists, cleanSheets, avgRating,
                     leaguePosition, divisionPlayed: div, teamName: team.name
@@ -2255,13 +2703,30 @@
                 facultyCupResult, interfacultadesResult, ufroSelectionInfo,
                 trophies: semesterTrophies,
                 awards: semesterAwards,
-                suspended: isSuspended
+                suspended: isSuspended,
+                isLoan: Boolean(activeLoan),
+                loanParentName: activeLoan ? activeLoan.parentTeamName : null,
+                trainingOnly: isTrainingOnlyS2
             });
+
+            // Si terminó el Semestre 2, cerrar préstamo o modo entrenamiento y volver al club dueño del pase
+            if (sem === 2) {
+                if (activeLoan && activeLoan.parentTeamCode) {
+                    careerState.teamCode = activeLoan.parentTeamCode;
+                }
+                careerState.loanInfo = null;
+                careerState.trainingOnlyS2 = false;
+                careerState.s1QualifiedCodes = [];
+            }
 
             const isFinalSemester = (careerState.currentYear === careerState.maxYears && careerState.currentSemester === 2);
             if (isFinalSemester) {
                 careerState.phase = careerState.extensionUsed < 2 ? 'EXTENSION_CHOICE' : 'RETIRED';
                 if (careerState.phase === 'RETIRED') inductHallOfFame();
+            } else if (sem === 1 && !qualifiedForS2Playoffs) {
+                // Eliminado en Fase de Grupos del Semestre 1 -> Decisión de Cesión o Entrenamiento
+                careerState.loanOptions = buildLoanDecisionOptions();
+                careerState.phase = 'LOAN_CHOICE';
             } else {
                 careerState.pendingOffers = generateTransferOffers();
                 careerState.phase = 'TRANSFER_MARKET';
@@ -2540,6 +3005,19 @@
             if (careerState.isProdigy) starBadge.classList.remove('hidden');
             else starBadge.classList.add('hidden');
 
+            const loanBadge = document.getElementById('hud-loan-badge');
+            if (loanBadge) {
+                if (careerState.loanInfo) {
+                    loanBadge.textContent = isFemale ? '🤝 Cedida (S2)' : '🤝 Cedido (S2)';
+                    loanBadge.classList.remove('hidden');
+                } else if (careerState.trainingOnlyS2) {
+                    loanBadge.textContent = '🏋️ Entrenando (S2)';
+                    loanBadge.classList.remove('hidden');
+                } else {
+                    loanBadge.classList.add('hidden');
+                }
+            }
+
             document.getElementById('hud-career-info').innerHTML = `
                 ${getTeamBadgeHTML(team, 'w-5 h-5', 'text-[8px]')}
                 <strong class="text-white">${escapeHtml(team.name)}</strong>
@@ -2594,20 +3072,113 @@
 
             if (careerState.phase === 'PLAY_SEMESTER') {
                 const isS2 = careerState.currentSemester === 2;
+                const isTrainingS2 = isS2 && careerState.trainingOnlyS2;
+                const activeLoan = isS2 ? careerState.loanInfo : null;
+
+                let subtitle = isS2 ? 'Playoffs Intercarreras + Interfacultades' : 'Fase de Grupos Intercarreras + Copa Facultad';
+                if (isTrainingS2) subtitle = 'Sesiones de Entrenamiento + Selección UFRO';
+                else if (activeLoan) subtitle = `Cedido desde ${activeLoan.parentTeamName} · Playoffs + Interfacultades`;
+
                 panel.innerHTML = `
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
                                 <span class="text-xs font-extrabold uppercase text-[#8b96ff]">Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}</span>
-                                ${isS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/20 text-[#d0d5ff]">🌍 Interfacultades</span>' : ''}
+                                ${isS2 && !isTrainingS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/20 text-[#d0d5ff]">🌍 Playoffs + Interfacultades</span>' : ''}
+                                ${activeLoan ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">🤝 Préstamo en ${escapeHtml(activeLoan.loanTeamName)}</span>` : ''}
+                                ${isTrainingS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">🏋️ Modo Entrenamiento</span>' : ''}
                             </div>
-                            <h3 class="text-lg font-black text-white mt-1">
-                                ${isS2 ? 'Clausura Intercarreras + Interfacultades' : 'Apertura Intercarreras + Copa Facultad'}
-                            </h3>
+                            <h3 class="text-lg font-black text-white mt-1">${subtitle}</h3>
                         </div>
                         <button onclick="triggerPlaySemester()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition transform active:scale-95">
-                            ▶ Simular Semestre ${careerState.currentSemester}
+                            ▶ ${isTrainingS2 ? 'Simular Entrenamientos S2' : `Simular Semestre ${careerState.currentSemester}`}
                         </button>
+                    </div>
+                `;
+            } else if (careerState.phase === 'LOAN_CHOICE') {
+                const opts = careerState.loanOptions || buildLoanDecisionOptions();
+                const sameTeam = opts.sameCareerCode ? findTeamByCode(opts.sameCareerCode) : null;
+                const randTeam = opts.randomCode ? findTeamByCode(opts.randomCode) : null;
+                const isFem = careerState.gender === 'F';
+
+                panel.innerHTML = `
+                    <div class="space-y-4 animate-pop">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#262626] pb-3">
+                            <div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/35">
+                                    ⚠️ Eliminados en Fase de Grupos
+                                </span>
+                                <h3 class="text-base sm:text-lg font-black text-white mt-1.5">
+                                    ${escapeHtml(team.name)} no clasificó a Playoffs del Semestre 2
+                                </h3>
+                                <p class="text-xs text-gray-400 mt-0.5">
+                                    Solo los 2 primeros de cada grupo avanzan. Elige si sales a préstamo por este semestre o te quedas entrenando.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <!-- Opción 1: Cesión a equipo de tu carrera en competencia -->
+                            ${sameTeam ? `
+                                <div class="p-4 rounded-2xl surface-sub border border-[#717fff]/50 hover:border-[#717fff] flex flex-col justify-between gap-3 transition">
+                                    <div>
+                                        <div class="flex items-center justify-between gap-2 mb-2">
+                                            <span class="text-[10px] font-black uppercase text-[#8b96ff]">🎓 Cesión Misma Carrera</span>
+                                            ${getTeamBadgeHTML(sameTeam, 'w-10 h-10', 'text-[10px]')}
+                                        </div>
+                                        <div class="font-black text-white text-sm">${escapeHtml(sameTeam.name)}</div>
+                                        <div class="text-xs text-gray-400 mt-0.5">${escapeHtml(sameTeam.career)} · ${getDivisionLabel(sameTeam.division, careerState.gender)}</div>
+                                        <p class="text-[11px] text-[#a3adff] mt-2">Sigue en Playoffs. Juega cedido el S2 y vuelve a ${escapeHtml(team.name)} a fin de año.</p>
+                                    </div>
+                                    <button onclick="resolveLoanDecision('SAME_CAREER', '${sameTeam.code}')" class="w-full py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white text-xs font-black transition">
+                                        Ir cedido a ${escapeHtml(sameTeam.name)}
+                                    </button>
+                                </div>
+                            ` : `
+                                <div class="p-4 rounded-2xl surface-sub border border-[#262626] opacity-60 flex flex-col justify-between gap-3">
+                                    <div>
+                                        <span class="text-[10px] font-black uppercase text-gray-500">🎓 Cesión Misma Carrera</span>
+                                        <div class="font-black text-gray-300 text-sm mt-2">Sin equipos en Playoffs</div>
+                                        <p class="text-[11px] text-gray-500 mt-1">Ningún otro equipo de ${escapeHtml(careerState.studiedCareer)} avanzó a la fase final.</p>
+                                    </div>
+                                    <span class="w-full py-2 rounded-xl bg-[#1c1c1c] text-center text-gray-500 text-xs font-bold">No disponible</span>
+                                </div>
+                            `}
+
+                            <!-- Opción 2: Cesión a equipo aleatorio que siga en competencia -->
+                            ${randTeam ? `
+                                <div class="p-4 rounded-2xl surface-sub border border-emerald-500/40 hover:border-emerald-400 flex flex-col justify-between gap-3 transition">
+                                    <div>
+                                        <div class="flex items-center justify-between gap-2 mb-2">
+                                            <span class="text-[10px] font-black uppercase text-emerald-400">🎲 Cesión Equipo Aleatorio</span>
+                                            ${getTeamBadgeHTML(randTeam, 'w-10 h-10', 'text-[10px]')}
+                                        </div>
+                                        <div class="font-black text-white text-sm">${escapeHtml(randTeam.name)}</div>
+                                        <div class="text-xs text-gray-400 mt-0.5">${escapeHtml(randTeam.career)} · ${getDivisionLabel(randTeam.division, careerState.gender)}</div>
+                                        <p class="text-[11px] text-emerald-300/90 mt-2">Clasificado a Playoffs. Refuerza su plantel por 1 semestre y regresa al terminar.</p>
+                                    </div>
+                                    <button onclick="resolveLoanDecision('RANDOM_TEAM', '${randTeam.code}')" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition">
+                                        Ir cedido a ${escapeHtml(randTeam.name)}
+                                    </button>
+                                </div>
+                            ` : ''}
+
+                            <!-- Opción 3: No jugar campeonato y entrenar -->
+                            <div class="p-4 rounded-2xl surface-sub border border-[#2b2b2b] hover:border-gray-500 flex flex-col justify-between gap-3 transition">
+                                <div>
+                                    <div class="flex items-center justify-between gap-2 mb-2">
+                                        <span class="text-[10px] font-black uppercase text-gray-300">🏋️ Quedarse Entrenando</span>
+                                        <span class="w-10 h-10 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] flex items-center justify-center text-lg">⚽</span>
+                                    </div>
+                                    <div class="font-black text-white text-sm">Sesiones de Entrenamiento</div>
+                                    <div class="text-xs text-gray-400 mt-0.5">Sin partidos de liga este semestre</div>
+                                    <p class="text-[11px] text-gray-400 mt-2">Tu progresión pasa a entrenamiento físico/táctico (+Media) y sigues ${isFem ? 'habilitada' : 'habilitado'} para la Selección UFRO.</p>
+                                </div>
+                                <button onclick="resolveLoanDecision('TRAIN_ONLY')" class="w-full py-2.5 rounded-xl bg-[#222222] hover:bg-[#2d2d2d] text-white text-xs font-bold border border-[#333333] transition">
+                                    Entrenar sin jugar liga
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 `;
             } else if (careerState.phase === 'RANDOM_EVENT' && careerState.activeEvent) {
@@ -2808,14 +3379,18 @@
                                 ${getTeamBadgeHTML(hTeam, 'w-10 h-10', 'text-[10px]')}
                                 <div>
                                     <span class="font-bold text-[#8b96ff]">Año ${s.year} · Semestre ${s.sem}</span> · <span class="text-gray-400">${getDivisionLabel(s.divisionPlayed, careerState.gender)}</span>
-                                    <div class="font-extrabold text-white text-sm">${escapeHtml(s.teamName)}</div>
+                                    <div class="font-extrabold text-white text-sm flex items-center gap-1.5 flex-wrap">
+                                        <span>${escapeHtml(s.teamName)}</span>
+                                        ${s.isLoan ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">🤝 Cedido</span>` : ''}
+                                        ${s.trainingOnly ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">🏋️ Entrenamiento</span>` : ''}
+                                    </div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
                                 <span class="px-2 py-0.5 rounded bg-[#151515] border border-[#2b2b2b] font-bold text-white">
                                     OVR ${formatOvr(s.ovrAfter)} <span class="text-emerald-400">(+${s.ovrDelta})</span>
                                 </span>
-                                <div class="text-[11px] text-gray-400 mt-0.5">Nota: <strong class="text-[#a3adff]">${s.avgRating}</strong></div>
+                                <div class="text-[11px] text-gray-400 mt-0.5">${s.trainingOnly ? 'Modo' : 'Nota'}: <strong class="text-[#a3adff]">${s.avgRating}</strong></div>
                             </div>
                         </div>
 
@@ -2893,9 +3468,12 @@
             `).join('');
 
             document.getElementById('individual-awards-card').innerHTML = `
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between flex-wrap gap-2">
                     <h3 class="text-sm font-black uppercase tracking-wider text-white">🎖️ Distinciones Individuales</h3>
-                    ${careerState.hofRank ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/35">🏛️ Top #${careerState.hofRank} Salón de la Fama</span>` : ''}
+                    <div class="flex items-center gap-2 flex-wrap">
+                        ${careerState.lastSubmittedScore ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">🌍 ${careerState.lastSubmittedScore} pts Ranking Semanal</span>` : ''}
+                        ${careerState.hofRank ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/35">🏛️ Top #${careerState.hofRank} Salón de la Fama</span>` : ''}
+                    </div>
                 </div>
                 ${awards.length === 0
                     ? `<p class="text-xs text-gray-500">Sin premios individuales anuales registrados.</p>`
@@ -2957,8 +3535,8 @@
 
             document.getElementById('full-career-semesters-list').innerHTML = careerState.history.map(h => `
                 <div class="p-2.5 rounded-lg surface-sub flex items-center justify-between text-xs">
-                    <span><strong>Año ${h.year} S${h.sem}</strong> · ${escapeHtml(h.teamName)} (${h.leagueSummaryText})</span>
-                    <span class="text-gray-400">OVR ${formatOvr(h.ovrAfter)} · Nota ${h.avgRating}</span>
+                    <span><strong>Año ${h.year} S${h.sem}</strong> · ${escapeHtml(h.teamName)} ${h.isLoan ? '(Cedido)' : ''} (${h.leagueSummaryText})</span>
+                    <span class="text-gray-400">OVR ${formatOvr(h.ovrAfter)} · ${h.trainingOnly ? 'Entr.' : `Nota ${h.avgRating}`}</span>
                 </div>
             `).join('');
         }
@@ -2998,6 +3576,207 @@
 
             const rankIdx = top5.findIndex(x => x.id === entry.id);
             careerState.hofRank = rankIdx !== -1 ? rankIdx + 1 : null;
+
+            if (window.submitCareerToCloudLeaderboard) {
+                window.submitCareerToCloudLeaderboard(legacy, score);
+            }
+        }
+
+        function switchLeaderboardTab(tab) {
+            const globalView = document.getElementById('global-leaderboard-view');
+            const localView = document.getElementById('local-leaderboard-view');
+            const btnGlobal = document.getElementById('tab-lb-global');
+            const btnLocal = document.getElementById('tab-lb-local');
+            if (!globalView || !localView) return;
+
+            if (tab === 'global') {
+                globalView.classList.remove('hidden');
+                localView.classList.add('hidden');
+                btnGlobal.className = 'flex-1 py-2 px-3 rounded-xl bg-[#717fff] text-white font-black text-xs transition';
+                btnLocal.className = 'flex-1 py-2 px-3 rounded-xl text-gray-400 hover:text-white font-bold text-xs transition';
+            } else {
+                globalView.classList.add('hidden');
+                localView.classList.remove('hidden');
+                btnLocal.className = 'flex-1 py-2 px-3 rounded-xl bg-[#717fff] text-white font-black text-xs transition';
+                btnGlobal.className = 'flex-1 py-2 px-3 rounded-xl text-gray-400 hover:text-white font-bold text-xs transition';
+                renderHallOfFame();
+            }
+        }
+
+        // =========================================================================
+        // VALIDACIÓN ESTRICTA DE NOMBRES DE USUARIO (SEGURIDAD + MODERACIÓN CHILENA)
+        // =========================================================================
+        const CHILEAN_BAD_WORDS = [
+            'weon', 'weona', 'hueon', 'hueona', 'wn', 'wna', 'aweonao', 'aweonado',
+            'conchetumare', 'conchatumadre', 'ctm', 'csm', 'culiao', 'culia', 'qlo', 'ql',
+            'maricon', 'mariconazo', 'maraca', 'maraco', 'chucha', 'chuchatumare',
+            'pico', 'pichula', 'tula', 'callampa', 'zorra', 'choro', 'cacha', 'cachar',
+            'perkin', 'longi', 'jiles', 'gil', 'paco', 'pacos', 'flaites', 'flaite',
+            'bastardo', 'bastarda', 'puta', 'puto', 'mierda', 'caca', 'mear', 'raja',
+            'potito', 'poto', 'tetas', 'teta', 'pene', 'vagina', 'sexo', 'porno', 'xxx',
+            'nazi', 'hitler', 'violador', 'violar', 'matar', 'suicidio', 'droga', 'falopa',
+            'admin', 'root', 'system', 'null', 'undefined', 'nan', 'true', 'false',
+            'moderator', 'moderador', 'soporte', 'staff', 'oficial', 'leyendasufro'
+        ];
+
+        function normalizeForProfanityCheck(str) {
+            return String(str || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/0/g, 'o')
+                .replace(/1/g, 'i')
+                .replace(/3/g, 'e')
+                .replace(/4/g, 'a')
+                .replace(/5/g, 's')
+                .replace(/7/g, 't')
+                .replace(/8/g, 'b')
+                .replace(/@/g, 'a')
+                .replace(/\$/g, 's')
+                .replace(/[^a-z0-9]/g, '');
+        }
+
+        function validateUsernameStrict(rawUsername) {
+            const clean = String(rawUsername || '').trim();
+
+            if (clean.length < 3 || clean.length > 18) {
+                return { valid: false, error: 'El nombre de usuario debe tener entre 3 y 18 caracteres.' };
+            }
+
+            // Bloquea caracteres que puedan causar errores en programación, HTML, SQL, rutas Firestore o JSON
+            if (!/^[a-zA-Z0-9_]+$/.test(clean)) {
+                return { valid: false, error: 'Solo se permiten letras (sin tildes), números y guion bajo (_).' };
+            }
+
+            if (/^[0-9_]/.test(clean)) {
+                return { valid: false, error: 'El usuario debe comenzar con una letra.' };
+            }
+
+            if (/__/.test(clean)) {
+                return { valid: false, error: 'No uses dos guiones bajos seguidos.' };
+            }
+
+            const normalized = normalizeForProfanityCheck(clean);
+            const collapsedRepeats = normalized.replace(/(.)\1{2,}/g, '$1$1');
+
+            for (const bad of CHILEAN_BAD_WORDS) {
+                if (normalized.includes(bad) || collapsedRepeats.includes(bad)) {
+                    return { valid: false, error: 'Ese nombre de usuario contiene palabras no permitidas.' };
+                }
+            }
+
+            return { valid: true, username: clean };
+        }
+
+        function sanitizeAutoUsername(baseStr) {
+            const lettersOnly = String(baseStr || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-zA-Z0-9_]/g, '');
+            let candidate = lettersOnly.slice(0, 13);
+            if (!/^[a-zA-Z]/.test(candidate)) {
+                candidate = `Ufro_${candidate}`;
+            }
+            candidate = `${candidate}_${Math.floor(100 + Math.random() * 899)}`.slice(0, 18);
+            const check = validateUsernameStrict(candidate);
+            return check.valid ? check.username : `Jugador_${Math.floor(1000 + Math.random() * 8999)}`;
+        }
+
+        // =========================================================================
+        // CONTROLADORES DE MODALES DE AUTENTICACIÓN, PERFIL Y DETALLE DE CARRERA
+        // =========================================================================
+        function toggleUserDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('user-dropdown-menu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('logged-user-menu-wrapper');
+            const menu = document.getElementById('user-dropdown-menu');
+            if (wrapper && menu && !wrapper.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        function openAuthModal(mode = 'login') {
+            const modal = document.getElementById('auth-modal');
+            if (!modal) return;
+            switchAuthMode(mode);
+            modal.classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function switchAuthMode(mode) {
+            const titleEl = document.getElementById('auth-modal-title');
+            const tabsEl = document.getElementById('auth-mode-tabs');
+            const formLogin = document.getElementById('form-auth-login');
+            const formReg = document.getElementById('form-auth-register');
+            const formReset = document.getElementById('form-auth-reset');
+            const googleSec = document.getElementById('auth-google-section');
+            const tabLogin = document.getElementById('tab-auth-login');
+            const tabReg = document.getElementById('tab-auth-register');
+
+            formLogin.classList.add('hidden');
+            formReg.classList.add('hidden');
+            formReset.classList.add('hidden');
+
+            if (mode === 'register') {
+                titleEl.textContent = 'Crear Cuenta';
+                tabsEl.classList.remove('hidden');
+                formReg.classList.remove('hidden');
+                googleSec.classList.remove('hidden');
+                tabReg.className = 'py-2 rounded-lg bg-[#717fff] text-white font-black text-xs transition';
+                tabLogin.className = 'py-2 rounded-lg text-gray-400 hover:text-white font-bold text-xs transition';
+            } else if (mode === 'reset') {
+                titleEl.textContent = 'Recuperar Contraseña';
+                tabsEl.classList.add('hidden');
+                formReset.classList.remove('hidden');
+                googleSec.classList.add('hidden');
+            } else {
+                titleEl.textContent = 'Iniciar Sesión';
+                tabsEl.classList.remove('hidden');
+                formLogin.classList.remove('hidden');
+                googleSec.classList.remove('hidden');
+                tabLogin.className = 'py-2 rounded-lg bg-[#717fff] text-white font-black text-xs transition';
+                tabReg.className = 'py-2 rounded-lg text-gray-400 hover:text-white font-bold text-xs transition';
+            }
+        }
+
+        function openProfileModal(focusSection = 'profile') {
+            const menu = document.getElementById('user-dropdown-menu');
+            if (menu) menu.classList.add('hidden');
+
+            const modal = document.getElementById('profile-modal');
+            if (!modal) return;
+
+            const nickInput = document.getElementById('input-cloud-nickname');
+            if (nickInput && window.cloudProfile) {
+                nickInput.value = window.cloudProfile.nickname || '';
+            }
+
+            if (window.renderUserProfileStats) {
+                window.renderUserProfileStats();
+            }
+
+            modal.classList.remove('hidden');
+            if (focusSection === 'username' && nickInput) {
+                setTimeout(() => nickInput.focus(), 100);
+            }
+        }
+
+        function closeProfileModal() {
+            const modal = document.getElementById('profile-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function closeCareerDetailModal() {
+            const modal = document.getElementById('career-detail-modal');
+            if (modal) modal.classList.add('hidden');
         }
 
         function renderHallOfFame() {
@@ -3492,6 +4271,695 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3400);
         }
+    </script>
+
+    <!-- ==================== MÓDULO CLOUD: RANKING GLOBAL SEMANAL ==================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            sendPasswordResetEmail,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore,
+            doc,
+            getDoc,
+            setDoc,
+            addDoc,
+            updateDoc,
+            collection,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuración del proyecto (usa __firebase_config del entorno o pega aquí el firebaseConfig de tu otra webapp)
+        const DEFAULT_FIREBASE_CONFIG = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_PROYECTO.firebaseapp.com",
+            projectId: "TU_PROYECTO",
+            storageBucket: "TU_PROYECTO.appspot.com",
+            messagingSenderId: "000000000000",
+            appId: "1:000000000000:web:000000000000"
+        };
+
+        const firebaseConfig = (typeof __firebase_config !== 'undefined' && __firebase_config)
+            ? JSON.parse(__firebase_config)
+            : DEFAULT_FIREBASE_CONFIG;
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'leyendas-ufro-global';
+
+        let app = null;
+        let auth = null;
+        let db = null;
+        let currentUser = null;
+        let unsubscribeLeaderboard = null;
+        let cachedAllLeaderboardDocs = [];
+
+        window.cloudProfile = {
+            nickname: ''
+        };
+
+        function isRealAuthenticatedUser(user) {
+            return Boolean(user && !user.isAnonymous);
+        }
+
+        // Calcula el identificador de semana ISO en hora de Chile (lunes a domingo)
+        function getChileWeekInfo() {
+            const now = new Date();
+            const chileStr = now.toLocaleString('en-US', { timeZone: 'America/Santiago' });
+            const chileDate = new Date(chileStr);
+
+            const target = new Date(Date.UTC(chileDate.getFullYear(), chileDate.getMonth(), chileDate.getDate()));
+            const dayNum = target.getUTCDay() || 7;
+            target.setUTCDate(target.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
+            const weekId = `${target.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+
+            const daysUntilMonday = (8 - dayNum) % 7 || 7;
+            return {
+                weekId,
+                weekLabel: `SEMANA ${weekNo} · ${target.getUTCFullYear()}`,
+                daysLeft: daysUntilMonday
+            };
+        }
+
+        function updateWeeklyHeaderUI() {
+            const info = getChileWeekInfo();
+            const badge = document.getElementById('weekly-season-badge');
+            const countdown = document.getElementById('weekly-countdown-text');
+            if (badge) badge.textContent = info.weekLabel;
+            if (countdown) {
+                countdown.textContent = `Cierre en ${info.daysLeft} ${info.daysLeft === 1 ? 'día' : 'días'} · Reinicio cada lunes 00:00 hrs`;
+            }
+        }
+
+        function updateAuthUI(user) {
+            const guestBtns = document.getElementById('guest-auth-buttons');
+            const loggedMenu = document.getElementById('logged-user-menu-wrapper');
+            const usernameLabel = document.getElementById('header-username-label');
+            const profileHeading = document.getElementById('profile-modal-heading');
+            const profileEmail = document.getElementById('profile-modal-email');
+
+            if (!isRealAuthenticatedUser(user)) {
+                if (guestBtns) guestBtns.classList.remove('hidden');
+                if (loggedMenu) loggedMenu.classList.add('hidden');
+                return;
+            }
+
+            if (guestBtns) guestBtns.classList.add('hidden');
+            if (loggedMenu) loggedMenu.classList.remove('hidden');
+
+            const displayNick = window.cloudProfile.nickname || sanitizeAutoUsername(user.displayName || user.email?.split('@')[0] || 'Jugador');
+            if (usernameLabel) usernameLabel.textContent = `@${displayNick}`;
+            if (profileHeading) profileHeading.textContent = `@${displayNick}`;
+            if (profileEmail) profileEmail.textContent = user.email || 'Cuenta vinculada';
+        }
+
+        async function loadUserCloudProfile(uid, userObj = null) {
+            if (!db || !uid) return;
+            try {
+                const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'main');
+                const snap = await getDoc(profileRef);
+                if (snap.exists() && snap.data().nickname) {
+                    window.cloudProfile.nickname = snap.data().nickname;
+                } else if (userObj && !userObj.isAnonymous) {
+                    const generatedNick = sanitizeAutoUsername(userObj.displayName || userObj.email?.split('@')[0] || 'Jugador');
+                    window.cloudProfile.nickname = generatedNick;
+                    await setDoc(profileRef, {
+                        nickname: generatedNick,
+                        email: userObj.email || '',
+                        createdAt: Date.now()
+                    }, { merge: true });
+                }
+            } catch (e) {}
+            updateAuthUI(currentUser);
+        }
+
+        window.handleEmailRegister = async function (e) {
+            e.preventDefault();
+            if (!auth || !db) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
+
+            const rawUser = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value.trim();
+            const pass1 = document.getElementById('reg-password').value;
+            const pass2 = document.getElementById('reg-password-confirm').value;
+
+            const userCheck = validateUsernameStrict(rawUser);
+            if (!userCheck.valid) {
+                showToast(userCheck.error, 'error');
+                return;
+            }
+
+            if (pass1 !== pass2) {
+                showToast('Las contraseñas no coinciden.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-register');
+            btn.disabled = true;
+            btn.textContent = 'Creando cuenta...';
+
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, email, pass1);
+                currentUser = cred.user;
+                window.cloudProfile.nickname = userCheck.username;
+
+                const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
+                await setDoc(profileRef, {
+                    nickname: userCheck.username,
+                    email,
+                    createdAt: Date.now()
+                }, { merge: true });
+
+                updateAuthUI(currentUser);
+                closeAuthModal();
+                showToast(`🎉 ¡Bienvenido @${userCheck.username}! Ya participas en el Top Global.`, 'success');
+            } catch (err) {
+                const code = err?.code || '';
+                if (code === 'auth/email-already-in-use') showToast('Ese correo ya está registrado.', 'error');
+                else if (code === 'auth/weak-password') showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
+                else if (code === 'auth/invalid-email') showToast('Correo electrónico inválido.', 'error');
+                else showToast('No se pudo registrar la cuenta. Revisa tus datos.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Crear cuenta y participar';
+            }
+        };
+
+        window.handleEmailLogin = async function (e) {
+            e.preventDefault();
+            if (!auth) return;
+
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-password').value;
+
+            const btn = document.getElementById('btn-submit-login');
+            btn.disabled = true;
+            btn.textContent = 'Iniciando sesión...';
+
+            try {
+                const cred = await signInWithEmailAndPassword(auth, email, pass);
+                currentUser = cred.user;
+                await loadUserCloudProfile(currentUser.uid, currentUser);
+                closeAuthModal();
+                showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}`, 'success');
+            } catch (err) {
+                showToast('Correo o contraseña incorrectos.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Entrar a mi cuenta';
+            }
+        };
+
+        window.handlePasswordReset = async function (e) {
+            e.preventDefault();
+            if (!auth) return;
+            const email = document.getElementById('reset-email').value.trim();
+            if (!email) return;
+
+            const btn = document.getElementById('btn-submit-reset');
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showToast('📩 Te enviamos un correo para restablecer tu contraseña.', 'success');
+                switchAuthMode('login');
+            } catch (err) {
+                showToast('No se pudo enviar el correo. Verifica que esté bien escrito.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Enviar enlace de recuperación';
+            }
+        };
+
+        window.saveCloudNickname = async function () {
+            if (!db || !isRealAuthenticatedUser(currentUser)) {
+                showToast('Debes iniciar sesión para cambiar tu usuario.', 'error');
+                return;
+            }
+            const input = document.getElementById('input-cloud-nickname');
+            const userCheck = validateUsernameStrict(input ? input.value : '');
+            if (!userCheck.valid) {
+                showToast(userCheck.error, 'error');
+                return;
+            }
+
+            window.cloudProfile.nickname = userCheck.username;
+            try {
+                const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
+                await setDoc(profileRef, {
+                    nickname: userCheck.username,
+                    updatedAt: Date.now()
+                }, { merge: true });
+
+                // Actualizar también el nombre de usuario en sus entradas del ranking
+                const userDocs = cachedAllLeaderboardDocs.filter(d => d.uid === currentUser.uid);
+                for (const item of userDocs) {
+                    const entryRef = doc(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard', item.id);
+                    await updateDoc(entryRef, { nickname: userCheck.username }).catch(() => {});
+                }
+
+                updateAuthUI(currentUser);
+                showToast(`✅ Usuario cambiado a @${userCheck.username}`, 'success');
+            } catch (err) {
+                showToast('No se pudo actualizar el usuario.', 'error');
+            }
+        };
+
+        window.signInWithGoogleAccount = async function () {
+            if (!auth) return;
+            try {
+                const provider = new GoogleAuthProvider();
+                const res = await signInWithPopup(auth, provider);
+                if (res && res.user) {
+                    currentUser = res.user;
+                    await loadUserCloudProfile(currentUser.uid, currentUser);
+                    closeAuthModal();
+                    showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}`, 'success');
+                }
+            } catch (err) {
+                showToast('No se pudo completar el inicio con Google.', 'error');
+            }
+        };
+
+        window.logoutCloudUser = async function () {
+            if (!auth) return;
+            const menu = document.getElementById('user-dropdown-menu');
+            if (menu) menu.classList.add('hidden');
+
+            try {
+                await signOut(auth);
+                window.cloudProfile.nickname = '';
+                await signInAnonymously(auth);
+                showToast('Sesión cerrada. Estás jugando como invitado.', 'info');
+            } catch (err) {
+                showToast('Error al cerrar sesión.', 'error');
+            }
+        };
+
+        function subscribeWeeklyLeaderboard() {
+            if (!db || !currentUser) return;
+            if (unsubscribeLeaderboard) unsubscribeLeaderboard();
+
+            const { weekId } = getChileWeekInfo();
+            const entriesCol = collection(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard');
+
+            unsubscribeLeaderboard = onSnapshot(entriesCol, (snapshot) => {
+                const allDocs = [];
+                snapshot.forEach(d => {
+                    allDocs.push({ id: d.id, ...d.data() });
+                });
+
+                cachedAllLeaderboardDocs = allDocs;
+
+                // Filtrar por la semana actual en memoria y ordenar por puntaje descendente
+                const currentWeekEntries = allDocs
+                    .filter(item => item.weekId === weekId && typeof item.score === 'number')
+                    .sort((a, b) => b.score - a.score || (b.ovr || 0) - (a.ovr || 0));
+
+                renderGlobalLeaderboardList(currentWeekEntries.slice(0, 10));
+
+                const profileModal = document.getElementById('profile-modal');
+                if (profileModal && !profileModal.classList.contains('hidden')) {
+                    window.renderUserProfileStats();
+                }
+            }, () => {
+                const listEl = document.getElementById('global-hof-list');
+                if (listEl) {
+                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Configura tu proyecto Firebase para ver el Top Global en vivo.</div>`;
+                }
+            });
+        }
+
+        window.renderUserProfileStats = function () {
+            if (!isRealAuthenticatedUser(currentUser)) return;
+            const { weekId } = getChileWeekInfo();
+            const myAllCareers = cachedAllLeaderboardDocs
+                .filter(d => d.uid === currentUser.uid)
+                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            const myWeeklyCareers = myAllCareers.filter(d => d.weekId === weekId);
+            const myTop5Careers = [...myAllCareers]
+                .sort((a, b) => (b.score || 0) - (a.score || 0) || (b.ovr || 0) - (a.ovr || 0))
+                .slice(0, 5);
+
+            const weeklyCountEl = document.getElementById('profile-weekly-count');
+            const weeklyListEl = document.getElementById('profile-weekly-list');
+            const top5ListEl = document.getElementById('profile-top5-list');
+
+            if (weeklyCountEl) {
+                weeklyCountEl.textContent = `${myWeeklyCareers.length} ${myWeeklyCareers.length === 1 ? 'carrera' : 'carreras'}`;
+            }
+
+            if (weeklyListEl) {
+                if (myWeeklyCareers.length === 0) {
+                    weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no completas carreras esta semana.</div>`;
+                } else {
+                    weeklyListEl.innerHTML = myWeeklyCareers.map(item => `
+                        <button type="button" onclick="openCareerDetailModal('${item.id}')"
+                            class="w-full p-3 rounded-xl surface-sub hover:border-[#717fff]/50 flex items-center justify-between gap-2 text-left transition">
+                            <div class="min-w-0">
+                                <div class="font-black text-white text-xs truncate">${escapeHtml(item.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(item.position || 'MED')})</span></div>
+                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.headline || item.studiedCareer || '')}</div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="text-xs font-black text-[#8b96ff]">${item.score} pts</div>
+                                <div class="text-[10px] text-amber-300 font-bold">🏆 ${item.titles || 0} · OVR ${formatOvr(item.ovr || 60)}</div>
+                            </div>
+                        </button>
+                    `).join('');
+                }
+            }
+
+            if (top5ListEl) {
+                if (myTop5Careers.length === 0) {
+                    top5ListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Completa tu primera carrera con sesión iniciada para inaugurar tu Top 5.</div>`;
+                } else {
+                    top5ListEl.innerHTML = myTop5Careers.map((item, idx) => `
+                        <button type="button" onclick="openCareerDetailModal('${item.id}')"
+                            class="w-full p-3 rounded-xl surface-sub hover:border-amber-400/50 flex items-center justify-between gap-2 text-left transition">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="w-5 text-center font-black text-xs ${idx === 0 ? 'text-amber-400' : 'text-gray-400'}">#${idx + 1}</span>
+                                <div class="min-w-0">
+                                    <div class="font-black text-white text-xs truncate">${escapeHtml(item.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(item.position || 'MED')})</span></div>
+                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.headline || '')}</div>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="text-xs font-black text-amber-300">${item.score} pts</div>
+                                <div class="text-[10px] text-gray-400 font-bold">🏆 ${item.titles || 0} · OVR ${formatOvr(item.ovr || 60)}</div>
+                            </div>
+                        </button>
+                    `).join('');
+                }
+            }
+        };
+
+        window.openCareerDetailModal = function (docId) {
+            const entry = cachedAllLeaderboardDocs.find(d => d.id === docId);
+            if (!entry) return;
+
+            const modal = document.getElementById('career-detail-modal');
+            const titleEl = document.getElementById('detail-modal-title');
+            const contentEl = document.getElementById('career-detail-content');
+            if (!modal || !contentEl) return;
+
+            const mainTeam = findTeamByCode(entry.teamCode);
+            titleEl.textContent = entry.playerName || 'Detalle de Carrera';
+
+            const stats = entry.stats || { matches: 0, goals: 0, assists: 0, cleanSheets: 0 };
+            const isArq = entry.position === 'ARQ';
+            const trajectory = Array.isArray(entry.trajectory) ? entry.trajectory : [];
+            const trophyList = Array.isArray(entry.trophyList) ? entry.trophyList : [];
+            const awardList = Array.isArray(entry.awardList) ? entry.awardList : [];
+
+            contentEl.innerHTML = `
+                <!-- Cabecera Jugador y Usuario -->
+                <div class="p-4 rounded-2xl surface-sub border-[#717fff]/35 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        ${mainTeam ? getTeamBadgeHTML(mainTeam, 'w-12 h-12', 'text-xs') : ''}
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-black text-white text-base truncate">${escapeHtml(entry.playerName)}</span>
+                                <span class="px-2 py-0.5 rounded bg-[#717fff]/20 text-[#a3adff] text-[10px] font-black">${escapeHtml(entry.position || 'MED')}</span>
+                            </div>
+                            <div class="text-xs text-gray-300 truncate">${escapeHtml(entry.studiedCareer || 'Universidad de La Frontera')}</div>
+                            <div class="text-[11px] text-[#8b96ff] font-bold mt-0.5">Usuario: @${escapeHtml(entry.nickname || 'Anónimo')}</div>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="text-lg font-black text-[#8b96ff]">${entry.score} pts</div>
+                        <div class="text-xs font-black text-amber-300">OVR ${formatOvr(entry.ovr || 60)}</div>
+                    </div>
+                </div>
+
+                <!-- Consigna de Legado -->
+                ${entry.headline ? `
+                    <div class="px-3.5 py-2.5 rounded-xl bg-[#717fff]/10 border border-[#717fff]/30 text-center">
+                        <span class="text-xs font-black text-white">👑 ${escapeHtml(entry.headline)}</span>
+                    </div>
+                ` : ''}
+
+                <!-- Estadísticas Totales -->
+                <div class="grid grid-cols-4 gap-2 text-center">
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-white">${stats.matches || 0}</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase">PJ</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-[#8b96ff]">${isArq ? (stats.cleanSheets || 0) : (stats.goals || 0)}</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase">${isArq ? 'Vallas' : 'Goles'}</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-[#a3adff]">${isArq ? ((stats.goals || 0) + (stats.assists || 0)) : (stats.assists || 0)}</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase">${isArq ? 'G+A' : 'Asist.'}</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-amber-300">${entry.titles || 0}</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase">Títulos</div>
+                    </div>
+                </div>
+
+                <!-- Trayectoria por Equipos -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🏟️ Trayectoria por Clubes</h4>
+                    ${trajectory.length === 0
+                        ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-400">Club principal: <strong class="text-white">${escapeHtml(mainTeam?.name || entry.teamCode || 'UFRO')}</strong></div>`
+                        : `<div class="space-y-1.5">${trajectory.map(st => {
+                            const stTeam = findTeamByCode(st.teamCode);
+                            return `
+                                <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        ${stTeam ? getTeamBadgeHTML(stTeam, 'w-8 h-8', 'text-[9px]') : ''}
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-white truncate">${escapeHtml(st.teamName)}</div>
+                                            <div class="text-[10px] text-gray-400">${st.sems} semestres · ${st.goals || 0}G · ${st.assists || 0}A</div>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs font-black text-amber-300 shrink-0">🏆 ${st.titles || 0}</span>
+                                </div>
+                            `;
+                        }).join('')}</div>`
+                    }
+                </div>
+
+                <!-- Logros y Títulos Conquistados -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🏆 Logros y Títulos (${trophyList.length})</h4>
+                    ${trophyList.length === 0
+                        ? `<p class="text-xs text-gray-500">Sin títulos colectivos registrados en esta carrera.</p>`
+                        : `<div class="flex flex-wrap gap-1.5">${trophyList.map(t => `
+                            <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[11px] font-bold">
+                                🏆 ${escapeHtml(t.title)} (${escapeHtml(t.teamName || '')} · A${t.year})
+                            </span>
+                        `).join('')}</div>`
+                    }
+                </div>
+
+                <!-- Premios Individuales -->
+                ${awardList.length > 0 ? `
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🎖️ Distinciones Individuales</h4>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${awardList.map(a => `
+                                <span class="px-2.5 py-1 rounded-lg bg-[#717fff]/15 border border-[#717fff]/30 text-[#d0d5ff] text-[11px] font-bold">
+                                    ${a.icon || '⭐'} ${escapeHtml(a.title)} (A${a.year})
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+
+            modal.classList.remove('hidden');
+        };
+
+        function renderGlobalLeaderboardList(entries) {
+            const listEl = document.getElementById('global-hof-list');
+            if (!listEl) return;
+
+            if (!entries || entries.length === 0) {
+                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Nadie ha registrado una carrera esta semana todavía. ¡Inicia sesión y sé el #1!</div>`;
+                return;
+            }
+
+            listEl.innerHTML = entries.map((item, idx) => {
+                const teamObj = findTeamByCode(item.teamCode);
+                const isMine = currentUser && item.uid === currentUser.uid;
+                const rankBadge = idx === 0
+                    ? 'text-amber-400'
+                    : idx === 1
+                        ? 'text-gray-200'
+                        : idx === 2
+                            ? 'text-amber-600'
+                            : 'text-gray-500';
+
+                return `
+                    <button type="button" onclick="openCareerDetailModal('${item.id}')"
+                        class="w-full p-3.5 rounded-2xl surface-sub ${isMine ? 'border-[#717fff]/60 bg-[#717fff]/5' : 'hover:border-[#717fff]/45'} flex items-center justify-between gap-3 text-left transition group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="w-6 text-center font-black text-sm shrink-0 ${rankBadge}">#${idx + 1}</span>
+                            ${teamObj ? getTeamBadgeHTML(teamObj, 'w-10 h-10', 'text-[10px]') : ''}
+                            <div class="min-w-0">
+                                <div class="font-black text-white text-sm truncate flex items-center gap-1.5 group-hover:text-[#a3adff] transition">
+                                    <span class="truncate">${escapeHtml(item.playerName)}</span>
+                                    <span class="text-[10px] font-bold text-[#8b96ff] shrink-0">(${escapeHtml(item.position || 'MED')})</span>
+                                </div>
+                                <div class="text-[11px] text-gray-400 truncate">
+                                    ${escapeHtml(item.headline || '')} · <span class="text-[#a3adff]">@${escapeHtml(item.nickname || 'Anónimo')}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-xs font-black text-[#8b96ff]">${item.score} pts</div>
+                            <div class="text-[10px] font-bold text-amber-300">🏆 ${item.titles || 0} · OVR ${formatOvr(item.ovr || 60)}</div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        window.submitCareerToCloudLeaderboard = async function (legacy, baseScore) {
+            if (!db || !careerState) return;
+
+            // Solo los usuarios registrados participan en el Ranking Global Semanal
+            if (!isRealAuthenticatedUser(currentUser)) {
+                showToast('💡 Inicia sesión o regístrate arriba para subir tus próximas carreras al Top Global Semanal.', 'info');
+                return;
+            }
+
+            // Excluir Easter Egg Mathias Bello del ranking competitivo para juego limpio
+            if (careerState.playerName && careerState.playerName.trim().toLowerCase() === 'mathias bello') {
+                return;
+            }
+
+            if (careerState.submittedToCloud) return;
+
+            const awardsBonus = (careerState.awards || []).length * 10;
+            const totalScore = Math.min(2500, Math.max(0, Math.round(baseScore + awardsBonus)));
+            const { weekId } = getChileWeekInfo();
+
+            const nickname = window.cloudProfile.nickname
+                || sanitizeAutoUsername(currentUser.displayName || currentUser.email?.split('@')[0] || 'Jugador');
+
+            // Construir trayectoria agrupada por equipos para la ficha de detalles
+            const stintsMap = new Map();
+            [...(careerState.history || [])].reverse().forEach(h => {
+                if (!stintsMap.has(h.teamCode)) {
+                    stintsMap.set(h.teamCode, {
+                        teamCode: h.teamCode,
+                        teamName: h.teamName,
+                        sems: 0,
+                        goals: 0,
+                        assists: 0,
+                        titles: 0
+                    });
+                }
+                const st = stintsMap.get(h.teamCode);
+                st.sems += 1;
+                st.goals += h.goals || 0;
+                st.assists += h.assists || 0;
+                st.titles += (h.trophies || []).filter(t => t.type !== 'SELECCION').length;
+            });
+
+            const trajectory = Array.from(stintsMap.values()).slice(0, 12);
+            const trophyList = (careerState.trophies || []).slice(0, 25).map(t => ({
+                title: String(t.title || '').slice(0, 60),
+                teamName: String(t.teamName || '').slice(0, 45),
+                year: t.year || 1
+            }));
+            const awardList = (careerState.awards || []).slice(0, 15).map(a => ({
+                icon: a.icon || '⭐',
+                title: String(a.title || '').slice(0, 60),
+                year: a.year || 1
+            }));
+
+            try {
+                const entriesCol = collection(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard');
+                await addDoc(entriesCol, {
+                    uid: currentUser.uid,
+                    nickname: String(nickname).slice(0, 18),
+                    playerName: String(careerState.playerName).slice(0, 36),
+                    studiedCareer: String(careerState.studiedCareer || '').slice(0, 60),
+                    position: careerState.position,
+                    gender: careerState.gender,
+                    ovr: Math.min(104, Number(careerState.ovr) || 60),
+                    titles: (careerState.trophies || []).length,
+                    awards: (careerState.awards || []).length,
+                    headline: String(legacy.headline || '').slice(0, 60),
+                    teamCode: legacy.teamCode || careerState.teamCode,
+                    stats: {
+                        matches: careerState.stats?.matches || 0,
+                        goals: careerState.stats?.goals || 0,
+                        assists: careerState.stats?.assists || 0,
+                        cleanSheets: careerState.stats?.cleanSheets || 0
+                    },
+                    trajectory,
+                    trophyList,
+                    awardList,
+                    score: totalScore,
+                    weekId,
+                    createdAt: Date.now()
+                });
+
+                careerState.submittedToCloud = true;
+                careerState.lastSubmittedScore = totalScore;
+                saveCareerState();
+                renderApp();
+                showToast(`🌍 ¡Carrera publicada en el Top Global Semanal (${totalScore} pts)!`, 'success');
+            } catch (err) {
+                console.warn('Error al subir al ranking global:', err);
+            }
+        };
+
+        window.initCloudLeaderboard = async function () {
+            updateWeeklyHeaderUI();
+
+            if (!firebaseConfig || firebaseConfig.apiKey === 'TU_API_KEY') {
+                updateAuthUI(null);
+                const listEl = document.getElementById('global-hof-list');
+                if (listEl) {
+                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-400">Pega las credenciales de tu proyecto Firebase en <code>DEFAULT_FIREBASE_CONFIG</code> para activar las cuentas y el Top Global Semanal.</div>`;
+                }
+                return;
+            }
+
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else if (!auth.currentUser) {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, async (user) => {
+                    currentUser = user;
+                    if (user) {
+                        await loadUserCloudProfile(user.uid, user);
+                        subscribeWeeklyLeaderboard();
+                    } else {
+                        updateAuthUI(null);
+                    }
+                });
+            } catch (err) {
+                updateAuthUI(null);
+            }
+        };
     </script>
 </body>
 </html>
