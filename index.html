@@ -130,7 +130,7 @@
                             <span>✏️</span> Cambiar usuario
                         </button>
                         <div class="my-1 border-t border-[#262626]"></div>
-                        <button type="button" onclick="logoutCloudUser()"
+                        <button type="button" onclick="window.logoutCloudUser()"
                             class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-rose-400 hover:bg-rose-950/30 flex items-center gap-2 transition">
                             <span>🚪</span> Cerrar sesión
                         </button>
@@ -5189,6 +5189,20 @@
 
         window.initCloudLeaderboard = async function () {
             startWeeklyCountdownTimer();
+
+            window.logoutCloudUser = async function () {
+                if (auth) {
+                    try {
+                        await signOut(auth);
+                        showToast('Has cerrado sesión correctamente.', 'info');
+                    } catch (e) {
+                        showToast('Error al cerrar sesión.', 'error');
+                    }
+                }
+                const menu = document.getElementById('user-dropdown-menu');
+                if (menu) menu.classList.add('hidden');
+                updateAuthUI(null);
+            };
 
             if (!firebaseConfig || firebaseConfig.apiKey === 'TU_API_KEY') {
                 updateAuthUI(null);
