@@ -4278,6 +4278,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import {
             getAuth,
+            setPersistence,
+            browserLocalPersistence,
             signInAnonymously,
             signInWithCustomToken,
             onAuthStateChanged,
@@ -4286,10 +4288,11 @@
             signInWithEmailAndPassword,
             createUserWithEmailAndPassword,
             sendPasswordResetEmail,
+            updateProfile,
             signOut
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import {
-            getFirestore,
+            initializeFirestore,
             doc,
             getDoc,
             setDoc,
@@ -4377,27 +4380,41 @@
             if (guestBtns) guestBtns.classList.add('hidden');
             if (loggedMenu) loggedMenu.classList.remove('hidden');
 
-            const displayNick = window.cloudProfile.nickname || sanitizeAutoUsername(user.displayName || user.email?.split('@')[0] || 'Jugador');
+            const displayNick = window.cloudProfile.nickname || user.displayName || sanitizeAutoUsername(user.email?.split('@')[0] || 'Jugador');
+            window.cloudProfile.nickname = displayNick;
             if (usernameLabel) usernameLabel.textContent = `@${displayNick}`;
             if (profileHeading) profileHeading.textContent = `@${displayNick}`;
             if (profileEmail) profileEmail.textContent = user.email || 'Cuenta vinculada';
         }
 
+        function promiseWithTimeout(promise, ms = 4000) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject({ code: 'custom/timeout' }), ms))
+            ]);
+        }
+
         async function loadUserCloudProfile(uid, userObj = null) {
+            // Prioridad inmediata: displayName guardado en Auth (sin esperar red)
+            if (userObj && !userObj.isAnonymous && userObj.displayName) {
+                window.cloudProfile.nickname = userObj.displayName;
+                updateAuthUI(userObj);
+            }
+
             if (!db || !uid) return;
             try {
                 const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'main');
-                const snap = await getDoc(profileRef);
+                const snap = await promiseWithTimeout(getDoc(profileRef), 3500);
                 if (snap.exists() && snap.data().nickname) {
                     window.cloudProfile.nickname = snap.data().nickname;
                 } else if (userObj && !userObj.isAnonymous) {
-                    const generatedNick = sanitizeAutoUsername(userObj.displayName || userObj.email?.split('@')[0] || 'Jugador');
+                    const generatedNick = window.cloudProfile.nickname || sanitizeAutoUsername(userObj.displayName || userObj.email?.split('@')[0] || 'Jugador');
                     window.cloudProfile.nickname = generatedNick;
-                    await setDoc(profileRef, {
+                    promiseWithTimeout(setDoc(profileRef, {
                         nickname: generatedNick,
                         email: userObj.email || '',
                         createdAt: Date.now()
-                    }, { merge: true });
+                    }, { merge: true }), 3500).catch(() => {});
                 }
             } catch (e) {}
             updateAuthUI(currentUser);
@@ -4431,26 +4448,31 @@
             btn.textContent = 'Creando cuenta...';
 
             try {
-                const cred = await createUserWithEmailAndPassword(auth, email, pass1);
+                const cred = await promiseWithTimeout(createUserWithEmailAndPassword(auth, email, pass1), 8000);
                 currentUser = cred.user;
                 window.cloudProfile.nickname = userCheck.username;
 
+                // Guardar usuario en Auth y en Firestore en segundo plano para respuesta instantánea
+                updateProfile(currentUser, { displayName: userCheck.username }).catch(() => {});
                 const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
-                await setDoc(profileRef, {
+                setDoc(profileRef, {
                     nickname: userCheck.username,
                     email,
                     createdAt: Date.now()
-                }, { merge: true });
+                }, { merge: true }).catch(() => {});
 
                 updateAuthUI(currentUser);
                 closeAuthModal();
                 showToast(`🎉 ¡Bienvenido @${userCheck.username}! Ya participas en el Top Global.`, 'success');
             } catch (err) {
                 const code = err?.code || '';
-                if (code === 'auth/email-already-in-use') showToast('Ese correo ya está registrado.', 'error');
+                if (code === 'auth/email-already-in-use') showToast('Ese correo ya está registrado. Intenta iniciar sesión.', 'error');
                 else if (code === 'auth/weak-password') showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
                 else if (code === 'auth/invalid-email') showToast('Correo electrónico inválido.', 'error');
-                else showToast('No se pudo registrar la cuenta. Revisa tus datos.', 'error');
+                else if (code === 'auth/operation-not-allowed') showToast('Activa "Correo electrónico/contraseña" en Firebase Console → Authentication.', 'error');
+                else if (code === 'auth/unauthorized-domain') showToast('Agrega este dominio en Firebase Console → Authentication → Authorized domains.', 'error');
+                else if (code === 'custom/timeout' || code === 'auth/network-request-failed') showToast('Tiempo de espera agotado. Revisa tu conexión a internet.', 'error');
+                else showToast(`Error al crear cuenta (${code || 'desconocido'}).`, 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Crear cuenta y participar';
@@ -4469,13 +4491,22 @@
             btn.textContent = 'Iniciando sesión...';
 
             try {
-                const cred = await signInWithEmailAndPassword(auth, email, pass);
+                const cred = await promiseWithTimeout(signInWithEmailAndPassword(auth, email, pass), 8000);
                 currentUser = cred.user;
-                await loadUserCloudProfile(currentUser.uid, currentUser);
+                window.cloudProfile.nickname = currentUser.displayName || sanitizeAutoUsername(email.split('@')[0]);
+                updateAuthUI(currentUser);
                 closeAuthModal();
                 showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}`, 'success');
+
+                // Sincronizar perfil desde Firestore en segundo plano sin bloquear el cierre
+                loadUserCloudProfile(currentUser.uid, currentUser);
             } catch (err) {
-                showToast('Correo o contraseña incorrectos.', 'error');
+                const code = err?.code || '';
+                if (code === 'custom/timeout' || code === 'auth/network-request-failed') {
+                    showToast('Tiempo de espera agotado al conectar con Firebase.', 'error');
+                } else {
+                    showToast('Correo o contraseña incorrectos.', 'error');
+                }
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Entrar a mi cuenta';
@@ -4517,24 +4548,26 @@
             }
 
             window.cloudProfile.nickname = userCheck.username;
+            updateAuthUI(currentUser);
+
             try {
+                updateProfile(currentUser, { displayName: userCheck.username }).catch(() => {});
                 const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
-                await setDoc(profileRef, {
+                await promiseWithTimeout(setDoc(profileRef, {
                     nickname: userCheck.username,
                     updatedAt: Date.now()
-                }, { merge: true });
+                }, { merge: true }), 4000);
 
                 // Actualizar también el nombre de usuario en sus entradas del ranking
                 const userDocs = cachedAllLeaderboardDocs.filter(d => d.uid === currentUser.uid);
                 for (const item of userDocs) {
                     const entryRef = doc(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard', item.id);
-                    await updateDoc(entryRef, { nickname: userCheck.username }).catch(() => {});
+                    updateDoc(entryRef, { nickname: userCheck.username }).catch(() => {});
                 }
 
-                updateAuthUI(currentUser);
                 showToast(`✅ Usuario cambiado a @${userCheck.username}`, 'success');
             } catch (err) {
-                showToast('No se pudo actualizar el usuario.', 'error');
+                showToast('Usuario actualizado localmente (revisa las reglas de Firestore para sincronizar).', 'info');
             }
         };
 
@@ -4545,9 +4578,11 @@
                 const res = await signInWithPopup(auth, provider);
                 if (res && res.user) {
                     currentUser = res.user;
-                    await loadUserCloudProfile(currentUser.uid, currentUser);
+                    window.cloudProfile.nickname = currentUser.displayName || sanitizeAutoUsername(currentUser.email?.split('@')[0] || 'Jugador');
+                    updateAuthUI(currentUser);
                     closeAuthModal();
                     showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}`, 'success');
+                    loadUserCloudProfile(currentUser.uid, currentUser);
                 }
             } catch (err) {
                 showToast('No se pudo completar el inicio con Google.', 'error');
@@ -4888,7 +4923,7 @@
 
             try {
                 const entriesCol = collection(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard');
-                await addDoc(entriesCol, {
+                await promiseWithTimeout(addDoc(entriesCol, {
                     uid: currentUser.uid,
                     nickname: String(nickname).slice(0, 18),
                     playerName: String(careerState.playerName).slice(0, 36),
@@ -4912,7 +4947,7 @@
                     score: totalScore,
                     weekId,
                     createdAt: Date.now()
-                });
+                }), 6000);
 
                 careerState.submittedToCloud = true;
                 careerState.lastSubmittedScore = totalScore;
@@ -4920,7 +4955,12 @@
                 renderApp();
                 showToast(`🌍 ¡Carrera publicada en el Top Global Semanal (${totalScore} pts)!`, 'success');
             } catch (err) {
-                console.warn('Error al subir al ranking global:', err);
+                const code = err?.code || '';
+                if (code === 'permission-denied') {
+                    showToast('⚠️ Firebase rechazó guardar el puntaje: revisa las Reglas de Firestore Database.', 'error');
+                } else {
+                    showToast('⚠️ No se pudo conectar con Firestore para guardar tu puntaje semanal.', 'error');
+                }
             }
         };
 
@@ -4939,7 +4979,16 @@
             try {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
-                db = getFirestore(app);
+                // Mantener la sesión guardada en el navegador incluso al recargar o cerrar la pestaña
+                await setPersistence(auth, browserLocalPersistence).catch(() => {});
+
+                // Long polling evita bloqueos y demoras de WebSocket en Vercel/iframes
+                db = initializeFirestore(app, { experimentalForceLongPolling: true });
+
+                // Esperar a que Firebase restaure la sesión persistida antes de decidir si entrar como invitado
+                if (typeof auth.authStateReady === 'function') {
+                    await auth.authStateReady();
+                }
 
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -4950,8 +4999,9 @@
                 onAuthStateChanged(auth, async (user) => {
                     currentUser = user;
                     if (user) {
-                        await loadUserCloudProfile(user.uid, user);
+                        updateAuthUI(user);
                         subscribeWeeklyLeaderboard();
+                        loadUserCloudProfile(user.uid, user);
                     } else {
                         updateAuthUI(null);
                     }
