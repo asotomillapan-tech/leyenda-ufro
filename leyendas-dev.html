@@ -96,7 +96,7 @@
                     <h1 class="text-base sm:text-xl font-black tracking-wider text-white leading-none uppercase">
                         LEYENDAS
                     </h1>
-                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.3.0</span>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.2.1</span>
                 </div>
             </div>
 
@@ -841,9 +841,7 @@
             }
         ];
 
-        // 22 Eventos Exclusivos cubriendo más de la mitad de las carreras UFRO
         const CAREER_EXCLUSIVE_EVENTS = [
-            // 1. Pedagogía en Ed. Física
             {
                 id: 'efi_profe_vane',
                 type: 'CAREER_EXCLUSIVE',
@@ -858,7 +856,6 @@
                 win: { text: '¡La Profe Vane aprobó el presupuesto! Estrenan camisetas nuevas, subes +2 de Media y el equipo gana impulso esta temporada.', ovrDelta: 2, allowNegativeOvr: true, teamBoost: 4.5, suspend: false },
                 lose: { text: 'La Profe Vane te dijo que no hay fondos este semestre. El bajón anímico te pega en la cancha y pierdes -1 de Media.', ovrDelta: -1, allowNegativeOvr: true, suspend: false }
             },
-            // 2. Medicina
             {
                 id: 'med_turno_urgencias',
                 type: 'CAREER_EXCLUSIVE',
@@ -873,7 +870,6 @@
                 win: { text: '¡Adrenalina pura! Llegaste con delantal al camarín, entraste y fuiste figura absoluta. +3 de Media y envión al plantel.', ovrDelta: 3, teamBoost: 3.5, suspend: false },
                 lose: { text: 'El cansancio te pasó la cuenta: calambre al minuto 20 y bajas -1 de Media por fatiga extrema.', ovrDelta: -1, allowNegativeOvr: true, suspend: false }
             },
-            // 3. Enfermería
             {
                 id: 'enf_botiquin_cancha',
                 type: 'CAREER_EXCLUSIVE',
@@ -888,7 +884,6 @@
                 win: { text: '¡Atención impecable! El arquero atajó todo el partido, subes +2 de Media y el equipo gana solidez.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'Se mareó a los 10 minutos y tuvieron que hacer un cambio obligado.', ovrDelta: 0, suspend: false }
             },
-            // 4. Kinesiología
             {
                 id: 'kine_vendaje_pro',
                 type: 'CAREER_EXCLUSIVE',
@@ -903,7 +898,6 @@
                 win: { text: '¡El equipo vuela en el segundo tiempo! Nadie se acalambra, subes +2 de Media y el plantel recibe un gran impulso.', ovrDelta: 2, teamBoost: 5.0, suspend: false },
                 lose: { text: 'Un vendaje mal calibrado te dejó rígido en el calentamiento.', ovrDelta: 0, suspend: false }
             },
-            // 5. Nutrición y Dietética
             {
                 id: 'nut_plan_glucogeno',
                 type: 'CAREER_EXCLUSIVE',
@@ -918,7 +912,6 @@
                 win: { text: '¡Rendimiento físico de otro planeta! El equipo corrió hasta el descuento. +2 de Media y gran empuje.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'La mitad del equipo prefirió comerse un completo antes del partido.', ovrDelta: 0, suspend: false }
             },
-            // 6. Obstetricia y Puericultura
             {
                 id: 'obs_guardia_nocturna',
                 type: 'CAREER_EXCLUSIVE',
@@ -933,7 +926,6 @@
                 win: { text: '¡Garra total! Entraste con una energía contagiosa y fuiste figura. +2 de Media.', ovrDelta: 2, teamBoost: 4.0, suspend: false },
                 lose: { text: 'El desgaste de la guardia te pasó la cuenta en el segundo tiempo.', ovrDelta: -1, allowNegativeOvr: true, suspend: false }
             },
-            // 7. Tecnología Médica
             {
                 id: 'tec_analisis_biometrico',
                 type: 'CAREER_EXCLUSIVE',
@@ -948,7 +940,6 @@
                 win: { text: '¡Acierto diagnóstico! Los suplentes entraron frescos y ganaron el partido. +2 de Media.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'El DT no quiso mover la oncena titular y se notó el cansancio.', ovrDelta: 0, suspend: false }
             },
-            // 8. Ingeniería Civil Industrial
             {
                 id: 'ind_logistica_campeonato',
                 type: 'CAREER_EXCLUSIVE',
@@ -963,7 +954,6 @@
                 win: { text: '¡Eficiencia total! Plantel completo en cada fecha, +2 de Media y gran impulso competitivo.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'Un cambio de horario de última hora en el D1 desordenó la planificación.', ovrDelta: 0, suspend: false }
             },
-            // 9. Ingeniería Civil Informática
             {
                 id: 'inf_scouting_algoritmo',
                 type: 'CAREER_EXCLUSIVE',
@@ -978,7 +968,6 @@
                 win: { text: '¡El algoritmo acertó todo! Neutralizaron al goleador rival y subes +2 de Media.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'El rival cambió de formación a última hora y el modelo quedó desactualizado.', ovrDelta: 0, suspend: false }
             },
-            // 10. Ingeniería Civil Mecánica
             {
                 id: 'mec_potencia_maquina',
                 type: 'CAREER_EXCLUSIVE',
@@ -993,7 +982,6 @@
                 win: { text: '¡Golazo de laboratorio! La jugada preparada salió perfecta y subes +2 de Media.', ovrDelta: 2, teamBoost: 4.0, suspend: false },
                 lose: { text: 'La barrera rival leyó el movimiento y despejó el balón.', ovrDelta: 0, suspend: false }
             },
-            // 11. Ingeniería Civil Eléctrica / Electrónica / Telemática
             {
                 id: 'ele_alta_tension',
                 type: 'CAREER_EXCLUSIVE',
@@ -1008,7 +996,6 @@
                 win: { text: '¡Equipo enchufadísimo! Transiciones eléctricas que desbordaron al rival. +2 de Media.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'Se cortó la luz de una torre y tuvieron que suspender la práctica.', ovrDelta: 0, suspend: false }
             },
-            // 12. Ingeniería en Construcción
             {
                 id: 'con_muralla_defensiva',
                 type: 'CAREER_EXCLUSIVE',
@@ -1023,7 +1010,6 @@
                 win: { text: '¡Muralla de hormigón! Arco en cero, victoria clave y +2 de Media.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'Un rebote fortuito rompió el cerrojo en los últimos minutos.', ovrDelta: 0, suspend: false }
             },
-            // 13. Química y Farmacia / Bioquímica
             {
                 id: 'qfa_formula_isotonica',
                 type: 'CAREER_EXCLUSIVE',
@@ -1038,7 +1024,6 @@
                 win: { text: '¡El equipo no bajó el ritmo en los 90 minutos! +2 de Media y gran impulso.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'El sabor quedó demasiado ácido y nadie quiso tomarla en el entretiempo.', ovrDelta: 0, suspend: false }
             },
-            // 14. Derecho
             {
                 id: 'der_apelacion_tribunal',
                 type: 'CAREER_EXCLUSIVE',
@@ -1053,7 +1038,6 @@
                 win: { text: '¡Fallo a favor! Habilitaron al capitán 10 minutos antes del pitazo inicial. +2 de Media y moral por las nubes.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'La mesa rechazó el escrito por presentarse fuera de plazo.', ovrDelta: 0, suspend: false }
             },
-            // 15. Ingeniería Comercial
             {
                 id: 'ico_auspicio_startup',
                 type: 'CAREER_EXCLUSIVE',
@@ -1068,7 +1052,6 @@
                 win: { text: '¡Acuerdo histórico! El plantel juega motivadísimo por los premios, subes +2 de Media y el equipo gana potencia.', ovrDelta: 2, teamBoost: 4.0, suspend: false },
                 lose: { text: 'La marca se bajó a última hora por exigir exclusividad de indumentaria.', ovrDelta: 0, suspend: false }
             },
-            // 16. Contador Público y Auditor
             {
                 id: 'aud_presupuesto_cuotas',
                 type: 'CAREER_EXCLUSIVE',
@@ -1083,7 +1066,6 @@
                 win: { text: '¡Gestión brillante! El equipo llegó motivadísimo y ganó el partido clave. +2 de Media.', ovrDelta: 2, teamBoost: 4.0, suspend: false },
                 lose: { text: 'Subieron las tarifas de arriendo de cancha y hubo que ajustar el presupuesto.', ovrDelta: 0, suspend: false }
             },
-            // 17. Psicología
             {
                 id: 'psi_charla_mental',
                 type: 'CAREER_EXCLUSIVE',
@@ -1098,7 +1080,6 @@
                 win: { text: '¡Química total! El equipo jugó con una confianza imparable, subes +2 de Media y el plantel rinde al máximo.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'Salieron a relucir viejas discusiones de camarín y costó conectar en el primer tiempo.', ovrDelta: 0, suspend: false }
             },
-            // 18. Trabajo Social y Sociología
             {
                 id: 'tso_barra_facultad',
                 type: 'CAREER_EXCLUSIVE',
@@ -1113,7 +1094,6 @@
                 win: { text: '¡Ambiente de final! El rival sintió la presión desde el minuto 1 y ustedes volaron. +2 de Media.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'La lluvia torrencial de Temuco dispersó a la barra en el entretiempo.', ovrDelta: 0, suspend: false }
             },
-            // 19. Periodismo
             {
                 id: 'per_transmision_vivo',
                 type: 'CAREER_EXCLUSIVE',
@@ -1128,7 +1108,6 @@
                 win: { text: '¡Cumpliste tu palabra en la cancha! Partidazo viral, subes +2 de Media y la hinchada llenó el borde de la cancha.', ovrDelta: 2, teamBoost: 4.0, suspend: false },
                 lose: { text: 'El rival usó tus declaraciones como motivación extra y salió con todo desde el minuto 1.', ovrDelta: 0, suspend: false }
             },
-            // 20. Pedagogías (Historia, Castellano, Inglés, Matemática, Ciencias)
             {
                 id: 'ped_pizarra_maestra',
                 type: 'CAREER_EXCLUSIVE',
@@ -1143,7 +1122,6 @@
                 win: { text: '¡Lección magistral! Dieron vuelta el partido en el complemento y subes +2 de Media.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'El cambio de esquema confundió a los volantes durante los primeros minutos.', ovrDelta: 0, suspend: false }
             },
-            // 21. Agronomía / Recursos Naturales / Biotecnología
             {
                 id: 'agro_cancha_maquehue',
                 type: 'CAREER_EXCLUSIVE',
@@ -1158,7 +1136,6 @@
                 win: { text: '¡Dominio total en cancha pesada! Mientras los rivales resbalaban, ustedes volaban. +2 de Media y gran impulso.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
                 lose: { text: 'Un resfrío post-lluvia te dejó a media máquina toda la semana.', ovrDelta: 0, suspend: false }
             },
-            // 22. Odontología
             {
                 id: 'odo_protector_bucal',
                 type: 'CAREER_EXCLUSIVE',
@@ -1453,7 +1430,7 @@
             const idxFaculty = headers.findIndex(h => h.includes('facultad') || h === 'faculty');
             const idxDiv = headers.findIndex(h => h.includes('division') || h === 'div');
             const idxOvr = headers.findIndex(h => h.includes('media') || h === 'ovr');
-            const idxAch = headers.findIndex(h => h.includes('logro') || h.includes('titulo'));
+            const idxAch = headers.findIndex(h => h.includes('logro') || h === 'titulo');
             const idxDur = headers.findIndex(h =>
                 h.includes('semestre') || h.includes('duracion') || h.includes('anos') || h.includes('años') || h === 'years'
             );
@@ -2144,12 +2121,11 @@
                 isProdigy,
                 baseYears,
                 maxYears: baseYears,
-                // Etapas de estudio: PREGRADO -> MAGISTER -> DOCTORADO
                 academicStage: 'PREGRADO',
                 magisterOffered: false,
                 doctorateOffered: false,
                 failedCoursesCount: 0,
-                hiddenGpa: 5.5, // Promedio interno oculto (escala chilena 1.0 a 7.0)
+                hiddenGpa: 5.5,
                 semesterFocus: null,
                 pendingKeyMatch: null,
                 keyMatchBonus: 0,
@@ -2245,7 +2221,6 @@
                 return;
             }
 
-            // En semestres clave (sobre todo 2° semestre o desde 2° año en adelante) permite elegir foco del semestre
             const shouldAskFocus = !(careerState.currentSemester === 2 && careerState.trainingOnlyS2)
                 && (careerState.currentSemester === 2 || careerState.currentYear >= 2 || Math.random() < 0.55);
 
@@ -2273,7 +2248,6 @@
         function proceedAfterFocusSelection(focusKey) {
             careerState.keyMatchBonus = 0;
 
-            // Probabilidad de Evento Contextual / Carrera / Académico (si las notas están críticas, aumenta chance de alerta académica)
             const gpa = careerState.hiddenGpa ?? 5.5;
             const academicRiskHigh = gpa < 4.55;
             const eventChance = academicRiskHigh ? 0.78 : 0.65;
@@ -2293,12 +2267,10 @@
 
         function updateHiddenGpa(delta) {
             const current = typeof careerState.hiddenGpa === 'number' ? careerState.hiddenGpa : 5.5;
-            // Leve presión natural de los ramos más difíciles desde 4° año y en 2° semestre
             const difficultyDrag = (careerState.currentYear >= 4 ? -0.06 : 0) + (careerState.currentSemester === 2 ? -0.05 : 0);
             careerState.hiddenGpa = Math.min(6.9, Math.max(3.2, Number((current + delta + difficultyDrag).toFixed(2))));
         }
 
-        // Decisiones en partidos clave (Último partido fase de grupos S1 o Penal decisivo / Final S2)
         function maybeTriggerKeyMatchDecision() {
             if (careerState.currentSemester === 2 && careerState.trainingOnlyS2) return false;
             if (Math.random() > 0.42) return false;
@@ -2411,7 +2383,6 @@
             const fails = careerState.failedCoursesCount || 0;
 
             if (careerState.academicStage === 'PREGRADO') {
-                // Reprobar 2 o más asignaturas vuelve muchísimo menos probable conseguir beca de Magíster
                 let prob = 0;
                 if (gpa >= 5.8) prob = 0.78;
                 else if (gpa >= 5.3) prob = 0.45;
@@ -2425,7 +2396,6 @@
             }
 
             if (careerState.academicStage === 'MAGISTER') {
-                // Doctorado: probabilidad bastante baja y exige excelentes notas tras concluir el Magíster
                 let prob = 0;
                 if (gpa >= 6.2) prob = 0.28;
                 else if (gpa >= 5.8) prob = 0.12;
@@ -2486,7 +2456,6 @@
             const gpa = careerState.hiddenGpa ?? 5.5;
             const currentAcademicDelays = careerState.academicDelayYears || 0;
 
-            // 1. Reprobar deja de ser puramente aleatorio: ocurre como consecuencia de notas bajas / descuidar estudios
             if (focusKey !== 'ESTUDIOS' && currentAcademicDelays < 2 && gpa < 4.75) {
                 const failChance = gpa < 4.0 ? 0.72 : gpa < 4.35 ? 0.45 : 0.24;
                 if (Math.random() < failChance) {
@@ -2494,7 +2463,6 @@
                     careerState.academicDelayYears = currentAcademicDelays + failEv.extraYears;
                     careerState.failedCoursesCount = (careerState.failedCoursesCount || 0) + 1;
                     careerState.maxYears += failEv.extraYears;
-                    // Al repetir el ramo subes ligeramente el piso académico para no entrar en bucle infinito
                     careerState.hiddenGpa = Math.min(5.3, gpa + 0.45);
                     return { ...failEv };
                 }
@@ -2502,7 +2470,6 @@
 
             const roll = Math.random();
 
-            // 2. Eventos exclusivos por carrera (ahora con cobertura ampliada)
             const matchingCareerEvents = CAREER_EXCLUSIVE_EVENTS.filter(ev => {
                 const matchesCareer = ev.careerMatch.some(kw => studiedLower.includes(kw));
                 const matchesSem = !ev.semesterOnly || ev.semesterOnly === careerState.currentSemester;
@@ -2517,7 +2484,6 @@
                 return { ...chosen };
             }
 
-            // 3. Lesiones deportivas
             if (roll >= 0.38 && roll < 0.50) {
                 const isAnnual = careerState.currentSemester === 1 && Math.random() < 0.32;
                 const injuryEv = isAnnual ? GLOBAL_SUDDEN_EVENTS[2] : GLOBAL_SUDDEN_EVENTS[1];
@@ -2534,7 +2500,6 @@
                 return { ...injuryEv };
             }
 
-            // 4. Regreso triunfal a ex-club
             if (pastCodes.length > 0 && roll >= 0.50 && roll < 0.65) {
                 const prevCode = pastCodes[Math.floor(Math.random() * pastCodes.length)];
                 const prevTeam = findTeamByCode(prevCode);
@@ -2551,7 +2516,6 @@
                 }
             }
 
-            // 5. Llamada con incentivo económico desde Ingeniería Comercial
             if (icoTeams.length > 0 && !currentTeam.career.toLowerCase().includes('comercial') && roll >= 0.65 && roll < 0.80) {
                 const targetIco = icoTeams[Math.floor(Math.random() * icoTeams.length)];
                 return {
@@ -2714,7 +2678,6 @@
                 };
             }
 
-            // Resumen al finalizar el 2° Semestre
             const sameDiv = Number(rivalTeam.division) === Number(playerTeam.division) && !isFemale;
             const rivalScore = rivalTeam.ovr + (Math.random() * 16 - 8);
             let outcome = '';
@@ -2783,7 +2746,6 @@
                 ? 0
                 : Math.max(2, Math.round(totalTeamMatches * playedRatio));
 
-            // Jugar muchos partidos sin estudiar desgasta ligeramente las notas
             if (!isSuspended && !isTrainingOnlyS2 && playedRatio >= 0.85 && focusKey !== 'ESTUDIOS') {
                 updateHiddenGpa(-0.14);
             }
@@ -2818,40 +2780,29 @@
                     ? 'BAJA'
                     : Number(Math.min(9.8, Math.max(5.8, rawRating)).toFixed(1));
 
-            // =================================================================
-            // CURVA DE PROGRESIÓN REALISTA (REQUERIMIENTO 1 Y 2):
-            // - Años 1 a 4 (18-21 años): crecimiento fuerte y acelerado
-            // - Año 5+ (22+ años): asignaturas difíciles y menos tiempo -> ligero decrecimiento
-            // - Segundos semestres: riesgo de bajón por sobrecarga académica
-            // - Llegar a 100 OVR (🐐) es exigente y requiere focos/rendimiento alto
-            // =================================================================
             let ovrDelta = 0;
             if (isSuspended) {
                 ovrDelta = 0;
             } else if (isTrainingOnlyS2) {
                 ovrDelta = year <= 4 ? (careerState.isProdigy ? 3 : 2) : 1;
             } else if (year <= 4) {
-                // Etapa de crecimiento fuerte (primeros 4 años)
                 let baseGrowth = careerState.isProdigy ? 4 : 3;
                 if (Number(avgRating) >= 8.0) baseGrowth += 1;
-                if (careerState.ovr >= 88) baseGrowth -= 1; // Más difícil subir cerca de la élite
+                if (careerState.ovr >= 88) baseGrowth -= 1;
                 if (careerState.ovr >= 95) baseGrowth = Math.max(1, baseGrowth - 1);
                 ovrDelta = baseGrowth;
             } else {
-                // Desde 5° año en adelante: ramos duros y menos tiempo libre -> ligero decrecimiento natural
                 let lateChange = Number(avgRating) >= 8.3 ? 0 : -1;
                 if (focusObj && focusObj.preventDecline && lateChange < 0) {
-                    lateChange = 0; // Foco Físico o Descanso evita el bajón de edad
+                    lateChange = 0;
                 }
                 ovrDelta = lateChange;
             }
 
-            // Efecto del foco elegido en el semestre
             if (focusObj && !isSuspended) {
                 ovrDelta += focusObj.ovrBonus;
             }
 
-            // Posibilidad de bajón de rendimiento por sobrecarga académica (especialmente en 2° semestre)
             let academicOverloadSlump = false;
             if (!isSuspended && focusKey !== 'ESTUDIOS' && focusKey !== 'DESCANSO') {
                 const overloadProb = sem === 2 ? (year >= 4 ? 0.34 : 0.22) : 0.08;
@@ -2862,7 +2813,6 @@
                 }
             }
 
-            // Frenado progresivo al acercarse al tope de 100 OVR para que 🐐 sea un logro difícil
             if (careerState.ovr >= 96 && ovrDelta > 1) {
                 ovrDelta = 1;
             }
@@ -3854,7 +3804,6 @@
             } else if (careerState.phase === 'EXTENSION_CHOICE') {
                 const hasMagisterOffer = Boolean(careerState.magisterOffered);
                 const hasDoctorateOffer = Boolean(careerState.doctorateOffered);
-                const hasAnyPostgrad = hasMagisterOffer || hasDoctorateOffer;
 
                 let stageHeading = `🎓 Completaste tu carrera de ${escapeHtml(careerState.studiedCareer)} (${careerState.maxYears} años)`;
                 if (careerState.academicStage === 'MAGISTER') {
@@ -4129,16 +4078,14 @@
                         <div class="flex items-center gap-3">
                             ${getTeamBadgeHTML(stTeam, 'w-10 h-10', 'text-[10px]')}
                             <div>
-                                <div class="font-black text-white text-sm">${escapeHtml(st.teamName)} <span class="text-xs font-normal text-gray-400">(${escapeHtml(st.careerName)})</span></div>
-                                <div class="text-gray-400 mt-0.5">
-                                    ${st.startLabel === st.endLabel ? st.startLabel : `${st.startLabel} → ${st.endLabel}`} · ${st.semesters} sem. · ${st.matches} PJ · ${careerState.position === 'ARQ' ? `${st.cleanSheets} VI` : `${st.goals}G / ${st.assists}A`}
-                                </div>
+                                <div class="font-extrabold text-white text-sm">${escapeHtml(st.teamName)} <span class="text-xs font-normal text-gray-400">(${escapeHtml(st.careerName)})</span></div>
+                                <div class="text-gray-400 mt-0.5">${st.startLabel} → ${st.endLabel} (${st.semesters} sem.) · ${st.matches} PJ · ${careerState.position === 'ARQ' ? `${st.cleanSheets} VI` : `${st.goals}G / ${st.assists}A`}</div>
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-1">
-                            ${st.trophies.length > 0
-                                ? st.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[11px]">🏆 ${escapeHtml(t.title)}</span>`).join('')
-                                : `<span class="text-gray-500">Sin títulos de club</span>`
+                            ${st.trophies.length === 0
+                                ? `<span class="text-[11px] text-gray-500">Sin títulos</span>`
+                                : st.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[11px]">🏆 ${escapeHtml(t.title)}</span>`).join('')
                             }
                         </div>
                     </div>
@@ -4146,12 +4093,12 @@
             }).join('');
 
             document.getElementById('full-career-semesters-list').innerHTML = orderedSemesters.map(s => `
-                <div class="p-2.5 rounded-xl surface-sub flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="p-3 rounded-xl surface-sub flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div>
-                        <strong class="text-[#8b96ff]">A${s.year} S${s.sem}</strong> · <strong class="text-white">${escapeHtml(s.teamName)}</strong> (${getDivisionLabel(s.divisionPlayed, careerState.gender)})
+                        <span class="font-bold text-[#8b96ff]">A${s.year} S${s.sem}</span> · <strong class="text-white">${escapeHtml(s.teamName)}</strong> (${getDivisionLabel(s.divisionPlayed, careerState.gender)})
                     </div>
-                    <div class="text-gray-400">
-                        OVR ${formatOvr(s.ovrAfter)} · ${s.matches} PJ · ${careerState.position === 'ARQ' ? `${s.cleanSheets} VI` : `${s.goals}G/${s.assists}A`} · ${s.leagueSummaryText}
+                    <div class="text-gray-300">
+                        OVR ${formatOvr(s.ovrAfter)} · ${s.matches} PJ · ${careerState.position === 'ARQ' ? `${s.cleanSheets} VI` : `${s.goals}G ${s.assists}A`} · ${s.leagueSummaryText}
                     </div>
                 </div>
             `).join('');
@@ -4159,44 +4106,42 @@
 
         function toggleFullCareerHistory() {
             showFullHistoryFlag = !showFullHistoryFlag;
-            const details = document.getElementById('full-career-details');
+            const box = document.getElementById('full-career-details');
             const btn = document.getElementById('btn-toggle-full-career');
-            if (showFullHistoryFlag) {
-                details.classList.remove('hidden');
-                btn.textContent = 'Ocultar detalle por semestre ↑';
-            } else {
-                details.classList.add('hidden');
-                btn.textContent = 'Ver detalle por semestre ↓';
-            }
+            box.classList.toggle('hidden', !showFullHistoryFlag);
+            btn.textContent = showFullHistoryFlag ? 'Ocultar detalle por semestre ↑' : 'Ver detalle por semestre ↓';
         }
 
-        function calculateLegendScore(c) {
-            const titlesPts = (c.trophies || []).reduce((acc, t) => {
-                if (t.type === 'INTERFACULTADES' || t.type === 'SELECCION') return acc + 22;
-                if (t.type === 'LEAGUE') return acc + 16;
-                return acc + 10;
-            }, 0);
-            const awardsPts = (c.awards || []).length * 14;
-            const goalsPts = (c.stats?.goals || 0) * 1.4 + (c.stats?.assists || 0) * 1.1 + (c.stats?.cleanSheets || 0) * 1.6;
-            const ovrPts = (c.ovr || 60) * 2.2;
-            const degreeBonus = c.academicStage === 'DOCTORADO' ? 35 : c.academicStage === 'MAGISTER' ? 18 : 0;
-            return Math.round(titlesPts + awardsPts + goalsPts + ovrPts + degreeBonus);
+        function calculateLegacyScore(st) {
+            return (st.trophies.length * 100)
+                + ((st.awards || []).length * 60)
+                + (st.ovr * 10)
+                + (st.stats.goals * 2)
+                + (st.stats.assists * 2)
+                + (st.stats.cleanSheets * 3)
+                + ((st.ufroCitations || []).length * 15);
         }
 
         function inductHallOfFame() {
             if (!careerState) return;
             const legacy = computeCreativeLegacyBanner();
-            const score = calculateLegendScore(careerState);
+            const score = calculateLegacyScore(careerState);
             careerState.lastSubmittedScore = score;
             const entry = {
-                id: `${Date.now()}`,
+                id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
                 playerName: careerState.playerName,
                 gender: careerState.gender,
                 position: careerState.position,
                 studiedCareer: careerState.studiedCareer,
                 ovr: careerState.ovr,
-                titlesCount: (careerState.trophies || []).length,
+                titlesCount: careerState.trophies.length,
+                awardsCount: (careerState.awards || []).length,
+                goals: careerState.stats.goals,
+                assists: careerState.stats.assists,
+                cleanSheets: careerState.stats.cleanSheets,
+                matches: careerState.stats.matches,
                 headline: legacy.headline,
+                badge: legacy.badge,
                 teamCode: legacy.teamCode || careerState.teamCode,
                 score
             };
@@ -4204,6 +4149,7 @@
             let list = [];
             try {
                 list = JSON.parse(localStorage.getItem(STORAGE_KEYS.HOF) || '[]');
+                if (!Array.isArray(list)) list = [];
             } catch (e) { list = []; }
 
             list.push(entry);
@@ -4211,42 +4157,43 @@
             const top5 = list.slice(0, 5);
             localStorage.setItem(STORAGE_KEYS.HOF, JSON.stringify(top5));
 
-            const rank = top5.findIndex(x => x.id === entry.id);
-            careerState.hofRank = rank !== -1 ? rank + 1 : null;
+            const rankIdx = top5.findIndex(item => item.id === entry.id);
+            careerState.hofRank = rankIdx !== -1 ? rankIdx + 1 : null;
 
             if (window.submitCareerToCloudLeaderboard) {
-                window.submitCareerToCloudLeaderboard(careerState, legacy, score);
+                window.submitCareerToCloudLeaderboard(careerState, entry);
             }
         }
 
         function renderHallOfFame() {
-            const listEl = document.getElementById('hof-list');
-            if (!listEl) return;
+            const container = document.getElementById('hof-list');
+            if (!container) return;
             let list = [];
             try {
                 list = JSON.parse(localStorage.getItem(STORAGE_KEYS.HOF) || '[]');
             } catch (e) { list = []; }
 
-            if (list.length === 0) {
-                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Aún no hay leyendas tituladas. Completa una carrera para inaugurar el Salón de la Fama.</div>`;
+            if (!list || list.length === 0) {
+                container.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Aún no hay leyendas tituladas. ¡Completa tu primera carrera para entrar al Top 5!</div>`;
                 return;
             }
 
-            listEl.innerHTML = list.map((item, idx) => {
-                const hofTeam = findTeamByCode(item.teamCode, item.gender);
+            const medals = ['🥇', '🥈', '🥉', '4°', '5°'];
+            container.innerHTML = list.map((item, idx) => {
+                const hTeam = findTeamByCode(item.teamCode, item.gender);
                 return `
-                    <div class="p-3.5 rounded-2xl surface-sub flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3">
-                            <span class="w-6 text-center font-black text-sm ${idx === 0 ? 'text-amber-400' : 'text-gray-400'}">#${idx + 1}</span>
-                            ${hofTeam ? getTeamBadgeHTML(hofTeam, 'w-10 h-10', 'text-[10px]') : ''}
-                            <div>
-                                <div class="font-black text-white text-sm">${escapeHtml(item.playerName)} <span class="text-[11px] font-bold text-[#8b96ff]">(${item.position})</span></div>
-                                <div class="text-[11px] text-gray-400">${escapeHtml(item.headline)}</div>
+                    <div class="p-3.5 rounded-2xl surface-sub flex items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <span class="w-6 text-center font-black text-sm shrink-0">${medals[idx] || `#${idx + 1}`}</span>
+                            ${getTeamBadgeHTML(hTeam, 'w-9 h-9', 'text-[9px]')}
+                            <div class="min-w-0">
+                                <div class="font-black text-white text-sm truncate">${escapeHtml(item.playerName)} <span class="text-[11px] font-bold text-[#8b96ff]">(${item.position} · ${formatOvr(item.ovr)})</span></div>
+                                <div class="text-gray-400 truncate">${escapeHtml(item.headline)} · ${escapeHtml(item.studiedCareer)}</div>
                             </div>
                         </div>
                         <div class="text-right shrink-0">
-                            <div class="text-xs font-black text-[#a3adff]">${item.score} pts</div>
-                            <div class="text-[11px] font-bold text-gray-400">🏆 ${item.titlesCount} · OVR ${formatOvr(item.ovr)}</div>
+                            <div class="font-black text-amber-300">🏆 ${item.titlesCount}</div>
+                            <div class="text-[11px] text-gray-500">${item.position === 'ARQ' ? `${item.cleanSheets} VI` : `${item.goals}G ${item.assists}A`}</div>
                         </div>
                     </div>
                 `;
@@ -4254,34 +4201,20 @@
         }
 
         // =========================================================================
-        // 14. TARJETA FINAL PARA COMPARTIR EN HISTORIAS (1080x1920 PNG)
+        // 14. TARJETA FINAL PARA INSTAGRAM STORIES (1080x1920 PNG)
         // =========================================================================
         function openSummaryCardModal() {
             if (!careerState || careerState.phase !== 'RETIRED') return;
             const modal = document.getElementById('summary-card-modal');
             modal.classList.remove('hidden');
-            renderSummaryPosterCanvas();
+            drawSummaryPoster();
         }
 
         function closeSummaryCardModal() {
             document.getElementById('summary-card-modal').classList.add('hidden');
         }
 
-        function downloadSummaryCardPNG() {
-            const canvas = document.getElementById('summary-poster-canvas');
-            if (!canvas) return;
-            const safeName = (careerState?.playerName || 'leyenda_ufro')
-                .toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^a-z0-9]+/g, '_');
-            const link = document.createElement('a');
-            link.download = `leyendas_${safeName}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            showToast('📸 Tarjeta Final descargada en formato Historia (1080×1920).', 'success');
-        }
-
-        function drawRoundRectPath(ctx, x, y, w, h, r) {
+        function roundRectPath(ctx, x, y, w, h, r) {
             const radius = Math.min(r, w / 2, h / 2);
             ctx.beginPath();
             ctx.moveTo(x + radius, y);
@@ -4292,36 +4225,38 @@
             ctx.closePath();
         }
 
-        function wrapCanvasText(ctx, text, maxWidth) {
+        function wrapCanvasLines(ctx, text, maxWidth, maxLines = 2) {
             const words = String(text || '').split(' ');
             const lines = [];
             let current = '';
             for (const word of words) {
                 const test = current ? `${current} ${word}` : word;
-                if (ctx.measureText(test).width > maxWidth && current) {
-                    lines.push(current);
-                    current = word;
-                } else {
+                if (ctx.measureText(test).width <= maxWidth) {
                     current = test;
+                } else {
+                    if (current) lines.push(current);
+                    current = word;
+                    if (lines.length >= maxLines) break;
                 }
             }
-            if (current) lines.push(current);
+            if (current && lines.length < maxLines) lines.push(current);
             return lines;
         }
 
-        function loadPosterImage(url) {
+        async function loadPosterImage(url) {
+            const cleanUrl = normalizeLogoUrl(url);
+            if (!cleanUrl) return null;
             return new Promise(resolve => {
-                const cleanUrl = normalizeLogoUrl(url);
-                if (!cleanUrl) return resolve(null);
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
-                img.onload = () => resolve(img);
-                img.onerror = () => resolve(null);
+                const timer = setTimeout(() => resolve(null), 2500);
+                img.onload = () => { clearTimeout(timer); resolve(img); };
+                img.onerror = () => { clearTimeout(timer); resolve(null); };
                 img.src = cleanUrl;
             });
         }
 
-        async function renderSummaryPosterCanvas() {
+        async function drawSummaryPoster() {
             const canvas = document.getElementById('summary-poster-canvas');
             if (!canvas || !careerState) return;
             const ctx = canvas.getContext('2d');
@@ -4329,114 +4264,66 @@
             const H = 1920;
 
             const legacy = computeCreativeLegacyBanner();
-            const legacyTeam = findTeamByCode(legacy.teamCode || careerState.teamCode) || findTeamByCode(careerState.teamCode);
+            const mainTeam = findTeamByCode(legacy.teamCode || careerState.teamCode);
             const trophies = careerState.trophies || [];
             const awards = careerState.awards || [];
-            const isGoat = careerState.ovr >= OVR_HARD_CAP;
             const isArq = careerState.position === 'ARQ';
 
-            ctx.clearRect(0, 0, W, H);
             const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-            bgGrad.addColorStop(0, '#121216');
-            bgGrad.addColorStop(0.5, '#171824');
-            bgGrad.addColorStop(1, '#101013');
+            bgGrad.addColorStop(0, '#101014');
+            bgGrad.addColorStop(0.5, '#15151a');
+            bgGrad.addColorStop(1, '#0e0e12');
             ctx.fillStyle = bgGrad;
             ctx.fillRect(0, 0, W, H);
 
-            const radialTop = ctx.createRadialGradient(540, 260, 40, 540, 260, 620);
-            radialTop.addColorStop(0, isGoat ? 'rgba(245, 158, 11, 0.24)' : 'rgba(113, 127, 255, 0.28)');
-            radialTop.addColorStop(1, 'rgba(18, 18, 22, 0)');
-            ctx.fillStyle = radialTop;
+            const glowTop = ctx.createRadialGradient(W * 0.5, 220, 40, W * 0.5, 220, 620);
+            glowTop.addColorStop(0, 'rgba(113, 127, 255, 0.28)');
+            glowTop.addColorStop(1, 'rgba(113, 127, 255, 0)');
+            ctx.fillStyle = glowTop;
             ctx.fillRect(0, 0, W, 900);
 
-            drawRoundRectPath(ctx, 36, 36, W - 72, H - 72, 48);
-            ctx.strokeStyle = isGoat ? 'rgba(251, 191, 36, 0.35)' : 'rgba(113, 127, 255, 0.32)';
+            const glowBot = ctx.createRadialGradient(W * 0.5, H - 200, 30, W * 0.5, H - 200, 560);
+            glowBot.addColorStop(0, 'rgba(113, 127, 255, 0.18)');
+            glowBot.addColorStop(1, 'rgba(113, 127, 255, 0)');
+            ctx.fillStyle = glowBot;
+            ctx.fillRect(0, H - 800, W, 800);
+
+            roundRectPath(ctx, 44, 44, W - 88, H - 88, 56);
+            ctx.strokeStyle = 'rgba(113, 127, 255, 0.32)';
             ctx.lineWidth = 3;
             ctx.stroke();
 
             ctx.save();
-            ctx.translate(425, 86);
-            ctx.scale(0.27, 0.27);
+            ctx.translate(W / 2 - 42, 92);
+            ctx.scale(0.42, 0.42);
             const logoPath = new Path2D('M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z');
             ctx.fillStyle = '#717fff';
             ctx.fill(logoPath);
             ctx.restore();
 
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '900 40px Inter, sans-serif';
-            ctx.textAlign = 'left';
-            ctx.fillText('LEYENDAS', 494, 127);
-
-            const badgeText = legacy.badge.toUpperCase();
-            ctx.font = '800 24px Inter, sans-serif';
-            const badgeW = ctx.measureText(badgeText).width + 64;
-            drawRoundRectPath(ctx, (W - badgeW) / 2, 182, badgeW, 52, 26);
-            ctx.fillStyle = isGoat ? 'rgba(245, 158, 11, 0.18)' : 'rgba(113, 127, 255, 0.18)';
-            ctx.fill();
-            ctx.strokeStyle = isGoat ? 'rgba(251, 191, 36, 0.45)' : 'rgba(113, 127, 255, 0.45)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.fillStyle = isGoat ? '#fcd34d' : '#a3adff';
             ctx.textAlign = 'center';
-            ctx.fillText(badgeText, W / 2, 216);
-
-            const clubImg = legacyTeam ? await loadPosterImage(legacyTeam.logo) : null;
-            const crestSize = 180;
-            const crestX = (W - crestSize) / 2;
-            const crestY = 272;
-            drawRoundRectPath(ctx, crestX, crestY, crestSize, crestSize, 42);
-            const crestColor = (legacyTeam && legacyTeam.color) || '#717fff';
-            const crestGrad = ctx.createLinearGradient(crestX, crestY, crestX + crestSize, crestY + crestSize);
-            crestGrad.addColorStop(0, crestColor);
-            crestGrad.addColorStop(1, '#18181f');
-            ctx.fillStyle = crestGrad;
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            if (clubImg) {
-                ctx.save();
-                drawRoundRectPath(ctx, crestX + 14, crestY + 14, crestSize - 28, crestSize - 28, 30);
-                ctx.clip();
-                ctx.drawImage(clubImg, crestX + 14, crestY + 14, crestSize - 28, crestSize - 28);
-                ctx.restore();
-            } else {
-                const initials = ((legacyTeam?.name || 'UFRO').replace(/[^A-Za-zÁÉÍÓÚÑ]/g, '').slice(0, 3) || 'UFR').toUpperCase();
-                ctx.fillStyle = '#ffffff';
-                ctx.font = '900 54px Inter, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(initials, W / 2, crestY + 110);
-            }
-
             ctx.fillStyle = '#ffffff';
-            ctx.font = '900 66px Inter, sans-serif';
-            ctx.textAlign = 'center';
-            const nameLines = wrapCanvasText(ctx, careerState.playerName, 900).slice(0, 2);
-            let curY = 528;
-            nameLines.forEach(line => {
-                ctx.fillText(line, W / 2, curY);
-                curY += 74;
-            });
+            ctx.font = '900 44px Inter, sans-serif';
+            ctx.fillText('LEYENDAS', W / 2, 232);
 
-            ctx.fillStyle = '#a3adff';
-            ctx.font = '800 32px Inter, sans-serif';
-            ctx.fillText(legacy.headline, W / 2, curY + 8);
-            curY += 52;
+            ctx.fillStyle = '#8b96ff';
+            ctx.font = '700 22px Inter, sans-serif';
+            ctx.fillText('TARJETA OFICIAL DE TRAYECTORIA UNIVERSITARIA', W / 2, 268);
 
-            ctx.fillStyle = '#9ca3af';
-            ctx.font = '600 26px Inter, sans-serif';
-            const subInfo = `${careerState.studiedCareer} · ${careerState.position} · ${careerState.maxYears} Años`;
-            ctx.fillText(subInfo, W / 2, curY + 6);
+            const isGoat = careerState.ovr >= OVR_HARD_CAP;
+            const ovrCardW = 240;
+            const ovrCardH = 240;
+            const ovrX = W / 2 - ovrCardW / 2;
+            const ovrY = 310;
 
-            const ovrBoxW = 240;
-            const ovrBoxH = 148;
-            const ovrBoxX = (W - ovrBoxW) / 2;
-            const ovrBoxY = curY + 46;
-            drawRoundRectPath(ctx, ovrBoxX, ovrBoxY, ovrBoxW, ovrBoxH, 34);
-            const ovrGrad = ctx.createLinearGradient(ovrBoxX, ovrBoxY, ovrBoxX + ovrBoxW, ovrBoxY + ovrBoxH);
+            roundRectPath(ctx, ovrX, ovrY, ovrCardW, ovrCardH, 48);
+            const ovrGrad = ctx.createLinearGradient(ovrX, ovrY, ovrX + ovrCardW, ovrY + ovrCardH);
             if (isGoat) {
-                ovrGrad.addColorStop(0, '#fbbf24');
+                ovrGrad.addColorStop(0, '#facc15');
+                ovrGrad.addColorStop(0.5, '#f59e0b');
+                ovrGrad.addColorStop(1, '#d97706');
+            } else if (careerState.ovr >= 90) {
+                ovrGrad.addColorStop(0, '#f59e0b');
                 ovrGrad.addColorStop(1, '#d97706');
             } else {
                 ovrGrad.addColorStop(0, '#717fff');
@@ -4445,142 +4332,188 @@
             ctx.fillStyle = ovrGrad;
             ctx.fill();
 
-            ctx.fillStyle = isGoat ? 'rgba(69, 26, 3, 0.85)' : 'rgba(255,255,255,0.82)';
+            ctx.fillStyle = isGoat ? 'rgba(69, 26, 3, 0.8)' : 'rgba(255,255,255,0.85)';
             ctx.font = '800 22px Inter, sans-serif';
-            ctx.fillText('MEDIA FINAL', W / 2, ovrBoxY + 38);
+            ctx.fillText('MEDIA FINAL', W / 2, ovrY + 46);
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = isGoat ? '900 72px Inter, sans-serif' : '900 78px Inter, sans-serif';
-            ctx.fillText(String(formatOvr(careerState.ovr)), W / 2, ovrBoxY + 118);
+            ctx.font = isGoat ? '900 105px Inter, sans-serif' : '900 112px Inter, sans-serif';
+            ctx.fillText(isGoat ? '🐐' : String(careerState.ovr), W / 2, ovrY + 154);
 
-            const statsY = ovrBoxY + ovrBoxH + 46;
-            const statItems = [
+            ctx.fillStyle = isGoat ? '#451a03' : '#d0d5ff';
+            ctx.font = '800 28px Inter, sans-serif';
+            ctx.fillText(`${careerState.position} · ${careerState.gender === 'F' ? 'FEMENINO' : 'MASCULINO'}`, W / 2, ovrY + 206);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 62px Inter, sans-serif';
+            const nameLines = wrapCanvasLines(ctx, careerState.playerName, W - 160, 2);
+            let curY = 635;
+            nameLines.forEach(line => {
+                ctx.fillText(line, W / 2, curY);
+                curY += 70;
+            });
+
+            ctx.fillStyle = '#a3adff';
+            ctx.font = '700 30px Inter, sans-serif';
+            const careerLines = wrapCanvasLines(ctx, `${careerState.studiedCareer} · ${careerState.maxYears} Años`, W - 180, 2);
+            careerLines.forEach(line => {
+                ctx.fillText(line, W / 2, curY + 6);
+                curY += 40;
+            });
+
+            const bannerY = curY + 28;
+            roundRectPath(ctx, 90, bannerY, W - 180, 195, 34);
+            ctx.fillStyle = '#1c1c22';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(113, 127, 255, 0.45)';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            const badgeImg = mainTeam && mainTeam.logo ? await loadPosterImage(mainTeam.logo) : null;
+            if (badgeImg) {
+                ctx.drawImage(badgeImg, 122, bannerY + 42, 110, 110);
+            } else if (mainTeam) {
+                roundRectPath(ctx, 122, bannerY + 42, 110, 110, 24);
+                ctx.fillStyle = mainTeam.color || '#717fff';
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '900 32px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                const abbr = (mainTeam.name || 'UFR').replace(/[^A-Za-zÁÉÍÓÚÑ]/g, '').slice(0, 3).toUpperCase();
+                ctx.fillText(abbr, 177, bannerY + 108);
+            }
+
+            const textCenterX = mainTeam ? (W / 2 + 48) : (W / 2);
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#8b96ff';
+            ctx.font = '800 22px Inter, sans-serif';
+            ctx.fillText(legacy.badge.toUpperCase(), textCenterX, bannerY + 52);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 36px Inter, sans-serif';
+            const headlineLines = wrapCanvasLines(ctx, legacy.headline, W - 360, 1);
+            ctx.fillText(headlineLines[0] || legacy.headline, textCenterX, bannerY + 106);
+
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '600 23px Inter, sans-serif';
+            ctx.fillText(legacy.subline, textCenterX, bannerY + 154);
+
+            const gridY = bannerY + 235;
+            const statsData = [
                 { label: 'PARTIDOS', val: String(careerState.stats.matches), color: '#ffffff' },
                 { label: isArq ? 'VALLAS INV.' : 'GOLES', val: String(isArq ? careerState.stats.cleanSheets : careerState.stats.goals), color: '#8b96ff' },
-                { label: isArq ? 'GOLES + ASIST.' : 'ASISTENCIAS', val: String(isArq ? (careerState.stats.goals + careerState.stats.assists) : careerState.stats.assists), color: '#717fff' },
-                { label: 'TÍTULOS', val: String(trophies.length), color: '#fcd34d' }
+                { label: isArq ? 'GOLES + ASIST' : 'ASISTENCIAS', val: String(isArq ? (careerState.stats.goals + careerState.stats.assists) : careerState.stats.assists), color: '#a3adff' },
+                { label: 'TÍTULOS', val: String(trophies.length), color: '#fbbf24' }
             ];
-            const cardW = 212;
-            const cardGap = 24;
-            const startX = (W - (cardW * 4 + cardGap * 3)) / 2;
 
-            statItems.forEach((st, i) => {
-                const cx = startX + i * (cardW + cardGap);
-                drawRoundRectPath(ctx, cx, statsY, cardW, 146, 26);
-                ctx.fillStyle = '#18181f';
+            const boxW = 430;
+            const boxH = 165;
+            const gapX = 40;
+            const gapY = 28;
+            const startX = (W - (boxW * 2 + gapX)) / 2;
+
+            statsData.forEach((st, i) => {
+                const col = i % 2;
+                const row = Math.floor(i / 2);
+                const bx = startX + col * (boxW + gapX);
+                const by = gridY + row * (boxH + gapY);
+
+                roundRectPath(ctx, bx, by, boxW, boxH, 30);
+                ctx.fillStyle = '#1a1a20';
                 ctx.fill();
-                ctx.strokeStyle = '#2a2a35';
+                ctx.strokeStyle = '#2b2b34';
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                ctx.fillStyle = st.color;
-                ctx.font = '900 54px Inter, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(st.val, cx + cardW / 2, statsY + 78);
+                ctx.fillStyle = st.color;
+                ctx.font = '900 68px Inter, sans-serif';
+                ctx.fillText(st.val, bx + boxW / 2, by + 95);
 
                 ctx.fillStyle = '#9ca3af';
-                ctx.font = '800 19px Inter, sans-serif';
-                ctx.fillText(st.label, cx + cardW / 2, statsY + 118);
+                ctx.font = '800 22px Inter, sans-serif';
+                ctx.fillText(st.label, bx + boxW / 2, by + 138);
             });
 
-            const palY = statsY + 186;
-            drawRoundRectPath(ctx, 80, palY, W - 160, 310, 32);
-            ctx.fillStyle = '#18181f';
+            const palmarY = gridY + (boxH * 2 + gapY) + 36;
+            const palmarH = 310;
+            roundRectPath(ctx, 90, palmarY, W - 180, palmarH, 34);
+            ctx.fillStyle = '#1a1a20';
             ctx.fill();
-            ctx.strokeStyle = '#2a2a35';
+            ctx.strokeStyle = '#2b2b34';
             ctx.lineWidth = 2;
             ctx.stroke();
 
+            const countLeague = trophies.filter(t => t.type === 'LEAGUE').length;
+            const countFac = trophies.filter(t => t.type === 'FACULTY').length;
+            const countInter = trophies.filter(t => t.type === 'INTERFACULTADES').length;
+            const countSel = trophies.filter(t => t.type === 'SELECCION').length;
+
+            ctx.textAlign = 'center';
             ctx.fillStyle = '#ffffff';
             ctx.font = '900 26px Inter, sans-serif';
-            ctx.textAlign = 'left';
-            ctx.fillText('🏆 PALMARÉS POR COMPETENCIA', 120, palY + 54);
+            ctx.fillText('PALMARÉS Y DISTINCIONES', W / 2, palmarY + 52);
 
             const breakdown = [
-                { icon: '🏆', name: 'Torneos Intercarreras', count: trophies.filter(t => t.type === 'LEAGUE').length },
-                { icon: '🌍', name: 'Torneos Interfacultades', count: trophies.filter(t => t.type === 'INTERFACULTADES').length },
-                { icon: '🏛️', name: 'Copas de Facultad', count: trophies.filter(t => t.type === 'FACULTY').length },
-                { icon: '🇨🇱', name: 'Títulos Selección UFRO', count: trophies.filter(t => t.type === 'SELECCION').length }
+                `🏆 ${countLeague} Intercarreras`,
+                `🏛️ ${countFac} Copa Facultad`,
+                `🌍 ${countInter} Interfacultades`,
+                `🇨🇱 ${countSel} Sel. UFRO`
             ];
+            ctx.fillStyle = '#d0d5ff';
+            ctx.font = '700 25px Inter, sans-serif';
+            ctx.fillText(`${breakdown[0]}   ·   ${breakdown[1]}`, W / 2, palmarY + 112);
+            ctx.fillText(`${breakdown[2]}   ·   ${breakdown[3]}`, W / 2, palmarY + 156);
 
-            breakdown.forEach((b, idx) => {
-                const col = idx % 2;
-                const row = Math.floor(idx / 2);
-                const bx = 120 + col * 435;
-                const by = palY + 92 + row * 94;
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = '800 24px Inter, sans-serif';
+            const awardLine = awards.length > 0
+                ? `🎖️ ${awards.length} ${awards.length === 1 ? 'Premio Individual' : 'Premios Individuales'} · ${(careerState.ufroCitations || []).length} Nominaciones Sel. UFRO`
+                : `🇨🇱 ${(careerState.ufroCitations || []).length} Nominaciones Selección UFRO · ${careerState.hofRank ? `Top #${careerState.hofRank} Salón de la Fama` : 'Carrera Completada'}`;
+            ctx.fillText(awardLine, W / 2, palmarY + 216);
 
-                drawRoundRectPath(ctx, bx, by, 405, 74, 18);
-                ctx.fillStyle = '#131318';
-                ctx.fill();
+            const clubNames = [...new Set((careerState.history || []).map(h => h.teamName))].reverse();
+            const clubsStr = clubNames.length > 0 ? `Clubes: ${clubNames.join(' → ')}` : '';
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '600 22px Inter, sans-serif';
+            const clubLines = wrapCanvasLines(ctx, clubsStr, W - 240, 1);
+            ctx.fillText(clubLines[0] || '', W / 2, palmarY + 266);
 
-                ctx.font = '700 24px Inter, sans-serif';
-                ctx.fillStyle = '#e5e7eb';
-                ctx.textAlign = 'left';
-                ctx.fillText(`${b.icon} ${b.name}`, bx + 20, by + 46);
-
-                ctx.font = '900 30px Inter, sans-serif';
-                ctx.fillStyle = b.count > 0 ? '#a3adff' : '#6b7280';
-                ctx.textAlign = 'right';
-                ctx.fillText(String(b.count), bx + 382, by + 48);
-            });
-
-            const clubsY = palY + 344;
-            const orderedSemesters = [...(careerState.history || [])].reverse();
-            const uniqueClubs = [];
-            orderedSemesters.forEach(s => {
-                if (!uniqueClubs.some(c => c.teamCode === s.teamCode)) {
-                    uniqueClubs.push({ teamCode: s.teamCode, teamName: s.teamName });
-                }
-            });
-
-            drawRoundRectPath(ctx, 80, clubsY, W - 160, 210, 32);
-            ctx.fillStyle = '#18181f';
-            ctx.fill();
-            ctx.strokeStyle = '#2a2a35';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '900 25px Inter, sans-serif';
-            ctx.textAlign = 'left';
-            ctx.fillText('🛡️ TRAYECTORIA & DISTINCIONES', 120, clubsY + 52);
-
-            const clubsText = uniqueClubs.length > 0
-                ? uniqueClubs.map(c => c.teamName).join('  →  ')
-                : (legacyTeam?.name || 'UFRO');
-            ctx.fillStyle = '#d1d5db';
-            ctx.font = '700 24px Inter, sans-serif';
-            const clubLines = wrapCanvasText(ctx, clubsText, 840).slice(0, 2);
-            clubLines.forEach((line, i) => {
-                ctx.fillText(line, 120, clubsY + 98 + i * 34);
-            });
-
-            const awardsSummary = awards.length > 0
-                ? `🎖️ ${awards.length} ${awards.length === 1 ? 'Premio Individual' : 'Premios Individuales'} · ${awards[0].title}`
-                : (careerState.hofRank ? `🏛️ Top #${careerState.hofRank} en Salón de la Fama UFRO` : '🎓 Leyenda Titulada de la Universidad de La Frontera');
-            ctx.fillStyle = '#fcd34d';
-            ctx.font = '700 22px Inter, sans-serif';
-            ctx.fillText(awardsSummary, 120, clubsY + 176);
-
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '700 24px Inter, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('notintercarreras.vercel.app/leyendas.html', W / 2, H - 78);
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '700 22px Inter, sans-serif';
+            ctx.fillText('leyenda-ufro.vercel.app  ·  Simulador Intercarreras UFRO', W / 2, H - 86);
+        }
+
+        function downloadSummaryCardPNG() {
+            const canvas = document.getElementById('summary-poster-canvas');
+            if (!canvas || !careerState) return;
+            const slug = careerState.playerName
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '') || 'leyenda';
+            const link = document.createElement('a');
+            link.download = `leyendas-ufro-${slug}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('📸 Tarjeta Final descargada en formato Historia (1080×1920).', 'success');
         }
 
         // =========================================================================
-        // 15. UTILIDADES DE INTERFAZ
+        // 15. UTILIDADES
         // =========================================================================
-        function showToast(msg, type = 'info') {
+        function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const styles = {
-                success: 'bg-[#1c1c1c] border-[#717fff] text-white',
-                error: 'bg-[#1c1c1c] border-rose-500 text-rose-200',
-                info: 'bg-[#1c1c1c] border-[#383838] text-gray-200'
+                info: 'bg-[#1c1c1c] border-[#717fff]/50 text-white',
+                success: 'bg-[#1c1c1c] border-emerald-500/60 text-emerald-200',
+                error: 'bg-[#1c1c1c] border-rose-500/60 text-rose-200'
             };
-            toast.className = `p-3 rounded-xl border shadow-2xl text-xs font-bold animate-pop pointer-events-auto ${styles[type] || styles.info}`;
-            toast.textContent = msg;
+            toast.className = `p-3 rounded-xl border shadow-2xl text-xs font-semibold pointer-events-auto animate-pop ${styles[type] || styles.info}`;
+            toast.textContent = message;
             container.appendChild(toast);
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -4595,156 +4528,156 @@
         }
     </script>
 
-    <!-- =========================================================================
-         16. SISTEMA DE RANKING GLOBAL SEMANAL Y CUENTAS DE USUARIO (FIREBASE)
-         ========================================================================= -->
+    <!-- ==================== MÓDULO FIREBASE: AUTH + PERFIL + RANKING GLOBAL ==================== -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import {
             getAuth,
-            signInAnonymously,
             onAuthStateChanged,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            sendPasswordResetEmail,
             GoogleAuthProvider,
             signInWithPopup,
-            signOut,
-            createUserWithEmailAndPassword,
-            signInWithEmailAndPassword,
-            sendPasswordResetEmail
-        } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+            signOut
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import {
             getFirestore,
+            collection,
             doc,
             getDoc,
             setDoc,
             addDoc,
-            updateDoc,
-            collection,
             query,
             where,
             orderBy,
             limit,
             getDocs,
             serverTimestamp
-        } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+        // =====================================================================
+        // CONFIGURACIÓN FIREBASE (Reemplaza con tus claves reales de Firebase)
+        // =====================================================================
         const DEFAULT_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyCCguxq1KNYTng0lK2S5HvaYM03UpFMVmM",
-            authDomain: "leyenda-ufro.firebaseapp.com",
-            projectId: "leyenda-ufro",
-            storageBucket: "leyenda-ufro.firebasestorage.app",
-            messagingSenderId: "885333611273",
-            appId: "1:885333611273:web:6af8b831a964d1a7ea79d8"
+            apiKey: "AIzaSyD-REEMPLAZA_CON_TU_API_KEY",
+            authDomain: "leyendas-ufro.firebaseapp.com",
+            projectId: "leyendas-ufro",
+            storageBucket: "leyendas-ufro.appspot.com",
+            messagingSenderId: "000000000000",
+            appId: "1:000000000000:web:0000000000000000000000"
         };
 
-        const firebaseConfig = (typeof __firebase_config !== 'undefined' && __firebase_config)
-            ? JSON.parse(__firebase_config)
-            : DEFAULT_FIREBASE_CONFIG;
+        // Permite inyectar configuración externa desde window.FIREBASE_CONFIG o localStorage si existe
+        function resolveFirebaseConfig() {
+            if (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && !String(window.FIREBASE_CONFIG.apiKey).includes('REEMPLAZA')) {
+                return window.FIREBASE_CONFIG;
+            }
+            try {
+                const stored = localStorage.getItem('leyendas_firebase_config_v1');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed && parsed.apiKey && !String(parsed.apiKey).includes('REEMPLAZA')) {
+                        return parsed;
+                    }
+                }
+            } catch (e) {}
+            return DEFAULT_FIREBASE_CONFIG;
+        }
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'leyendas-ufro-global';
+        const ACTIVE_FIREBASE_CONFIG = resolveFirebaseConfig();
 
         let app = null;
         let auth = null;
         let db = null;
-        let currentUser = null;
-        let unsubscribeLeaderboard = null;
-        let weeklyCountdownInterval = null;
-        let cachedAllLeaderboardDocs = [];
+        let firebaseAvailable = false;
+        let currentCloudUser = null;
+        let currentUserProfile = null;
+        let cachedGlobalEntries = [];
 
-        const NICKNAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+        const NICKNAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // 14 días en milisegundos
 
-        window.cloudProfile = {
-            nickname: '',
-            nicknameUpdatedAt: 0
-        };
+        // Lista de filtro de palabras ofensivas / groserías (Chilenismos y español general)
+        const BANNED_WORDS = [
+            'weon', 'weona', 'hueon', 'hueona', 'wn', 'wna', 'ctm', 'conchetumare', 'conchatumadre',
+            'culiao', 'culia', 'ql', 'qlo', 'qla', 'maricon', 'maraca', 'maraco', 'puta', 'puto',
+            'perra', 'zorra', 'pico', 'tula', 'pichula', 'chucha', 'mierda', 'caca', 'bastardo',
+            'bastarda', 'imbecil', 'idiota', 'estupido', 'estupida', 'aweonao', 'aweona', 'saco',
+            'pajero', 'pajera', 'verga', 'pene', 'vagina', 'anal', 'sexo', 'porn', 'xxx', 'nazi',
+            'hitler', 'negro', 'nigga', 'faggot', 'bitch', 'fuck', 'shit', 'asshole', 'dick', 'cock',
+            'admin', 'moderador', 'staff', 'oficial', 'soporte', 'system', 'root'
+        ];
 
-        function renderOfflineWeeklyLeaderboard() {
-            const listEl = document.getElementById('global-hof-list');
-            if (!listEl) return;
+        function containsProfanity(username) {
+            const normalized = String(username || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/0/g, 'o')
+                .replace(/1/g, 'i')
+                .replace(/3/g, 'e')
+                .replace(/4/g, 'a')
+                .replace(/5/g, 's')
+                .replace(/7/g, 't')
+                .replace(/_/g, '');
 
-            let localItems = [];
-            try {
-                localItems = JSON.parse(localStorage.getItem(LOCAL_MOCK_WEEKLY_KEY) || '[]');
-            } catch (e) { localItems = []; }
-
-            const weekKey = getCurrentWeekKey();
-            const currentWeekItems = localItems.filter(x => x.weekKey === weekKey).sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 10);
-
-            if (currentWeekItems.length === 0) {
-                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-400">
-                    Aún no hay carreras registradas esta semana. ¡Inicia sesión y titula una carrera para liderar la tabla!
-                </div>`;
-                return;
-            }
-
-            cachedGlobalEntries.clear();
-            listEl.innerHTML = currentWeekItems.map((item, idx) => {
-                const entryId = item.id || `local_${idx}`;
-                cachedGlobalEntries.set(entryId, item);
-                const hofTeam = findTeamByCode(item.teamCode, item.gender);
-                const rankColor = idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500';
-                return `
-                    <button type="button" onclick="openGlobalCareerDetail('${entryId}')"
-                        class="w-full text-left p-3.5 rounded-2xl surface-sub hover:border-[#717fff]/60 transition flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <span class="w-6 text-center font-black text-sm ${rankColor} shrink-0">#${idx + 1}</span>
-                            ${hofTeam ? getTeamBadgeHTML(hofTeam, 'w-10 h-10', 'text-[10px]') : ''}
-                            <div class="min-w-0">
-                                <div class="font-black text-white text-sm truncate">
-                                    ${escapeHtml(item.playerName)} <span class="text-[11px] font-bold text-[#8b96ff]">(${item.position})</span>
-                                </div>
-                                <div class="text-[11px] text-[#a3adff] font-bold truncate">@${escapeHtml(item.username || 'leyenda_ufro')}</div>
-                            </div>
-                        </div>
-                        <div class="text-right shrink-0">
-                            <div class="text-xs font-black text-[#a3adff]">${item.score} pts</div>
-                            <div class="text-[11px] font-bold text-gray-400">🏆 ${item.titlesCount} · OVR ${formatOvr(item.ovr)}</div>
-                        </div>
-                    </button>
-                `;
-            }).join('');
+            return BANNED_WORDS.some(word => normalized.includes(word));
         }
 
-        function getNicknameCooldownStatus(profile) {
-            if (!profile || !profile.lastUsernameChangeAt) return { canChange: true, daysLeft: 0 };
-            let lastMs = 0;
-            if (typeof profile.lastUsernameChangeAt.toMillis === 'function') {
-                lastMs = profile.lastUsernameChangeAt.toMillis();
-            } else if (typeof profile.lastUsernameChangeAt === 'number') {
-                lastMs = profile.lastUsernameChangeAt;
+        function validateNickname(raw) {
+            const clean = String(raw || '').trim().replace(/^@+/, '');
+            if (clean.length < 3 || clean.length > 18) {
+                return { ok: false, error: 'El nombre de usuario debe tener entre 3 y 18 caracteres.' };
             }
-            if (!lastMs) return { canChange: true, daysLeft: 0 };
-            const elapsed = Date.now() - lastMs;
-            if (elapsed >= NICKNAME_COOLDOWN_MS) return { canChange: true, daysLeft: 0 };
-            const daysLeft = Math.ceil((NICKNAME_COOLDOWN_MS - elapsed) / (24 * 60 * 60 * 1000));
-            return { canChange: false, daysLeft };
+            if (!/^[a-zA-Z0-9_]+$/.test(clean)) {
+                return { ok: false, error: 'Solo se permiten letras, números y guion bajo (_), sin espacios.' };
+            }
+            if (containsProfanity(clean)) {
+                return { ok: false, error: 'El nombre de usuario contiene palabras no permitidas o reservadas.' };
+            }
+            return { ok: true, value: clean };
         }
 
-        function updateAuthHeaderUI() {
-            const guestBtns = document.getElementById('guest-auth-buttons');
-            const userWrapper = document.getElementById('logged-user-menu-wrapper');
-            const usernameLabel = document.getElementById('header-username-label');
+        // Semana competitiva actual (Lunes 00:00:00 a Domingo 23:59:59 hora local)
+        function getCurrentWeekInfo() {
+            const now = new Date();
+            const day = now.getDay(); // 0 = Dom, 1 = Lun ... 6 = Sab
+            const diffToMonday = (day === 0 ? -6 : 1 - day);
+            const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday, 0, 0, 0, 0);
+            const nextMonday = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 7, 0, 0, 0, 0);
 
-            if (currentCloudUser && !currentCloudUser.isAnonymous && currentCloudProfile) {
-                guestBtns.classList.add('hidden');
-                userWrapper.classList.remove('hidden');
-                usernameLabel.textContent = `@${currentCloudProfile.username}`;
-            } else {
-                guestBtns.classList.remove('hidden');
-                userWrapper.classList.add('hidden');
-            }
+            const yyyy = weekStart.getFullYear();
+            const mm = String(weekStart.getMonth() + 1).padStart(2, '0');
+            const dd = String(weekStart.getDate()).padStart(2, '0');
+            const weekKey = `${yyyy}-W-${mm}-${dd}`;
+
+            return { weekKey, weekStart, nextMonday };
         }
 
-        window.toggleUserDropdown = function (e) {
-            if (e) e.stopPropagation();
-            const menu = document.getElementById('user-dropdown-menu');
-            if (menu) menu.classList.toggle('hidden');
-        };
+        function startWeeklyCountdownTimer() {
+            const badgeEl = document.getElementById('weekly-season-badge');
+            const timerEl = document.getElementById('weekly-countdown-text');
 
-        document.addEventListener('click', () => {
-            const menu = document.getElementById('user-dropdown-menu');
-            if (menu && !menu.classList.contains('hidden')) menu.classList.add('hidden');
-        });
+            function update() {
+                const { weekKey, nextMonday } = getCurrentWeekInfo();
+                if (badgeEl) badgeEl.textContent = `TEMPORADA ${weekKey}`;
+                if (!timerEl) return;
 
+                const diffMs = Math.max(0, nextMonday.getTime() - Date.now());
+                const totalSec = Math.floor(diffMs / 1000);
+                const days = Math.floor(totalSec / 86400);
+                const hours = Math.floor((totalSec % 86400) / 3600);
+                const mins = Math.floor((totalSec % 3600) / 60);
+                const secs = totalSec % 60;
+
+                timerEl.textContent = `${days}d ${String(hours).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+            }
+
+            update();
+            setInterval(update, 1000);
+        }
+
+        // UI Tabs Ranking Global vs Salón de la Fama Local
         window.switchLeaderboardTab = function (tab) {
             const globalView = document.getElementById('global-leaderboard-view');
             const localView = document.getElementById('local-leaderboard-view');
@@ -4756,132 +4689,200 @@
                 localView.classList.add('hidden');
                 btnGlobal.className = 'flex-1 py-2 px-3 rounded-xl bg-[#717fff] text-white font-black text-xs transition';
                 btnLocal.className = 'flex-1 py-2 px-3 rounded-xl text-gray-400 hover:text-white font-bold text-xs transition';
+                fetchGlobalWeeklyLeaderboard();
             } else {
                 globalView.classList.add('hidden');
                 localView.classList.remove('hidden');
                 btnLocal.className = 'flex-1 py-2 px-3 rounded-xl bg-[#717fff] text-white font-black text-xs transition';
                 btnGlobal.className = 'flex-1 py-2 px-3 rounded-xl text-gray-400 hover:text-white font-bold text-xs transition';
-                renderHallOfFame();
+                if (window.renderHallOfFame) window.renderHallOfFame();
             }
         };
 
+        // Modales de Autenticación
         window.openAuthModal = function (mode = 'login') {
-            const modal = document.getElementById('auth-modal');
-            if (!modal) return;
-            window.switchAuthMode(mode);
-            modal.classList.remove('hidden');
+            if (!firebaseAvailable) {
+                showToast('⚠️ Configura tus credenciales de Firebase en el código para activar el inicio de sesión en la nube.', 'error');
+                return;
+            }
+            switchAuthMode(mode);
+            document.getElementById('auth-modal').classList.remove('hidden');
         };
 
         window.closeAuthModal = function () {
-            const modal = document.getElementById('auth-modal');
-            if (modal) modal.classList.add('hidden');
+            document.getElementById('auth-modal').classList.add('hidden');
         };
 
         window.switchAuthMode = function (mode) {
-            const titleEl = document.getElementById('auth-modal-title');
-            const tabsEl = document.getElementById('auth-mode-tabs');
-            const tabLogin = document.getElementById('tab-auth-login');
-            const tabReg = document.getElementById('tab-auth-register');
-            const formLogin = document.getElementById('form-auth-login');
-            const formReg = document.getElementById('form-auth-register');
-            const formReset = document.getElementById('form-auth-reset');
-            const googleSec = document.getElementById('auth-google-section');
+            const title = document.getElementById('auth-modal-title');
+            const tabs = document.getElementById('auth-mode-tabs');
+            const fLogin = document.getElementById('form-auth-login');
+            const fReg = document.getElementById('form-auth-register');
+            const fReset = document.getElementById('form-auth-reset');
+            const gSec = document.getElementById('auth-google-section');
+            const tLogin = document.getElementById('tab-auth-login');
+            const tReg = document.getElementById('tab-auth-register');
 
-            formLogin.classList.add('hidden');
-            formReg.classList.add('hidden');
-            formReset.classList.add('hidden');
+            fLogin.classList.add('hidden');
+            fReg.classList.add('hidden');
+            fReset.classList.add('hidden');
 
-            if (mode === 'register') {
-                titleEl.textContent = 'Crear Cuenta';
-                tabsEl.classList.remove('hidden');
-                googleSec.classList.remove('hidden');
-                formReg.classList.remove('hidden');
-                tabReg.className = 'py-2 rounded-lg bg-[#717fff] text-white font-black text-xs transition';
-                tabLogin.className = 'py-2 rounded-lg text-gray-400 hover:text-white font-bold text-xs transition';
+            if (mode === 'login') {
+                title.textContent = 'Iniciar Sesión';
+                tabs.classList.remove('hidden');
+                fLogin.classList.remove('hidden');
+                gSec.classList.remove('hidden');
+                tLogin.className = 'py-2 rounded-lg bg-[#717fff] text-white font-black text-xs transition';
+                tReg.className = 'py-2 rounded-lg text-gray-400 hover:text-white font-bold text-xs transition';
+            } else if (mode === 'register') {
+                title.textContent = 'Crear Cuenta';
+                tabs.classList.remove('hidden');
+                fReg.classList.remove('hidden');
+                gSec.classList.remove('hidden');
+                tReg.className = 'py-2 rounded-lg bg-[#717fff] text-white font-black text-xs transition';
+                tLogin.className = 'py-2 rounded-lg text-gray-400 hover:text-white font-bold text-xs transition';
             } else if (mode === 'reset') {
-                titleEl.textContent = 'Recuperar Contraseña';
-                tabsEl.classList.add('hidden');
-                googleSec.classList.add('hidden');
-                formReset.classList.remove('hidden');
-            } else {
-                titleEl.textContent = 'Iniciar Sesión';
-                tabsEl.classList.remove('hidden');
-                googleSec.classList.remove('hidden');
-                formLogin.classList.remove('hidden');
-                tabLogin.className = 'py-2 rounded-lg bg-[#717fff] text-white font-black text-xs transition';
-                tabReg.className = 'py-2 rounded-lg text-gray-400 hover:text-white font-bold text-xs transition';
+                title.textContent = 'Recuperar Contraseña';
+                tabs.classList.add('hidden');
+                fReset.classList.remove('hidden');
+                gSec.classList.add('hidden');
             }
         };
 
-        async function isUsernameAvailable(cleanUsername, excludeUid = null) {
-            if (!firebaseAvailable || !db) return true;
-            const q = query(
-                collection(db, 'leyendas_users'),
-                where('usernameLower', '==', cleanUsername.toLowerCase()),
-                limit(1)
-            );
+        // Menú desplegable de usuario en el header
+        window.toggleUserDropdown = function (ev) {
+            if (ev) ev.stopPropagation();
+            const menu = document.getElementById('user-dropdown-menu');
+            if (menu) menu.classList.toggle('hidden');
+        };
+
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('logged-user-menu-wrapper');
+            const menu = document.getElementById('user-dropdown-menu');
+            if (wrapper && menu && !wrapper.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // Verificar disponibilidad de username en Firestore
+        async function isNicknameAvailable(nickname, excludeUid = null) {
+            if (!db) return true;
+            const lower = nickname.toLowerCase();
+            const q = query(collection(db, 'users'), where('nicknameLower', '==', lower), limit(1));
             const snap = await getDocs(q);
             if (snap.empty) return true;
-            return snap.docs[0].id === excludeUid;
+            if (excludeUid && snap.docs[0].id === excludeUid) return true;
+            return false;
         }
 
-        async function loadOrCreateUserProfile(user, preferredUsername = null) {
-            if (!user || user.isAnonymous || !firebaseAvailable || !db) {
-                currentCloudProfile = null;
-                updateAuthHeaderUI();
-                return null;
-            }
+        function generateDefaultNickname(emailOrName) {
+            const base = String(emailOrName || 'leyenda')
+                .split('@')[0]
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-zA-Z0-9_]/g, '')
+                .slice(0, 12) || 'LeyendaUFRO';
+            const suffix = Math.floor(100 + Math.random() * 899);
+            const candidate = `${base}_${suffix}`.slice(0, 18);
+            return containsProfanity(candidate) ? `Leyenda_${suffix}` : candidate;
+        }
 
-            const userRef = doc(db, 'leyendas_users', user.uid);
+        async function ensureUserDocument(user, preferredNickname = null) {
+            if (!db || !user) return null;
+            const userRef = doc(db, 'users', user.uid);
             const snap = await getDoc(userRef);
 
             if (snap.exists()) {
-                currentCloudProfile = { uid: user.uid, ...snap.data() };
-                updateAuthHeaderUI();
-                return currentCloudProfile;
+                currentUserProfile = snap.data();
+                if (!currentUserProfile.nickname) {
+                    const fallbackNick = preferredNickname || generateDefaultNickname(user.displayName || user.email);
+                    await setDoc(userRef, {
+                        nickname: fallbackNick,
+                        nicknameLower: fallbackNick.toLowerCase(),
+                        email: user.email || '',
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
+                    currentUserProfile.nickname = fallbackNick;
+                    currentUserProfile.nicknameLower = fallbackNick.toLowerCase();
+                }
+                return currentUserProfile;
             }
 
-            let baseCandidate = preferredUsername || (user.email ? user.email.split('@')[0] : 'LeyendaUFRO');
-            baseCandidate = baseCandidate.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 14) || 'JugadorUFRO';
-            if (baseCandidate.length < 3) baseCandidate = `${baseCandidate}_ufro`;
-
-            const validCheck = validateCleanUsername(baseCandidate);
-            let finalUsername = validCheck.ok ? validCheck.clean : `Jugador_${Math.floor(1000 + Math.random() * 9000)}`;
-
-            const free = await isUsernameAvailable(finalUsername, user.uid);
+            let finalNick = preferredNickname || generateDefaultNickname(user.displayName || user.email);
+            const free = await isNicknameAvailable(finalNick, user.uid);
             if (!free) {
-                finalUsername = `${finalUsername.slice(0, 12)}_${Math.floor(100 + Math.random() * 899)}`;
+                finalNick = `${finalNick.slice(0, 13)}_${Math.floor(100 + Math.random() * 899)}`;
             }
 
-            const profileData = {
-                username: finalUsername,
-                usernameLower: finalUsername.toLowerCase(),
+            const newProfile = {
+                uid: user.uid,
+                nickname: finalNick,
+                nicknameLower: finalNick.toLowerCase(),
                 email: user.email || '',
-                createdAt: serverTimestamp()
+                lastNicknameChangeAt: 0,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
             };
-            await setDoc(userRef, profileData);
-            currentCloudProfile = { uid: user.uid, ...profileData };
-            updateAuthHeaderUI();
-            return currentCloudProfile;
+            await setDoc(userRef, newProfile);
+            currentUserProfile = newProfile;
+            return currentUserProfile;
         }
 
+        // Login con correo o @usuario
+        window.handleEmailLogin = async function (e) {
+            e.preventDefault();
+            if (!firebaseAvailable) return;
+
+            const identifier = document.getElementById('login-identifier').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('btn-submit-login');
+            btn.disabled = true;
+            btn.textContent = 'Ingresando...';
+
+            try {
+                let emailToUse = identifier;
+                if (!identifier.includes('@')) {
+                    const cleanNick = identifier.replace(/^@+/, '').toLowerCase();
+                    const q = query(collection(db, 'users'), where('nicknameLower', '==', cleanNick), limit(1));
+                    const snap = await getDocs(q);
+                    if (snap.empty || !snap.docs[0].data().email) {
+                        throw new Error('USER_NOT_FOUND_BY_NICK');
+                    }
+                    emailToUse = snap.docs[0].data().email;
+                }
+
+                await signInWithEmailAndPassword(auth, emailToUse, password);
+                closeAuthModal();
+                showToast('✅ ¡Bienvenido de vuelta a LEYENDAS!', 'success');
+            } catch (err) {
+                console.error(err);
+                if (err.message === 'USER_NOT_FOUND_BY_NICK') {
+                    showToast('No encontramos ninguna cuenta con ese nombre de usuario.', 'error');
+                } else {
+                    showToast('Correo/usuario o contraseña incorrectos.', 'error');
+                }
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Entrar a mi cuenta';
+            }
+        };
+
+        // Registro con correo + username único
         window.handleEmailRegister = async function (e) {
             e.preventDefault();
-            if (!firebaseAvailable || !auth || !db) {
-                showToast('Configura tu proyecto Firebase para habilitar el registro de cuentas.', 'info');
-                return;
-            }
-            const rawUser = document.getElementById('reg-username').value;
-            const email = document.getElementById('reg-email').value.trim().toLowerCase();
-            const pass = document.getElementById('reg-password').value;
+            if (!firebaseAvailable) return;
+
+            const rawNick = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value.trim();
+            const pass1 = document.getElementById('reg-password').value;
             const pass2 = document.getElementById('reg-password-confirm').value;
 
-            const validUser = validateCleanUsername(rawUser);
-            if (!validUser.ok) {
-                showToast(validUser.reason, 'error');
+            const nickCheck = validateNickname(rawNick);
+            if (!nickCheck.ok) {
+                showToast(nickCheck.error, 'error');
                 return;
             }
-            if (pass !== pass2) {
+            if (pass1 !== pass2) {
                 showToast('Las contraseñas no coinciden.', 'error');
                 return;
             }
@@ -4891,176 +4892,150 @@
             btn.textContent = 'Creando cuenta...';
 
             try {
-                const free = await isUsernameAvailable(validUser.clean);
-                if (!free) {
-                    showToast('Ese nombre de usuario ya está en uso. Prueba con otro.', 'error');
+                const available = await isNicknameAvailable(nickCheck.value);
+                if (!available) {
+                    showToast(`El usuario @${nickCheck.value} ya está en uso. Elige otro.`, 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Crear cuenta y participar';
                     return;
                 }
 
-                const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                currentCloudUser = cred.user;
-                await loadOrCreateUserProfile(cred.user, validUser.clean);
-                window.closeAuthModal();
-                showToast(`✅ ¡Cuenta creada! Bienvenido @${validUser.clean}`, 'success');
+                const cred = await createUserWithEmailAndPassword(auth, email, pass1);
+                await ensureUserDocument(cred.user, nickCheck.value);
+                updateHeaderAuthUI();
+                closeAuthModal();
+                showToast(`🎉 ¡Cuenta creada! Bienvenido/a @${nickCheck.value}`, 'success');
             } catch (err) {
-                const code = err?.code || '';
-                if (code === 'auth/email-already-in-use') showToast('Ese correo ya está registrado. Inicia sesión.', 'error');
-                else if (code === 'auth/invalid-email') showToast('El correo electrónico no es válido.', 'error');
-                else if (code === 'auth/weak-password') showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
-                else showToast('No se pudo crear la cuenta. Intenta nuevamente.', 'error');
+                console.error(err);
+                if (err.code === 'auth/email-already-in-use') {
+                    showToast('Ese correo ya está registrado. Inicia sesión.', 'error');
+                } else if (err.code === 'auth/weak-password') {
+                    showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
+                } else {
+                    showToast('No se pudo crear la cuenta. Revisa tus datos.', 'error');
+                }
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Crear cuenta y participar';
             }
         };
 
-        window.handleEmailLogin = async function (e) {
-            e.preventDefault();
-            if (!firebaseAvailable || !auth || !db) {
-                showToast('Configura tu proyecto Firebase para iniciar sesión en el ranking global.', 'info');
-                return;
-            }
-            const identifier = document.getElementById('login-identifier').value.trim();
-            const pass = document.getElementById('login-password').value;
-            const btn = document.getElementById('btn-submit-login');
-            btn.disabled = true;
-            btn.textContent = 'Ingresando...';
-
-            try {
-                let targetEmail = identifier;
-
-                if (!identifier.includes('@') || identifier.startsWith('@')) {
-                    const cleanUser = identifier.replace(/^@+/, '').toLowerCase();
-                    const q = query(
-                        collection(db, 'leyendas_users'),
-                        where('usernameLower', '==', cleanUser),
-                        limit(1)
-                    );
-                    const snap = await getDocs(q);
-                    if (snap.empty || !snap.docs[0].data().email) {
-                        showToast('No encontramos ninguna cuenta con ese usuario.', 'error');
-                        return;
-                    }
-                    targetEmail = snap.docs[0].data().email;
-                }
-
-                const cred = await signInWithEmailAndPassword(auth, targetEmail, pass);
-                currentCloudUser = cred.user;
-                const prof = await loadOrCreateUserProfile(cred.user);
-                window.closeAuthModal();
-                showToast(`👋 ¡Hola de nuevo @${prof?.username || 'Leyenda'}!`, 'success');
-            } catch (err) {
-                const code = err?.code || '';
-                console.error('Auth login error:', code, err?.message);
-                if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
-                    showToast('Correo/usuario o contraseña incorrectos. Si creaste tu cuenta con Google, usa el botón "Continuar con Google".', 'error');
-                } else if (code === 'auth/too-many-requests') {
-                    showToast('Demasiados intentos fallidos. Espera unos minutos o restablece tu contraseña.', 'error');
-                } else {
-                    showToast(`Error de acceso (${code || 'desconocido'}). Revisa tu conexión o proyecto Firebase.`, 'error');
-                }
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Entrar a mi cuenta';
-            }
-        };
-
+        // Recuperación de contraseña
         window.handlePasswordReset = async function (e) {
             e.preventDefault();
-            if (!firebaseAvailable || !auth) {
-                showToast('Configura tu proyecto Firebase para recuperar contraseñas.', 'info');
-                return;
-            }
+            if (!firebaseAvailable) return;
             const email = document.getElementById('reset-email').value.trim();
-            if (!email) return;
-
             const btn = document.getElementById('btn-submit-reset');
             btn.disabled = true;
             btn.textContent = 'Enviando...';
 
             try {
                 await sendPasswordResetEmail(auth, email);
-                showToast('📩 Te enviamos un correo para restablecer tu contraseña.', 'success');
-                window.switchAuthMode('login');
+                showToast('📩 Te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja o spam.', 'success');
+                switchAuthMode('login');
             } catch (err) {
-                showToast('No pudimos enviar el correo. Verifica que esté bien escrito.', 'error');
+                console.error(err);
+                showToast('No se pudo enviar el correo. Verifica que esté bien escrito.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Enviar enlace de recuperación';
             }
         };
 
+        // Inicio de sesión con Google
         window.signInWithGoogleAccount = async function () {
-            if (!firebaseAvailable || !auth) {
-                showToast('Configura tu proyecto Firebase para continuar con Google.', 'info');
+            if (!firebaseAvailable) {
+                showToast('⚠️ Configura tus credenciales de Firebase en el código para usar Google.', 'error');
                 return;
             }
             try {
                 const provider = new GoogleAuthProvider();
-                const cred = await signInWithPopup(auth, provider);
-                currentCloudUser = cred.user;
-                const prof = await loadOrCreateUserProfile(cred.user);
-                window.closeAuthModal();
-                showToast(`✅ Sesión iniciada como @${prof?.username || 'Leyenda'}`, 'success');
+                const res = await signInWithPopup(auth, provider);
+                await ensureUserDocument(res.user);
+                updateHeaderAuthUI();
+                closeAuthModal();
+                showToast(`✅ Sesión iniciada como @${currentUserProfile.nickname}`, 'success');
             } catch (err) {
-                showToast('No se pudo completar el inicio con Google.', 'error');
+                console.error(err);
+                showToast('No se pudo iniciar sesión con Google.', 'error');
             }
         };
 
         window.logoutCloudUser = async function () {
+            const menu = document.getElementById('user-dropdown-menu');
+            if (menu) menu.classList.add('hidden');
             if (!firebaseAvailable || !auth) return;
-            await signOut(auth);
-            currentCloudUser = null;
-            currentCloudProfile = null;
-            updateAuthHeaderUI();
             try {
-                const anon = await signInAnonymously(auth);
-                currentCloudUser = anon.user;
-            } catch (e) {}
-            showToast('Sesión cerrada.', 'info');
+                await signOut(auth);
+                currentCloudUser = null;
+                currentUserProfile = null;
+                updateHeaderAuthUI();
+                showToast('Sesión cerrada.', 'info');
+            } catch (e) {
+                console.error(e);
+            }
         };
 
-        window.openProfileModal = async function (focusSection = 'all') {
-            if (!currentCloudUser || currentCloudUser.isAnonymous || !currentCloudProfile) {
-                window.openAuthModal('login');
+        function updateHeaderAuthUI() {
+            const guestBtns = document.getElementById('guest-auth-buttons');
+            const loggedWrapper = document.getElementById('logged-user-menu-wrapper');
+            const label = document.getElementById('header-username-label');
+
+            if (currentCloudUser && currentUserProfile) {
+                guestBtns.classList.add('hidden');
+                loggedWrapper.classList.remove('hidden');
+                label.textContent = `@${currentUserProfile.nickname}`;
+            } else {
+                guestBtns.classList.remove('hidden');
+                loggedWrapper.classList.add('hidden');
+            }
+        }
+
+        // Modal de Perfil (Ver carreras semanales, Top 5 histórico y Cambiar usuario con cooldown 14 días)
+        window.openProfileModal = async function (focusSection = 'overview') {
+            const menu = document.getElementById('user-dropdown-menu');
+            if (menu) menu.classList.add('hidden');
+
+            if (!currentCloudUser || !currentUserProfile) {
+                openAuthModal('login');
                 return;
             }
 
-            const dropdown = document.getElementById('user-dropdown-menu');
-            if (dropdown) dropdown.classList.add('hidden');
-
             const modal = document.getElementById('profile-modal');
-            document.getElementById('profile-modal-heading').textContent = `@${currentCloudProfile.username}`;
-            document.getElementById('profile-modal-email').textContent = currentCloudProfile.email || '';
-
-            const nickInput = document.getElementById('input-cloud-nickname');
-            const saveBtn = document.getElementById('btn-save-cloud-nickname');
-            const badgeEl = document.getElementById('nickname-cooldown-badge');
-            const hintEl = document.getElementById('nickname-change-hint');
-
-            nickInput.value = currentCloudProfile.username;
-
-            const cooldown = getNicknameCooldownStatus(currentCloudProfile);
-            if (!cooldown.canChange) {
-                nickInput.disabled = true;
-                saveBtn.disabled = true;
-                badgeEl.textContent = `Disponible en ${cooldown.daysLeft}d`;
-                badgeEl.classList.remove('hidden');
-                hintEl.textContent = `Ya cambiaste tu usuario recientemente. Podrás volver a modificarlo en ${cooldown.daysLeft} ${cooldown.daysLeft === 1 ? 'día' : 'días'}.`;
-            } else {
-                nickInput.disabled = false;
-                saveBtn.disabled = false;
-                badgeEl.classList.add('hidden');
-                hintEl.textContent = 'Solo letras, números y guion bajo (3-18 caracteres). Podrás cambiarlo una vez cada 14 días.';
-            }
-
             modal.classList.remove('hidden');
 
-            if (focusSection === 'username' && cooldown.canChange) {
-                setTimeout(() => nickInput.focus(), 100);
+            document.getElementById('profile-modal-heading').textContent = `@${currentUserProfile.nickname}`;
+            document.getElementById('profile-modal-email').textContent = currentUserProfile.email || '';
+
+            const inputNick = document.getElementById('input-cloud-nickname');
+            const btnSaveNick = document.getElementById('btn-save-cloud-nickname');
+            const badgeCooldown = document.getElementById('nickname-cooldown-badge');
+            const hintEl = document.getElementById('nickname-change-hint');
+
+            inputNick.value = currentUserProfile.nickname || '';
+
+            const lastChange = Number(currentUserProfile.lastNicknameChangeAt || 0);
+            const elapsed = Date.now() - lastChange;
+            const remainingMs = lastChange > 0 ? Math.max(0, NICKNAME_COOLDOWN_MS - elapsed) : 0;
+
+            if (remainingMs > 0) {
+                const daysLeft = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
+                inputNick.disabled = true;
+                btnSaveNick.disabled = true;
+                badgeCooldown.classList.remove('hidden');
+                badgeCooldown.textContent = `Disponible en ${daysLeft}d`;
+                hintEl.textContent = `Ya cambiaste tu usuario recientemente. Podrás volver a cambiarlo en ${daysLeft} ${daysLeft === 1 ? 'día' : 'días'}.`;
+            } else {
+                inputNick.disabled = false;
+                btnSaveNick.disabled = false;
+                badgeCooldown.classList.add('hidden');
+                hintEl.textContent = 'Solo letras, números y guion bajo (3-18 caracteres). Podrás cambiarlo una vez cada 14 días.';
+                if (focusSection === 'username') {
+                    setTimeout(() => inputNick.focus(), 100);
+                }
             }
 
-            await loadUserProfileRuns();
+            await loadUserCompetitiveHistory();
         };
 
         window.closeProfileModal = function () {
@@ -5068,310 +5043,336 @@
         };
 
         window.saveCloudNickname = async function () {
-            if (!currentCloudUser || currentCloudUser.isAnonymous || !currentCloudProfile) return;
+            if (!firebaseAvailable || !currentCloudUser || !currentUserProfile) return;
 
-            const cooldown = getNicknameCooldownStatus(currentCloudProfile);
-            if (!cooldown.canChange) {
-                showToast(`Debes esperar ${cooldown.daysLeft} días para volver a cambiar tu usuario.`, 'error');
+            const lastChange = Number(currentUserProfile.lastNicknameChangeAt || 0);
+            if (lastChange > 0 && (Date.now() - lastChange) < NICKNAME_COOLDOWN_MS) {
+                showToast('Debes esperar 14 días entre cambios de nombre de usuario.', 'error');
                 return;
             }
 
             const raw = document.getElementById('input-cloud-nickname').value;
-            const check = validateCleanUsername(raw);
+            const check = validateNickname(raw);
             if (!check.ok) {
-                showToast(check.reason, 'error');
+                showToast(check.error, 'error');
                 return;
             }
 
-            const clean = check.clean;
-            if (clean === currentCloudProfile.username) {
+            if (check.value.toLowerCase() === String(currentUserProfile.nickname || '').toLowerCase()) {
                 showToast('Ese ya es tu nombre de usuario actual.', 'info');
                 return;
             }
 
-            const available = await isUsernameAvailable(clean, currentCloudUser.uid);
-            if (!available) {
-                showToast('Ese usuario ya está ocupado por otra persona.', 'error');
-                return;
-            }
-
-            const userRef = doc(db, 'leyendas_users', currentCloudUser.uid);
-            await updateDoc(userRef, {
-                username: clean,
-                usernameLower: clean.toLowerCase(),
-                lastUsernameChangeAt: serverTimestamp()
-            });
-
-            currentCloudProfile.username = clean;
-            currentCloudProfile.usernameLower = clean.toLowerCase();
-            currentCloudProfile.lastUsernameChangeAt = Date.now();
-            document.getElementById('profile-modal-heading').textContent = `@${clean}`;
-            updateAuthHeaderUI();
-            window.openProfileModal('all');
-            showToast(`✅ Usuario actualizado a @${clean}.`, 'success');
-            loadGlobalWeeklyLeaderboard();
-        };
-
-        async function loadUserProfileRuns() {
-            const weeklyListEl = document.getElementById('profile-weekly-list');
-            const weeklyCountEl = document.getElementById('profile-weekly-count');
-            const top5El = document.getElementById('profile-top5-list');
-            if (!currentCloudUser || !firebaseAvailable || !db) return;
-
-            weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Cargando carreras de esta semana...</div>`;
-            top5El.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Cargando historial personal...</div>`;
+            const btn = document.getElementById('btn-save-cloud-nickname');
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
 
             try {
+                const free = await isNicknameAvailable(check.value, currentCloudUser.uid);
+                if (!free) {
+                    showToast(`El usuario @${check.value} ya está ocupado.`, 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Guardar';
+                    return;
+                }
+
+                const nowMs = Date.now();
+                await setDoc(doc(db, 'users', currentCloudUser.uid), {
+                    nickname: check.value,
+                    nicknameLower: check.value.toLowerCase(),
+                    lastNicknameChangeAt: nowMs,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+
+                currentUserProfile.nickname = check.value;
+                currentUserProfile.nicknameLower = check.value.toLowerCase();
+                currentUserProfile.lastNicknameChangeAt = nowMs;
+
+                updateHeaderAuthUI();
+                document.getElementById('profile-modal-heading').textContent = `@${check.value}`;
+                showToast(`✅ Usuario actualizado a @${check.value}`, 'success');
+                openProfileModal('overview');
+            } catch (e) {
+                console.error(e);
+                showToast('Error al actualizar el nombre de usuario.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Guardar';
+            }
+        };
+
+        async function loadUserCompetitiveHistory() {
+            const weeklyListEl = document.getElementById('profile-weekly-list');
+            const weeklyCountEl = document.getElementById('profile-weekly-count');
+            const top5ListEl = document.getElementById('profile-top5-list');
+
+            if (!db || !currentCloudUser) return;
+
+            try {
+                const { weekKey } = getCurrentWeekInfo();
                 const q = query(
-                    collection(db, 'leyendas_weekly_leaderboard'),
+                    collection(db, 'weekly_leaderboard'),
                     where('uid', '==', currentCloudUser.uid),
                     limit(50)
                 );
                 const snap = await getDocs(q);
-                const runs = [];
-                snap.forEach(d => runs.push({ id: d.id, ...d.data() }));
-                runs.sort((a, b) => (b.score || 0) - (a.score || 0));
+                const allRuns = [];
+                snap.forEach(d => allRuns.push({ id: d.id, ...d.data() }));
 
-                const weekKey = getCurrentWeekKey();
-                const thisWeekRuns = runs.filter(r => r.weekKey === weekKey);
-                weeklyCountEl.textContent = `${thisWeekRuns.length} ${thisWeekRuns.length === 1 ? 'carrera' : 'carreras'}`;
+                // Filtrar carreras de esta semana
+                const weeklyRuns = allRuns
+                    .filter(r => r.weekKey === weekKey)
+                    .sort((a, b) => (b.score || 0) - (a.score || 0));
 
-                if (thisWeekRuns.length === 0) {
-                    weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras esta semana.</div>`;
+                weeklyCountEl.textContent = `${weeklyRuns.length} ${weeklyRuns.length === 1 ? 'carrera' : 'carreras'}`;
+
+                if (weeklyRuns.length === 0) {
+                    weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras esta semana (${weekKey}).</div>`;
                 } else {
-                    weeklyListEl.innerHTML = thisWeekRuns.map(r => `
+                    weeklyListEl.innerHTML = weeklyRuns.map((r, idx) => `
                         <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
                             <div class="min-w-0">
-                                <div class="font-black text-white truncate">${escapeHtml(r.playerName)} <span class="text-[#8b96ff]">(${r.position})</span></div>
-                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(r.headline || r.studiedCareer)}</div>
+                                <div class="font-bold text-white truncate">${idx === 0 ? '⭐ ' : ''}${escapeHtml(r.playerName)} <span class="text-[#8b96ff]">(${r.position} · ${r.ovr >= 100 ? '🐐' : r.ovr})</span></div>
+                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(r.studiedCareer)} · 🏆 ${r.titlesCount || 0} títulos</div>
                             </div>
-                            <div class="text-right shrink-0">
-                                <div class="font-black text-[#a3adff]">${r.score} pts</div>
-                                <div class="text-[10px] text-gray-500">🏆 ${r.titlesCount || 0} · OVR ${formatOvr(r.ovr)}</div>
-                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-[#717fff]/20 text-[#a3adff] font-black shrink-0">${r.score} pts</span>
                         </div>
                     `).join('');
                 }
 
-                const top5 = runs.slice(0, 5);
-                if (top5.length === 0) {
-                    top5El.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Titula tu primera carrera para inaugurar tu Top 5 personal.</div>`;
+                // Top 5 Histórico personal
+                const top5Runs = [...allRuns]
+                    .sort((a, b) => (b.score || 0) - (a.score || 0))
+                    .slice(0, 5);
+
+                if (top5Runs.length === 0) {
+                    top5ListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>`;
                 } else {
-                    top5El.innerHTML = top5.map((r, idx) => `
+                    const medals = ['🥇', '🥈', '🥉', '4°', '5°'];
+                    top5ListEl.innerHTML = top5Runs.map((r, idx) => `
                         <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <span class="font-black ${idx === 0 ? 'text-amber-400' : 'text-gray-400'}">#${idx + 1}</span>
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="font-black text-sm shrink-0">${medals[idx]}</span>
                                 <div class="min-w-0">
-                                    <div class="font-black text-white truncate">${escapeHtml(r.playerName)} <span class="text-[#8b96ff]">(${r.position})</span></div>
-                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(r.headline || r.studiedCareer)}</div>
+                                    <div class="font-bold text-white truncate">${escapeHtml(r.playerName)} <span class="text-[#8b96ff]">(${r.position} · ${r.ovr >= 100 ? '🐐' : r.ovr})</span></div>
+                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(r.headline || r.studiedCareer)} · ${r.weekKey || ''}</div>
                                 </div>
                             </div>
-                            <div class="text-right shrink-0">
-                                <div class="font-black text-amber-300">${r.score} pts</div>
-                                <div class="text-[10px] text-gray-500">🏆 ${r.titlesCount || 0} · OVR ${formatOvr(r.ovr)}</div>
-                            </div>
+                            <span class="font-black text-amber-300 shrink-0">${r.score} pts</span>
                         </div>
                     `).join('');
                 }
             } catch (e) {
-                weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">No se pudieron cargar tus carreras.</div>`;
-                top5El.innerHTML = '';
+                console.error(e);
+                weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-rose-400">Error al cargar tus carreras.</div>`;
             }
         }
 
-        window.submitCareerToCloudLeaderboard = async function (cState, legacy, score) {
-            if (!cState) return;
-            if (!currentCloudUser || currentCloudUser.isAnonymous || !currentCloudProfile) {
-                showToast('ℹ️ Inicia sesión o crea una cuenta para participar en el Top Global Semanal.', 'info');
-                return;
-            }
-
-            const weekKey = getCurrentWeekKey();
-            const clubMap = new Map();
-            (cState.history || []).slice().reverse().forEach(s => {
-                const clubTrophies = (s.trophies || []).filter(t => t.type !== 'SELECCION');
-                if (clubMap.has(s.teamCode)) {
-                    const ex = clubMap.get(s.teamCode);
-                    ex.semesters += 1;
-                    ex.titles += clubTrophies.length;
-                } else {
-                    clubMap.set(s.teamCode, {
-                        teamCode: s.teamCode,
-                        teamName: s.teamName,
-                        careerName: s.careerName,
-                        semesters: 1,
-                        titles: clubTrophies.length
-                    });
-                }
-            });
-
-            const payload = {
-                weekKey,
-                uid: currentCloudUser.uid,
-                username: currentCloudProfile.username,
-                playerName: cState.playerName,
-                gender: cState.gender,
-                position: cState.position,
-                studiedCareer: cState.studiedCareer,
-                academicStage: cState.academicStage || 'PREGRADO',
-                ovr: cState.ovr,
-                score,
-                headline: legacy.headline,
-                teamCode: legacy.teamCode || cState.teamCode,
-                titlesCount: (cState.trophies || []).length,
-                stats: {
-                    matches: cState.stats?.matches || 0,
-                    goals: cState.stats?.goals || 0,
-                    assists: cState.stats?.assists || 0,
-                    cleanSheets: cState.stats?.cleanSheets || 0
-                },
-                trophiesSummary: (cState.trophies || []).slice(0, 12).map(t => ({
-                    title: t.title,
-                    teamName: t.teamName,
-                    year: t.year,
-                    sem: t.sem
-                })),
-                awardsSummary: (cState.awards || []).slice(0, 8).map(a => ({
-                    title: a.title,
-                    detail: a.detail,
-                    year: a.year
-                })),
-                clubsSummary: Array.from(clubMap.values()).slice(0, 8)
-            };
-
-            if (!firebaseAvailable || !db || currentCloudUser.isLocal) {
-                let localItems = [];
-                try {
-                    localItems = JSON.parse(localStorage.getItem(LOCAL_MOCK_WEEKLY_KEY) || '[]');
-                } catch (e) { localItems = []; }
-                localItems.push({ id: `local_${Date.now()}`, ...payload });
-                localItems.sort((a, b) => (b.score || 0) - (a.score || 0));
-                localStorage.setItem(LOCAL_MOCK_WEEKLY_KEY, JSON.stringify(localItems.slice(0, 50)));
-                renderOfflineWeeklyLeaderboard();
-                showToast(`🌍 ¡Puntaje publicado como @${currentCloudProfile.username} (${score} pts)!`, 'success');
+        // Subir carrera completada al Ranking Global Semanal (solo si el usuario tiene cuenta iniciada)
+        window.submitCareerToCloudLeaderboard = async function (st, summaryEntry) {
+            if (!firebaseAvailable || !db || !currentCloudUser || !currentUserProfile) {
+                showToast('💡 Inicia sesión o regístrate arriba para competir en el Top Global Semanal.', 'info');
                 return;
             }
 
             try {
-                await addDoc(collection(db, 'leyendas_weekly_leaderboard'), {
-                    ...payload,
+                const { weekKey } = getCurrentWeekInfo();
+                const clubNames = [...new Set((st.history || []).map(h => h.teamName))].reverse();
+
+                const payload = {
+                    uid: currentCloudUser.uid,
+                    nickname: currentUserProfile.nickname,
+                    weekKey,
+                    score: summaryEntry.score,
+                    playerName: st.playerName,
+                    gender: st.gender,
+                    position: st.position,
+                    studiedCareer: st.studiedCareer,
+                    academicStage: st.academicStage || 'PREGRADO',
+                    maxYears: st.maxYears,
+                    ovr: st.ovr,
+                    headline: summaryEntry.headline,
+                    badge: summaryEntry.badge,
+                    teamCode: summaryEntry.teamCode,
+                    titlesCount: (st.trophies || []).length,
+                    awardsCount: (st.awards || []).length,
+                    matches: st.stats.matches,
+                    goals: st.stats.goals,
+                    assists: st.stats.assists,
+                    cleanSheets: st.stats.cleanSheets,
+                    ufroCitationsCount: (st.ufroCitations || []).length,
+                    clubs: clubNames,
+                    trophiesList: (st.trophies || []).slice(0, 25).map(t => ({
+                        title: t.title,
+                        teamName: t.teamName,
+                        year: t.year,
+                        sem: t.sem
+                    })),
                     createdAt: serverTimestamp()
-                });
-                showToast(`🌍 ¡Puntaje publicado en el Top Global como @${currentCloudProfile.username} (${score} pts)!`, 'success');
-                loadGlobalWeeklyLeaderboard();
-            } catch (e) {}
+                };
+
+                await addDoc(collection(db, 'weekly_leaderboard'), payload);
+                showToast(`🌍 ¡Tu carrera (${summaryEntry.score} pts) subió al Top Global Semanal como @${currentUserProfile.nickname}!`, 'success');
+                fetchGlobalWeeklyLeaderboard();
+            } catch (err) {
+                console.error('Error subiendo puntaje al ranking global:', err);
+                showToast('No se pudo publicar el puntaje en el ranking global.', 'error');
+            }
         };
 
-        async function loadGlobalWeeklyLeaderboard() {
+        // Obtener Top 10 Global de la Semana (agrupado por mejor puntaje de cada usuario esta semana)
+        async function fetchGlobalWeeklyLeaderboard() {
             const listEl = document.getElementById('global-hof-list');
             if (!listEl) return;
 
             if (!firebaseAvailable || !db) {
-                renderOfflineWeeklyLeaderboard();
+                listEl.innerHTML = `
+                    <div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-400 space-y-1">
+                        <div class="font-bold text-white">Ranking Global en espera de configuración Firebase</div>
+                        <p class="text-[11px] text-gray-500">Agrega tus credenciales de Firebase en el script para habilitar las cuentas y el Top Global Semanal.</p>
+                    </div>
+                `;
                 return;
             }
 
             try {
-                const weekKey = getCurrentWeekKey();
+                const { weekKey } = getCurrentWeekInfo();
                 const q = query(
-                    collection(db, 'leyendas_weekly_leaderboard'),
+                    collection(db, 'weekly_leaderboard'),
                     where('weekKey', '==', weekKey),
                     orderBy('score', 'desc'),
-                    limit(10)
+                    limit(50)
                 );
                 const snap = await getDocs(q);
+                const bestByUser = new Map();
 
-                if (snap.empty) {
-                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">
-                        Aún no hay carreras registradas esta semana. ¡Inicia sesión y titula una carrera para liderar el ranking!
-                    </div>`;
+                snap.forEach(docSnap => {
+                    const data = { id: docSnap.id, ...docSnap.data() };
+                    const existing = bestByUser.get(data.uid);
+                    if (!existing || (data.score || 0) > (existing.score || 0)) {
+                        bestByUser.set(data.uid, data);
+                    }
+                });
+
+                const ranking = Array.from(bestByUser.values())
+                    .sort((a, b) => (b.score || 0) - (a.score || 0))
+                    .slice(0, 10);
+
+                cachedGlobalEntries = ranking;
+
+                if (ranking.length === 0) {
+                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Aún no hay carreras registradas esta semana (${weekKey}). ¡Inicia sesión, termina una carrera y sé el #1!</div>`;
                     return;
                 }
 
-                cachedGlobalEntries.clear();
-                const items = [];
-                snap.forEach(docSnap => {
-                    const data = { id: docSnap.id, ...docSnap.data() };
-                    cachedGlobalEntries.set(docSnap.id, data);
-                    items.push(data);
-                });
-
-                listEl.innerHTML = items.map((item, idx) => {
-                    const hofTeam = findTeamByCode(item.teamCode, item.gender);
-                    const rankColor = idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500';
+                const medals = ['🥇', '🥈', '🥉', '4°', '5°', '6°', '7°', '8°', '9°', '10°'];
+                listEl.innerHTML = ranking.map((item, idx) => {
+                    const hTeam = findTeamByCode(item.teamCode, item.gender);
+                    const isMe = currentCloudUser && item.uid === currentCloudUser.uid;
                     return `
-                        <button type="button" onclick="openGlobalCareerDetail('${item.id}')"
-                            class="w-full text-left p-3.5 rounded-2xl surface-sub hover:border-[#717fff]/60 transition flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <span class="w-6 text-center font-black text-sm ${rankColor} shrink-0">#${idx + 1}</span>
-                                ${hofTeam ? getTeamBadgeHTML(hofTeam, 'w-10 h-10', 'text-[10px]') : ''}
+                        <button type="button" onclick="openCareerDetailModal(${idx})"
+                            class="w-full text-left p-3.5 rounded-2xl surface-sub ${isMe ? 'border-[#717fff]/70 bg-[#717fff]/10' : 'hover:border-[#717fff]/50'} flex items-center justify-between gap-3 text-xs transition group">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="w-6 text-center font-black text-sm shrink-0">${medals[idx] || `#${idx + 1}`}</span>
+                                ${getTeamBadgeHTML(hTeam, 'w-9 h-9', 'text-[9px]')}
                                 <div class="min-w-0">
-                                    <div class="font-black text-white text-sm truncate">
-                                        ${escapeHtml(item.playerName)} <span class="text-[11px] font-bold text-[#8b96ff]">(${item.position})</span>
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-black text-[#8b96ff]">@${escapeHtml(item.nickname || 'jugador')}</span>
+                                        <span class="text-gray-500">·</span>
+                                        <span class="font-bold text-white truncate">${escapeHtml(item.playerName)}</span>
+                                        <span class="text-[11px] font-bold text-amber-300">(${item.position} · ${item.ovr >= 100 ? '🐐' : item.ovr})</span>
                                     </div>
-                                    <div class="text-[11px] text-[#a3adff] font-bold truncate">@${escapeHtml(item.username || 'leyenda_ufro')}</div>
+                                    <div class="text-gray-400 truncate mt-0.5">${escapeHtml(item.studiedCareer)} · 🏆 ${item.titlesCount || 0} títulos</div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <div class="text-xs font-black text-[#a3adff]">${item.score} pts</div>
-                                <div class="text-[11px] font-bold text-gray-400">🏆 ${item.titlesCount} · OVR ${formatOvr(item.ovr)}</div>
+                                <div class="font-black text-white group-hover:text-[#a3adff] transition">${item.score} pts</div>
+                                <div class="text-[10px] text-[#8b96ff] font-bold">Ver ficha →</div>
                             </div>
                         </button>
                     `;
                 }).join('');
-            } catch (e) {
-                renderOfflineWeeklyLeaderboard();
+            } catch (err) {
+                console.error('Error cargando ranking semanal:', err);
+                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">No se pudo cargar el ranking semanal en este momento.</div>`;
             }
         }
 
-        window.openGlobalCareerDetail = function (entryId) {
-            const item = cachedGlobalEntries.get(entryId);
+        // Modal con toda la información de la carrera seleccionada en el Top Global Semanal
+        window.openCareerDetailModal = function (index) {
+            const item = cachedGlobalEntries[index];
             if (!item) return;
 
             const modal = document.getElementById('career-detail-modal');
             const titleEl = document.getElementById('detail-modal-title');
             const contentEl = document.getElementById('career-detail-content');
-            const clubTeam = findTeamByCode(item.teamCode, item.gender);
+
+            titleEl.textContent = `${item.playerName} (@${item.nickname || 'jugador'})`;
+
+            const hTeam = findTeamByCode(item.teamCode, item.gender);
             const isArq = item.position === 'ARQ';
+            const stageLabel = item.academicStage === 'DOCTORADO'
+                ? 'Doctorado UFRO'
+                : item.academicStage === 'MAGISTER'
+                    ? 'Magíster UFRO'
+                    : 'Pregrado UFRO';
 
-            titleEl.textContent = `${item.playerName} (@${item.username || 'leyenda_ufro'})`;
-
-            const trophiesHtml = (item.trophiesSummary && item.trophiesSummary.length > 0)
-                ? item.trophiesSummary.map(t => `<span class="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold">🏆 ${escapeHtml(t.title)} (A${t.year} S${t.sem})</span>`).join('')
+            const trophiesHtml = Array.isArray(item.trophiesList) && item.trophiesList.length > 0
+                ? item.trophiesList.map(t => `
+                    <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[11px] font-bold">
+                        🏆 ${escapeHtml(t.title)} (${escapeHtml(t.teamName)} · A${t.year} S${t.sem})
+                    </span>
+                `).join('')
                 : `<span class="text-xs text-gray-500">Sin títulos oficiales registrados.</span>`;
 
-            const clubsHtml = (item.clubsSummary && item.clubsSummary.length > 0)
-                ? item.clubsSummary.map(c => `<div class="p-2.5 rounded-xl surface-sub flex items-center justify-between text-xs"><strong class="text-white">${escapeHtml(c.teamName)}</strong><span class="text-gray-400">${c.semesters} sem. · 🏆 ${c.titles}</span></div>`).join('')
-                : '';
+            const clubsHtml = Array.isArray(item.clubs) && item.clubs.length > 0
+                ? item.clubs.map(c => escapeHtml(c)).join(' → ')
+                : 'Sin historial de clubes';
 
             contentEl.innerHTML = `
-                <div class="p-4 rounded-2xl surface-sub flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3">
-                        ${clubTeam ? getTeamBadgeHTML(clubTeam, 'w-12 h-12', 'text-xs') : ''}
-                        <div>
-                            <div class="font-black text-white text-base">${escapeHtml(item.headline || item.playerName)}</div>
-                            <div class="text-xs text-gray-400">${escapeHtml(item.studiedCareer)} · ${item.position}</div>
+                <div class="p-4 rounded-2xl surface-sub border-[#717fff]/35 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        ${getTeamBadgeHTML(hTeam, 'w-12 h-12', 'text-xs')}
+                        <div class="min-w-0">
+                            <span class="text-[10px] font-black uppercase text-[#8b96ff]">${escapeHtml(item.badge || 'Leyenda UFRO')}</span>
+                            <div class="font-black text-white text-base truncate">${escapeHtml(item.headline || item.playerName)}</div>
+                            <div class="text-xs text-gray-400 truncate">${escapeHtml(item.studiedCareer)} (${stageLabel} · ${item.maxYears || 5} años)</div>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-[10px] font-bold uppercase text-gray-500">Media Final</div>
-                        <div class="text-2xl font-black text-[#8b96ff]">${formatOvr(item.ovr)}</div>
+                    <div class="text-right shrink-0">
+                        <div class="text-[10px] font-bold uppercase text-gray-500">Media</div>
+                        <div class="text-2xl font-black text-[#8b96ff]">${item.ovr >= 100 ? '🐐' : item.ovr}</div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-4 gap-2 text-center">
-                    <div class="p-2.5 rounded-xl surface-sub"><div class="text-base font-black text-white">${item.stats?.matches || 0}</div><div class="text-[10px] text-gray-500 font-bold uppercase">PJ</div></div>
-                    <div class="p-2.5 rounded-xl surface-sub"><div class="text-base font-black text-[#8b96ff]">${isArq ? (item.stats?.cleanSheets || 0) : (item.stats?.goals || 0)}</div><div class="text-[10px] text-gray-500 font-bold uppercase">${isArq ? 'VI' : 'Goles'}</div></div>
-                    <div class="p-2.5 rounded-xl surface-sub"><div class="text-base font-black text-[#717fff]">${item.stats?.assists || 0}</div><div class="text-[10px] text-gray-500 font-bold uppercase">Asist.</div></div>
-                    <div class="p-2.5 rounded-xl surface-sub"><div class="text-base font-black text-amber-300">${item.score}</div><div class="text-[10px] text-gray-500 font-bold uppercase">Puntos</div></div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-white">${item.matches || 0}</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase">PJ</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-[#8b96ff]">${isArq ? (item.cleanSheets || 0) : (item.goals || 0)}</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase">${isArq ? 'Vallas' : 'Goles'}</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-[#717fff]">${item.assists || 0}</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase">Asist.</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-amber-300">${item.score || 0}</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase">Puntos</div>
+                    </div>
                 </div>
 
-                <div class="space-y-1.5">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🏆 Palmarés Conquistado (${item.titlesCount || 0})</h4>
+                <div class="p-3.5 rounded-2xl surface-sub space-y-1 text-xs">
+                    <div class="font-bold text-gray-300">🏟️ Trayectoria de Clubes</div>
+                    <div class="text-gray-400">${clubsHtml}</div>
+                    <div class="text-[11px] text-[#a3adff] pt-1">🇨🇱 ${item.ufroCitationsCount || 0} nominaciones a la Selección UFRO · ${item.awardsCount || 0} premios individuales</div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="text-xs font-black uppercase tracking-wider text-amber-300">🏆 Palmarés Conquistado (${item.titlesCount || 0})</div>
                     <div class="flex flex-wrap gap-1.5">${trophiesHtml}</div>
                 </div>
-
-                ${clubsHtml ? `<div class="space-y-1.5"><h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🛡️ Equipos Defendidos</h4><div class="space-y-1.5">${clubsHtml}</div></div>` : ''}
             `;
 
             modal.classList.remove('hidden');
@@ -5381,38 +5382,36 @@
             document.getElementById('career-detail-modal').classList.add('hidden');
         };
 
+        // Inicialización del módulo Firebase
         window.initCloudLeaderboard = function () {
             startWeeklyCountdownTimer();
+
             try {
-                app = initializeApp(FIREBASE_CONFIG);
+                if (!ACTIVE_FIREBASE_CONFIG.apiKey || String(ACTIVE_FIREBASE_CONFIG.apiKey).includes('REEMPLAZA')) {
+                    firebaseAvailable = false;
+                    fetchGlobalWeeklyLeaderboard();
+                    return;
+                }
+
+                app = initializeApp(ACTIVE_FIREBASE_CONFIG);
                 auth = getAuth(app);
                 db = getFirestore(app);
                 firebaseAvailable = true;
 
                 onAuthStateChanged(auth, async (user) => {
-                    try {
-                        if (user) {
-                            currentCloudUser = user;
-                            await loadOrCreateUserProfile(user);
-                            loadGlobalWeeklyLeaderboard();
-                        } else {
-                            try {
-                                const anon = await signInAnonymously(auth);
-                                currentCloudUser = anon.user;
-                                updateAuthHeaderUI();
-                                loadGlobalWeeklyLeaderboard();
-                            } catch (e) {
-                                updateAuthHeaderUI();
-                                loadGlobalWeeklyLeaderboard();
-                            }
-                        }
-                    } catch (err) {
-                        updateAuthHeaderUI();
+                    currentCloudUser = user;
+                    if (user) {
+                        await ensureUserDocument(user);
+                    } else {
+                        currentUserProfile = null;
                     }
+                    updateHeaderAuthUI();
+                    fetchGlobalWeeklyLeaderboard();
                 });
-            } catch (e) {
+            } catch (err) {
+                console.warn('Firebase no inicializado:', err);
                 firebaseAvailable = false;
-                renderOfflineWeeklyLeaderboard();
+                fetchGlobalWeeklyLeaderboard();
             }
         };
     </script>
