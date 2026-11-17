@@ -212,27 +212,6 @@
                 </button>
             </form>
 
-            <!-- Formulario rápido para elegir tu @usuario al entrar con Google -->
-            <form id="form-auth-google-setup" onsubmit="handleGoogleLocalSetup(event)" class="hidden space-y-3">
-                <div class="p-3 rounded-xl bg-[#717fff]/10 border border-[#717fff]/30 text-xs text-[#d0d5ff]">
-                    Personaliza tu perfil para que tus carreras aparezcan con <strong>tu propio @usuario</strong> en el ranking.
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-400 mb-1">Tu nombre de usuario</label>
-                    <input type="text" id="google-setup-username" required minlength="3" maxlength="18" placeholder="Ej: El10DeLaUFRO" class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-400 mb-1">Tu correo electrónico</label>
-                    <input type="email" id="google-setup-email" required placeholder="tu.correo@ufromail.cl" class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
-                </div>
-                <button type="submit" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
-                    Confirmar y entrar con mi perfil
-                </button>
-                <button type="button" onclick="switchAuthMode('login')" class="w-full py-1.5 text-xs font-bold text-gray-400 hover:text-white transition">
-                    ← Volver atrás
-                </button>
-            </form>
-
             <div id="auth-google-section" class="pt-2 border-t border-[#262626] space-y-2.5">
                 <div class="text-center text-[10px] font-bold uppercase tracking-wider text-gray-500">O continúa con</div>
                 <button type="button" onclick="signInWithGoogleAccount()" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-gray-100 text-gray-900 font-black text-xs flex items-center justify-center gap-2.5 shadow transition">
@@ -4701,48 +4680,9 @@
         let cachedGlobalEntries = new Map();
         const NICKNAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
         const LOCAL_MOCK_WEEKLY_KEY = 'leyenda_ufro_weekly_fallback_v1';
-        const LOCAL_ACCOUNTS_KEY = 'leyenda_ufro_local_accounts_v1';
-        const LOCAL_SESSION_KEY = 'leyenda_ufro_local_session_v1';
 
         function isValidFirebaseConfig(cfg) {
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) return true;
             return Boolean(cfg && cfg.apiKey && !cfg.apiKey.includes('38472920') && !cfg.apiKey.includes('847291') && cfg.projectId);
-        }
-
-        function getActiveFirebaseConfig() {
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                try {
-                    return JSON.parse(__firebase_config);
-                } catch (e) {}
-            }
-            return FIREBASE_CONFIG;
-        }
-
-        function getLocalAccounts() {
-            try { return JSON.parse(localStorage.getItem(LOCAL_ACCOUNTS_KEY) || '[]'); }
-            catch (e) { return []; }
-        }
-
-        function saveLocalAccounts(accs) {
-            try { localStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify(accs)); } catch (e) {}
-        }
-
-        function restoreLocalSessionIfNeeded() {
-            if (firebaseAvailable) return;
-            try {
-                const savedUid = localStorage.getItem(LOCAL_SESSION_KEY);
-                if (!savedUid) return;
-                const accounts = getLocalAccounts();
-                const acc = accounts.find(a => a.uid === savedUid);
-                // Ignorar la antigua cuenta genérica automática si existe
-                if (acc && acc.uid !== 'local_google_ufro') {
-                    currentCloudUser = { uid: acc.uid, email: acc.email, isAnonymous: false, isLocal: true };
-                    currentCloudProfile = acc;
-                    updateAuthHeaderUI();
-                } else if (acc && acc.uid === 'local_google_ufro') {
-                    localStorage.removeItem(LOCAL_SESSION_KEY);
-                }
-            } catch (e) {}
         }
 
         function renderOfflineWeeklyLeaderboard() {
@@ -4759,9 +4699,7 @@
 
             if (currentWeekItems.length === 0) {
                 listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-400">
-                    ${currentCloudUser && !currentCloudUser.isAnonymous
-                        ? `Sesión activa como <strong class="text-white">@${escapeHtml(currentCloudProfile?.username || 'jugador')}</strong>. ¡Titula una carrera esta semana para estrenar la tabla!`
-                        : 'Aún no hay carreras registradas esta semana. ¡Inicia sesión y titula una carrera para liderar la tabla!'}
+                    Aún no hay carreras registradas esta semana. ¡Inicia sesión y titula una carrera para liderar la tabla!
                 </div>`;
                 return;
             }
@@ -4875,13 +4813,11 @@
             const formLogin = document.getElementById('form-auth-login');
             const formReg = document.getElementById('form-auth-register');
             const formReset = document.getElementById('form-auth-reset');
-            const formGoogleSetup = document.getElementById('form-auth-google-setup');
             const googleSec = document.getElementById('auth-google-section');
 
             formLogin.classList.add('hidden');
             formReg.classList.add('hidden');
             formReset.classList.add('hidden');
-            if (formGoogleSetup) formGoogleSetup.classList.add('hidden');
 
             if (mode === 'register') {
                 titleEl.textContent = 'Crear Cuenta';
@@ -4895,11 +4831,6 @@
                 tabsEl.classList.add('hidden');
                 googleSec.classList.add('hidden');
                 formReset.classList.remove('hidden');
-            } else if (mode === 'google-setup') {
-                titleEl.textContent = 'Configura tu Perfil';
-                tabsEl.classList.add('hidden');
-                googleSec.classList.add('hidden');
-                if (formGoogleSetup) formGoogleSetup.classList.remove('hidden');
             } else {
                 titleEl.textContent = 'Iniciar Sesión';
                 tabsEl.classList.remove('hidden');
@@ -4911,22 +4842,15 @@
         };
 
         async function isUsernameAvailable(cleanUsername, excludeUid = null) {
-            if (!firebaseAvailable || !db) {
-                const accounts = getLocalAccounts();
-                return !accounts.some(a => a.usernameLower === cleanUsername.toLowerCase() && a.uid !== excludeUid);
-            }
-            try {
-                const q = query(
-                    collection(db, 'leyendas_users'),
-                    where('usernameLower', '==', cleanUsername.toLowerCase()),
-                    limit(1)
-                );
-                const snap = await getDocs(q);
-                if (snap.empty) return true;
-                return snap.docs[0].id === excludeUid;
-            } catch (e) {
-                return true;
-            }
+            if (!firebaseAvailable || !db) return true;
+            const q = query(
+                collection(db, 'leyendas_users'),
+                where('usernameLower', '==', cleanUsername.toLowerCase()),
+                limit(1)
+            );
+            const snap = await getDocs(q);
+            if (snap.empty) return true;
+            return snap.docs[0].id === excludeUid;
         }
 
         async function loadOrCreateUserProfile(user, preferredUsername = null) {
@@ -4971,6 +4895,10 @@
 
         window.handleEmailRegister = async function (e) {
             e.preventDefault();
+            if (!firebaseAvailable || !auth || !db) {
+                showToast('Configura tu proyecto Firebase para habilitar el registro de cuentas.', 'info');
+                return;
+            }
             const rawUser = document.getElementById('reg-username').value;
             const email = document.getElementById('reg-email').value.trim().toLowerCase();
             const pass = document.getElementById('reg-password').value;
@@ -4983,36 +4911,6 @@
             }
             if (pass !== pass2) {
                 showToast('Las contraseñas no coinciden.', 'error');
-                return;
-            }
-
-            if (!firebaseAvailable || !auth || !db) {
-                const accounts = getLocalAccounts();
-                if (accounts.some(a => a.usernameLower === validUser.clean.toLowerCase())) {
-                    showToast('Ese nombre de usuario ya está en uso. Prueba con otro.', 'error');
-                    return;
-                }
-                if (accounts.some(a => a.email === email)) {
-                    showToast('Ese correo ya está registrado. Inicia sesión.', 'error');
-                    return;
-                }
-                const newAcc = {
-                    uid: `local_${Date.now()}`,
-                    username: validUser.clean,
-                    usernameLower: validUser.clean.toLowerCase(),
-                    email,
-                    password: pass,
-                    createdAt: Date.now()
-                };
-                accounts.push(newAcc);
-                saveLocalAccounts(accounts);
-                localStorage.setItem(LOCAL_SESSION_KEY, newAcc.uid);
-                currentCloudUser = { uid: newAcc.uid, email: newAcc.email, isAnonymous: false, isLocal: true };
-                currentCloudProfile = newAcc;
-                updateAuthHeaderUI();
-                window.closeAuthModal();
-                showToast(`✅ ¡Cuenta creada! Bienvenido @${validUser.clean}`, 'success');
-                renderOfflineWeeklyLeaderboard();
                 return;
             }
 
@@ -5046,29 +4944,12 @@
 
         window.handleEmailLogin = async function (e) {
             e.preventDefault();
-            const identifier = document.getElementById('login-identifier').value.trim();
-            const pass = document.getElementById('login-password').value;
-
             if (!firebaseAvailable || !auth || !db) {
-                const cleanId = identifier.replace(/^@+/, '').toLowerCase();
-                const accounts = getLocalAccounts();
-                const found = accounts.find(a =>
-                    (a.email === cleanId || a.usernameLower === cleanId) && a.password === pass
-                );
-                if (!found) {
-                    showToast('Correo/usuario o contraseña incorrectos.', 'error');
-                    return;
-                }
-                localStorage.setItem(LOCAL_SESSION_KEY, found.uid);
-                currentCloudUser = { uid: found.uid, email: found.email, isAnonymous: false, isLocal: true };
-                currentCloudProfile = found;
-                updateAuthHeaderUI();
-                window.closeAuthModal();
-                showToast(`👋 ¡Hola de nuevo @${found.username}!`, 'success');
-                renderOfflineWeeklyLeaderboard();
+                showToast('Configura tu proyecto Firebase para iniciar sesión en el ranking global.', 'info');
                 return;
             }
-
+            const identifier = document.getElementById('login-identifier').value.trim();
+            const pass = document.getElementById('login-password').value;
             const btn = document.getElementById('btn-submit-login');
             btn.disabled = true;
             btn.textContent = 'Ingresando...';
@@ -5098,23 +4979,8 @@
                 showToast(`👋 ¡Hola de nuevo @${prof?.username || 'Leyenda'}!`, 'success');
             } catch (err) {
                 const code = err?.code || '';
-                if (code === 'auth/invalid-api-key' || code === 'auth/network-request-failed' || code === 'auth/internal-error' || code === 'auth/operation-not-allowed') {
-                    firebaseAvailable = false;
-                    const cleanId = identifier.replace(/^@+/, '').toLowerCase();
-                    const found = getLocalAccounts().find(a => (a.email === cleanId || a.usernameLower === cleanId) && a.password === pass);
-                    if (found) {
-                        localStorage.setItem(LOCAL_SESSION_KEY, found.uid);
-                        currentCloudUser = { uid: found.uid, email: found.email, isAnonymous: false, isLocal: true };
-                        currentCloudProfile = found;
-                        updateAuthHeaderUI();
-                        window.closeAuthModal();
-                        showToast(`👋 ¡Hola de nuevo @${found.username}!`, 'success');
-                        renderOfflineWeeklyLeaderboard();
-                        return;
-                    }
-                }
                 if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
-                    showToast('Correo/usuario o contraseña incorrectos. Si cambiaste de navegador o dispositivo, crea una cuenta nueva.', 'error');
+                    showToast('Correo/usuario o contraseña incorrectos.', 'error');
                 } else {
                     showToast('No se pudo iniciar sesión. Revisa tus datos.', 'error');
                 }
@@ -5126,19 +4992,12 @@
 
         window.handlePasswordReset = async function (e) {
             e.preventDefault();
-            const email = document.getElementById('reset-email').value.trim().toLowerCase();
-            if (!email) return;
-
             if (!firebaseAvailable || !auth) {
-                const found = getLocalAccounts().find(a => a.email === email);
-                if (!found) {
-                    showToast('No encontramos una cuenta registrada con ese correo.', 'error');
-                    return;
-                }
-                showToast(`📩 Cuenta encontrada (@${found.username}). Puedes iniciar sesión directamente.`, 'success');
-                window.switchAuthMode('login');
+                showToast('Configura tu proyecto Firebase para recuperar contraseñas.', 'info');
                 return;
             }
+            const email = document.getElementById('reset-email').value.trim();
+            if (!email) return;
 
             const btn = document.getElementById('btn-submit-reset');
             btn.disabled = true;
@@ -5158,32 +5017,7 @@
 
         window.signInWithGoogleAccount = async function () {
             if (!firebaseAvailable || !auth) {
-                const accounts = getLocalAccounts().filter(a => a.uid !== 'local_google_ufro');
-                // Si el usuario ya había ingresado un correo/usuario en el formulario de login, buscar su cuenta
-                const typedId = (document.getElementById('login-identifier')?.value || '').trim().replace(/^@+/, '').toLowerCase();
-                const matchedAcc = typedId
-                    ? accounts.find(a => a.email === typedId || a.usernameLower === typedId)
-                    : (accounts.length === 1 ? accounts[0] : null);
-
-                if (matchedAcc) {
-                    localStorage.setItem(LOCAL_SESSION_KEY, matchedAcc.uid);
-                    currentCloudUser = { uid: matchedAcc.uid, email: matchedAcc.email, isAnonymous: false, isLocal: true };
-                    currentCloudProfile = matchedAcc;
-                    updateAuthHeaderUI();
-                    window.closeAuthModal();
-                    showToast(`✅ Sesión iniciada como @${matchedAcc.username}`, 'success');
-                    renderOfflineWeeklyLeaderboard();
-                    return;
-                }
-
-                // Si es la primera vez en este dispositivo, pedir su propio @usuario y correo en vez de poner @LeyendaUFRO
-                const setupUser = document.getElementById('google-setup-username');
-                const setupEmail = document.getElementById('google-setup-email');
-                if (typedId) {
-                    if (typedId.includes('@')) setupEmail.value = typedId;
-                    else setupUser.value = typedId;
-                }
-                window.switchAuthMode('google-setup');
+                showToast('Configura tu proyecto Firebase para continuar con Google.', 'info');
                 return;
             }
             try {
@@ -5198,53 +5032,8 @@
             }
         };
 
-        window.handleGoogleLocalSetup = function (e) {
-            e.preventDefault();
-            const rawUser = document.getElementById('google-setup-username').value;
-            const email = document.getElementById('google-setup-email').value.trim().toLowerCase();
-            const validUser = validateCleanUsername(rawUser);
-            if (!validUser.ok) {
-                showToast(validUser.reason, 'error');
-                return;
-            }
-
-            const accounts = getLocalAccounts().filter(a => a.uid !== 'local_google_ufro');
-            let existing = accounts.find(a => a.email === email || a.usernameLower === validUser.clean.toLowerCase());
-
-            if (existing) {
-                existing.username = validUser.clean;
-                existing.usernameLower = validUser.clean.toLowerCase();
-            } else {
-                existing = {
-                    uid: `local_${Date.now()}`,
-                    username: validUser.clean,
-                    usernameLower: validUser.clean.toLowerCase(),
-                    email,
-                    createdAt: Date.now()
-                };
-                accounts.push(existing);
-            }
-
-            saveLocalAccounts(accounts);
-            localStorage.setItem(LOCAL_SESSION_KEY, existing.uid);
-            currentCloudUser = { uid: existing.uid, email: existing.email, isAnonymous: false, isLocal: true };
-            currentCloudProfile = existing;
-            updateAuthHeaderUI();
-            window.closeAuthModal();
-            showToast(`✅ ¡Bienvenido @${existing.username}!`, 'success');
-            renderOfflineWeeklyLeaderboard();
-        };
-
         window.logoutCloudUser = async function () {
-            if (!firebaseAvailable || !auth) {
-                localStorage.removeItem(LOCAL_SESSION_KEY);
-                currentCloudUser = null;
-                currentCloudProfile = null;
-                updateAuthHeaderUI();
-                showToast('Sesión cerrada.', 'info');
-                renderOfflineWeeklyLeaderboard();
-                return;
-            }
+            if (!firebaseAvailable || !auth) return;
             await signOut(auth);
             currentCloudUser = null;
             currentCloudProfile = null;
@@ -5331,30 +5120,6 @@
                 return;
             }
 
-            if (!firebaseAvailable || !db || currentCloudUser.isLocal) {
-                const accounts = getLocalAccounts();
-                if (accounts.some(a => a.uid !== currentCloudUser.uid && a.usernameLower === clean.toLowerCase())) {
-                    showToast('Ese usuario ya está ocupado por otra persona.', 'error');
-                    return;
-                }
-                const idx = accounts.findIndex(a => a.uid === currentCloudUser.uid);
-                if (idx !== -1) {
-                    accounts[idx].username = clean;
-                    accounts[idx].usernameLower = clean.toLowerCase();
-                    accounts[idx].lastUsernameChangeAt = Date.now();
-                    saveLocalAccounts(accounts);
-                }
-                currentCloudProfile.username = clean;
-                currentCloudProfile.usernameLower = clean.toLowerCase();
-                currentCloudProfile.lastUsernameChangeAt = Date.now();
-                document.getElementById('profile-modal-heading').textContent = `@${clean}`;
-                updateAuthHeaderUI();
-                window.openProfileModal('all');
-                showToast(`✅ Usuario actualizado a @${clean}.`, 'success');
-                renderOfflineWeeklyLeaderboard();
-                return;
-            }
-
             const userRef = doc(db, 'leyendas_users', currentCloudUser.uid);
             await updateDoc(userRef, {
                 username: clean,
@@ -5376,54 +5141,10 @@
             const weeklyListEl = document.getElementById('profile-weekly-list');
             const weeklyCountEl = document.getElementById('profile-weekly-count');
             const top5El = document.getElementById('profile-top5-list');
-            if (!currentCloudUser) return;
+            if (!currentCloudUser || !firebaseAvailable || !db) return;
 
             weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Cargando carreras de esta semana...</div>`;
             top5El.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Cargando historial personal...</div>`;
-
-            if (!firebaseAvailable || !db || currentCloudUser.isLocal) {
-                let localItems = [];
-                try { localItems = JSON.parse(localStorage.getItem(LOCAL_MOCK_WEEKLY_KEY) || '[]'); } catch (e) {}
-                const runs = localItems.filter(r => r.uid === currentCloudUser.uid).sort((a, b) => (b.score || 0) - (a.score || 0));
-                const weekKey = getCurrentWeekKey();
-                const thisWeekRuns = runs.filter(r => r.weekKey === weekKey);
-                weeklyCountEl.textContent = `${thisWeekRuns.length} ${thisWeekRuns.length === 1 ? 'carrera' : 'carreras'}`;
-
-                weeklyListEl.innerHTML = thisWeekRuns.length === 0
-                    ? `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras esta semana.</div>`
-                    : thisWeekRuns.map(r => `
-                        <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
-                            <div class="min-w-0">
-                                <div class="font-black text-white truncate">${escapeHtml(r.playerName)} <span class="text-[#8b96ff]">(${r.position})</span></div>
-                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(r.headline || r.studiedCareer)}</div>
-                            </div>
-                            <div class="text-right shrink-0">
-                                <div class="font-black text-[#a3adff]">${r.score} pts</div>
-                                <div class="text-[10px] text-gray-500">🏆 ${r.titlesCount || 0} · OVR ${formatOvr(r.ovr)}</div>
-                            </div>
-                        </div>
-                    `).join('');
-
-                const top5 = runs.slice(0, 5);
-                top5El.innerHTML = top5.length === 0
-                    ? `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Titula tu primera carrera para inaugurar tu Top 5 personal.</div>`
-                    : top5.map((r, idx) => `
-                        <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <span class="font-black ${idx === 0 ? 'text-amber-400' : 'text-gray-400'}">#${idx + 1}</span>
-                                <div class="min-w-0">
-                                    <div class="font-black text-white truncate">${escapeHtml(r.playerName)} <span class="text-[#8b96ff]">(${r.position})</span></div>
-                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(r.headline || r.studiedCareer)}</div>
-                                </div>
-                            </div>
-                            <div class="text-right shrink-0">
-                                <div class="font-black text-amber-300">${r.score} pts</div>
-                                <div class="text-[10px] text-gray-500">🏆 ${r.titlesCount || 0} · OVR ${formatOvr(r.ovr)}</div>
-                            </div>
-                        </div>
-                    `).join('');
-                return;
-            }
 
             try {
                 const q = query(
@@ -5584,41 +5305,41 @@
                     limit(10)
                 );
                 const snap = await getDocs(q);
-                cachedGlobalEntries.clear();
 
                 if (snap.empty) {
-                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Aún no hay carreras registradas esta semana. ¡Inicia sesión y sé el primero en liderar la tabla!</div>`;
+                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">
+                        Aún no hay carreras registradas esta semana. ¡Inicia sesión y titula una carrera para liderar el ranking!
+                    </div>`;
                     return;
                 }
 
-                const rows = [];
+                cachedGlobalEntries.clear();
+                const items = [];
                 snap.forEach(docSnap => {
                     const data = { id: docSnap.id, ...docSnap.data() };
                     cachedGlobalEntries.set(docSnap.id, data);
-                    rows.push(data);
+                    items.push(data);
                 });
 
-                listEl.innerHTML = rows.map((item, idx) => {
+                listEl.innerHTML = items.map((item, idx) => {
                     const hofTeam = findTeamByCode(item.teamCode, item.gender);
                     const rankColor = idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500';
                     return `
                         <button type="button" onclick="openGlobalCareerDetail('${item.id}')"
-                            class="w-full text-left p-3.5 rounded-2xl surface-sub hover:border-[#717fff]/60 transition flex items-center justify-between gap-3 group">
+                            class="w-full text-left p-3.5 rounded-2xl surface-sub hover:border-[#717fff]/60 transition flex items-center justify-between gap-3">
                             <div class="flex items-center gap-3 min-w-0">
                                 <span class="w-6 text-center font-black text-sm ${rankColor} shrink-0">#${idx + 1}</span>
                                 ${hofTeam ? getTeamBadgeHTML(hofTeam, 'w-10 h-10', 'text-[10px]') : ''}
                                 <div class="min-w-0">
-                                    <div class="font-black text-white text-sm truncate group-hover:text-[#a3adff] transition">
+                                    <div class="font-black text-white text-sm truncate">
                                         ${escapeHtml(item.playerName)} <span class="text-[11px] font-bold text-[#8b96ff]">(${item.position})</span>
                                     </div>
                                     <div class="text-[11px] text-[#a3adff] font-bold truncate">@${escapeHtml(item.username || 'leyenda_ufro')}</div>
-                                    <div class="text-[10px] text-gray-500 truncate">${escapeHtml(item.headline)}</div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
                                 <div class="text-xs font-black text-[#a3adff]">${item.score} pts</div>
                                 <div class="text-[11px] font-bold text-gray-400">🏆 ${item.titlesCount} · OVR ${formatOvr(item.ovr)}</div>
-                                <div class="text-[10px] text-gray-500 mt-0.5">Ver ficha →</div>
                             </div>
                         </button>
                     `;
@@ -5635,87 +5356,47 @@
             const modal = document.getElementById('career-detail-modal');
             const titleEl = document.getElementById('detail-modal-title');
             const contentEl = document.getElementById('career-detail-content');
-
-            const team = findTeamByCode(item.teamCode, item.gender);
+            const clubTeam = findTeamByCode(item.teamCode, item.gender);
             const isArq = item.position === 'ARQ';
-            const st = item.stats || {};
 
-            titleEl.textContent = `${item.playerName} · @${item.username || 'leyenda_ufro'}`;
+            titleEl.textContent = `${item.playerName} (@${item.username || 'leyenda_ufro'})`;
+
+            const trophiesHtml = (item.trophiesSummary && item.trophiesSummary.length > 0)
+                ? item.trophiesSummary.map(t => `<span class="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-bold">🏆 ${escapeHtml(t.title)} (A${t.year} S${t.sem})</span>`).join('')
+                : `<span class="text-xs text-gray-500">Sin títulos oficiales registrados.</span>`;
+
+            const clubsHtml = (item.clubsSummary && item.clubsSummary.length > 0)
+                ? item.clubsSummary.map(c => `<div class="p-2.5 rounded-xl surface-sub flex items-center justify-between text-xs"><strong class="text-white">${escapeHtml(c.teamName)}</strong><span class="text-gray-400">${c.semesters} sem. · 🏆 ${c.titles}</span></div>`).join('')
+                : '';
 
             contentEl.innerHTML = `
                 <div class="p-4 rounded-2xl surface-sub flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
-                        ${team ? getTeamBadgeHTML(team, 'w-12 h-12', 'text-xs') : ''}
+                        ${clubTeam ? getTeamBadgeHTML(clubTeam, 'w-12 h-12', 'text-xs') : ''}
                         <div>
-                            <div class="font-black text-white text-base">${escapeHtml(item.playerName)} <span class="text-xs text-[#8b96ff]">(${item.position})</span></div>
-                            <div class="text-xs text-[#a3adff] font-bold">${escapeHtml(item.headline)}</div>
-                            <div class="text-[11px] text-gray-400 mt-0.5">${escapeHtml(item.studiedCareer)} · Usuario: @${escapeHtml(item.username || 'leyenda_ufro')}</div>
+                            <div class="font-black text-white text-base">${escapeHtml(item.headline || item.playerName)}</div>
+                            <div class="text-xs text-gray-400">${escapeHtml(item.studiedCareer)} · ${item.position}</div>
                         </div>
                     </div>
-                    <div class="text-right shrink-0">
-                        <div class="text-xl font-black text-[#8b96ff]">OVR ${formatOvr(item.ovr)}</div>
-                        <div class="text-xs font-black text-amber-300">${item.score} pts</div>
+                    <div class="text-right">
+                        <div class="text-[10px] font-bold uppercase text-gray-500">Media Final</div>
+                        <div class="text-2xl font-black text-[#8b96ff]">${formatOvr(item.ovr)}</div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-4 gap-2 text-center">
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-white">${st.matches || 0}</div>
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">PJ</div>
-                    </div>
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-[#8b96ff]">${isArq ? (st.cleanSheets || 0) : (st.goals || 0)}</div>
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">${isArq ? 'Vallas' : 'Goles'}</div>
-                    </div>
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-[#717fff]">${isArq ? ((st.goals || 0) + (st.assists || 0)) : (st.assists || 0)}</div>
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">${isArq ? 'G+A' : 'Asist.'}</div>
-                    </div>
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-amber-300">${item.titlesCount || 0}</div>
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">Títulos</div>
-                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub"><div class="text-base font-black text-white">${item.stats?.matches || 0}</div><div class="text-[10px] text-gray-500 font-bold uppercase">PJ</div></div>
+                    <div class="p-2.5 rounded-xl surface-sub"><div class="text-base font-black text-[#8b96ff]">${isArq ? (item.stats?.cleanSheets || 0) : (item.stats?.goals || 0)}</div><div class="text-[10px] text-gray-500 font-bold uppercase">${isArq ? 'VI' : 'Goles'}</div></div>
+                    <div class="p-2.5 rounded-xl surface-sub"><div class="text-base font-black text-[#717fff]">${item.stats?.assists || 0}</div><div class="text-[10px] text-gray-500 font-bold uppercase">Asist.</div></div>
+                    <div class="p-2.5 rounded-xl surface-sub"><div class="text-base font-black text-amber-300">${item.score}</div><div class="text-[10px] text-gray-500 font-bold uppercase">Puntos</div></div>
                 </div>
 
-                ${(item.clubsSummary && item.clubsSummary.length > 0) ? `
-                    <div class="space-y-1.5">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🛡️ Equipos en su Carrera</h4>
-                        <div class="space-y-1.5">
-                            ${item.clubsSummary.map(c => `
-                                <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between text-xs">
-                                    <span class="font-bold text-white">${escapeHtml(c.teamName)} <span class="text-gray-500 font-normal">(${escapeHtml(c.careerName || '')})</span></span>
-                                    <span class="text-gray-400">${c.semesters} sem. · 🏆 ${c.titles}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                ` : ''}
+                <div class="space-y-1.5">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🏆 Palmarés Conquistado (${item.titlesCount || 0})</h4>
+                    <div class="flex flex-wrap gap-1.5">${trophiesHtml}</div>
+                </div>
 
-                ${(item.trophiesSummary && item.trophiesSummary.length > 0) ? `
-                    <div class="space-y-1.5">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🏆 Títulos Destacados</h4>
-                        <div class="flex flex-wrap gap-1.5">
-                            ${item.trophiesSummary.map(t => `
-                                <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[11px] font-bold">
-                                    🏆 ${escapeHtml(t.title)} (A${t.year} S${t.sem})
-                                </span>
-                            `).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-
-                ${(item.awardsSummary && item.awardsSummary.length > 0) ? `
-                    <div class="space-y-1.5">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🎖️ Premios Individuales</h4>
-                        <div class="flex flex-wrap gap-1.5">
-                            ${item.awardsSummary.map(a => `
-                                <span class="px-2.5 py-1 rounded-lg bg-[#717fff]/15 border border-[#717fff]/30 text-[#d0d5ff] text-[11px] font-bold">
-                                    🌟 ${escapeHtml(a.title)} (Año ${a.year})
-                                </span>
-                            `).join('')}
-                        </div>
-                    </div>
-                ` : ''}
+                ${clubsHtml ? `<div class="space-y-1.5"><h4 class="text-xs font-black uppercase tracking-wider text-gray-400">🛡️ Equipos Defendidos</h4><div class="space-y-1.5">${clubsHtml}</div></div>` : ''}
             `;
 
             modal.classList.remove('hidden');
@@ -5727,15 +5408,13 @@
 
         window.initCloudLeaderboard = function () {
             startWeeklyCountdownTimer();
-            const activeCfg = getActiveFirebaseConfig();
-            if (!isValidFirebaseConfig(activeCfg)) {
+            if (!isValidFirebaseConfig(FIREBASE_CONFIG)) {
                 firebaseAvailable = false;
-                restoreLocalSessionIfNeeded();
                 renderOfflineWeeklyLeaderboard();
                 return;
             }
             try {
-                app = initializeApp(activeCfg);
+                app = initializeApp(FIREBASE_CONFIG);
                 auth = getAuth(app);
                 db = getFirestore(app);
                 firebaseAvailable = true;
@@ -5754,19 +5433,16 @@
                                 loadGlobalWeeklyLeaderboard();
                             } catch (e) {
                                 firebaseAvailable = false;
-                                restoreLocalSessionIfNeeded();
                                 renderOfflineWeeklyLeaderboard();
                             }
                         }
                     } catch (err) {
                         firebaseAvailable = false;
-                        restoreLocalSessionIfNeeded();
                         renderOfflineWeeklyLeaderboard();
                     }
                 });
             } catch (e) {
                 firebaseAvailable = false;
-                restoreLocalSessionIfNeeded();
                 renderOfflineWeeklyLeaderboard();
             }
         };
