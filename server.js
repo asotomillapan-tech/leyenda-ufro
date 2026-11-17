@@ -51,6 +51,64 @@ app.get('/firebase-config.js', (_req, res) => {
   );
 });
 
+const ALLOWED_LOGO_HOSTS = new Set([
+  'images.ligup2.com',
+  'lh3.googleusercontent.com',
+  'drive.google.com',
+  'i.imgur.com',
+  'imgur.com',
+  'i.postimg.cc',
+  'postimg.cc',
+  'raw.githubusercontent.com'
+]);
+
+app.get('/api/logo-proxy', async (req, res) => {
+  const rawUrl = typeof req.query.url === 'string' ? req.query.url.trim() : '';
+  if (!rawUrl) {
+    return res.status(400).json({ error: 'Missing url parameter' });
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return res.status(400).json({ error: 'Invalid url' });
+  }
+
+  if (parsed.protocol !== 'https:' || !ALLOWED_LOGO_HOSTS.has(parsed.hostname.toLowerCase())) {
+    return res.status(403).json({ error: 'Host not allowed' });
+  }
+
+  try {
+    const upstream = await fetch(parsed.toString(), {
+      signal: AbortSignal.timeout(4000),
+      headers: {
+        Accept: 'image/png,image/jpeg,image/webp,image/*,*/*;q=0.8'
+      }
+    });
+    if (!upstream.ok) {
+      return res.status(upstream.status).end();
+    }
+
+    const contentType = upstream.headers.get('content-type') || 'image/png';
+    if (!contentType.toLowerCase().startsWith('image/')) {
+      return res.status(415).json({ error: 'Unsupported media type' });
+    }
+
+    const arrayBuf = await upstream.arrayBuffer();
+    if (arrayBuf.byteLength > 2 * 1024 * 1024) {
+      return res.status(413).json({ error: 'Image too large' });
+    }
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(Buffer.from(arrayBuf));
+  } catch {
+    return res.status(502).end();
+  }
+});
+
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
 const htmlRoutes = {
