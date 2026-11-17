@@ -4681,10 +4681,6 @@
         const NICKNAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
         const LOCAL_MOCK_WEEKLY_KEY = 'leyenda_ufro_weekly_fallback_v1';
 
-        function isValidFirebaseConfig(cfg) {
-            return Boolean(cfg && cfg.apiKey && !cfg.apiKey.includes('38472920') && !cfg.apiKey.includes('847291') && cfg.projectId);
-        }
-
         function renderOfflineWeeklyLeaderboard() {
             const listEl = document.getElementById('global-hof-list');
             if (!listEl) return;
@@ -5408,11 +5404,6 @@
 
         window.initCloudLeaderboard = function () {
             startWeeklyCountdownTimer();
-            if (!isValidFirebaseConfig(FIREBASE_CONFIG)) {
-                firebaseAvailable = false;
-                renderOfflineWeeklyLeaderboard();
-                return;
-            }
             try {
                 app = initializeApp(FIREBASE_CONFIG);
                 auth = getAuth(app);
@@ -5432,13 +5423,12 @@
                                 updateAuthHeaderUI();
                                 loadGlobalWeeklyLeaderboard();
                             } catch (e) {
-                                firebaseAvailable = false;
-                                renderOfflineWeeklyLeaderboard();
+                                updateAuthHeaderUI();
+                                loadGlobalWeeklyLeaderboard();
                             }
                         }
                     } catch (err) {
-                        firebaseAvailable = false;
-                        renderOfflineWeeklyLeaderboard();
+                        updateAuthHeaderUI();
                     }
                 });
             } catch (e) {
