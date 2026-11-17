@@ -1,0 +1,205 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 420" width="240" height="420" fill="none">
+  <defs>
+    <!-- Gradientes metálicos dorados -->
+    <linearGradient id="goldBody" x1="55" y1="140" x2="185" y2="310" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#b87d14"/>
+      <stop offset="18%" stop-color="#f6cf56"/>
+      <stop offset="38%" stop-color="#fff4b8"/>
+      <stop offset="56%" stop-color="#e4ad2b"/>
+      <stop offset="80%" stop-color="#9e660c"/>
+      <stop offset="100%" stop-color="#f2c446"/>
+    </linearGradient>
+
+    <linearGradient id="goldLid" x1="72" y1="90" x2="168" y2="165" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#a86f0d"/>
+      <stop offset="25%" stop-color="#f8d463"/>
+      <stop offset="46%" stop-color="#fff6c7"/>
+      <stop offset="72%" stop-color="#d89d1c"/>
+      <stop offset="100%" stop-color="#8c5809"/>
+    </linearGradient>
+
+    <linearGradient id="goldHorizontal" x1="64" y1="0" x2="176" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8d590a"/>
+      <stop offset="22%" stop-color="#f5c94d"/>
+      <stop offset="44%" stop-color="#fff6c4"/>
+      <stop offset="68%" stop-color="#d99f1f"/>
+      <stop offset="100%" stop-color="#855107"/>
+    </linearGradient>
+
+    <linearGradient id="goldHandle" x1="0" y1="150" x2="0" y2="275" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffe999"/>
+      <stop offset="45%" stop-color="#e5ae2d"/>
+      <stop offset="100%" stop-color="#945f0a"/>
+    </linearGradient>
+
+    <linearGradient id="goldPlaque" x1="92" y1="362" x2="148" y2="388" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f7d66b"/>
+      <stop offset="45%" stop-color="#fff3b5"/>
+      <stop offset="100%" stop-color="#cfa034"/>
+    </linearGradient>
+
+    <linearGradient id="cupReflectionDark" x1="120" y1="190" x2="120" y2="295" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#193b47" stop-opacity="0.58"/>
+      <stop offset="100%" stop-color="#102730" stop-opacity="0.72"/>
+    </linearGradient>
+
+    <linearGradient id="pedestalDark" x1="70" y1="342" x2="170" y2="408" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2b2b34"/>
+      <stop offset="50%" stop-color="#18181f"/>
+      <stop offset="100%" stop-color="#0d0d12"/>
+    </linearGradient>
+
+    <!-- Cintas chilenas (rojo, blanco, azul) -->
+    <linearGradient id="ribbonRed" x1="0" y1="150" x2="0" y2="305" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </linearGradient>
+    <linearGradient id="ribbonWhite" x1="0" y1="150" x2="0" y2="305" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="ribbonBlue" x1="0" y1="150" x2="0" y2="305" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+
+    <radialGradient id="ambientGlow" cx="120" cy="210" r="115" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f5c842" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#f5c842" stop-opacity="0"/>
+    </radialGradient>
+
+    <clipPath id="bowlClip">
+      <path d="M68 164 C68 232 88 282 120 288 C152 282 172 232 172 164 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Halo suave sutil -->
+  <ellipse cx="120" cy="215" rx="95" ry="155" fill="url(#ambientGlow)"/>
+  <!-- Sombra de apoyo bajo el pedestal -->
+  <ellipse cx="120" cy="404" rx="64" ry="8" fill="#000000" fill-opacity="0.45"/>
+
+  <!-- ==================== 1. ASAS LATERALES DORADAS ==================== -->
+  <!-- Asa Izquierda -->
+  <path d="M71 174 C44 156 36 184 48 210 C56 228 72 252 86 266"
+        stroke="url(#goldHandle)" stroke-width="7.5" stroke-linecap="round"/>
+  <path d="M71 174 C47 160 40 184 51 208"
+        stroke="#fff3b8" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- Asa Derecha -->
+  <path d="M169 174 C196 156 204 184 192 210 C184 228 168 252 154 266"
+        stroke="url(#goldHandle)" stroke-width="7.5" stroke-linecap="round"/>
+  <path d="M169 174 C193 160 200 184 189 208"
+        stroke="#fff3b8" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- ==================== 2. CINTAS TRICOLOR (IZQ Y DER) ==================== -->
+  <!-- Cintas Izquierdas -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M46 168 C33 196 31 245 36 298" stroke="url(#ribbonRed)" stroke-width="5.2"/>
+    <path d="M49 167 C42 200 44 246 49 294" stroke="url(#ribbonWhite)" stroke-width="4.4"/>
+    <path d="M52 169 C51 206 54 252 57 303" stroke="url(#ribbonBlue)" stroke-width="5"/>
+    <!-- Nudo / rosetón izquierdo -->
+    <circle cx="49" cy="168" r="5.5" fill="#e11d48" stroke="#f8fafc" stroke-width="1.5"/>
+  </g>
+
+  <!-- Cintas Derechas -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M188 169 C189 206 186 252 183 303" stroke="url(#ribbonRed)" stroke-width="5"/>
+    <path d="M191 167 C198 200 196 246 191 294" stroke="url(#ribbonWhite)" stroke-width="4.4"/>
+    <path d="M194 168 C207 196 209 245 204 298" stroke="url(#ribbonBlue)" stroke-width="5.2"/>
+    <!-- Nudo / rosetón derecho -->
+    <circle cx="191" cy="168" r="5.5" fill="#2563eb" stroke="#f8fafc" stroke-width="1.5"/>
+  </g>
+
+  <!-- ==================== 3. PEDESTAL OSCURO Y PLACA DORADA ==================== -->
+  <!-- Zócalo inferior ancho -->
+  <path d="M62 390 L178 390 L183 402 L57 402 Z" fill="url(#pedestalDark)" stroke="#3f3f4e" stroke-width="1.2"/>
+  <rect x="62" y="388" width="116" height="4" rx="1.5" fill="#2e2e38"/>
+  <!-- Bloque principal del pedestal -->
+  <path d="M74 348 L166 348 L173 389 L67 389 Z" fill="url(#pedestalDark)" stroke="#3b3b48" stroke-width="1.4"/>
+  <!-- Tapa superior del pedestal con brillo -->
+  <path d="M74 348 L166 348 L160 342 L80 342 Z" fill="#32323e"/>
+  <!-- Placa dorada frontal -->
+  <rect x="92" y="357" width="56" height="24" rx="2.5" fill="url(#goldPlaque)" stroke="#9a6e17" stroke-width="1.2"/>
+  <line x1="101" y1="366" x2="139" y2="366" stroke="#7c530b" stroke-width="1.4" stroke-opacity="0.45" stroke-linecap="round"/>
+  <line x1="106" y1="373" x2="134" y2="373" stroke="#7c530b" stroke-width="1.4" stroke-opacity="0.35" stroke-linecap="round"/>
+
+  <!-- ==================== 4. TALLO TORNEADO Y PIE ACAMPANADO ==================== -->
+  <!-- Pie acampanado -->
+  <path d="M107 314 C105 328 94 338 86 342 L154 342 C146 338 135 328 133 314 Z"
+        fill="url(#goldHorizontal)" stroke="#8a5609" stroke-width="1"/>
+  <!-- Reborde inferior del pie -->
+  <rect x="83" y="340" width="74" height="5" rx="2.5" fill="url(#goldHorizontal)"/>
+  <!-- Anillo de cintura del tallo -->
+  <rect x="103" y="307" width="34" height="7" rx="3.5" fill="url(#goldHorizontal)"/>
+  <!-- Nudo esférico bajo el cáliz -->
+  <ellipse cx="120" cy="296" rx="16" ry="11" fill="url(#goldHorizontal)" stroke="#8a5609" stroke-width="1"/>
+  <ellipse cx="114" cy="294" rx="5" ry="3.5" fill="#fff7cc" opacity="0.8"/>
+
+  <!-- ==================== 5. CÁLIZ PRINCIPAL DORADO ==================== -->
+  <path d="M68 164 C68 232 88 282 120 288 C152 282 172 232 172 164 Z"
+        fill="url(#goldBody)" stroke="#915d0b" stroke-width="1.4"/>
+
+  <!-- Reflejos esculturales en V característicos de la copa -->
+  <g clip-path="url(#bowlClip)">
+    <!-- Contraste azulado/oscuro inferior estilizado como la foto -->
+    <path d="M68 202 Q95 224 114 275 L82 288 L64 235 Z" fill="url(#cupReflectionDark)"/>
+    <path d="M172 202 Q145 224 126 275 L158 288 L176 235 Z" fill="url(#cupReflectionDark)"/>
+    <!-- Chevron central brillante -->
+    <path d="M120 214 C104 228 96 250 120 284 C144 250 136 228 120 214 Z" fill="#fff3b5" opacity="0.72"/>
+    <path d="M120 201 L128 212 L120 223 L112 212 Z" fill="#ffe98f" opacity="0.85"/>
+    <!-- Brillo vertical izquierdo en el cáliz -->
+    <path d="M84 166 C83 200 90 236 104 265 L96 266 C82 235 76 199 77 166 Z" fill="#fff9d6" opacity="0.58"/>
+  </g>
+
+  <!-- Borde doble entre tapa y cáliz -->
+  <rect x="64" y="157" width="112" height="9" rx="4.5" fill="url(#goldHorizontal)" stroke="#8c580a" stroke-width="1.1"/>
+  <line x1="72" y1="160" x2="168" y2="160" stroke="#fff9d4" stroke-width="1.6" stroke-linecap="round" opacity="0.75"/>
+
+  <!-- ==================== 6. TAPA ABOMBADA Y CUELLO ANILLADO ==================== -->
+  <!-- Cúpula de la tapa -->
+  <path d="M68 157 C72 132 91 120 120 120 C149 120 168 132 172 157 Z"
+        fill="url(#goldLid)" stroke="#8c580a" stroke-width="1.2"/>
+  <path d="M84 148 C89 133 102 126 116 125" stroke="#fff8ce" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+
+  <!-- Cuello cilíndrico con 3 anillos horizontales -->
+  <rect x="97" y="96" width="46" height="26" rx="3" fill="url(#goldHorizontal)" stroke="#8c580a" stroke-width="1"/>
+  <rect x="94" y="102" width="52" height="4.5" rx="2.2" fill="url(#goldHorizontal)"/>
+  <rect x="94" y="110" width="52" height="4.5" rx="2.2" fill="url(#goldHorizontal)"/>
+  <rect x="94" y="118" width="52" height="4.5" rx="2.2" fill="url(#goldHorizontal)"/>
+
+  <!-- Corona superior acampanada del cuello -->
+  <path d="M87 89 L153 89 L144 97 L96 97 Z" fill="url(#goldHorizontal)" stroke="#8c580a" stroke-width="1"/>
+  <rect x="85" y="86" width="70" height="4.5" rx="2.2" fill="#ffe688" stroke="#99640e" stroke-width="0.8"/>
+
+  <!-- ==================== 7. REMATE SUPERIOR: LAURELES + MEDALLÓN ==================== -->
+  <!-- Tallo corto del remate -->
+  <path d="M113 73 L127 73 L130 86 L110 86 Z" fill="url(#goldHorizontal)" stroke="#8c580a" stroke-width="1"/>
+  <ellipse cx="120" cy="72" rx="10" ry="3.5" fill="url(#goldHorizontal)"/>
+
+  <!-- Corona de laureles dorada -->
+  <path d="M120 71 C100 66 91 50 93 34 C95 22 103 16 110 15"
+        stroke="url(#goldHandle)" stroke-width="6.5" stroke-linecap="round"/>
+  <path d="M120 71 C140 66 149 50 147 34 C145 22 137 16 130 15"
+        stroke="url(#goldHandle)" stroke-width="6.5" stroke-linecap="round"/>
+  <!-- Detalles de hojas del laurel -->
+  <g fill="#ffe999" stroke="#99640e" stroke-width="0.7">
+    <ellipse cx="95" cy="54" rx="4.5" ry="2.4" transform="rotate(-35 95 54)"/>
+    <ellipse cx="91" cy="43" rx="4.5" ry="2.4" transform="rotate(-15 91 43)"/>
+    <ellipse cx="94" cy="31" rx="4.5" ry="2.4" transform="rotate(15 94 31)"/>
+    <ellipse cx="101" cy="21" rx="4.2" ry="2.2" transform="rotate(38 101 21)"/>
+
+    <ellipse cx="145" cy="54" rx="4.5" ry="2.4" transform="rotate(35 145 54)"/>
+    <ellipse cx="149" cy="43" rx="4.5" ry="2.4" transform="rotate(15 149 43)"/>
+    <ellipse cx="146" cy="31" rx="4.5" ry="2.4" transform="rotate(-15 146 31)"/>
+    <ellipse cx="139" cy="21" rx="4.2" ry="2.2" transform="rotate(-38 139 21)"/>
+  </g>
+
+  <!-- Medallón circular blanco con escudo azul central -->
+  <circle cx="120" cy="38" r="19" fill="#f8fafc" stroke="url(#goldHandle)" stroke-width="3.2"/>
+  <circle cx="120" cy="38" r="14.5" fill="none" stroke="#cbd5e1" stroke-width="1"/>
+  <!-- Emblema azul central estilo deportivo -->
+  <circle cx="120" cy="38" r="10.5" fill="#1e3a8a"/>
+  <path d="M120 30 L122.4 35 L127.6 35.6 L123.6 39.2 L124.8 44.4 L120 41.6 L115.2 44.4 L116.4 39.2 L112.4 35.6 L117.6 35 Z"
+        fill="#f8fafc"/>
+  <circle cx="120" cy="38" r="3" fill="#3b82f6"/>
+</svg>

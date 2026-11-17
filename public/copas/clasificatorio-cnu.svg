@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 310" width="240" height="310" fill="none">
+  <defs>
+    <!-- Plato / Escudo Clasificatorio CNU (oro + azul chileno + rojo) -->
+    <linearGradient id="cnuGold" x1="40" y1="20" x2="200" y2="230" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#9e670b"/>
+      <stop offset="25%" stop-color="#f7cf54"/>
+      <stop offset="48%" stop-color="#fff8cc"/>
+      <stop offset="76%" stop-color="#d4961a"/>
+      <stop offset="100%" stop-color="#875407"/>
+    </linearGradient>
+
+    <linearGradient id="cnuSilver" x1="50" y1="35" x2="190" y2="205" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#94a3b8"/>
+      <stop offset="30%" stop-color="#ffffff"/>
+      <stop offset="65%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+
+    <linearGradient id="cnuNavy" x1="65" y1="50" x2="175" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="50%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+
+    <linearGradient id="cnuPedestal" x1="60" y1="230" x2="180" y2="298" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2a2a34"/>
+      <stop offset="55%" stop-color="#17171e"/>
+      <stop offset="100%" stop-color="#0b0b10"/>
+    </linearGradient>
+
+    <radialGradient id="cnuGlow" cx="120" cy="128" r="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.22"/>
+      <stop offset="60%" stop-color="#f5c842" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#151515" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="120" cy="130" r="108" fill="url(#cnuGlow)"/>
+  <ellipse cx="120" cy="296" rx="64" ry="7.5" fill="#000000" fill-opacity="0.45"/>
+
+  <!-- Pedestal oscuro con soporte metálico -->
+  <path d="M58 282 L182 282 L187 294 L53 294 Z" fill="url(#cnuPedestal)" stroke="#3f3f4e" stroke-width="1.2"/>
+  <path d="M70 244 L170 244 L177 281 L63 281 Z" fill="url(#cnuPedestal)" stroke="#3b3b48" stroke-width="1.4"/>
+  <path d="M70 244 L170 244 L162 238 L78 238 Z" fill="#32323e"/>
+  <rect x="88" y="251" width="64" height="22" rx="2.5" fill="url(#cnuGold)" stroke="#8c580a" stroke-width="1.2"/>
+  <text x="120" y="266" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="900" font-size="11" letter-spacing="1.2" fill="#1e293b">CNU</text>
+
+  <!-- Tallo corto dorado -->
+  <path d="M108 205 L132 205 L140 238 L100 238 Z" fill="url(#cnuGold)" stroke="#8a5609" stroke-width="1"/>
+
+  <!-- Galardón / Plato Escudo Clasificatorio -->
+  <circle cx="120" cy="122" r="90" fill="url(#cnuGold)" stroke="#8a5609" stroke-width="1.8"/>
+  <circle cx="120" cy="122" r="78" fill="url(#cnuSilver)" stroke="#64748b" stroke-width="1.3"/>
+  <circle cx="120" cy="122" r="66" fill="url(#cnuNavy)" stroke="url(#cnuGold)" stroke-width="2.6"/>
+
+  <!-- Banda roja inferior tricolor dentro del emblema -->
+  <path d="M62 152 A66 66 0 0 0 178 152 L162 138 L78 138 Z" fill="#dc2626" opacity="0.92"/>
+  <path d="M68 138 L172 138" stroke="#f8fafc" stroke-width="3.2"/>
+
+  <!-- Estrella solitaria chilena dorada/blanca en el centro -->
+  <path d="M120 74 L128.5 98 L154 98.5 L133.5 113.5 L141 138 L120 123 L99 138 L106.5 113.5 L86 98.5 L111.5 98 Z"
+        fill="#ffffff" stroke="url(#cnuGold)" stroke-width="2"/>
+
+  <!-- Laureles alrededor del anillo plateado -->
+  <g fill="url(#cnuGold)" stroke="#8a5609" stroke-width="0.6">
+    <ellipse cx="52" cy="122" rx="7" ry="3.2" transform="rotate(-85 52 122)"/>
+    <ellipse cx="56" cy="146" rx="7" ry="3.2" transform="rotate(-62 56 146)"/>
+    <ellipse cx="68" cy="166" rx="7" ry="3.2" transform="rotate(-38 68 166)"/>
+    <ellipse cx="188" cy="122" rx="7" ry="3.2" transform="rotate(85 188 122)"/>
+    <ellipse cx="184" cy="146" rx="7" ry="3.2" transform="rotate(62 184 146)"/>
+    <ellipse cx="172" cy="166" rx="7" ry="3.2" transform="rotate(38 172 166)"/>
+  </g>
+
+  <!-- Cinta inferior "PASE NACIONAL" -->
+  <path d="M74 180 L166 180 L158 197 L82 197 Z" fill="#dc2626" stroke="#fff3b5" stroke-width="1.3"/>
+  <text x="120" y="192" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="900" font-size="9.5" letter-spacing="0.8" fill="#ffffff">CLASIFICADO</text>
+</svg>

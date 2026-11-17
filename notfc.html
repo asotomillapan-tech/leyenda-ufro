@@ -1031,6 +1031,7 @@
             getPlayerAverageRating,
         } from '/public/notfc-engine.js';
         import { mountNotFcMiniGame } from '/public/notfc-minigames.js';
+        import { renderTrophyImgHTML, renderAwardImgHTML } from '/public/copas.js';
 
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
         import {
@@ -2988,26 +2989,36 @@
                 awardsEl.innerHTML = `
                     <div class="p-5 rounded-2xl bg-gradient-to-br from-[#717fff]/20 to-[#151515] border border-[#717fff]/45 text-center space-y-2">
                         <span class="text-[11px] font-black uppercase tracking-widest text-amber-300">Campeón de NOT F.C</span>
-                        <div class="flex items-center justify-center gap-3">
+                        <div class="flex items-center justify-center gap-3.5">
+                            ${renderTrophyImgHTML('NOTFC', 'w-12 h-14')}
                             ${renderCrestSVG(champ, 48)}
                             <div class="text-2xl font-black text-white">${escapeHtml(champ?.name || '')}</div>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div class="p-4 rounded-2xl surface-sub border-amber-500/35 space-y-1">
-                            <div class="text-[11px] font-black uppercase text-amber-300">👑 MVP del Campeonato</div>
-                            <div class="text-sm font-black text-white">${escapeHtml(mvp?.name || 'N/A')}</div>
-                            <div class="text-xs text-gray-400">${escapeHtml(mvp?.clubName || '')} · Prom. ${mvp?.avgRating || 0}</div>
+                        <div class="p-4 rounded-2xl surface-sub border-amber-500/35 flex items-center gap-3">
+                            ${renderAwardImgHTML('MVP', 'w-12 h-12')}
+                            <div class="min-w-0 space-y-0.5">
+                                <div class="text-[11px] font-black uppercase text-amber-300">MVP del Campeonato</div>
+                                <div class="text-sm font-black text-white truncate">${escapeHtml(mvp?.name || 'N/A')}</div>
+                                <div class="text-xs text-gray-400 truncate">${escapeHtml(mvp?.clubName || '')} · Prom. ${mvp?.avgRating || 0}</div>
+                            </div>
                         </div>
-                        <div class="p-4 rounded-2xl surface-sub border-emerald-500/35 space-y-1">
-                            <div class="text-[11px] font-black uppercase text-emerald-300">⚽ Máximo Goleador</div>
-                            <div class="text-sm font-black text-white">${escapeHtml(topScorer?.name || 'N/A')}</div>
-                            <div class="text-xs text-gray-400">${escapeHtml(topScorer?.clubName || '')} · ${topScorer?.stats?.goals || 0} goles</div>
+                        <div class="p-4 rounded-2xl surface-sub border-emerald-500/35 flex items-center gap-3">
+                            ${renderAwardImgHTML('GOLEADOR', 'w-12 h-12')}
+                            <div class="min-w-0 space-y-0.5">
+                                <div class="text-[11px] font-black uppercase text-emerald-300">Máximo Goleador</div>
+                                <div class="text-sm font-black text-white truncate">${escapeHtml(topScorer?.name || 'N/A')}</div>
+                                <div class="text-xs text-gray-400 truncate">${escapeHtml(topScorer?.clubName || '')} · ${topScorer?.stats?.goals || 0} goles</div>
+                            </div>
                         </div>
-                        <div class="p-4 rounded-2xl surface-sub border-[#717fff]/35 space-y-1">
-                            <div class="text-[11px] font-black uppercase text-[#a3adff]">🧤 Mejor Arquero</div>
-                            <div class="text-sm font-black text-white">${escapeHtml(bestKeeper?.name || 'N/A')}</div>
-                            <div class="text-xs text-gray-400">${escapeHtml(bestKeeper?.clubName || '')} · ${bestKeeper?.stats?.cleanSheets || 0} vallas invictas</div>
+                        <div class="p-4 rounded-2xl surface-sub border-[#717fff]/35 flex items-center gap-3">
+                            ${renderAwardImgHTML('GUANTE', 'w-12 h-12')}
+                            <div class="min-w-0 space-y-0.5">
+                                <div class="text-[11px] font-black uppercase text-[#a3adff]">Mejor Arquero</div>
+                                <div class="text-sm font-black text-white truncate">${escapeHtml(bestKeeper?.name || 'N/A')}</div>
+                                <div class="text-xs text-gray-400 truncate">${escapeHtml(bestKeeper?.clubName || '')} · ${bestKeeper?.stats?.cleanSheets || 0} vallas invictas</div>
+                            </div>
                         </div>
                     </div>
                 `;

@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 420" width="240" height="420" fill="none">
+  <defs>
+    <!-- Plateado / cromo principal de la copa LDES -->
+    <linearGradient id="ldesSilverBody" x1="56" y1="145" x2="184" y2="305" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#64748b"/>
+      <stop offset="18%" stop-color="#e2e8f0"/>
+      <stop offset="38%" stop-color="#ffffff"/>
+      <stop offset="56%" stop-color="#cbd5e1"/>
+      <stop offset="78%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+
+    <linearGradient id="ldesSilverLid" x1="70" y1="95" x2="170" y2="165" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#64748b"/>
+      <stop offset="28%" stop-color="#f8fafc"/>
+      <stop offset="52%" stop-color="#ffffff"/>
+      <stop offset="78%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+
+    <linearGradient id="ldesGoldAccent" x1="65" y1="0" x2="175" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#9a640b"/>
+      <stop offset="24%" stop-color="#f7cf54"/>
+      <stop offset="46%" stop-color="#fff5ba"/>
+      <stop offset="72%" stop-color="#d4961a"/>
+      <stop offset="100%" stop-color="#875307"/>
+    </linearGradient>
+
+    <linearGradient id="ldesInnerWarm" x1="120" y1="190" x2="120" y2="288" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#c27c1a" stop-opacity="0.35"/>
+      <stop offset="55%" stop-color="#945608" stop-opacity="0.52"/>
+      <stop offset="100%" stop-color="#334155" stop-opacity="0.65"/>
+    </linearGradient>
+
+    <linearGradient id="ldesHandle" x1="0" y1="148" x2="0" y2="275" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#cbd5e1"/>
+      <stop offset="70%" stop-color="#e5b84b"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+
+    <linearGradient id="ldesPlaque" x1="88" y1="362" x2="152" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f7d66b"/>
+      <stop offset="45%" stop-color="#fff3b5"/>
+      <stop offset="100%" stop-color="#cfa034"/>
+    </linearGradient>
+
+    <linearGradient id="ldesPedestal" x1="65" y1="342" x2="175" y2="408" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#292932"/>
+      <stop offset="50%" stop-color="#17171d"/>
+      <stop offset="100%" stop-color="#0c0c10"/>
+    </linearGradient>
+
+    <linearGradient id="ldesRibRed" x1="0" y1="150" x2="0" y2="310" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#991b1b"/>
+    </linearGradient>
+    <linearGradient id="ldesRibBlue" x1="0" y1="150" x2="0" y2="310" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+
+    <radialGradient id="ldesGlow" cx="120" cy="215" r="118" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e2e8f0" stop-opacity="0.16"/>
+      <stop offset="55%" stop-color="#f5c842" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#151515" stop-opacity="0"/>
+    </radialGradient>
+
+    <clipPath id="ldesBowlClip">
+      <path d="M68 164 C68 232 88 282 120 288 C152 282 172 232 172 164 Z"/>
+    </clipPath>
+  </defs>
+
+  <ellipse cx="120" cy="215" rx="95" ry="155" fill="url(#ldesGlow)"/>
+  <ellipse cx="120" cy="404" rx="66" ry="8" fill="#000000" fill-opacity="0.45"/>
+
+  <!-- ==================== 1. ASAS LATERALES PLATEADAS/DORADAS ==================== -->
+  <path d="M71 172 C42 152 33 182 46 210 C55 229 71 252 86 266"
+        stroke="url(#ldesHandle)" stroke-width="7.8" stroke-linecap="round"/>
+  <path d="M39 175 L33 169 M37 192 L31 190 M44 211 L37 213"
+        stroke="#e2e8f0" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M70 172 C46 158 39 183 50 208"
+        stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+
+  <path d="M169 172 C198 152 207 182 194 210 C185 229 169 252 154 266"
+        stroke="url(#ldesHandle)" stroke-width="7.8" stroke-linecap="round"/>
+  <path d="M201 175 L207 169 M203 192 L209 190 M196 211 L203 213"
+        stroke="#e2e8f0" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M170 172 C194 158 201 183 190 208"
+        stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- ==================== 2. CINTAS ROJO Y AZUL LDES ==================== -->
+  <g stroke-linecap="round">
+    <path d="M44 168 C31 198 29 248 35 304" stroke="url(#ldesRibRed)" stroke-width="5.2"/>
+    <path d="M51 169 C49 208 51 255 55 306" stroke="url(#ldesRibBlue)" stroke-width="5"/>
+    <circle cx="48" cy="168" r="5" fill="#dc2626" stroke="#f8fafc" stroke-width="1.4"/>
+  </g>
+  <g stroke-linecap="round">
+    <path d="M189 169 C191 208 189 255 185 306" stroke="url(#ldesRibBlue)" stroke-width="5"/>
+    <path d="M196 168 C209 198 211 248 205 304" stroke="url(#ldesRibRed)" stroke-width="5.2"/>
+    <circle cx="192" cy="168" r="5" fill="#1d4ed8" stroke="#f8fafc" stroke-width="1.4"/>
+  </g>
+
+  <!-- ==================== 3. PEDESTAL NEGRO Y PLACA DORADA ==================== -->
+  <path d="M60 390 L180 390 L185 402 L55 402 Z" fill="url(#ldesPedestal)" stroke="#3f3f4e" stroke-width="1.2"/>
+  <rect x="60" y="388" width="120" height="4" rx="1.5" fill="#2e2e38"/>
+  <path d="M72 346 L168 346 L175 389 L65 389 Z" fill="url(#ldesPedestal)" stroke="#3b3b48" stroke-width="1.4"/>
+  <path d="M72 346 L168 346 L161 340 L79 340 Z" fill="#32323e"/>
+  <rect x="89" y="355" width="62" height="26" rx="2.5" fill="url(#ldesPlaque)" stroke="#9a6e17" stroke-width="1.2"/>
+  <line x1="99" y1="364" x2="141" y2="364" stroke="#7c530b" stroke-width="1.5" stroke-opacity="0.5" stroke-linecap="round"/>
+  <line x1="104" y1="372" x2="136" y2="372" stroke="#7c530b" stroke-width="1.4" stroke-opacity="0.38" stroke-linecap="round"/>
+
+  <!-- ==================== 4. TALLO DORADO + PLATA ACAMPANADO ==================== -->
+  <path d="M107 314 C104 328 93 336 84 340 L156 340 C147 336 136 328 133 314 Z"
+        fill="url(#ldesGoldAccent)" stroke="#8a5609" stroke-width="1"/>
+  <path d="M108 317 C106 327 98 335 90 339 L120 339 C117 331 114 323 114 317 Z" fill="#f8fafc" opacity="0.48"/>
+  <rect x="82" y="338" width="76" height="5" rx="2.5" fill="url(#ldesSilverLid)"/>
+  <rect x="103" y="307" width="34" height="7" rx="3.5" fill="url(#ldesGoldAccent)"/>
+  <ellipse cx="120" cy="296" rx="16" ry="11" fill="url(#ldesSilverLid)" stroke="#64748b" stroke-width="1"/>
+  <ellipse cx="114" cy="294" rx="5" ry="3.5" fill="#ffffff" opacity="0.85"/>
+
+  <!-- ==================== 5. CÁLIZ PRINCIPAL PLATEADO CON CHEVRON ==================== -->
+  <path d="M68 164 C68 232 88 282 120 288 C152 282 172 232 172 164 Z"
+        fill="url(#ldesSilverBody)" stroke="#64748b" stroke-width="1.4"/>
+
+  <g clip-path="url(#ldesBowlClip)">
+    <path d="M68 198 Q95 222 114 275 L82 288 L64 235 Z" fill="url(#ldesInnerWarm)"/>
+    <path d="M172 198 Q145 222 126 275 L158 288 L176 235 Z" fill="url(#ldesInnerWarm)"/>
+    <!-- Facetas esculturales características de la foto LDES -->
+    <path d="M120 206 C103 224 95 250 120 284 C145 250 137 224 120 206 Z" fill="#ffffff" opacity="0.84"/>
+    <path d="M120 220 C110 236 106 256 120 278 C134 256 130 236 120 220 Z" fill="#f7cf54" opacity="0.32"/>
+    <path d="M84 166 C83 200 90 236 104 265 L96 266 C82 235 76 199 77 166 Z" fill="#ffffff" opacity="0.72"/>
+  </g>
+
+  <!-- Anillo divisor dorado entre tapa y cáliz -->
+  <rect x="64" y="157" width="112" height="9" rx="4.5" fill="url(#ldesGoldAccent)" stroke="#8c580a" stroke-width="1.1"/>
+  <line x1="72" y1="160" x2="168" y2="160" stroke="#fff9d4" stroke-width="1.5" stroke-linecap="round" opacity="0.75"/>
+
+  <!-- ==================== 6. TAPA ABOMBADA CON ANILLOS DORADOS ==================== -->
+  <path d="M68 157 C72 132 91 120 120 120 C149 120 168 132 172 157 Z"
+        fill="url(#ldesSilverLid)" stroke="#64748b" stroke-width="1.2"/>
+  <path d="M84 148 C89 133 102 126 116 125" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+
+  <rect x="96" y="102" width="48" height="20" rx="3" fill="url(#ldesGoldAccent)" stroke="#8c580a" stroke-width="1"/>
+  <rect x="93" y="108" width="54" height="4.2" rx="2" fill="url(#ldesGoldAccent)"/>
+  <rect x="93" y="116" width="54" height="4.2" rx="2" fill="url(#ldesGoldAccent)"/>
+  <path d="M89 96 L151 96 L143 103 L97 103 Z" fill="url(#ldesGoldAccent)" stroke="#8c580a" stroke-width="0.9"/>
+
+  <!-- ==================== 7. MEDALLÓN CIRCULAR LDES DENTADO ==================== -->
+  <path d="M114 82 L126 82 L129 96 L111 96 Z" fill="url(#ldesGoldAccent)" stroke="#8c580a" stroke-width="0.9"/>
+  <!-- Borde festoneado plateado del medallón -->
+  <circle cx="120" cy="48" r="30" fill="url(#ldesSilverLid)" stroke="#64748b" stroke-width="2" stroke-dasharray="6 3"/>
+  <circle cx="120" cy="48" r="26" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.6"/>
+  <!-- Franja multicolor estilo LDES dentro del disco -->
+  <path d="M100 50 Q110 43 120 50 Q130 57 140 50" stroke="#2563eb" stroke-width="4.2" stroke-linecap="round"/>
+  <path d="M102 44 Q112 37 122 44 Q131 51 138 44" stroke="#f97316" stroke-width="3.6" stroke-linecap="round"/>
+  <path d="M104 56 Q113 50 122 56 Q130 62 136 56" stroke="#06b6d4" stroke-width="3.4" stroke-linecap="round"/>
+  <circle cx="120" cy="36" r="3.2" fill="#dc2626"/>
+</svg>

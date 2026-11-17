@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280" width="240" height="280" fill="none">
+  <defs>
+    <!-- Rey de los Tableros: Tablero cristal/plata + Aro + Balón -->
+    <linearGradient id="rebBoard" x1="48" y1="36" x2="192" y2="148" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e2e8f0" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.96"/>
+      <stop offset="100%" stop-color="#94a3b8" stop-opacity="0.88"/>
+    </linearGradient>
+
+    <linearGradient id="rebGold" x1="60" y1="60" x2="180" y2="210" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#9e670b"/>
+      <stop offset="28%" stop-color="#f7cf54"/>
+      <stop offset="52%" stop-color="#fff8cc"/>
+      <stop offset="100%" stop-color="#875407"/>
+    </linearGradient>
+
+    <linearGradient id="rebPedestal" x1="65" y1="205" x2="175" y2="270" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#292934"/>
+      <stop offset="50%" stop-color="#17171f"/>
+      <stop offset="100%" stop-color="#0c0c12"/>
+    </linearGradient>
+
+    <radialGradient id="rebGlow" cx="120" cy="118" r="102" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#151515" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="120" cy="118" r="102" fill="url(#rebGlow)"/>
+  <ellipse cx="120" cy="268" rx="64" ry="7" fill="#000000" fill-opacity="0.45"/>
+
+  <!-- Pedestal oscuro -->
+  <path d="M58 254 L182 254 L187 265 L53 265 Z" fill="url(#rebPedestal)" stroke="#3f3f4e" stroke-width="1.2"/>
+  <path d="M70 212 L170 212 L177 253 L63 253 Z" fill="url(#rebPedestal)" stroke="#3b3b48" stroke-width="1.4"/>
+  <rect x="84" y="220" width="72" height="24" rx="3" fill="url(#rebGold)" stroke="#8c580a" stroke-width="1.2"/>
+  <text x="120" y="236" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="900" font-size="10" letter-spacing="0.8" fill="#451a03">TABLEROS</text>
+
+  <!-- Poste soporte -->
+  <rect x="113" y="146" width="14" height="66" rx="3" fill="url(#rebGold)" stroke="#8a5609" stroke-width="1.1"/>
+
+  <!-- Tablero cristal con marco dorado -->
+  <rect x="48" y="42" width="144" height="104" rx="10" fill="url(#rebBoard)" stroke="url(#rebGold)" stroke-width="5"/>
+  <!-- Cuadrado interior del tablero -->
+  <rect x="92" y="84" width="56" height="44" rx="3" stroke="#ef4444" stroke-width="4" fill="none"/>
+  <!-- Reflejo diagonal del cristal -->
+  <path d="M58 50 L98 50 L68 138 L56 138 Z" fill="#ffffff" opacity="0.5"/>
+
+  <!-- Aro dorado sobresaliente -->
+  <ellipse cx="120" cy="134" rx="30" ry="7.5" fill="#1e293b" stroke="#ea580c" stroke-width="5.5"/>
+  <!-- Balón capturado en rebote sobre el aro -->
+  <circle cx="154" cy="158" r="24" fill="url(#rebGold)" stroke="#78350f" stroke-width="1.5"/>
+  <path d="M130 158 L178 158 M154 134 L154 182" stroke="#78350f" stroke-width="1.6" opacity="0.65"/>
+</svg>

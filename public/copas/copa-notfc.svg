@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 350" width="240" height="350" fill="none">
+  <defs>
+    <!-- Copa NOT F.C: Platino + Índigo #717fff + Oro -->
+    <linearGradient id="notSilver" x1="60" y1="40" x2="180" y2="235" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#64748b"/>
+      <stop offset="22%" stop-color="#f1f5f9"/>
+      <stop offset="46%" stop-color="#ffffff"/>
+      <stop offset="76%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+
+    <linearGradient id="notIndigo" x1="70" y1="50" x2="170" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="50%" stop-color="#717fff"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+
+    <linearGradient id="notGold" x1="65" y1="0" x2="175" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#9e670b"/>
+      <stop offset="28%" stop-color="#f7cf54"/>
+      <stop offset="52%" stop-color="#fff8cc"/>
+      <stop offset="100%" stop-color="#8a5609"/>
+    </linearGradient>
+
+    <linearGradient id="notPedestal" x1="65" y1="270" x2="175" y2="338" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#282834"/>
+      <stop offset="50%" stop-color="#17171f"/>
+      <stop offset="100%" stop-color="#0c0c12"/>
+    </linearGradient>
+
+    <radialGradient id="notGlow" cx="120" cy="145" r="115" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#717fff" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#151515" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <ellipse cx="120" cy="150" rx="95" ry="125" fill="url(#notGlow)"/>
+  <ellipse cx="120" cy="336" rx="64" ry="7.5" fill="#000000" fill-opacity="0.48"/>
+
+  <!-- Asas geométricas de campeonato -->
+  <path d="M68 74 C40 60 28 76 34 108 C40 138 62 166 86 180"
+        stroke="url(#notGold)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M172 74 C200 60 212 76 206 108 C200 138 178 166 154 180"
+        stroke="url(#notGold)" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Pedestal oscuro -->
+  <path d="M60 320 L180 320 L185 333 L55 333 Z" fill="url(#notPedestal)" stroke="#3f3f4e" stroke-width="1.2"/>
+  <path d="M72 276 L168 276 L175 319 L65 319 Z" fill="url(#notPedestal)" stroke="#3b3b4c" stroke-width="1.4"/>
+  <rect x="88" y="285" width="64" height="24" rx="3" fill="url(#notGold)" stroke="#8c580a" stroke-width="1.2"/>
+  <text x="120" y="301" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="900" font-size="10.5" letter-spacing="0.8" fill="#1e1b4b">NOT F.C</text>
+
+  <!-- Tallo y base -->
+  <path d="M107 232 C104 250 92 264 84 273 L156 273 C148 264 136 250 133 232 Z"
+        fill="url(#notSilver)" stroke="#475569" stroke-width="1"/>
+  <rect x="82" y="270" width="76" height="5" rx="2.5" fill="url(#notGold)"/>
+  <ellipse cx="120" cy="221" rx="16" ry="9" fill="url(#notIndigo)" stroke="#c7d2fe" stroke-width="1.2"/>
+
+  <!-- Cáliz principal -->
+  <path d="M62 60 L178 60 C175 138 156 195 120 212 C84 195 65 138 62 60 Z"
+        fill="url(#notSilver)" stroke="#475569" stroke-width="1.5"/>
+  <!-- Núcleo índigo + monograma F7 -->
+  <path d="M64 88 Q120 100 176 88 L171 142 Q120 156 69 142 Z" fill="url(#notIndigo)"/>
+  <circle cx="120" cy="118" r="22" fill="#151520" stroke="url(#notGold)" stroke-width="2.5"/>
+  <text x="120" y="125" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="900" font-size="18" fill="#ffffff">F7</text>
+  <path d="M76 64 C77 118 84 162 98 190 L90 192 C76 162 70 118 69 64 Z" fill="#ffffff" opacity="0.65"/>
+
+  <!-- Corona superior dorada -->
+  <ellipse cx="120" cy="60" rx="60" ry="11" fill="url(#notGold)" stroke="#8a5609" stroke-width="1.3"/>
+  <ellipse cx="120" cy="60.5" rx="52" ry="7.5" fill="#1e1b4b"/>
+</svg>
