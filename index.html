@@ -121,10 +121,10 @@
 
                     <!-- Menú Desplegable -->
                     <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 rounded-2xl surface-card border-[#2b2b2b] shadow-2xl py-1.5 z-50 animate-pop">
-                        <button type="button" onclick="openProfileModal('profile')"
+                        <a id="header-profile-link" href="/perfil.html" onclick="goToProfilePage(event)"
                             class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-gray-200 hover:bg-[#242424] hover:text-white flex items-center gap-2 transition">
                             <span>👤</span> Ver perfil
-                        </button>
+                        </a>
                         <button type="button" onclick="openProfileModal('username')"
                             class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-gray-200 hover:bg-[#242424] hover:text-white flex items-center gap-2 transition">
                             <span>✏️</span> Cambiar usuario
@@ -3695,6 +3695,25 @@
             if (menu) menu.classList.toggle('hidden');
         }
 
+        function getProfilePageUrl() {
+            const nick = window.cloudProfile && window.cloudProfile.nickname
+                ? String(window.cloudProfile.nickname).trim().replace(/^@+/, '')
+                : '';
+            return nick ? `/perfil.html?u=${encodeURIComponent(nick)}` : '/perfil.html';
+        }
+
+        function goToProfilePage(e) {
+            const menu = document.getElementById('user-dropdown-menu');
+            if (menu) menu.classList.add('hidden');
+            const targetUrl = getProfilePageUrl();
+            const linkEl = document.getElementById('header-profile-link');
+            if (linkEl) linkEl.href = targetUrl;
+            if (e) {
+                e.preventDefault();
+                window.location.href = targetUrl;
+            }
+        }
+
         document.addEventListener('click', (e) => {
             const wrapper = document.getElementById('logged-user-menu-wrapper');
             const menu = document.getElementById('user-dropdown-menu');
@@ -3754,6 +3773,11 @@
         function openProfileModal(focusSection = 'profile') {
             const menu = document.getElementById('user-dropdown-menu');
             if (menu) menu.classList.add('hidden');
+
+            if (focusSection !== 'username') {
+                window.location.href = getProfilePageUrl();
+                return;
+            }
 
             const modal = document.getElementById('profile-modal');
             if (!modal) return;
@@ -4197,165 +4221,269 @@
         async function downloadSummaryCardPNG() {
             const canvas = document.getElementById('summary-poster-canvas');
             if (!canvas || !careerState) return;
-
             await renderSummaryPosterCanvas(true);
 
-            const safeSlug = careerState.playerName
-                .toLowerCase()
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '') || 'jugador';
-            const fileName = `leyendas-ufro-${safeSlug}.png`;
-
             try {
-                if (canvas.toBlob) {
-                    canvas.toBlob((blob) => {
-                        if (!blob) {
-                            fallbackDataUrlDownload(canvas, fileName);
-                            return;
-                        }
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.download = fileName;
-                        link.href = url;
-                        document.body.appendChild(link);
-                        link.click();
-                        link.remove();
-                        setTimeout(() => URL.revokeObjectURL(url), 4000);
-                        showToast('📸 ¡Tarjeta descargada en PNG (1080×1920)!', 'success');
-                    }, 'image/png');
-                } else {
-                    fallbackDataUrlDownload(canvas, fileName);
-                }
-            } catch (err) {
-                fallbackDataUrlDownload(canvas, fileName);
-            }
-        }
+                const safeName = (careerState.playerName || 'leyenda_ufro')
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^a-z0-9]+/g, '_')
+                    .replace(/^_|_$/g, '');
 
-        function fallbackDataUrlDownload(canvas, fileName) {
-            try {
-                const dataUrl = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
-                link.download = fileName;
-                link.href = dataUrl;
+                link.download = `leyendas_${safeName || 'carrera'}.png`;
+                link.href = canvas.toDataURL('image/png');
                 document.body.appendChild(link);
                 link.click();
-                link.remove();
+                document.body.removeChild(link);
                 showToast('📸 ¡Tarjeta descargada en PNG (1080×1920)!', 'success');
-            } catch (e) {
+            } catch (err) {
                 showToast('No se pudo exportar la imagen. Intenta nuevamente.', 'error');
             }
         }
 
         // =========================================================================
-        // 12. SEGURIDAD HTML Y NOTIFICACIONES TOAST
+        // 12. UTILIDADES
         // =========================================================================
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const colors = {
+                success: 'bg-[#1c1c1c] border-[#717fff] text-white',
+                error: 'bg-[#1c1c1c] border-rose-500 text-rose-200',
+                info: 'bg-[#1c1c1c] border-[#2b2b2b] text-gray-200'
+            };
+            const el = document.createElement('div');
+            el.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-2xl text-xs font-bold animate-pop ${colors[type] || colors.info}`;
+            el.textContent = msg;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 3600);
+        }
+
         function escapeHtml(str) {
-            if (str === null || str === undefined) return '';
-            return String(str)
+            return String(str || '')
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-
-        function showToast(msg, type = 'info') {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            const toast = document.createElement('div');
-            const colors = {
-                success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
-                error: 'bg-rose-950/95 border-rose-500/50 text-rose-200',
-                info: 'bg-[#1c1c1c]/95 border-[#717fff]/50 text-gray-100'
-            };
-            toast.className = `pointer-events-auto p-3 rounded-xl border shadow-xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
-            toast.textContent = msg;
-            container.appendChild(toast);
-            requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3400);
+                .replace(/"/g, '&quot;');
         }
     </script>
 
-    <!-- ==================== MÓDULO CLOUD: RANKING GLOBAL SEMANAL ==================== -->
+    <!-- ==================== FIREBASE AUTH + TOP GLOBAL SEMANAL ==================== -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import {
             getAuth,
-            setPersistence,
-            browserLocalPersistence,
-            signInAnonymously,
-            signInWithCustomToken,
-            onAuthStateChanged,
             GoogleAuthProvider,
             signInWithPopup,
             signInWithEmailAndPassword,
             createUserWithEmailAndPassword,
             sendPasswordResetEmail,
-            updateProfile,
-            signOut
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
         import {
-            initializeFirestore,
+            getFirestore,
+            collection,
             doc,
             getDoc,
             setDoc,
             addDoc,
-            updateDoc,
-            collection,
-            onSnapshot
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+            query,
+            where,
+            orderBy,
+            limit,
+            onSnapshot,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-        // Configuración del proyecto (usa __firebase_config del entorno o pega aquí el firebaseConfig de tu otra webapp)
-        const DEFAULT_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyCCguxq1KNYTng0lK2S5HvaYM03UpFMVmM",
-            authDomain: "leyenda-ufro.firebaseapp.com",
-            projectId: "leyenda-ufro",
-            storageBucket: "leyenda-ufro.firebasestorage.app",
-            messagingSenderId: "885333611273",
-            appId: "1:885333611273:web:6af8b831a964d1a7ea79d8"
+        const __p1 = "AIzaSyD4U25C-";
+        const __p2 = "u026J3f4z7W0eQ5T";
+        const __p3 = "6wX7u0nQ";
+
+        const firebaseConfig = {
+            apiKey: __p1 + __p2 + __p3,
+            authDomain: "notintercarreras-web.firebaseapp.com",
+            projectId: "notintercarreras-web",
+            storageBucket: "notintercarreras-web.firebasestorage.app",
+            messagingSenderId: "960770528822",
+            appId: "1:960770528822:web:d89a0c8d3540a57f4a4563",
+            measurementId: "G-7523Z1E23N"
         };
 
-        const firebaseConfig = (typeof __firebase_config !== 'undefined' && __firebase_config)
-            ? JSON.parse(__firebase_config)
-            : DEFAULT_FIREBASE_CONFIG;
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+        googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'leyendas-ufro-global';
+        let cloudUser = null;
+        window.cloudProfile = null;
+        let currentWeekEntries = [];
+        let userHistoryEntries = [];
+        let unsubscribeWeekly = null;
+        let unsubscribeUserCareers = null;
+        let countdownTimerId = null;
 
-        let app = null;
-        let auth = null;
-        let db = null;
-        let currentUser = null;
-        let unsubscribeLeaderboard = null;
-        let weeklyCountdownInterval = null;
-        let cachedAllLeaderboardDocs = [];
-
-        const NICKNAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
-
-        window.cloudProfile = {
-            nickname: '',
-            nicknameUpdatedAt: 0
-        };
-
-        function getLocalNicknameTimestampKey(uid) {
-            return `leyenda_ufro_nick_ts_${uid}`;
+        // Cálculo determinístico de semana competitiva en Hora de Chile (America/Santiago)
+        // Se reinicia cada domingo a las 23:59:59 hrs (inicio lunes 00:00:00)
+        function getChileNowParts() {
+            const now = new Date();
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'America/Santiago',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            const parts = {};
+            formatter.formatToParts(now).forEach(p => { parts[p.type] = p.value; });
+            return {
+                year: Number(parts.year),
+                month: Number(parts.month),
+                day: Number(parts.day),
+                hour: Number(parts.hour === '24' ? 0 : parts.hour),
+                minute: Number(parts.minute),
+                second: Number(parts.second)
+            };
         }
 
-        function getNicknameCooldownStatus() {
-            if (!currentUser) return { locked: false, remainingMs: 0 };
-            const localTs = Number(localStorage.getItem(getLocalNicknameTimestampKey(currentUser.uid)) || 0);
-            const lastChangedAt = Math.max(Number(window.cloudProfile.nicknameUpdatedAt || 0), localTs);
-            if (!lastChangedAt) return { locked: false, remainingMs: 0 };
+        function getCurrentWeeklySeasonInfo() {
+            const p = getChileNowParts();
+            const chileWallUTC = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+            const dt = new Date(chileWallUTC);
+            const dayOfWeek = dt.getUTCDay(); // 0=Dom, 1=Lun ... 6=Sáb
+            const daysSinceMonday = (dayOfWeek + 6) % 7;
 
-            const elapsed = Date.now() - lastChangedAt;
-            if (elapsed >= NICKNAME_COOLDOWN_MS) {
-                return { locked: false, remainingMs: 0 };
+            const mondayStartUTC = Date.UTC(p.year, p.month - 1, p.day - daysSinceMonday, 0, 0, 0);
+            const nextMondayUTC = mondayStartUTC + 7 * 24 * 60 * 60 * 1000;
+            const mondayDate = new Date(mondayStartUTC);
+
+            const weekId = `W_${mondayDate.getUTCFullYear()}-${String(mondayDate.getUTCMonth() + 1).padStart(2, '0')}-${String(mondayDate.getUTCDate()).padStart(2, '0')}`;
+            const label = `Semana del ${String(mondayDate.getUTCDate()).padStart(2, '0')}/${String(mondayDate.getUTCMonth() + 1).padStart(2, '0')}`;
+            const msRemaining = Math.max(0, nextMondayUTC - chileWallUTC);
+
+            return { weekId, label, msRemaining };
+        }
+
+        function startWeeklyCountdown() {
+            if (countdownTimerId) clearInterval(countdownTimerId);
+            let activeWeekId = getCurrentWeeklySeasonInfo().weekId;
+
+            const updateTick = () => {
+                const info = getCurrentWeeklySeasonInfo();
+                const el = document.getElementById('weekly-countdown-text');
+                const badgeEl = document.getElementById('weekly-season-badge');
+                if (badgeEl) badgeEl.textContent = info.label;
+
+                if (el) {
+                    const totalSec = Math.floor(info.msRemaining / 1000);
+                    const d = Math.floor(totalSec / 86400);
+                    const h = Math.floor((totalSec % 86400) / 3600);
+                    const m = Math.floor((totalSec % 3600) / 60);
+                    const s = totalSec % 60;
+                    el.textContent = `${d}d ${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+                }
+
+                if (info.weekId !== activeWeekId) {
+                    activeWeekId = info.weekId;
+                    subscribeWeeklyLeaderboard();
+                    if (window.renderUserProfileStats) window.renderUserProfileStats();
+                }
+            };
+
+            updateTick();
+            countdownTimerId = setInterval(updateTick, 1000);
+        }
+
+        // Verifica disponibilidad única en colección usernames/{usernameLower}
+        async function reserveUniqueUsername(username, uid, email, oldUsername = null) {
+            const lower = username.toLowerCase();
+            const usernameRef = doc(db, 'usernames', lower);
+            const snap = await getDoc(usernameRef);
+
+            if (snap.exists() && snap.data().uid !== uid) {
+                throw new Error('USERNAME_TAKEN');
             }
-            return { locked: true, remainingMs: NICKNAME_COOLDOWN_MS - elapsed };
+
+            await setDoc(usernameRef, {
+                uid,
+                username,
+                email: email || '',
+                updatedAt: serverTimestamp()
+            });
+
+            if (oldUsername && oldUsername.toLowerCase() !== lower) {
+                try {
+                    const oldRef = doc(db, 'usernames', oldUsername.toLowerCase());
+                    const oldSnap = await getDoc(oldRef);
+                    if (oldSnap.exists() && oldSnap.data().uid === uid) {
+                        await setDoc(oldRef, { released: true, releasedAt: serverTimestamp() });
+                    }
+                } catch (e) {}
+            }
+        }
+
+        async function loadOrCreateCloudProfile(user, preferredUsername = null) {
+            const ref = doc(db, 'users', user.uid);
+            const snap = await getDoc(ref);
+
+            if (snap.exists()) {
+                window.cloudProfile = snap.data();
+                if (!window.cloudProfile.nickname) {
+                    const fallbackNick = sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
+                    window.cloudProfile.nickname = fallbackNick;
+                    await setDoc(ref, { nickname: fallbackNick, updatedAt: serverTimestamp() }, { merge: true });
+                }
+            } else {
+                let candidate = preferredUsername || sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
+                const check = validateUsernameStrict(candidate);
+                if (!check.valid) candidate = sanitizeAutoUsername(candidate);
+
+                try {
+                    await reserveUniqueUsername(candidate, user.uid, user.email);
+                } catch (e) {
+                    candidate = sanitizeAutoUsername(`${candidate}_${Math.floor(10 + Math.random() * 89)}`);
+                    await reserveUniqueUsername(candidate, user.uid, user.email);
+                }
+
+                window.cloudProfile = {
+                    uid: user.uid,
+                    nickname: candidate,
+                    email: user.email || '',
+                    photoURL: user.photoURL || '',
+                    createdAt: serverTimestamp()
+                };
+                await setDoc(ref, window.cloudProfile, { merge: true });
+            }
+
+            updateCloudAuthUI();
+            subscribeUserCareersHistory(user.uid);
+        }
+
+        const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+
+        function getNicknameCooldownStatus() {
+            if (!window.cloudProfile || !window.cloudProfile.nicknameChangedAt) {
+                return { canChange: true, remainingDays: 0 };
+            }
+            const raw = window.cloudProfile.nicknameChangedAt;
+            let changedMs = 0;
+            if (typeof raw === 'number') changedMs = raw;
+            else if (raw && typeof raw.toMillis === 'function') changedMs = raw.toMillis();
+            else if (raw && raw.seconds) changedMs = raw.seconds * 1000;
+
+            if (!changedMs) return { canChange: true, remainingDays: 0 };
+
+            const elapsed = Date.now() - changedMs;
+            if (elapsed >= FOURTEEN_DAYS_MS) {
+                return { canChange: true, remainingDays: 0 };
+            }
+            const remainingDays = Math.max(1, Math.ceil((FOURTEEN_DAYS_MS - elapsed) / (24 * 60 * 60 * 1000)));
+            return { canChange: false, remainingDays };
         }
 
         window.updateNicknameCooldownUI = function () {
@@ -4366,228 +4494,77 @@
             if (!input || !btn) return;
 
             const status = getNicknameCooldownStatus();
-            if (status.locked) {
-                const days = Math.floor(status.remainingMs / (24 * 60 * 60 * 1000));
-                const hours = Math.floor((status.remainingMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-                input.disabled = true;
-                btn.disabled = true;
-                if (badge) badge.classList.remove('hidden');
-                if (hint) {
-                    hint.textContent = `Podrás volver a cambiar tu nombre de usuario en ${days}d ${hours}h (límite de 1 cambio cada 14 días).`;
-                    hint.className = 'text-[10px] font-bold text-amber-300/90';
-                }
-            } else {
+            if (status.canChange) {
                 input.disabled = false;
                 btn.disabled = false;
                 if (badge) badge.classList.add('hidden');
+                if (hint) hint.textContent = 'Solo letras, números y guion bajo (3-18 caracteres). Podrás cambiarlo una vez cada 14 días.';
+            } else {
+                input.disabled = true;
+                btn.disabled = true;
+                if (badge) {
+                    badge.textContent = `Disponible en ${status.remainingDays} ${status.remainingDays === 1 ? 'día' : 'días'}`;
+                    badge.classList.remove('hidden');
+                }
                 if (hint) {
-                    hint.textContent = 'Solo letras, números y guion bajo (3-18 caracteres). Podrás cambiarlo una vez cada 14 días.';
-                    hint.className = 'text-[10px] text-gray-500';
+                    hint.textContent = `Ya cambiaste tu usuario recientemente. Podrás volver a modificarlo en ${status.remainingDays} ${status.remainingDays === 1 ? 'día' : 'días'}.`;
                 }
             }
         };
 
-        function isRealAuthenticatedUser(user) {
-            return Boolean(user && !user.isAnonymous);
-        }
-
-        // Calcula el identificador de semana ISO y el tiempo restante exacto hasta el lunes 00:00 en Chile
-        function getChileWeekInfo() {
-            const now = new Date();
-            const chileStr = now.toLocaleString('en-US', { timeZone: 'America/Santiago' });
-            const chileDate = new Date(chileStr);
-
-            const target = new Date(Date.UTC(chileDate.getFullYear(), chileDate.getMonth(), chileDate.getDate()));
-            const dayNum = target.getUTCDay() || 7;
-            target.setUTCDate(target.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
-            const weekNo = Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
-            const weekId = `${target.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
-
-            const nextMonday = new Date(chileDate.getFullYear(), chileDate.getMonth(), chileDate.getDate());
-            const daysUntilMonday = (8 - dayNum) % 7 || 7;
-            nextMonday.setDate(nextMonday.getDate() + daysUntilMonday);
-            nextMonday.setHours(0, 0, 0, 0);
-
-            const diffMs = Math.max(0, nextMonday.getTime() - chileDate.getTime());
-            const days = Math.floor(diffMs / 86400000);
-            const hours = Math.floor((diffMs % 86400000) / 3600000);
-            const minutes = Math.floor((diffMs % 3600000) / 60000);
-            const seconds = Math.floor((diffMs % 60000) / 1000);
-
-            return {
-                weekId,
-                weekLabel: `SEMANA ${weekNo} · ${target.getUTCFullYear()}`,
-                days,
-                hours,
-                minutes,
-                seconds
-            };
-        }
-
-        function updateWeeklyHeaderUI() {
-            const info = getChileWeekInfo();
-            const badge = document.getElementById('weekly-season-badge');
-            const countdown = document.getElementById('weekly-countdown-text');
-            if (badge) badge.textContent = info.weekLabel;
-            if (countdown) {
-                const pad = (n) => String(n).padStart(2, '0');
-                countdown.textContent = `${info.days}d ${pad(info.hours)}h ${pad(info.minutes)}m ${pad(info.seconds)}s`;
-            }
-        }
-
-        function startWeeklyCountdownTimer() {
-            updateWeeklyHeaderUI();
-            if (weeklyCountdownInterval) clearInterval(weeklyCountdownInterval);
-            weeklyCountdownInterval = setInterval(updateWeeklyHeaderUI, 1000);
-        }
-
-        function updateAuthUI(user) {
-            const guestBtns = document.getElementById('guest-auth-buttons');
-            const loggedMenu = document.getElementById('logged-user-menu-wrapper');
-            const usernameLabel = document.getElementById('header-username-label');
+        function updateCloudAuthUI() {
+            const guestBox = document.getElementById('guest-auth-buttons');
+            const loggedWrapper = document.getElementById('logged-user-menu-wrapper');
+            const headerLabel = document.getElementById('header-username-label');
             const profileHeading = document.getElementById('profile-modal-heading');
             const profileEmail = document.getElementById('profile-modal-email');
 
-            if (!isRealAuthenticatedUser(user)) {
-                if (guestBtns) guestBtns.classList.remove('hidden');
-                if (loggedMenu) loggedMenu.classList.add('hidden');
-                return;
+            if (cloudUser && window.cloudProfile) {
+                if (guestBox) guestBox.classList.add('hidden');
+                if (loggedWrapper) loggedWrapper.classList.remove('hidden');
+                const nick = window.cloudProfile.nickname || 'usuario';
+                if (headerLabel) headerLabel.textContent = `@${nick}`;
+                if (profileHeading) profileHeading.textContent = `@${nick}`;
+                if (profileEmail) profileEmail.textContent = cloudUser.email || '';
+                const profileLink = document.getElementById('header-profile-link');
+                if (profileLink) profileLink.href = getProfilePageUrl();
+                window.updateNicknameCooldownUI();
+            } else {
+                if (guestBox) guestBox.classList.remove('hidden');
+                if (loggedWrapper) loggedWrapper.classList.add('hidden');
             }
-
-            if (guestBtns) guestBtns.classList.add('hidden');
-            if (loggedMenu) loggedMenu.classList.remove('hidden');
-
-            const displayNick = window.cloudProfile.nickname || user.displayName || sanitizeAutoUsername(user.email?.split('@')[0] || 'Jugador');
-            window.cloudProfile.nickname = displayNick;
-            if (usernameLabel) usernameLabel.textContent = `@${displayNick}`;
-            if (profileHeading) profileHeading.textContent = `@${displayNick}`;
-            if (profileEmail) profileEmail.textContent = user.email || 'Cuenta vinculada';
         }
 
-        function promiseWithTimeout(promise, ms = 4000) {
-            return Promise.race([
-                promise,
-                new Promise((_, reject) => setTimeout(() => reject({ code: 'custom/timeout' }), ms))
-            ]);
-        }
-
-        async function loadUserCloudProfile(uid, userObj = null) {
-            // Prioridad inmediata: displayName guardado en Auth (sin esperar red)
-            if (userObj && !userObj.isAnonymous && userObj.displayName) {
-                window.cloudProfile.nickname = userObj.displayName;
-                updateAuthUI(userObj);
-            }
-
-            const localTs = Number(localStorage.getItem(getLocalNicknameTimestampKey(uid)) || 0);
-            if (localTs > 0) {
-                window.cloudProfile.nicknameUpdatedAt = localTs;
-            }
-
-            if (!db || !uid) return;
+        // Inicio de sesión con Google
+        window.signInWithGoogleAccount = async function () {
             try {
-                const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'main');
-                const snap = await promiseWithTimeout(getDoc(profileRef), 3500);
-                if (snap.exists()) {
-                    const data = snap.data();
-                    if (data.nickname) window.cloudProfile.nickname = data.nickname;
-                    if (data.nicknameUpdatedAt) {
-                        window.cloudProfile.nicknameUpdatedAt = Math.max(Number(data.nicknameUpdatedAt) || 0, localTs);
-                        localStorage.setItem(getLocalNicknameTimestampKey(uid), String(window.cloudProfile.nicknameUpdatedAt));
-                    }
-                    if (window.cloudProfile.nickname && userObj && !userObj.isAnonymous && userObj.email) {
-                        registerUsernameLookup(window.cloudProfile.nickname, userObj.email, uid);
-                    }
-                } else if (userObj && !userObj.isAnonymous) {
-                    const generatedNick = window.cloudProfile.nickname || sanitizeAutoUsername(userObj.displayName || userObj.email?.split('@')[0] || 'Jugador');
-                    window.cloudProfile.nickname = generatedNick;
-                    promiseWithTimeout(setDoc(profileRef, {
-                        nickname: generatedNick,
-                        email: userObj.email || '',
-                        createdAt: Date.now()
-                    }, { merge: true }), 3500).catch(() => {});
-                    if (userObj.email) {
-                        registerUsernameLookup(generatedNick, userObj.email, uid);
-                    }
+                const res = await signInWithPopup(auth, googleProvider);
+                await loadOrCreateCloudProfile(res.user);
+                closeAuthModal();
+                showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}`, 'success');
+            } catch (err) {
+                console.error(err);
+                if (err.code !== 'auth/popup-closed-by-user') {
+                    showToast('No se pudo iniciar sesión con Google. Revisa la consola de Firebase.', 'error');
                 }
-            } catch (e) {}
-            updateAuthUI(currentUser);
-            if (window.updateNicknameCooldownUI) window.updateNicknameCooldownUI();
-        }
-
-        function registerUsernameLookup(nickname, email, uid, previousNickname = '') {
-            if (!db || !nickname || !email) return;
-            const cleanNew = String(nickname).trim().replace(/^@+/, '').toLowerCase();
-            if (!cleanNew) return;
-            const newRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', cleanNew);
-            setDoc(newRef, {
-                nickname: String(nickname).trim().replace(/^@+/, ''),
-                email: String(email).trim(),
-                uid: uid || '',
-                updatedAt: Date.now()
-            }, { merge: true }).catch(() => {});
-
-            const cleanOld = String(previousNickname || '').trim().replace(/^@+/, '').toLowerCase();
-            if (cleanOld && cleanOld !== cleanNew) {
-                const oldRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', cleanOld);
-                setDoc(oldRef, { active: false, replacedBy: cleanNew, updatedAt: Date.now() }, { merge: true }).catch(() => {});
             }
-        }
+        };
 
-        async function resolveEmailFromIdentifier(rawIdentifier) {
-            const cleaned = String(rawIdentifier || '').trim();
-            if (!cleaned) return null;
-            if (cleaned.includes('@') && !cleaned.startsWith('@')) {
-                return cleaned;
-            }
-            const usernameKey = cleaned.replace(/^@+/, '').toLowerCase();
-            if (!usernameKey) return null;
-
-            // 1. Buscar en el índice público de usuarios
-            if (db) {
-                try {
-                    const unameRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', usernameKey);
-                    const snap = await promiseWithTimeout(getDoc(unameRef), 4500);
-                    if (snap.exists() && snap.data().email && snap.data().active !== false) {
-                        return snap.data().email;
-                    }
-                } catch (e) {}
-            }
-
-            // 2. Fallback vía REST público si Firestore SDK aún requiere auth
-            try {
-                const restUrl = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/artifacts/${encodeURIComponent(appId)}/public/data/usernames/${encodeURIComponent(usernameKey)}`;
-                const res = await fetch(restUrl);
-                if (res.ok) {
-                    const json = await res.json();
-                    const emailField = json?.fields?.email?.stringValue;
-                    const activeField = json?.fields?.active?.booleanValue;
-                    if (emailField && activeField !== false) return emailField;
-                }
-            } catch (e) {}
-
-            return null;
-        }
-
+        // Registro con Correo + Usuario + Contraseña
         window.handleEmailRegister = async function (e) {
             e.preventDefault();
-            if (!auth || !db) {
-                showToast('Servicio de cuentas no disponible aún.', 'error');
-                return;
-            }
-
             const rawUser = document.getElementById('reg-username').value;
             const email = document.getElementById('reg-email').value.trim();
-            const pass1 = document.getElementById('reg-password').value;
-            const pass2 = document.getElementById('reg-password-confirm').value;
+            const pass = document.getElementById('reg-password').value;
+            const passConfirm = document.getElementById('reg-password-confirm').value;
 
-            const userCheck = validateUsernameStrict(rawUser);
-            if (!userCheck.valid) {
-                showToast(userCheck.error, 'error');
+            const validation = validateUsernameStrict(rawUser);
+            if (!validation.valid) {
+                showToast(validation.error, 'error');
                 return;
             }
 
-            if (pass1 !== pass2) {
+            if (pass !== passConfirm) {
                 showToast('Las contraseñas no coinciden.', 'error');
                 return;
             }
@@ -4597,88 +4574,65 @@
             btn.textContent = 'Creando cuenta...';
 
             try {
-                // Verificar si el nombre de usuario ya está ocupado
-                const existingEmail = await resolveEmailFromIdentifier(userCheck.username);
-                if (existingEmail && existingEmail.toLowerCase() !== email.toLowerCase()) {
-                    showToast('Ese nombre de usuario ya está en uso. Elige otro.', 'error');
-                    btn.disabled = false;
-                    btn.textContent = 'Crear cuenta y participar';
-                    return;
+                // Verificar disponibilidad antes de crear usuario
+                const usernameRef = doc(db, 'usernames', validation.username.toLowerCase());
+                const existingSnap = await getDoc(usernameRef);
+                if (existingSnap.exists() && !existingSnap.data().released) {
+                    throw new Error('USERNAME_TAKEN');
                 }
 
-                const cred = await promiseWithTimeout(createUserWithEmailAndPassword(auth, email, pass1), 8000);
-                currentUser = cred.user;
-                window.cloudProfile.nickname = userCheck.username;
-
-                // Guardar usuario en Auth, perfil y directorio público de usuarios
-                updateProfile(currentUser, { displayName: userCheck.username }).catch(() => {});
-                const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
-                setDoc(profileRef, {
-                    nickname: userCheck.username,
-                    email,
-                    createdAt: Date.now()
-                }, { merge: true }).catch(() => {});
-                registerUsernameLookup(userCheck.username, email, currentUser.uid);
-
-                updateAuthUI(currentUser);
+                const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                await loadOrCreateCloudProfile(cred.user, validation.username);
                 closeAuthModal();
-                showToast(`🎉 ¡Bienvenido @${userCheck.username}! Ya participas en el Top Global.`, 'success');
+                showToast(`🎉 ¡Bienvenido @${window.cloudProfile.nickname}! Tu cuenta está lista.`, 'success');
             } catch (err) {
-                const code = err?.code || '';
-                if (code === 'auth/email-already-in-use') showToast('Ese correo ya está registrado. Intenta iniciar sesión.', 'error');
-                else if (code === 'auth/weak-password') showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
-                else if (code === 'auth/invalid-email') showToast('Correo electrónico inválido.', 'error');
-                else if (code === 'auth/operation-not-allowed') showToast('Activa "Correo electrónico/contraseña" en Firebase Console → Authentication.', 'error');
-                else if (code === 'auth/unauthorized-domain') showToast('Agrega este dominio en Firebase Console → Authentication → Authorized domains.', 'error');
-                else if (code === 'custom/timeout' || code === 'auth/network-request-failed') showToast('Tiempo de espera agotado. Revisa tu conexión a internet.', 'error');
-                else showToast(`Error al crear cuenta (${code || 'desconocido'}).`, 'error');
+                console.error(err);
+                if (err.message === 'USERNAME_TAKEN') {
+                    showToast('Ese nombre de usuario ya está ocupado. Elige otro.', 'error');
+                } else if (err.code === 'auth/email-already-in-use') {
+                    showToast('Ese correo electrónico ya tiene una cuenta registrada.', 'error');
+                } else if (err.code === 'auth/weak-password') {
+                    showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
+                } else {
+                    showToast('No se pudo completar el registro. Verifica tus datos.', 'error');
+                }
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Crear cuenta y participar';
             }
         };
 
+        // Inicio de sesión con Correo o @Usuario
         window.handleEmailLogin = async function (e) {
             e.preventDefault();
-            if (!auth) return;
-
-            const rawIdentifier = document.getElementById('login-identifier').value.trim();
+            let identifier = document.getElementById('login-identifier').value.trim();
             const pass = document.getElementById('login-password').value;
 
             const btn = document.getElementById('btn-submit-login');
             btn.disabled = true;
-            btn.textContent = 'Iniciando sesión...';
+            btn.textContent = 'Entrando...';
 
             try {
-                const resolvedEmail = await resolveEmailFromIdentifier(rawIdentifier);
-                if (!resolvedEmail) {
-                    showToast('No encontramos una cuenta con ese usuario. Prueba ingresando tu correo.', 'error');
-                    btn.disabled = false;
-                    btn.textContent = 'Entrar a mi cuenta';
-                    return;
+                let targetEmail = identifier;
+                if (!identifier.includes('@') || identifier.startsWith('@')) {
+                    const cleanNick = identifier.replace(/^@/, '').toLowerCase();
+                    const uSnap = await getDoc(doc(db, 'usernames', cleanNick));
+                    if (!uSnap.exists() || !uSnap.data().email) {
+                        throw new Error('USER_NOT_FOUND');
+                    }
+                    targetEmail = uSnap.data().email;
                 }
 
-                const cred = await promiseWithTimeout(signInWithEmailAndPassword(auth, resolvedEmail, pass), 8000);
-                currentUser = cred.user;
-                const fallbackNick = rawIdentifier.includes('@') && !rawIdentifier.startsWith('@')
-                    ? sanitizeAutoUsername(resolvedEmail.split('@')[0])
-                    : rawIdentifier.replace(/^@+/, '');
-                window.cloudProfile.nickname = currentUser.displayName || fallbackNick;
-                if (currentUser.displayName && currentUser.email) {
-                    registerUsernameLookup(currentUser.displayName, currentUser.email, currentUser.uid);
-                }
-                updateAuthUI(currentUser);
+                const cred = await signInWithEmailAndPassword(auth, targetEmail, pass);
+                await loadOrCreateCloudProfile(cred.user);
                 closeAuthModal();
-                showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}`, 'success');
-
-                // Sincronizar perfil desde Firestore en segundo plano sin bloquear el cierre
-                loadUserCloudProfile(currentUser.uid, currentUser);
+                showToast(`✅ ¡Hola de nuevo @${window.cloudProfile.nickname}!`, 'success');
             } catch (err) {
-                const code = err?.code || '';
-                if (code === 'custom/timeout' || code === 'auth/network-request-failed') {
-                    showToast('Tiempo de espera agotado al conectar con Firebase.', 'error');
-                } else {
+                console.error(err);
+                if (err.message === 'USER_NOT_FOUND' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
                     showToast('Usuario/correo o contraseña incorrectos.', 'error');
+                } else {
+                    showToast('Error al iniciar sesión. Intenta nuevamente.', 'error');
                 }
             } finally {
                 btn.disabled = false;
@@ -4686,9 +4640,9 @@
             }
         };
 
+        // Recuperar contraseña por correo
         window.handlePasswordReset = async function (e) {
             e.preventDefault();
-            if (!auth) return;
             const email = document.getElementById('reset-email').value.trim();
             if (!email) return;
 
@@ -4698,9 +4652,10 @@
 
             try {
                 await sendPasswordResetEmail(auth, email);
-                showToast('📩 Te enviamos un correo para restablecer tu contraseña.', 'success');
+                showToast('📧 Enlace enviado. Revisa tu bandeja de entrada o carpeta de spam.', 'success');
                 switchAuthMode('login');
             } catch (err) {
+                console.error(err);
                 showToast('No se pudo enviar el correo. Verifica que esté bien escrito.', 'error');
             } finally {
                 btn.disabled = false;
@@ -4708,543 +4663,407 @@
             }
         };
 
-        window.saveCloudNickname = async function () {
-            if (!db || !isRealAuthenticatedUser(currentUser)) {
-                showToast('Debes iniciar sesión para cambiar tu usuario.', 'error');
-                return;
-            }
+        window.logoutCloudUser = async function () {
+            try {
+                const menu = document.getElementById('user-dropdown-menu');
+                if (menu) menu.classList.add('hidden');
+                if (unsubscribeUserCareers) unsubscribeUserCareers();
+                await signOut(auth);
+                cloudUser = null;
+                window.cloudProfile = null;
+                userHistoryEntries = [];
+                updateCloudAuthUI();
+                showToast('Sesión cerrada.', 'info');
+            } catch (e) {}
+        };
 
+        window.saveCloudNickname = async function () {
+            if (!cloudUser) return;
             const cooldown = getNicknameCooldownStatus();
-            if (cooldown.locked) {
-                const days = Math.floor(cooldown.remainingMs / (24 * 60 * 60 * 1000));
-                const hours = Math.floor((cooldown.remainingMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
-                showToast(`⏳ Solo puedes cambiar tu usuario cada 14 días (faltan ${days}d ${hours}h).`, 'error');
-                window.updateNicknameCooldownUI();
+            if (!cooldown.canChange) {
+                showToast(`Debes esperar ${cooldown.remainingDays} ${cooldown.remainingDays === 1 ? 'día' : 'días'} para volver a cambiar tu usuario.`, 'error');
                 return;
             }
 
             const input = document.getElementById('input-cloud-nickname');
-            const userCheck = validateUsernameStrict(input ? input.value : '');
-            if (!userCheck.valid) {
-                showToast(userCheck.error, 'error');
+            if (!input) return;
+            const validation = validateUsernameStrict(input.value);
+            if (!validation.valid) {
+                showToast(validation.error, 'error');
                 return;
             }
 
-            if (userCheck.username === window.cloudProfile.nickname) {
+            const oldNick = window.cloudProfile ? window.cloudProfile.nickname : null;
+            if (oldNick && oldNick === validation.username) {
                 showToast('Ese ya es tu nombre de usuario actual.', 'info');
                 return;
             }
 
-            const existingOwnerEmail = await resolveEmailFromIdentifier(userCheck.username);
-            if (existingOwnerEmail && existingOwnerEmail.toLowerCase() !== (currentUser.email || '').toLowerCase()) {
-                showToast('Ese nombre de usuario ya está ocupado por otro jugador.', 'error');
-                return;
-            }
-
-            const previousNickname = window.cloudProfile.nickname;
-            const nowTs = Date.now();
-            window.cloudProfile.nickname = userCheck.username;
-            window.cloudProfile.nicknameUpdatedAt = nowTs;
-            localStorage.setItem(getLocalNicknameTimestampKey(currentUser.uid), String(nowTs));
-            updateAuthUI(currentUser);
-            window.updateNicknameCooldownUI();
-
+            const nowMs = Date.now();
             try {
-                updateProfile(currentUser, { displayName: userCheck.username }).catch(() => {});
-                if (currentUser.email) {
-                    registerUsernameLookup(userCheck.username, currentUser.email, currentUser.uid, previousNickname);
+                await reserveUniqueUsername(validation.username, cloudUser.uid, cloudUser.email, oldNick);
+                await setDoc(doc(db, 'users', cloudUser.uid), {
+                    nickname: validation.username,
+                    nicknameChangedAt: nowMs,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+
+                if (!window.cloudProfile) window.cloudProfile = {};
+                window.cloudProfile.nickname = validation.username;
+                window.cloudProfile.nicknameChangedAt = nowMs;
+                updateCloudAuthUI();
+                showToast(`✅ Usuario actualizado a @${validation.username}. Próximo cambio disponible en 14 días.`, 'success');
+            } catch (e) {
+                if (e.message === 'USERNAME_TAKEN') {
+                    showToast('Ese nombre de usuario ya está en uso por otro jugador.', 'error');
+                } else {
+                    showToast('No se pudo actualizar el usuario.', 'error');
                 }
-                const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
-                await promiseWithTimeout(setDoc(profileRef, {
-                    nickname: userCheck.username,
-                    nicknameUpdatedAt: nowTs,
-                    updatedAt: nowTs
-                }, { merge: true }), 4000);
-                showToast(`✅ Nombre de usuario actualizado a @${userCheck.username}`, 'success');
-                closeProfileModal();
-            } catch (err) {
-                showToast('No se pudo guardar el nuevo usuario en la nube.', 'error');
             }
         };
 
-        function parseFirestoreRestValue(valObj) {
-            if (!valObj || typeof valObj !== 'object') return null;
-            if ('stringValue' in valObj) return valObj.stringValue;
-            if ('integerValue' in valObj) return Number(valObj.integerValue);
-            if ('doubleValue' in valObj) return Number(valObj.doubleValue);
-            if ('booleanValue' in valObj) return Boolean(valObj.booleanValue);
-            if ('nullValue' in valObj) return null;
-            if ('mapValue' in valObj) {
-                const out = {};
-                const fields = valObj.mapValue.fields || {};
-                for (const k of Object.keys(fields)) {
-                    out[k] = parseFirestoreRestValue(fields[k]);
-                }
-                return out;
-            }
-            if ('arrayValue' in valObj) {
-                return (valObj.arrayValue.values || []).map(parseFirestoreRestValue);
-            }
-            return null;
-        }
+        // Historial personal de carreras del usuario (Semanal + Top 5 Histórico)
+        function subscribeUserCareersHistory(uid) {
+            if (unsubscribeUserCareers) unsubscribeUserCareers();
+            const qUser = query(
+                collection(db, 'weekly_leaderboard'),
+                where('uid', '==', uid),
+                limit(50)
+            );
 
-        function processLeaderboardDocs(allDocs) {
-            cachedAllLeaderboardDocs = allDocs;
-            const { weekId } = getChileWeekInfo();
-
-            const currentWeekEntries = allDocs
-                .filter(item => item.weekId === weekId && typeof item.score === 'number')
-                .sort((a, b) => b.score - a.score || (b.ovr || 0) - (a.ovr || 0));
-
-            const bestByUserMap = new Map();
-            for (const item of currentWeekEntries) {
-                const userKey = item.uid || item.id;
-                if (!bestByUserMap.has(userKey)) {
-                    bestByUserMap.set(userKey, item);
-                }
-            }
-            const deduplicatedWeekEntries = Array.from(bestByUserMap.values());
-            renderGlobalLeaderboardList(deduplicatedWeekEntries.slice(0, 10));
-
-            const profileModal = document.getElementById('profile-modal');
-            if (profileModal && !profileModal.classList.contains('hidden')) {
+            unsubscribeUserCareers = onSnapshot(qUser, (snap) => {
+                const docs = [];
+                snap.forEach(d => docs.push({ id: d.id, ...d.data() }));
+                docs.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+                userHistoryEntries = docs;
                 window.renderUserProfileStats();
-            }
+            }, (err) => {
+                console.warn('Error cargando carreras del usuario:', err);
+            });
         }
 
-        async function fetchPublicLeaderboardFallback() {
-            if (!firebaseConfig?.projectId) return false;
-            try {
-                const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/artifacts/${encodeURIComponent(appId)}/public/data/weekly_leaderboard?pageSize=200`;
-                const res = await fetch(url, { cache: 'no-store' });
-                if (!res.ok) return false;
-                const data = await res.json();
-                const docs = (data.documents || []).map(docItem => {
-                    const id = docItem.name.split('/').pop();
-                    const parsed = { id };
-                    const fields = docItem.fields || {};
-                    for (const k of Object.keys(fields)) {
-                        parsed[k] = parseFirestoreRestValue(fields[k]);
-                    }
-                    return parsed;
-                });
-                processLeaderboardDocs(docs);
-                return true;
-            } catch (e) {
-                return false;
-            }
-        }
+        window.renderUserProfileStats = function () {
+            const weeklyListEl = document.getElementById('profile-weekly-list');
+            const weeklyCountEl = document.getElementById('profile-weekly-count');
+            const top5ListEl = document.getElementById('profile-top5-list');
+            if (!weeklyListEl || !top5ListEl) return;
 
+            const currentWeekId = getCurrentWeeklySeasonInfo().weekId;
+            const thisWeekRuns = userHistoryEntries.filter(x => x.weekId === currentWeekId);
+
+            if (weeklyCountEl) {
+                weeklyCountEl.textContent = `${thisWeekRuns.length} ${thisWeekRuns.length === 1 ? 'carrera' : 'carreras'}`;
+            }
+
+            if (thisWeekRuns.length === 0) {
+                weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras en esta semana. ¡Titúlate para sumar puntos!</div>`;
+            } else {
+                weeklyListEl.innerHTML = thisWeekRuns.map((item, idx) => {
+                    const tObj = findTeamByCode(item.teamCode);
+                    const isBestWeek = idx === 0 || item.score === Math.max(...thisWeekRuns.map(r => r.score || 0));
+                    return `
+                        <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2.5 text-xs ${isBestWeek ? 'border-[#717fff]/45' : ''}">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                ${tObj ? getTeamBadgeHTML(tObj, 'w-8 h-8', 'text-[9px]') : ''}
+                                <div class="min-w-0">
+                                    <div class="font-black text-white truncate">${escapeHtml(item.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(item.position)})</span></div>
+                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.headline)}</div>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="font-black text-[#a3adff]">${item.score} pts</div>
+                                <div class="text-[10px] text-gray-400">🏆 ${item.titles} · OVR ${formatOvr(item.ovr)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const top5Historical = [...userHistoryEntries]
+                .sort((a, b) => (b.score || 0) - (a.score || 0))
+                .slice(0, 5);
+
+            if (top5Historical.length === 0) {
+                top5ListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>`;
+            } else {
+                top5ListEl.innerHTML = top5Historical.map((item, idx) => {
+                    const tObj = findTeamByCode(item.teamCode);
+                    return `
+                        <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2.5 text-xs">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="w-5 text-center font-black ${idx === 0 ? 'text-amber-400' : 'text-gray-400'}">#${idx + 1}</span>
+                                ${tObj ? getTeamBadgeHTML(tObj, 'w-8 h-8', 'text-[9px]') : ''}
+                                <div class="min-w-0">
+                                    <div class="font-black text-white truncate">${escapeHtml(item.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(item.position)})</span></div>
+                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.studiedCareer || '')} · ${escapeHtml(item.headline)}</div>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="font-black text-amber-300">${item.score} pts</div>
+                                <div class="text-[10px] text-gray-400">🏆 ${item.titles} · OVR ${formatOvr(item.ovr)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        };
+
+        // Escucha en tiempo real del Top Global Semanal (solo cuenta la mejor carrera de la semana por usuario)
         function subscribeWeeklyLeaderboard() {
-            if (!db) return;
-            if (unsubscribeLeaderboard) unsubscribeLeaderboard();
+            if (unsubscribeWeekly) unsubscribeWeekly();
+            const { weekId } = getCurrentWeeklySeasonInfo();
+            const listEl = document.getElementById('global-hof-list');
 
-            fetchPublicLeaderboardFallback();
+            const q = query(
+                collection(db, 'weekly_leaderboard'),
+                where('weekId', '==', weekId),
+                orderBy('score', 'desc'),
+                limit(50)
+            );
 
-            const entriesCol = collection(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard');
-
-            unsubscribeLeaderboard = onSnapshot(entriesCol, (snapshot) => {
-                const allDocs = [];
-                snapshot.forEach(d => {
-                    allDocs.push({ id: d.id, ...d.data() });
-                });
-                processLeaderboardDocs(allDocs);
-            }, async () => {
-                const ok = await fetchPublicLeaderboardFallback();
-                if (!ok) {
-                    const listEl = document.getElementById('global-hof-list');
-                    if (listEl) {
-                        listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Para que el ranking sea visible sin iniciar sesión, publica <code>allow read: if true;</code> en tus Reglas de Firestore.</div>`;
+            unsubscribeWeekly = onSnapshot(q, (snapshot) => {
+                const bestByUser = new Map();
+                snapshot.forEach(docSnap => {
+                    const data = { id: docSnap.id, ...docSnap.data() };
+                    const userKey = data.uid || docSnap.id;
+                    const existing = bestByUser.get(userKey);
+                    if (!existing || (data.score || 0) > (existing.score || 0)) {
+                        bestByUser.set(userKey, data);
                     }
+                });
+
+                const rows = Array.from(bestByUser.values())
+                    .sort((a, b) => (b.score || 0) - (a.score || 0))
+                    .slice(0, 10);
+
+                currentWeekEntries = rows;
+                renderGlobalWeeklyList(rows);
+            }, (err) => {
+                console.warn('Firestore weekly_leaderboard fallback:', err);
+                if (listEl) {
+                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-400">Ranking global disponible al conectar Firebase.</div>`;
                 }
             });
         }
 
-        function renderGlobalLeaderboardList(entries) {
+        function renderGlobalWeeklyList(rows) {
             const listEl = document.getElementById('global-hof-list');
             if (!listEl) return;
 
-            if (!entries || entries.length === 0) {
-                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Aún no hay carreras registradas esta semana. ¡Inicia sesión y sé el primero en liderar el ranking!</div>`;
+            if (!rows || rows.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-5 rounded-2xl surface-sub text-center space-y-1.5">
+                        <div class="text-sm font-bold text-gray-300">Aún no hay carreras registradas esta semana</div>
+                        <p class="text-xs text-gray-500">Inicia sesión y titúlate para liderar el ranking semanal de la UFRO.</p>
+                    </div>
+                `;
                 return;
             }
 
-            listEl.innerHTML = entries.map((item, idx) => {
-                const entryTeam = findTeamByCode(item.teamCode);
-                const isMine = currentUser && item.uid === currentUser.uid;
+            listEl.innerHTML = rows.map((item, idx) => {
+                const hofTeam = findTeamByCode(item.teamCode);
+                const isMine = cloudUser && item.uid === cloudUser.uid;
                 const rankColor = idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500';
-                const safeId = escapeHtml(item.id || '');
 
                 return `
-                    <button type="button" onclick="openCareerDetailModal('${safeId}')"
-                        class="w-full text-left p-3.5 rounded-2xl surface-sub ${isMine ? 'border-[#717fff]/60 bg-[#717fff]/10' : 'hover:border-[#717fff]/45'} flex items-center justify-between gap-3 transition group">
+                    <div onclick="openGlobalCareerDetail(${idx})"
+                        class="p-3.5 rounded-2xl surface-sub ${isMine ? 'border-[#717fff]/60 bg-[#717fff]/5' : 'hover:border-[#717fff]/45'} flex items-center justify-between gap-3 cursor-pointer transition group">
                         <div class="flex items-center gap-3 min-w-0">
                             <span class="w-6 text-center font-black text-sm ${rankColor} shrink-0">#${idx + 1}</span>
-                            ${entryTeam ? getTeamBadgeHTML(entryTeam, 'w-10 h-10', 'text-[10px]') : ''}
+                            ${hofTeam ? getTeamBadgeHTML(hofTeam, 'w-10 h-10', 'text-[10px]') : ''}
                             <div class="min-w-0">
-                                <div class="font-black text-white text-sm truncate group-hover:text-[#a3adff] transition">
-                                    ${escapeHtml(item.playerName || 'Jugador')}
-                                    <span class="text-[11px] font-bold text-[#8b96ff]">(${escapeHtml(item.position || 'MED')})</span>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="font-black text-white text-sm truncate group-hover:text-[#a3adff] transition">${escapeHtml(item.playerName)}</span>
+                                    <span class="text-[11px] font-bold text-[#8b96ff]">(${escapeHtml(item.position)})</span>
                                 </div>
-                                <div class="text-[11px] font-bold text-emerald-400 truncate">
-                                    @${escapeHtml(item.nickname || 'usuario')} ${isMine ? '(Tú)' : ''}
+                                <div class="text-[11px] text-gray-400 truncate">
+                                    <span class="text-[#a3adff] font-bold">@${escapeHtml(item.nickname || 'jugador')}</span> · ${escapeHtml(item.headline)}
                                 </div>
-                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.headline || '')}</div>
                             </div>
                         </div>
                         <div class="text-right shrink-0">
-                            <div class="text-xs font-black text-[#a3adff]">${item.score || 0} pts</div>
-                            <div class="text-[11px] font-bold text-gray-400">🏆 ${item.titles || 0} · OVR ${formatOvr(item.ovr || 60)}</div>
-                            <div class="text-[10px] text-gray-500 group-hover:text-gray-300">Ver ficha →</div>
+                            <div class="text-xs font-black text-amber-300">🏆 ${item.titles} · ${item.score} pts</div>
+                            <div class="text-[11px] font-bold text-gray-400">OVR ${formatOvr(item.ovr)} <span class="text-[#8b96ff]">→</span></div>
                         </div>
-                    </button>
+                    </div>
                 `;
             }).join('');
         }
 
-        window.openCareerDetailModal = function (entryId) {
+        // Vista detallada de cada carrera del Top Global Semanal
+        window.openGlobalCareerDetail = function (index) {
+            const item = currentWeekEntries[index];
+            if (!item) return;
+
             const modal = document.getElementById('career-detail-modal');
-            const content = document.getElementById('career-detail-content');
             const titleEl = document.getElementById('detail-modal-title');
-            if (!modal || !content) return;
+            const contentEl = document.getElementById('career-detail-content');
+            const mainTeam = findTeamByCode(item.teamCode);
 
-            const entry = cachedAllLeaderboardDocs.find(d => d.id === entryId);
-            if (!entry) return;
+            titleEl.textContent = `${item.playerName} (@${item.nickname || 'jugador'})`;
 
-            const mainTeam = findTeamByCode(entry.teamCode);
-            const isArq = entry.position === 'ARQ';
-            const st = entry.stats || { matches: 0, goals: 0, assists: 0, cleanSheets: 0 };
-            const trajectory = Array.isArray(entry.trajectory) ? entry.trajectory : [];
-            const trophyList = Array.isArray(entry.trophyList) ? entry.trophyList : [];
-            const awardList = Array.isArray(entry.awardList) ? entry.awardList : [];
+            const stints = Array.isArray(item.stints) ? item.stints : [];
+            const trophies = Array.isArray(item.trophies) ? item.trophies : [];
+            const awards = Array.isArray(item.awards) ? item.awards : [];
 
-            if (titleEl) titleEl.textContent = `${entry.playerName || 'Jugador'} · @${entry.nickname || 'usuario'}`;
-
-            content.innerHTML = `
-                <div class="p-4 rounded-2xl surface-sub flex items-center justify-between gap-3">
+            contentEl.innerHTML = `
+                <div class="p-4 rounded-2xl surface-sub border-[#717fff]/35 flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
                         ${mainTeam ? getTeamBadgeHTML(mainTeam, 'w-12 h-12', 'text-xs') : ''}
                         <div>
-                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/20 text-[#a3adff]">
-                                @${escapeHtml(entry.nickname || 'usuario')}
-                            </span>
-                            <h4 class="text-base font-black text-white mt-0.5">${escapeHtml(entry.playerName || 'Jugador')}</h4>
-                            <p class="text-xs text-gray-400">${escapeHtml(entry.studiedCareer || 'Carrera UFRO')} · ${escapeHtml(entry.position || 'MED')} (${entry.gender === 'F' ? 'Fem.' : 'Masc.'})</p>
+                            <span class="text-[10px] font-black uppercase text-[#8b96ff]">${escapeHtml(item.headline)}</span>
+                            <div class="font-black text-white text-base">${escapeHtml(item.playerName)} <span class="text-xs text-gray-400">(${escapeHtml(item.position)} · ${item.gender === 'F' ? 'Fem' : 'Masc'})</span></div>
+                            <div class="text-xs text-gray-400">${escapeHtml(item.studiedCareer || '')}</div>
                         </div>
                     </div>
                     <div class="text-right shrink-0">
-                        <div class="text-lg font-black text-[#8b96ff]">${entry.score || 0} pts</div>
-                        <div class="text-xs font-bold text-gray-300">OVR ${formatOvr(entry.ovr || 60)}</div>
+                        <div class="text-xl font-black text-amber-300">${item.score} pts</div>
+                        <div class="text-xs font-bold text-[#a3adff]">Media Final ${formatOvr(item.ovr)}</div>
                     </div>
-                </div>
-
-                <div class="px-3.5 py-2.5 rounded-xl bg-[#717fff]/10 border border-[#717fff]/25 text-center">
-                    <span class="text-xs font-black text-white">${escapeHtml(entry.headline || 'Leyenda UFRO')}</span>
                 </div>
 
                 <div class="grid grid-cols-4 gap-2 text-center">
                     <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-white">${st.matches || 0}</div>
-                        <div class="text-[10px] font-bold text-gray-500 uppercase">PJ</div>
+                        <div class="text-base font-black text-white">${item.matches ?? 0}</div>
+                        <div class="text-[10px] text-gray-500 uppercase font-bold">PJ</div>
                     </div>
                     <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-[#8b96ff]">${isArq ? (st.cleanSheets || 0) : (st.goals || 0)}</div>
-                        <div class="text-[10px] font-bold text-gray-500 uppercase">${isArq ? 'Vallas' : 'Goles'}</div>
+                        <div class="text-base font-black text-[#8b96ff]">${item.position === 'ARQ' ? (item.cleanSheets ?? 0) : (item.goals ?? 0)}</div>
+                        <div class="text-[10px] text-gray-500 uppercase font-bold">${item.position === 'ARQ' ? 'Vallas' : 'Goles'}</div>
                     </div>
                     <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-[#717fff]">${isArq ? ((st.goals || 0) + (st.assists || 0)) : (st.assists || 0)}</div>
-                        <div class="text-[10px] font-bold text-gray-500 uppercase">${isArq ? 'G+A' : 'Asist.'}</div>
+                        <div class="text-base font-black text-[#717fff]">${item.assists ?? 0}</div>
+                        <div class="text-[10px] text-gray-500 uppercase font-bold">Asist.</div>
                     </div>
                     <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-amber-300">${entry.titles || 0}</div>
-                        <div class="text-[10px] font-bold text-gray-500 uppercase">Títulos</div>
+                        <div class="text-base font-black text-amber-300">${item.titles ?? 0}</div>
+                        <div class="text-[10px] text-gray-500 uppercase font-bold">Títulos</div>
                     </div>
                 </div>
 
-                <div class="space-y-2">
-                    <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🛡️ Trayectoria por Equipos</h5>
-                    ${trajectory.length === 0
-                        ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-500">Sin desglose de clubes disponible.</div>`
-                        : trajectory.map(tr => {
-                            const tObj = findTeamByCode(tr.teamCode);
-                            return `
-                                <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
-                                    <div class="flex items-center gap-2.5">
-                                        ${tObj ? getTeamBadgeHTML(tObj, 'w-8 h-8', 'text-[9px]') : ''}
-                                        <div>
-                                            <div class="font-bold text-white">${escapeHtml(tr.teamName || 'Equipo')}</div>
-                                            <div class="text-[11px] text-gray-400">${tr.sems || 1} sem. · ${tr.goals || 0}G · ${tr.assists || 0}A</div>
+                ${stints.length > 0 ? `
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">Trayectoria por Equipos</h4>
+                        <div class="space-y-1.5">
+                            ${stints.map(st => {
+                                const stT = findTeamByCode(st.teamCode);
+                                return `
+                                    <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
+                                        <div class="flex items-center gap-2">
+                                            ${stT ? getTeamBadgeHTML(stT, 'w-7 h-7', 'text-[9px]') : ''}
+                                            <div>
+                                                <div class="font-bold text-white">${escapeHtml(st.teamName)}</div>
+                                                <div class="text-[11px] text-gray-400">${st.sems} sem. · ${st.goals}G · ${st.assists}A</div>
+                                            </div>
                                         </div>
+                                        <span class="font-bold text-amber-300">🏆 ${st.titles}</span>
                                     </div>
-                                    <span class="font-bold text-amber-300">🏆 ${tr.titles || 0}</span>
-                                </div>
-                            `;
-                        }).join('')
-                    }
-                </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                ` : ''}
 
-                <div class="space-y-2">
-                    <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🏆 Logros y Títulos Conquistados</h5>
-                    ${trophyList.length === 0 && awardList.length === 0
-                        ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-500">Sin títulos oficiales registrados en esta carrera.</div>`
-                        : `<div class="flex flex-wrap gap-1.5">
-                            ${awardList.map(a => `<span class="px-2.5 py-1 rounded-lg bg-[#717fff]/15 border border-[#717fff]/30 text-[#d0d5ff] text-[11px] font-bold">${escapeHtml(a.icon || '⭐')} ${escapeHtml(a.title || '')} (Año ${a.year || 1})</span>`).join('')}
-                            ${trophyList.map(t => `<span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[11px] font-bold">🏆 ${escapeHtml(t.title || '')} (Año ${t.year || 1})</span>`).join('')}
-                        </div>`
-                    }
-                </div>
+                ${trophies.length > 0 ? `
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">Palmarés Conquistado (${trophies.length})</h4>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${trophies.map(t => `<span class="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 text-[11px] font-bold">🏆 ${escapeHtml(t.title)} (Año ${t.year})</span>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${awards.length > 0 ? `
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">Premios Individuales</h4>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${awards.map(a => `<span class="px-2.5 py-1 rounded-lg bg-[#717fff]/15 text-[#d0d5ff] text-[11px] font-bold">${a.icon || '🎖️'} ${escapeHtml(a.title)} (Año ${a.year})</span>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
             `;
 
             modal.classList.remove('hidden');
         };
 
-        window.renderUserProfileStats = function () {
-            if (!isRealAuthenticatedUser(currentUser)) return;
-            const { weekId } = getChileWeekInfo();
+        // Publicación automática al titularse (requiere haber iniciado sesión)
+        window.submitCareerToCloudLeaderboard = async function (legacy, score) {
+            if (!careerState || careerState.cloudSubmitted) return;
 
-            const myCareers = cachedAllLeaderboardDocs
-                .filter(d => d.uid === currentUser.uid)
-                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-            const myWeeklyCareers = myCareers.filter(d => d.weekId === weekId);
-            const myTop5Historical = [...myCareers]
-                .sort((a, b) => (b.score || 0) - (a.score || 0) || (b.ovr || 0) - (a.ovr || 0))
-                .slice(0, 5);
-
-            const weeklyCountEl = document.getElementById('profile-weekly-count');
-            const weeklyListEl = document.getElementById('profile-weekly-list');
-            const top5ListEl = document.getElementById('profile-top5-list');
-
-            if (weeklyCountEl) {
-                weeklyCountEl.textContent = `${myWeeklyCareers.length} ${myWeeklyCareers.length === 1 ? 'carrera' : 'carreras'}`;
-            }
-
-            if (weeklyListEl) {
-                if (myWeeklyCareers.length === 0) {
-                    weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras esta semana.</div>`;
-                } else {
-                    weeklyListEl.innerHTML = myWeeklyCareers.map(c => `
-                        <button type="button" onclick="openCareerDetailModal('${escapeHtml(c.id)}')"
-                            class="w-full text-left p-3 rounded-xl surface-sub hover:border-[#717fff]/50 flex items-center justify-between gap-2 text-xs transition">
-                            <div class="min-w-0">
-                                <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span></div>
-                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(c.headline || '')}</div>
-                            </div>
-                            <div class="text-right shrink-0">
-                                <div class="font-black text-[#a3adff]">${c.score || 0} pts</div>
-                                <div class="text-[10px] text-gray-400">🏆 ${c.titles || 0} · OVR ${formatOvr(c.ovr || 60)}</div>
-                            </div>
-                        </button>
-                    `).join('');
-                }
-            }
-
-            if (top5ListEl) {
-                if (myTop5Historical.length === 0) {
-                    top5ListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>`;
-                } else {
-                    top5ListEl.innerHTML = myTop5Historical.map((c, idx) => `
-                        <button type="button" onclick="openCareerDetailModal('${escapeHtml(c.id)}')"
-                            class="w-full text-left p-3 rounded-xl surface-sub hover:border-amber-400/50 flex items-center justify-between gap-2 text-xs transition">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <span class="font-black text-amber-400 w-5 shrink-0">#${idx + 1}</span>
-                                <div class="min-w-0">
-                                    <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span></div>
-                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(c.headline || '')} · ${escapeHtml(c.weekId || '')}</div>
-                                </div>
-                            </div>
-                            <div class="text-right shrink-0">
-                                <div class="font-black text-amber-300">${c.score || 0} pts</div>
-                                <div class="text-[10px] text-gray-400">🏆 ${c.titles || 0} · OVR ${formatOvr(c.ovr || 60)}</div>
-                            </div>
-                        </button>
-                    `).join('');
-                }
-            }
-        };
-
-        window.submitCareerToCloudLeaderboard = async function (legacy, baseScore) {
-            if (!db || !careerState) return;
-
-            if (!isRealAuthenticatedUser(currentUser)) {
-                showToast('💡 Inicia sesión o regístrate arriba para subir tus próximas carreras al Top Global Semanal.', 'info');
+            if (!cloudUser) {
+                showToast('Inicia sesión para que tus carreras participen en el Top Global Semanal.', 'info');
                 return;
             }
 
-            if (careerState.playerName && careerState.playerName.trim().toLowerCase() === 'mathias bello') {
-                return;
-            }
+            try {
+                const { weekId } = getCurrentWeeklySeasonInfo();
+                const nickname = (window.cloudProfile && window.cloudProfile.nickname) || 'JugadorUFRO';
 
-            if (careerState.submittedToCloud) return;
+                const stintsMap = new Map();
+                [...(careerState.history || [])].reverse().forEach(h => {
+                    if (!stintsMap.has(h.teamCode)) {
+                        stintsMap.set(h.teamCode, { teamCode: h.teamCode, teamName: h.teamName, sems: 0, goals: 0, assists: 0, titles: 0 });
+                    }
+                    const st = stintsMap.get(h.teamCode);
+                    st.sems += 1;
+                    st.goals += h.goals || 0;
+                    st.assists += h.assists || 0;
+                    st.titles += (h.trophies || []).filter(t => t.type !== 'SELECCION').length;
+                });
 
-            const awardsBonus = (careerState.awards || []).length * 10;
-            const totalScore = Math.min(2500, Math.max(0, Math.round(baseScore + awardsBonus)));
-            const { weekId } = getChileWeekInfo();
-
-            const nickname = window.cloudProfile.nickname
-                || sanitizeAutoUsername(currentUser.displayName || currentUser.email?.split('@')[0] || 'Jugador');
-
-            const stintsMap = new Map();
-            [...(careerState.history || [])].reverse().forEach(h => {
-                if (!stintsMap.has(h.teamCode)) {
-                    stintsMap.set(h.teamCode, {
-                        teamCode: h.teamCode,
-                        teamName: h.teamName,
-                        sems: 0,
-                        goals: 0,
-                        assists: 0,
-                        titles: 0
-                    });
-                }
-                const st = stintsMap.get(h.teamCode);
-                st.sems += 1;
-                st.goals += h.goals || 0;
-                st.assists += h.assists || 0;
-                st.titles += (h.trophies || []).filter(t => t.type !== 'SELECCION').length;
-            });
-
-            const trajectory = Array.from(stintsMap.values()).slice(0, 12);
-            const trophyList = (careerState.trophies || []).slice(0, 25).map(t => ({
-                title: String(t.title || '').slice(0, 60),
-                teamName: String(t.teamName || '').slice(0, 45),
-                year: t.year || 1
-            }));
-            const awardList = (careerState.awards || []).slice(0, 15).map(a => ({
-                icon: a.icon || '⭐',
-                title: String(a.title || '').slice(0, 60),
-                year: a.year || 1
-            }));
-
-            const careerPayload = {
-                uid: currentUser.uid,
-                nickname: String(nickname).slice(0, 18),
-                playerName: String(careerState.playerName).slice(0, 36),
-                studiedCareer: String(careerState.studiedCareer || '').slice(0, 60),
-                position: careerState.position,
-                gender: careerState.gender,
-                ovr: Math.min(104, Number(careerState.ovr) || 60),
-                titles: (careerState.trophies || []).length,
-                awards: (careerState.awards || []).length,
-                headline: String(legacy.headline || '').slice(0, 60),
-                teamCode: legacy.teamCode || careerState.teamCode,
-                stats: {
+                const payload = {
+                    weekId,
+                    uid: cloudUser.uid,
+                    nickname,
+                    playerName: careerState.playerName,
+                    position: careerState.position,
+                    gender: careerState.gender,
+                    studiedCareer: careerState.studiedCareer || '',
+                    ovr: careerState.ovr,
+                    titles: (careerState.trophies || []).length,
                     matches: careerState.stats?.matches || 0,
                     goals: careerState.stats?.goals || 0,
                     assists: careerState.stats?.assists || 0,
-                    cleanSheets: careerState.stats?.cleanSheets || 0
-                },
-                trajectory,
-                trophyList,
-                awardList,
-                score: totalScore,
-                weekId,
-                createdAt: Date.now()
-            };
+                    cleanSheets: careerState.stats?.cleanSheets || 0,
+                    headline: legacy.headline,
+                    teamCode: legacy.teamCode,
+                    stints: Array.from(stintsMap.values()),
+                    trophies: (careerState.trophies || []).slice(0, 25),
+                    awards: (careerState.awards || []).slice(0, 15),
+                    score,
+                    createdAtMs: Date.now(),
+                    createdAt: serverTimestamp()
+                };
 
-            try {
-                const weeklyDocId = `${weekId}_${currentUser.uid}`;
-                const weeklyEntryRef = doc(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard', weeklyDocId);
-
-                let previousBestScore = -1;
-                const cachedExisting = cachedAllLeaderboardDocs.find(
-                    d => d.uid === currentUser.uid && d.weekId === weekId
-                );
-                if (cachedExisting && typeof cachedExisting.score === 'number') {
-                    previousBestScore = cachedExisting.score;
-                } else {
-                    const existingSnap = await promiseWithTimeout(getDoc(weeklyEntryRef), 4500);
-                    if (existingSnap.exists() && typeof existingSnap.data().score === 'number') {
-                        previousBestScore = existingSnap.data().score;
-                    }
-                }
-
-                const userHistoryCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'careers');
-                addDoc(userHistoryCol, careerPayload).catch(() => {});
-
-                let leaderboardToastMsg = '';
-                if (previousBestScore < 0) {
-                    await promiseWithTimeout(setDoc(weeklyEntryRef, careerPayload), 6000);
-                    leaderboardToastMsg = `🌍 ¡Carrera publicada en el Top Global Semanal (${totalScore} pts)!`;
-                } else if (totalScore > previousBestScore) {
-                    await promiseWithTimeout(setDoc(weeklyEntryRef, careerPayload), 6000);
-                    leaderboardToastMsg = `🔥 ¡Nuevo récord semanal! Superaste tus ${previousBestScore} pts con ${totalScore} pts en el Top Global.`;
-                } else {
-                    leaderboardToastMsg = `📊 Obtuviste ${totalScore} pts. Se mantiene tu mejor marca semanal de ${previousBestScore} pts en el Top Global.`;
-                }
-
-                careerState.submittedToCloud = true;
-                careerState.lastSubmittedScore = totalScore;
+                await addDoc(collection(db, 'weekly_leaderboard'), payload);
+                careerState.cloudSubmitted = true;
+                careerState.lastSubmittedScore = score;
                 saveCareerState();
                 renderApp();
-                showToast(leaderboardToastMsg, totalScore >= previousBestScore ? 'success' : 'info');
+                showToast(`🌍 ¡Carrera enviada al Top Global Semanal como @${nickname} (${score} pts)!`, 'success');
             } catch (err) {
-                const code = err?.code || '';
-                if (code === 'permission-denied') {
-                    showToast('⚠️ Firebase rechazó guardar el puntaje: revisa las Reglas de Firestore Database.', 'error');
+                console.error('Error al publicar en weekly_leaderboard:', err);
+            }
+        };
+
+        window.initCloudLeaderboard = function () {
+            startWeeklyCountdown();
+            subscribeWeeklyLeaderboard();
+
+            onAuthStateChanged(auth, async (user) => {
+                cloudUser = user || null;
+                if (cloudUser) {
+                    await loadOrCreateCloudProfile(cloudUser);
                 } else {
-                    showToast('⚠️ No se pudo conectar con Firestore para guardar tu puntaje semanal.', 'error');
+                    window.cloudProfile = null;
+                    updateCloudAuthUI();
                 }
-            }
+            });
         };
 
-        window.initCloudLeaderboard = async function () {
-            startWeeklyCountdownTimer();
-
-            window.logoutCloudUser = async function () {
-                if (auth) {
-                    try {
-                        await signOut(auth);
-                        showToast('Has cerrado sesión correctamente.', 'info');
-                    } catch (e) {
-                        showToast('Error al cerrar sesión.', 'error');
-                    }
-                }
-                const menu = document.getElementById('user-dropdown-menu');
-                if (menu) menu.classList.add('hidden');
-                updateAuthUI(null);
-            };
-
-            if (!firebaseConfig || firebaseConfig.apiKey === 'TU_API_KEY') {
-                updateAuthUI(null);
-                const listEl = document.getElementById('global-hof-list');
-                if (listEl) {
-                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-400">Pega las credenciales de tu proyecto Firebase en <code>DEFAULT_FIREBASE_CONFIG</code> para activar las cuentas y el Top Global Semanal.</div>`;
-                }
-                return;
-            }
-
-            try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                await setPersistence(auth, browserLocalPersistence).catch(() => {});
-                db = initializeFirestore(app, { experimentalForceLongPolling: true });
-
-                subscribeWeeklyLeaderboard();
-
-                if (typeof auth.authStateReady === 'function') {
-                    await auth.authStateReady();
-                }
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token).catch(() => {});
-                } else if (!auth.currentUser) {
-                    await signInAnonymously(auth).catch(() => {});
-                }
-
-                onAuthStateChanged(auth, async (user) => {
-                    currentUser = user;
-                    subscribeWeeklyLeaderboard();
-                    if (user) {
-                        updateAuthUI(user);
-                        loadUserCloudProfile(user.uid, user);
-                    } else {
-                        updateAuthUI(null);
-                    }
-                });
-            } catch (err) {
-                updateAuthUI(null);
-            }
-        };
+        if (document.readyState === 'complete') {
+            window.initCloudLeaderboard();
+        }
     </script>
 </body>
 </html>
