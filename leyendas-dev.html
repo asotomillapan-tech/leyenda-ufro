@@ -109,6 +109,32 @@
                         Inicio o registro
                     </button>
                 </div>
+
+                <!-- Estado Autenticado: Menú desplegable de usuario -->
+                <div id="logged-user-menu-wrapper" class="hidden relative">
+                    <button type="button" onclick="toggleUserDropdown(event)"
+                        class="px-3 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-[#242424] border border-[#717fff]/45 text-[11px] font-black text-white flex items-center gap-1.5 transition max-w-[160px]">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                        <span id="header-username-label" class="truncate">@usuario</span>
+                        <span class="text-gray-400 text-[9px]">▼</span>
+                    </button>
+
+                    <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 rounded-2xl surface-card border-[#2b2b2b] shadow-2xl py-1.5 z-50 text-xs">
+                        <button type="button" onclick="openProfileModal('overview')"
+                            class="w-full text-left px-3.5 py-2 hover:bg-[#242424] text-gray-200 font-bold flex items-center gap-2 transition">
+                            <span>👤</span> Mi Perfil y Récords
+                        </button>
+                        <button type="button" onclick="openProfileModal('username')"
+                            class="w-full text-left px-3.5 py-2 hover:bg-[#242424] text-gray-200 font-bold flex items-center gap-2 transition">
+                            <span>✏️</span> Cambiar @usuario
+                        </button>
+                        <div class="my-1 border-t border-[#262626]"></div>
+                        <button type="button" onclick="logoutCloudUser()"
+                            class="w-full text-left px-3.5 py-2 hover:bg-rose-950/40 text-rose-400 font-bold flex items-center gap-2 transition">
+                            <span>🚪</span> Cerrar sesión
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
@@ -4956,12 +4982,12 @@
             const label = document.getElementById('header-username-label');
 
             if (currentCloudUser && currentUserProfile) {
-                guestBtns.classList.add('hidden');
-                loggedWrapper.classList.remove('hidden');
-                label.textContent = `@${currentUserProfile.nickname}`;
+                if (guestBtns) guestBtns.classList.add('hidden');
+                if (loggedWrapper) loggedWrapper.classList.remove('hidden');
+                if (label) label.textContent = `@${currentUserProfile.nickname}`;
             } else {
-                guestBtns.classList.remove('hidden');
-                loggedWrapper.classList.add('hidden');
+                if (guestBtns) guestBtns.classList.remove('hidden');
+                if (loggedWrapper) loggedWrapper.classList.add('hidden');
             }
         }
 
