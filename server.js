@@ -40,7 +40,8 @@ app.get('/firebase-config.js', (_req, res) => {
     messagingSenderId: pickEnv('FIREBASE_MESSAGING_SENDER_ID', 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID', 'VITE_FIREBASE_MESSAGING_SENDER_ID', DEFAULT_FIREBASE_CONFIG.messagingSenderId),
     appId: pickEnv('FIREBASE_APP_ID', 'NEXT_PUBLIC_FIREBASE_APP_ID', 'VITE_FIREBASE_APP_ID', DEFAULT_FIREBASE_CONFIG.appId)
   };
-  const appNamespace = pickEnv('FIREBASE_APP_NAMESPACE', 'NEXT_PUBLIC_FIREBASE_APP_NAMESPACE', 'VITE_FIREBASE_APP_NAMESPACE', 'leyenda-ufro');
+  const rawNamespace = pickEnv('FIREBASE_APP_NAMESPACE', 'NEXT_PUBLIC_FIREBASE_APP_NAMESPACE', 'VITE_FIREBASE_APP_NAMESPACE', 'leyendas-ufro-global');
+  const appNamespace = rawNamespace === config.projectId ? 'leyendas-ufro-global' : rawNamespace;
 
   res.type('application/javascript');
   res.setHeader('Cache-Control', 'no-store');
