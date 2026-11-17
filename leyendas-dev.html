@@ -4684,7 +4684,17 @@
         const LOCAL_SESSION_KEY = 'leyenda_ufro_local_session_v1';
 
         function isValidFirebaseConfig(cfg) {
-            return Boolean(cfg && cfg.apiKey && !cfg.apiKey.includes('38472920') && cfg.projectId);
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) return true;
+            return Boolean(cfg && cfg.apiKey && !cfg.apiKey.includes('38472920') && !cfg.apiKey.includes('847291') && cfg.projectId);
+        }
+
+        function getActiveFirebaseConfig() {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                try {
+                    return JSON.parse(__firebase_config);
+                } catch (e) {}
+            }
+            return FIREBASE_CONFIG;
         }
 
         function getLocalAccounts() {
@@ -5056,8 +5066,23 @@
                 showToast(`👋 ¡Hola de nuevo @${prof?.username || 'Leyenda'}!`, 'success');
             } catch (err) {
                 const code = err?.code || '';
+                if (code === 'auth/invalid-api-key' || code === 'auth/network-request-failed' || code === 'auth/internal-error' || code === 'auth/operation-not-allowed') {
+                    firebaseAvailable = false;
+                    const cleanId = identifier.replace(/^@+/, '').toLowerCase();
+                    const found = getLocalAccounts().find(a => (a.email === cleanId || a.usernameLower === cleanId) && a.password === pass);
+                    if (found) {
+                        localStorage.setItem(LOCAL_SESSION_KEY, found.uid);
+                        currentCloudUser = { uid: found.uid, email: found.email, isAnonymous: false, isLocal: true };
+                        currentCloudProfile = found;
+                        updateAuthHeaderUI();
+                        window.closeAuthModal();
+                        showToast(`👋 ¡Hola de nuevo @${found.username}!`, 'success');
+                        renderOfflineWeeklyLeaderboard();
+                        return;
+                    }
+                }
                 if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
-                    showToast('Correo/usuario o contraseña incorrectos.', 'error');
+                    showToast('Correo/usuario o contraseña incorrectos. Si cambiaste de navegador o dispositivo, crea una cuenta nueva.', 'error');
                 } else {
                     showToast('No se pudo iniciar sesión. Revisa tus datos.', 'error');
                 }
@@ -5627,14 +5652,15 @@
 
         window.initCloudLeaderboard = function () {
             startWeeklyCountdownTimer();
-            if (!isValidFirebaseConfig(FIREBASE_CONFIG)) {
+            const activeCfg = getActiveFirebaseConfig();
+            if (!isValidFirebaseConfig(activeCfg)) {
                 firebaseAvailable = false;
                 restoreLocalSessionIfNeeded();
                 renderOfflineWeeklyLeaderboard();
                 return;
             }
             try {
-                app = initializeApp(FIREBASE_CONFIG);
+                app = initializeApp(activeCfg);
                 auth = getAuth(app);
                 db = getFirestore(app);
                 firebaseAvailable = true;
