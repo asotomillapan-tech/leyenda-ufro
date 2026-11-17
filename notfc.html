@@ -63,7 +63,7 @@
 <body class="min-h-screen flex flex-col bg-[#151515] text-gray-100 selection:bg-[#717fff] selection:text-white" data-state="lobby" data-role="guest">
 
     <!-- TOAST NOTIFICATIONS -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none px-4 sm:px-0"></div>
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[90] flex flex-col gap-2 max-w-xs w-full pointer-events-none px-4 sm:px-0"></div>
 
     <!-- ==================== HEADER ==================== -->
     <header class="sticky top-0 z-40 bg-[#151515]/90 backdrop-blur-md border-b border-[#262626]">
@@ -3724,32 +3724,65 @@
             } catch (e) {}
         }
 
+        function promiseWithTimeout(promise, ms = 8000) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error('Tiempo de espera agotado'), { code: 'custom/timeout' })), ms))
+            ]);
+        }
+
         window.handleEmailLogin = async function (e) {
             e.preventDefault();
-            if (!auth) return;
+            if (!auth) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
             const rawIdentifier = document.getElementById('login-identifier').value.trim();
             const pass = document.getElementById('login-password').value;
+            const btn = document.getElementById('btn-submit-login');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Iniciando sesión...';
+            }
             try {
                 const resolvedEmail = await resolveEmailFromIdentifier(rawIdentifier);
                 if (!resolvedEmail) {
                     showToast('No encontramos una cuenta con ese usuario. Prueba con tu correo.', 'error');
                     return;
                 }
-                const cred = await signInWithEmailAndPassword(auth, resolvedEmail, pass);
+                const cred = await promiseWithTimeout(signInWithEmailAndPassword(auth, resolvedEmail, pass), 8000);
                 currentUser = cred.user;
                 const fallbackNick = rawIdentifier.includes('@') && !rawIdentifier.startsWith('@')
                     ? sanitizeAutoUsername(resolvedEmail.split('@')[0])
                     : rawIdentifier.replace(/^@+/, '');
                 window.cloudProfile.nickname = validAuthNickname(currentUser) || fallbackNick;
+                if (validAuthNickname(currentUser) && currentUser.email) {
+                    registerUsernameLookup(currentUser.displayName, currentUser.email, currentUser.uid);
+                }
                 updateAuthUI(currentUser);
                 window.closeAuthModal();
                 showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}.`, 'success');
                 loadUserCloudProfile(currentUser.uid, currentUser);
-            } catch (err) { showToast('Usuario/correo o contraseña incorrectos.', 'error'); }
+            } catch (err) {
+                const code = err?.code || '';
+                if (code === 'custom/timeout' || code === 'auth/network-request-failed') {
+                    showToast('Tiempo de espera agotado al conectar con Firebase.', 'error');
+                } else {
+                    showToast('Usuario/correo o contraseña incorrectos.', 'error');
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Entrar a mi cuenta';
+                }
+            }
         };
         window.handleEmailRegister = async function (e) {
             e.preventDefault();
-            if (!auth || !db) return;
+            if (!auth || !db) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
             const rawUser = document.getElementById('reg-username').value;
             const email = document.getElementById('reg-email').value.trim();
             const p1 = document.getElementById('reg-password').value;
@@ -3759,13 +3792,18 @@
             if (!userCheck.valid) { showToast(userCheck.error, 'error'); return; }
             if (p1 !== p2) { showToast('Las contraseñas no coinciden.', 'error'); return; }
 
+            const btn = document.getElementById('btn-submit-register');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Creando cuenta...';
+            }
             try {
                 const existingEmail = await resolveEmailFromIdentifier(userCheck.username);
                 if (existingEmail && existingEmail.toLowerCase() !== email.toLowerCase()) {
                     showToast('Ese nombre de usuario ya está en uso.', 'error');
                     return;
                 }
-                const cred = await createUserWithEmailAndPassword(auth, email, p1);
+                const cred = await promiseWithTimeout(createUserWithEmailAndPassword(auth, email, p1), 8000);
                 currentUser = cred.user;
                 window.cloudProfile.nickname = userCheck.username;
                 updateProfile(currentUser, { displayName: userCheck.username }).catch(() => {});
@@ -3784,20 +3822,48 @@
                 if (code === 'auth/email-already-in-use') showToast('Ese correo ya está registrado.', 'error');
                 else if (code === 'auth/weak-password') showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
                 else if (code === 'auth/invalid-email') showToast('Correo electrónico inválido.', 'error');
-                else showToast('Error al registrar cuenta.', 'error');
+                else if (code === 'auth/operation-not-allowed') showToast('Activa "Correo electrónico/contraseña" en Firebase Console → Authentication.', 'error');
+                else if (code === 'auth/unauthorized-domain') showToast('Agrega este dominio en Firebase Console → Authentication → Authorized domains.', 'error');
+                else if (code === 'custom/timeout' || code === 'auth/network-request-failed') showToast('Tiempo de espera agotado. Revisa tu conexión a internet.', 'error');
+                else showToast(`Error al registrar cuenta (${code || 'desconocido'}).`, 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Crear cuenta';
+                }
             }
         };
         window.handlePasswordReset = async function (e) {
             e.preventDefault();
-            if (!auth) return;
+            if (!auth) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
+            const email = document.getElementById('reset-email').value.trim();
+            if (!email) return;
+            const btn = document.getElementById('btn-submit-reset');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Enviando...';
+            }
             try {
-                await sendPasswordResetEmail(auth, document.getElementById('reset-email').value.trim());
+                await sendPasswordResetEmail(auth, email);
                 showToast('📩 Enlace enviado.', 'success');
                 window.switchAuthMode('login');
-            } catch (err) { showToast('No se pudo enviar el correo.', 'error'); }
+            } catch (err) {
+                showToast('No se pudo enviar el correo. Verifica que esté bien escrito.', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'Enviar enlace de recuperación';
+                }
+            }
         };
         window.signInWithGoogleAccount = async function () {
-            if (!auth) return;
+            if (!auth) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
             try {
                 const cred = await signInWithPopup(auth, new GoogleAuthProvider());
                 currentUser = cred.user;
@@ -3809,8 +3875,10 @@
                 const code = err?.code || '';
                 if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return;
                 if (code === 'auth/popup-blocked') showToast('Tu navegador bloqueó la ventana de Google. Permite los pop-ups.', 'error');
-                else if (code === 'auth/unauthorized-domain') showToast('Agrega este dominio en Firebase Console → Authorized domains.', 'error');
-                else showToast('No se pudo iniciar sesión con Google.', 'error');
+                else if (code === 'auth/unauthorized-domain') showToast('Agrega este dominio en Firebase Console → Authentication → Authorized domains.', 'error');
+                else if (code === 'auth/operation-not-allowed') showToast('Activa el proveedor Google en Firebase Console → Authentication.', 'error');
+                else if (code === 'auth/network-request-failed') showToast('Error de red al conectar con Google.', 'error');
+                else showToast(`No se pudo iniciar sesión con Google (${code || 'desconocido'}).`, 'error');
             }
         };
         window.logoutCloudUser = async function () {

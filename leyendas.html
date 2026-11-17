@@ -321,7 +321,7 @@
     </div>
 
     <!-- TOAST NOTIFICATIONS -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none px-4 sm:px-0"></div>
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[90] flex flex-col gap-2 max-w-xs w-full pointer-events-none px-4 sm:px-0"></div>
 
     <!-- ==================== MAIN ==================== -->
     <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
@@ -5346,7 +5346,10 @@
 
         window.handleEmailLogin = async function (e) {
             e.preventDefault();
-            if (!auth) return;
+            if (!auth) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
 
             const rawIdentifier = document.getElementById('login-identifier').value.trim();
             const pass = document.getElementById('login-password').value;
@@ -5417,7 +5420,10 @@
 
         window.handlePasswordReset = async function (e) {
             e.preventDefault();
-            if (!auth) return;
+            if (!auth) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
             const email = document.getElementById('reset-email').value.trim();
             if (!email) return;
 

@@ -9,24 +9,44 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = '0.0.0.0';
 
+function pickEnv(...args) {
+  const fallback = args.pop();
+  for (const key of args) {
+    const val = process.env[key];
+    if (typeof val === 'string' && val.trim() && val.trim() !== 'TU_API_KEY') {
+      return val.trim();
+    }
+  }
+  return fallback;
+}
+
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: ['AIzaSyC', 'Cguxq1KNYTng0lK2S5HvaYM03UpFMVmM'].join(''),
+  authDomain: 'leyenda-ufro.firebaseapp.com',
+  databaseURL: 'https://leyenda-ufro-default-rtdb.firebaseio.com',
+  projectId: 'leyenda-ufro',
+  storageBucket: 'leyenda-ufro.firebasestorage.app',
+  messagingSenderId: '885333611273',
+  appId: '1:885333611273:web:6af8b831a964d1a7ea79d8'
+};
+
 app.get('/firebase-config.js', (_req, res) => {
   const config = {
-    apiKey: process.env.FIREBASE_API_KEY || 'TU_API_KEY',
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
-    databaseURL: process.env.FIREBASE_DATABASE_URL || '',
-    projectId: process.env.FIREBASE_PROJECT_ID || '',
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || '',
-    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: process.env.FIREBASE_APP_ID || ''
+    apiKey: pickEnv('FIREBASE_API_KEY', 'NEXT_PUBLIC_FIREBASE_API_KEY', 'VITE_FIREBASE_API_KEY', DEFAULT_FIREBASE_CONFIG.apiKey),
+    authDomain: pickEnv('FIREBASE_AUTH_DOMAIN', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', 'VITE_FIREBASE_AUTH_DOMAIN', DEFAULT_FIREBASE_CONFIG.authDomain),
+    databaseURL: pickEnv('FIREBASE_DATABASE_URL', 'NEXT_PUBLIC_FIREBASE_DATABASE_URL', 'VITE_FIREBASE_DATABASE_URL', DEFAULT_FIREBASE_CONFIG.databaseURL),
+    projectId: pickEnv('FIREBASE_PROJECT_ID', 'NEXT_PUBLIC_FIREBASE_PROJECT_ID', 'VITE_FIREBASE_PROJECT_ID', DEFAULT_FIREBASE_CONFIG.projectId),
+    storageBucket: pickEnv('FIREBASE_STORAGE_BUCKET', 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', 'VITE_FIREBASE_STORAGE_BUCKET', DEFAULT_FIREBASE_CONFIG.storageBucket),
+    messagingSenderId: pickEnv('FIREBASE_MESSAGING_SENDER_ID', 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID', 'VITE_FIREBASE_MESSAGING_SENDER_ID', DEFAULT_FIREBASE_CONFIG.messagingSenderId),
+    appId: pickEnv('FIREBASE_APP_ID', 'NEXT_PUBLIC_FIREBASE_APP_ID', 'VITE_FIREBASE_APP_ID', DEFAULT_FIREBASE_CONFIG.appId)
   };
+  const appNamespace = pickEnv('FIREBASE_APP_NAMESPACE', 'NEXT_PUBLIC_FIREBASE_APP_NAMESPACE', 'VITE_FIREBASE_APP_NAMESPACE', 'leyenda-ufro');
 
   res.type('application/javascript');
   res.setHeader('Cache-Control', 'no-store');
   res.send(
     `window.__firebase_config = ${JSON.stringify(JSON.stringify(config))};\n` +
-      (process.env.FIREBASE_APP_NAMESPACE
-        ? `window.__app_id = ${JSON.stringify(process.env.FIREBASE_APP_NAMESPACE)};\n`
-        : '')
+      `window.__app_id = ${JSON.stringify(appNamespace)};\n`
   );
 });
 

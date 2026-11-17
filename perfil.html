@@ -56,7 +56,7 @@
 <body class="min-h-screen flex flex-col bg-[#151515] text-gray-100 selection:bg-[#717fff] selection:text-white">
 
     <!-- TOAST NOTIFICATIONS -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none px-4 sm:px-0"></div>
+    <div id="toast-container" class="fixed bottom-4 right-4 z-[90] flex flex-col gap-2 max-w-xs w-full pointer-events-none px-4 sm:px-0"></div>
 
     <!-- ==================== HEADER ==================== -->
     <header class="sticky top-0 z-40 bg-[#151515]/90 backdrop-blur-md border-b border-[#262626]">
@@ -1347,6 +1347,10 @@
 
         window.handleEmailLogin = async function (e) {
             e.preventDefault();
+            if (!auth) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
             const rawId = document.getElementById('login-identifier').value.trim();
             const pass = document.getElementById('login-password').value;
             const btn = document.getElementById('btn-submit-login');
@@ -1373,6 +1377,10 @@
 
         window.handleEmailRegister = async function (e) {
             e.preventDefault();
+            if (!auth || !db) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
             const rawUser = document.getElementById('reg-username').value;
             const email = document.getElementById('reg-email').value.trim();
             const pass1 = document.getElementById('reg-password').value;
@@ -1425,6 +1433,10 @@
 
         window.handlePasswordReset = async function (e) {
             e.preventDefault();
+            if (!auth) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
             const email = document.getElementById('reset-email').value.trim();
             if (!email) return;
             try {
@@ -1437,7 +1449,10 @@
         };
 
         window.signInWithGoogleAccount = async function () {
-            if (!auth) return;
+            if (!auth) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
             try {
                 const provider = new GoogleAuthProvider();
                 const cred = await signInWithPopup(auth, provider);
