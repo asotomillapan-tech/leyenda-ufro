@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{*.html,public/**}"
+    }
+  },
+  "rewrites": [
+    { "source": "/public/(.*)", "destination": "/$1" },
+    { "source": "/(.*)", "destination": "/api" }
+  ]
+}
