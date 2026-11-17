@@ -2820,6 +2820,7 @@
         } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
         import {
             getFirestore,
+            initializeFirestore,
             doc,
             getDoc,
             setDoc,
@@ -3155,15 +3156,13 @@
                     }
                     emailToUse = foundData.email;
                 }
-                const cred = await withTimeout(signInWithEmailAndPassword(auth, emailToUse, password), 8000, 'signin_timeout');
+                const cred = await signInWithEmailAndPassword(auth, emailToUse, password);
                 currentCloudUser = cred.user;
                 window.closeAuthModal();
                 showToast('¡Bienvenido de vuelta!', 'success');
             } catch (err) {
                 const code = err && err.code ? String(err.code) : '';
-                if (err && err.message === 'signin_timeout') {
-                    showToast('La conexión tardó demasiado. Verifica tu internet e intenta de nuevo.', 'error');
-                } else if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+                if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
                     showToast('Contraseña incorrecta, cuenta no registrada o creada con Google. Prueba "Continuar con Google" o "Registrarse".', 'error');
                 } else {
                     showToast(formatFirebaseAuthError(err), 'error');
@@ -3213,69 +3212,7 @@
                             return;
                         }
                     } catch (dupErr) {
-                        // Si la consulta de duplicados tarda o falla por reglas, no bloquear el registro
                         console.warn('Omitiendo verificación previa de @usuario:', dupErr);
-                    }
-                }
-
-                sessionStorage.setItem('pending_reg_nickname', nickname);
-                const cred = await withTimeout(createUserWithEmailAndPassword(auth, email, pass), 8000, 'signup_timeout');
-                setCachedNickname(cred.user.uid, nickname, email);
-                try { await updateProfile(cred.user, { displayName: nickname }); } catch (e) {}
-                currentUserProfile = { uid: cred.user.uid, email, nickname };
-                currentCloudUser = cred.user;
-                updateHeaderAuthUI();
-                window.closeAuthModal();
-                showToast(`¡Cuenta @${nickname} creada!`, 'success');
-            } catch (err) {
-                sessionStorage.removeItem('pending_reg_nickname');
-                if (err && err.message === 'signup_timeout') {
-                    showToast('El registro tardó demasiado en responder. Intenta de nuevo.', 'error');
-                } else {
-                    showToast(formatFirebaseAuthError(err), 'error');
-                }
-            } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = prevLabel;
-                }
-            }
-        };
-
-        window.handleEmailRegister = async function (e) {
-            e.preventDefault();
-            if (!firebaseAvailable || !auth) {
-                showToast('El servicio de registro aún está cargando. Intenta en un segundo.', 'error');
-                return;
-            }
-            const nickname = document.getElementById('reg-username').value.trim().replace(/^@/, '');
-            const email = document.getElementById('reg-email').value.trim();
-            const pass = document.getElementById('reg-password').value;
-            const pass2 = document.getElementById('reg-password-confirm').value;
-            const btn = document.getElementById('btn-submit-register');
-            const prevLabel = btn ? btn.textContent : 'Crear cuenta y participar';
-
-            if (!/^[a-zA-Z0-9_]{3,18}$/.test(nickname)) {
-                showToast('El usuario debe tener 3-18 caracteres alfanuméricos o "_".', 'error');
-                return;
-            }
-            if (pass !== pass2) {
-                showToast('Las contraseñas no coinciden.', 'error');
-                return;
-            }
-
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = 'Creando cuenta...';
-            }
-
-            try {
-                if (db) {
-                    const dupQ = query(collection(db, 'users'), where('nicknameLower', '==', nickname.toLowerCase()), limit(1));
-                    const dupSnap = await getDocs(dupQ);
-                    if (!dupSnap.empty) {
-                        showToast(`El usuario @${nickname} ya está en uso. Elige otro.`, 'error');
-                        return;
                     }
                 }
 
@@ -3608,11 +3545,13 @@
 
                 app = initializeApp(ACTIVE_FIREBASE_CONFIG);
                 auth = getAuth(app);
-                db = getFirestore(app);
+                try {
+                    db = initializeFirestore(app, { experimentalForceLongPolling: true });
+                } catch (fsErr) {
+                    db = getFirestore(app);
+                }
                 firebaseAvailable = true;
 
-                // Persistir sesión localmente en el navegador y capturar retornos de Google Redirect
-                setPersistence(auth, browserLocalPersistence).catch(() => {});
                 getRedirectResult(auth).catch((err) => {
                     if (err && err.code) {
                         showToast(formatFirebaseAuthError(err), 'error');
