@@ -3124,17 +3124,27 @@
                     const q = query(collection(db, 'users'), where('nicknameLower', '==', cleanUser), limit(1));
                     const snap = await getDocs(q);
                     if (snap.empty) {
-                        showToast('No encontramos una cuenta con ese @usuario. Prueba con tu correo.', 'error');
+                        showToast(`No encontramos el usuario @${cleanUser}. Prueba iniciar sesión con tu correo electrónico completo.`, 'error');
                         return;
                     }
-                    emailToUse = snap.docs[0].data().email;
+                    const foundData = snap.docs[0].data() || {};
+                    if (!foundData.email) {
+                        showToast('Este usuario no tiene correo asociado. Inicia sesión con tu correo o con Google.', 'error');
+                        return;
+                    }
+                    emailToUse = foundData.email;
                 }
                 const cred = await signInWithEmailAndPassword(auth, emailToUse, password);
                 currentCloudUser = cred.user;
                 window.closeAuthModal();
                 showToast('¡Bienvenido de vuelta!', 'success');
             } catch (err) {
-                showToast(formatFirebaseAuthError(err), 'error');
+                const code = err && err.code ? String(err.code) : '';
+                if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+                    showToast('Contraseña incorrecta, cuenta no registrada o creada con Google. Prueba "Continuar con Google" o "Registrarse".', 'error');
+                } else {
+                    showToast(formatFirebaseAuthError(err), 'error');
+                }
             } finally {
                 if (btn) {
                     btn.disabled = false;
