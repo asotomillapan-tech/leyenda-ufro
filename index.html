@@ -4400,28 +4400,35 @@
         }
 
         // Verifica disponibilidad única en colección usernames/{usernameLower}
+        function withTimeout(promise, ms = 6000) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), ms))
+            ]);
+        }
+
         async function reserveUniqueUsername(username, uid, email, oldUsername = null) {
             const lower = username.toLowerCase();
             const usernameRef = doc(db, 'usernames', lower);
-            const snap = await getDoc(usernameRef);
+            const snap = await withTimeout(getDoc(usernameRef), 5000);
 
             if (snap.exists() && snap.data().uid !== uid) {
                 throw new Error('USERNAME_TAKEN');
             }
 
-            await setDoc(usernameRef, {
+            await withTimeout(setDoc(usernameRef, {
                 uid,
                 username,
                 email: email || '',
                 updatedAt: serverTimestamp()
-            });
+            }), 5000);
 
             if (oldUsername && oldUsername.toLowerCase() !== lower) {
                 try {
                     const oldRef = doc(db, 'usernames', oldUsername.toLowerCase());
-                    const oldSnap = await getDoc(oldRef);
+                    const oldSnap = await withTimeout(getDoc(oldRef), 4000);
                     if (oldSnap.exists() && oldSnap.data().uid === uid) {
-                        await setDoc(oldRef, { released: true, releasedAt: serverTimestamp() });
+                        await withTimeout(setDoc(oldRef, { released: true, releasedAt: serverTimestamp() }), 4000);
                     }
                 } catch (e) {}
             }
@@ -4429,35 +4436,48 @@
 
         async function loadOrCreateCloudProfile(user, preferredUsername = null) {
             const ref = doc(db, 'users', user.uid);
-            const snap = await getDoc(ref);
+            try {
+                const snap = await withTimeout(getDoc(ref), 6000);
 
-            if (snap.exists()) {
-                window.cloudProfile = snap.data();
-                if (!window.cloudProfile.nickname) {
-                    const fallbackNick = sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
-                    window.cloudProfile.nickname = fallbackNick;
-                    await setDoc(ref, { nickname: fallbackNick, updatedAt: serverTimestamp() }, { merge: true });
+                if (snap.exists()) {
+                    window.cloudProfile = snap.data();
+                    if (!window.cloudProfile.nickname) {
+                        const fallbackNick = sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
+                        window.cloudProfile.nickname = fallbackNick;
+                        withTimeout(setDoc(ref, { nickname: fallbackNick, updatedAt: serverTimestamp() }, { merge: true }), 5000).catch(() => {});
+                    }
+                } else {
+                    let candidate = preferredUsername || sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
+                    const check = validateUsernameStrict(candidate);
+                    if (!check.valid) candidate = sanitizeAutoUsername(candidate);
+
+                    try {
+                        await reserveUniqueUsername(candidate, user.uid, user.email);
+                    } catch (e) {
+                        if (e.message === 'USERNAME_TAKEN') {
+                            candidate = sanitizeAutoUsername(`${candidate}_${Math.floor(10 + Math.random() * 89)}`);
+                            await reserveUniqueUsername(candidate, user.uid, user.email).catch(() => {});
+                        }
+                    }
+
+                    window.cloudProfile = {
+                        uid: user.uid,
+                        nickname: candidate,
+                        email: user.email || '',
+                        photoURL: user.photoURL || '',
+                        createdAt: serverTimestamp()
+                    };
+                    await withTimeout(setDoc(ref, window.cloudProfile, { merge: true }), 5000);
                 }
-            } else {
-                let candidate = preferredUsername || sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
-                const check = validateUsernameStrict(candidate);
-                if (!check.valid) candidate = sanitizeAutoUsername(candidate);
-
-                try {
-                    await reserveUniqueUsername(candidate, user.uid, user.email);
-                } catch (e) {
-                    candidate = sanitizeAutoUsername(`${candidate}_${Math.floor(10 + Math.random() * 89)}`);
-                    await reserveUniqueUsername(candidate, user.uid, user.email);
-                }
-
+            } catch (err) {
+                console.warn('Fallback local para perfil de usuario:', err);
+                const fallbackNick = preferredUsername || sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
                 window.cloudProfile = {
                     uid: user.uid,
-                    nickname: candidate,
+                    nickname: fallbackNick,
                     email: user.email || '',
-                    photoURL: user.photoURL || '',
-                    createdAt: serverTimestamp()
+                    photoURL: user.photoURL || ''
                 };
-                await setDoc(ref, window.cloudProfile, { merge: true });
             }
 
             updateCloudAuthUI();
@@ -4616,21 +4636,26 @@
                 let targetEmail = identifier;
                 if (!identifier.includes('@') || identifier.startsWith('@')) {
                     const cleanNick = identifier.replace(/^@/, '').toLowerCase();
-                    const uSnap = await getDoc(doc(db, 'usernames', cleanNick));
+                    const uSnap = await withTimeout(getDoc(doc(db, 'usernames', cleanNick)), 6000);
                     if (!uSnap.exists() || !uSnap.data().email) {
                         throw new Error('USER_NOT_FOUND');
                     }
                     targetEmail = uSnap.data().email;
                 }
 
-                const cred = await signInWithEmailAndPassword(auth, targetEmail, pass);
+                const cred = await withTimeout(signInWithEmailAndPassword(auth, targetEmail, pass), 10000);
+                cloudUser = cred.user;
                 await loadOrCreateCloudProfile(cred.user);
                 closeAuthModal();
                 showToast(`✅ ¡Hola de nuevo @${window.cloudProfile.nickname}!`, 'success');
             } catch (err) {
                 console.error(err);
-                if (err.message === 'USER_NOT_FOUND' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+                if (err.message === 'TIMEOUT') {
+                    showToast('Tiempo de espera agotado. Revisa tu conexión o recarga la página.', 'error');
+                } else if (err.message === 'USER_NOT_FOUND' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
                     showToast('Usuario/correo o contraseña incorrectos.', 'error');
+                } else if (err.code === 'auth/too-many-requests') {
+                    showToast('Demasiados intentos fallidos. Espera unos minutos.', 'error');
                 } else {
                     showToast('Error al iniciar sesión. Intenta nuevamente.', 'error');
                 }
