@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil & Amigos · LEYENDAS UFRO</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath fill='%23717fff' d='M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z'/%3E%3C/svg%3E">
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            DEFAULT: '#717fff',
+                            light: '#8b96ff',
+                            soft: '#a3adff',
+                            pale: '#d0d5ff',
+                            dark: '#5866e6'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com" onerror="var s=document.createElement('script');s.src='https://unpkg.com/@tailwindcss/browser@4';document.head.appendChild(s);"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #151515;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #151515; }
+        ::-webkit-scrollbar-thumb { background: #2d2d2d; border-radius: 9999px; }
+        .surface-card {
+            background-color: #1c1c1c;
+            border: 1px solid #2b2b2b;
+        }
+        .surface-sub {
+            background-color: #151515;
+            border: 1px solid #262626;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.96); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: popIn 0.24s ease-out forwards; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#151515] text-gray-100 selection:bg-[#717fff] selection:text-white">
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="sticky top-0 z-40 bg-[#151515]/90 backdrop-blur-md border-b border-[#262626]">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
+            <!-- Botón Volver al Juego -->
+            <a href="/" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-xs font-bold text-gray-200 hover:text-white transition">
+                <span>←</span>
+                <span class="hidden sm:inline">Volver al Simulador</span>
+                <span class="sm:hidden">Jugar</span>
+            </a>
+
+            <!-- Logo Central -->
+            <div class="flex items-center justify-center gap-2.5">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="w-8 h-8 shrink-0">
+                    <path fill="#717fff" d="M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z"/>
+                </svg>
+                <div class="flex items-baseline gap-2">
+                    <h1 class="text-base sm:text-lg font-black tracking-wider text-white leading-none uppercase">
+                        LEYENDAS
+                    </h1>
+                    <span class="text-[10px] font-black tracking-wider text-[#8b96ff] uppercase">v0.2.1 · SOCIAL</span>
+                </div>
+            </div>
+
+            <!-- Estado Sesión Header -->
+            <div class="flex items-center justify-end">
+                <button id="btn-header-login" type="button" onclick="openAuthModal('login')"
+                    class="px-3.5 py-1.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-[11px] font-black text-white shadow transition">
+                    Inicio o registro
+                </button>
+                <div id="header-user-pill" class="hidden flex items-center gap-2">
+                    <span class="px-3 py-1.5 rounded-xl bg-[#1c1c1c] border border-[#717fff]/45 text-[11px] font-black text-white flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span id="header-username-text">@usuario</span>
+                    </span>
+                    <button type="button" onclick="window.logoutCloudUser()" title="Cerrar sesión"
+                        class="px-2.5 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-rose-950/40 border border-[#2b2b2b] text-xs font-bold text-rose-400 transition">
+                        🚪
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MODAL DE AUTENTICACIÓN ==================== -->
+    <div id="auth-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="surface-card border-[#2b2b2b] rounded-3xl max-w-md w-full p-6 shadow-2xl animate-pop space-y-4 my-auto">
+            <div class="flex items-center justify-between border-b border-[#262626] pb-3">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Cuenta LEYENDAS UFRO</span>
+                    <h3 id="auth-modal-title" class="text-base font-black text-white">Iniciar Sesión</h3>
+                </div>
+                <button type="button" onclick="closeAuthModal()" class="w-8 h-8 rounded-lg bg-[#151515] hover:bg-[#242424] border border-[#2b2b2b] text-gray-400 hover:text-white font-bold text-sm transition">
+                    ✕
+                </button>
+            </div>
+
+            <div id="auth-mode-tabs" class="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-[#151515] border border-[#262626]">
+                <button type="button" onclick="switchAuthMode('login')" id="tab-auth-login"
+                    class="py-2 rounded-lg bg-[#717fff] text-white font-black text-xs transition">
+                    Iniciar sesión
+                </button>
+                <button type="button" onclick="switchAuthMode('register')" id="tab-auth-register"
+                    class="py-2 rounded-lg text-gray-400 hover:text-white font-bold text-xs transition">
+                    Registrarse
+                </button>
+            </div>
+
+            <form id="form-auth-login" onsubmit="handleEmailLogin(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Correo electrónico o usuario</label>
+                    <input type="text" id="login-identifier" required placeholder="tu.correo@ufromail.cl o @usuario"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold text-gray-400">Contraseña</label>
+                        <button type="button" onclick="switchAuthMode('reset')" class="text-[11px] font-bold text-[#8b96ff] hover:text-white transition">
+                            ¿Olvidaste tu contraseña?
+                        </button>
+                    </div>
+                    <input type="password" id="login-password" required placeholder="••••••••"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                </div>
+                <button type="submit" id="btn-submit-login" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
+                    Entrar a mi cuenta
+                </button>
+            </form>
+
+            <form id="form-auth-register" onsubmit="handleEmailRegister(event)" class="hidden space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Nombre de usuario</label>
+                    <input type="text" id="reg-username" required minlength="3" maxlength="18" placeholder="Ej: El10DeLaUFRO"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                    <p class="text-[10px] text-gray-500 mt-1">3 a 18 caracteres (letras, números y guion bajo).</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Correo electrónico</label>
+                    <input type="email" id="reg-email" required placeholder="tu.correo@ufromail.cl"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-1">Contraseña</label>
+                        <input type="password" id="reg-password" required minlength="6" placeholder="Mín. 6 caracteres"
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-1">Repetir contraseña</label>
+                        <input type="password" id="reg-password-confirm" required minlength="6" placeholder="Confirmar clave"
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                    </div>
+                </div>
+                <button type="submit" id="btn-submit-register" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
+                    Crear cuenta
+                </button>
+            </form>
+
+            <form id="form-auth-reset" onsubmit="handlePasswordReset(event)" class="hidden space-y-3">
+                <p class="text-xs text-gray-400">Ingresa tu correo registrado y te enviaremos un enlace para restablecer tu clave.</p>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Correo electrónico</label>
+                    <input type="email" id="reset-email" required placeholder="tu.correo@ufromail.cl"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                </div>
+                <button type="submit" id="btn-submit-reset" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
+                    Enviar enlace de recuperación
+                </button>
+                <button type="button" onclick="switchAuthMode('login')" class="w-full py-2 text-xs font-bold text-gray-400 hover:text-white transition">
+                    ← Volver a Iniciar sesión
+                </button>
+            </form>
+
+            <div id="auth-google-section" class="pt-2 border-t border-[#262626] space-y-2.5">
+                <div class="text-center text-[10px] font-bold uppercase tracking-wider text-gray-500">O continúa con</div>
+                <button type="button" onclick="signInWithGoogleAccount()"
+                    class="w-full py-3 px-4 rounded-xl bg-white hover:bg-gray-100 text-gray-900 font-black text-xs flex items-center justify-center gap-2.5 shadow transition">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
+                        <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
+                    </svg>
+                    <span>Continuar con Google</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL FICHA DETALLADA DE JUGADOR / AMIGO ==================== -->
+    <div id="player-card-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="surface-card border-[#2b2b2b] rounded-3xl max-w-lg w-full p-6 shadow-2xl animate-pop space-y-4 my-auto">
+            <div class="flex items-center justify-between border-b border-[#262626] pb-3">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Ficha del Jugador · UFRO</span>
+                    <h3 id="modal-player-title" class="text-base font-black text-white">@usuario</h3>
+                </div>
+                <button type="button" onclick="closePlayerCardModal()" class="w-8 h-8 rounded-lg bg-[#151515] hover:bg-[#242424] border border-[#2b2b2b] text-gray-400 hover:text-white font-bold text-sm transition">
+                    ✕
+                </button>
+            </div>
+            <div id="modal-player-body" class="space-y-4 max-h-[75vh] overflow-y-auto pr-1"></div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN ==================== -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
+
+        <!-- ESTADO NO AUTENTICADO -->
+        <section id="guest-wall" class="max-w-lg mx-auto surface-card rounded-3xl p-8 text-center space-y-4 shadow-2xl my-8">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-[#717fff]/15 border border-[#717fff]/30 flex items-center justify-center text-3xl">
+                👥
+            </div>
+            <h2 class="text-2xl font-black text-white">Centro Social & Perfil UFRO</h2>
+            <p class="text-xs sm:text-sm text-gray-400">
+                Inicia sesión o regístrate para ver tu perfil competitivo, buscar a tus amigos por su <strong class="text-white">@usuario</strong>, enviar solicitudes de amistad y preparar tu equipo para los clanes.
+            </p>
+            <div class="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
+                <button type="button" onclick="openAuthModal('login')" class="px-6 py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
+                    Iniciar sesión / Registrarse
+                </button>
+                <a href="/" class="px-6 py-3 rounded-xl bg-[#151515] hover:bg-[#222222] border border-[#2b2b2b] text-gray-300 font-bold text-xs transition">
+                    Volver al Simulador
+                </a>
+            </div>
+        </section>
+
+        <!-- DASHBOARD DE PERFIL + PANEL LATERAL DE AMIGOS -->
+        <section id="social-dashboard" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- COLUMNA IZQUIERDA (7 cols): PERFIL Y CARRERAS DEL USUARIO -->
+            <div class="lg:col-span-7 space-y-5">
+
+                <!-- Tarjeta Principal de Perfil -->
+                <div class="surface-card rounded-3xl p-6 shadow-xl space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#262626] pb-4">
+                        <div class="flex items-center gap-3.5">
+                            <div id="profile-avatar-ovr" class="w-16 h-16 rounded-2xl bg-[#717fff] flex flex-col items-center justify-center shrink-0 shadow-lg">
+                                <span class="text-[9px] font-bold uppercase text-white/80">TOP OVR</span>
+                                <span id="profile-best-ovr" class="text-2xl font-black text-white leading-none">--</span>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h2 id="profile-nickname-display" class="text-xl font-black text-white">@usuario</h2>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                                        En línea
+                                    </span>
+                                </div>
+                                <p id="profile-email-display" class="text-xs text-gray-400 mt-0.5">correo@ufromail.cl</p>
+                                <p id="profile-active-career-summary" class="text-xs text-[#a3adff] font-semibold mt-1">
+                                    Sin carrera récord registrada aún
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Resumen rápido social -->
+                        <div class="grid grid-cols-2 gap-2 shrink-0">
+                            <div class="px-3.5 py-2 rounded-xl surface-sub text-center">
+                                <div id="stat-friends-count" class="text-lg font-black text-white">0</div>
+                                <div class="text-[10px] font-bold uppercase text-gray-500">Amigos</div>
+                            </div>
+                            <div class="px-3.5 py-2 rounded-xl surface-sub text-center">
+                                <div id="stat-careers-count" class="text-lg font-black text-[#8b96ff]">0</div>
+                                <div class="text-[10px] font-bold uppercase text-gray-500">Carreras</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cambiar nombre de usuario (Cooldown 14 días) -->
+                    <div class="p-4 rounded-2xl surface-sub space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <label class="block text-xs font-bold text-gray-300">Cambiar nombre de usuario</label>
+                            <span id="nickname-cooldown-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                Bloqueado (14 días)
+                            </span>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="input-cloud-nickname" minlength="3" maxlength="18" placeholder="Nuevo usuario"
+                                class="flex-1 px-3.5 py-2 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] text-xs sm:text-sm text-white focus:outline-none focus:border-[#717fff] disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button type="button" id="btn-save-cloud-nickname" onclick="saveCloudNickname()"
+                                class="px-4 py-2 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Guardar
+                            </button>
+                        </div>
+                        <p id="nickname-change-hint" class="text-[10px] text-gray-500">Solo letras, números y guion bajo (3-18 caracteres). 1 cambio cada 14 días.</p>
+                    </div>
+                </div>
+
+                <!-- Carreras de la Semana Actual -->
+                <div class="surface-card rounded-3xl p-6 shadow-xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-[#8b96ff]">📅 Tus Carreras de Esta Semana</h3>
+                        <span id="profile-weekly-count" class="text-[11px] font-bold text-gray-400">0 carreras</span>
+                    </div>
+                    <div id="profile-weekly-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <div class="p-3.5 rounded-xl surface-sub text-center text-xs text-gray-500">Cargando carreras semanales...</div>
+                    </div>
+                </div>
+
+                <!-- Top 5 Histórico Personal -->
+                <div class="surface-card rounded-3xl p-6 shadow-xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-amber-300">🏆 Tu Top 5 Histórico</h3>
+                        <span class="text-[10px] text-gray-500">Mejores puntajes</span>
+                    </div>
+                    <div id="profile-top5-list" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                        <div class="p-3.5 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COLUMNA DERECHA (5 cols): MENÚ LATERAL DE AMIGOS (FASE 1) -->
+            <aside class="lg:col-span-5 space-y-5 lg:sticky lg:top-20">
+
+                <!-- Buscador de Usuarios Únicos -->
+                <div class="surface-card rounded-3xl p-6 shadow-xl space-y-4 border-[#717fff]/30">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Comunidad UFRO · Fase 1</span>
+                        <h3 class="text-lg font-black text-white mt-0.5">👥 Buscar y Añadir Amigos</h3>
+                        <p class="text-xs text-gray-400 mt-0.5">Encuentra jugadores por su <strong class="text-gray-200">@nombre_de_usuario</strong> único.</p>
+                    </div>
+
+                    <div class="relative">
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">@</span>
+                        <input type="text" id="friend-search-input" oninput="handleFriendSearchInput()" placeholder="Buscar usuario (ej: El10DeLaUFRO)..."
+                            class="w-full pl-8 pr-4 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                    </div>
+
+                    <!-- Resultados de búsqueda -->
+                    <div id="friend-search-results" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        <div class="p-3 rounded-xl surface-sub text-center text-[11px] text-gray-500">
+                            Escribe al menos 2 letras para buscar jugadores registrados.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solicitudes de Amistad Pendientes -->
+                <div id="friend-requests-card" class="surface-card rounded-3xl p-6 shadow-xl space-y-3 border-amber-500/30">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-amber-300">📩 Solicitudes de Amistad</h3>
+                        <span id="pending-requests-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300">0</span>
+                    </div>
+                    <div id="friend-requests-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">No tienes solicitudes pendientes.</div>
+                    </div>
+                </div>
+
+                <!-- Lista de Amigos Aceptados -->
+                <div class="surface-card rounded-3xl p-6 shadow-xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-emerald-400">🤝 Tus Amigos</h3>
+                        <span id="friends-list-badge" class="text-[11px] font-bold text-gray-400">0 amigos</span>
+                    </div>
+                    <div id="friends-list-container" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                        <div class="p-4 rounded-xl surface-sub text-center text-xs text-gray-500">
+                            Aún no tienes amigos agregados. ¡Busca un @usuario arriba y envíale una solicitud!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adelanto Fase 2: Clanes / Equipos -->
+                <div class="surface-card rounded-3xl p-5 border-[#2b2b2b] opacity-80 flex items-center justify-between gap-3">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-[#8b96ff]">Próximamente · Fase 2</span>
+                        <div class="text-sm font-black text-white">⚔️ Equipos / Clanes de Amigos</div>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Funda tu plantel con tus amigos y compite en el Ranking por Equipos.</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-lg bg-[#151515] border border-[#2b2b2b] text-[10px] font-bold text-gray-400 shrink-0">
+                        Pronto
+                    </span>
+                </div>
+
+            </aside>
+        </section>
+
+    </main>
+
+    <!-- ==================== SCRIPT UTILIDADES UI & VALIDACIÓN ==================== -->
+    <script>
+        const OVR_DISPLAY_MAX = 99;
+        function formatOvr(v) {
+            const num = Number(v) || 0;
+            if (num <= 0) return '--';
+            return num > OVR_DISPLAY_MAX ? '🐐' : num;
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
+                error: 'bg-rose-950/95 border-rose-500/50 text-rose-200',
+                info: 'bg-[#1c1c1c]/95 border-[#717fff]/50 text-gray-100'
+            };
+            toast.className = `pointer-events-auto p-3 rounded-xl border shadow-xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3400);
+        }
+
+        const CHILEAN_BAD_WORDS = [
+            'weon', 'weona', 'hueon', 'hueona', 'wn', 'wna', 'aweonao', 'aweonado',
+            'conchetumare', 'conchatumadre', 'ctm', 'csm', 'culiao', 'culia', 'qlo', 'ql',
+            'maricon', 'mariconazo', 'maraca', 'maraco', 'chucha', 'chuchatumare',
+            'pico', 'pichula', 'tula', 'callampa', 'zorra', 'choro', 'cacha', 'cachar',
+            'perkin', 'longi', 'jiles', 'gil', 'paco', 'pacos', 'flaites', 'flaite',
+            'bastardo', 'bastarda', 'puta', 'puto', 'mierda', 'caca', 'mear', 'raja',
+            'potito', 'poto', 'tetas', 'teta', 'pene', 'vagina', 'sexo', 'porno', 'xxx',
+            'nazi', 'hitler', 'violador', 'violar', 'matar', 'suicidio', 'droga', 'falopa',
+            'admin', 'root', 'system', 'null', 'undefined', 'nan', 'true', 'false',
+            'moderator', 'moderador', 'soporte', 'staff', 'oficial', 'leyendasufro'
+        ];
+
+        function normalizeForProfanityCheck(str) {
+            return String(str || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/0/g, 'o')
+                .replace(/1/g, 'i')
+                .replace(/3/g, 'e')
+                .replace(/4/g, 'a')
+                .replace(/5/g, 's')
+                .replace(/7/g, 't')
+                .replace(/8/g, 'b')
+                .replace(/@/g, 'a')
+                .replace(/\$/g, 's')
+                .replace(/[^a-z0-9]/g, '');
+        }
+
+        function validateUsernameStrict(rawUsername) {
+            const clean = String(rawUsername || '').trim();
+            if (clean.length < 3 || clean.length > 18) {
+                return { valid: false, error: 'El nombre de usuario debe tener entre 3 y 18 caracteres.' };
+            }
+            if (!/^[a-zA-Z0-9_]+$/.test(clean)) {
+                return { valid: false, error: 'Solo se permiten letras (sin tildes), números y guion bajo (_).' };
+            }
+            if (/^[0-9_]/.test(clean)) {
+                return { valid: false, error: 'El usuario debe comenzar con una letra.' };
+            }
+            if (/__/.test(clean)) {
+                return { valid: false, error: 'No uses dos guiones bajos seguidos.' };
+            }
+            const normalized = normalizeForProfanityCheck(clean);
+            const collapsedRepeats = normalized.replace(/(.)\1{2,}/g, '$1$1');
+            for (const bad of CHILEAN_BAD_WORDS) {
+                if (normalized.includes(bad) || collapsedRepeats.includes(bad)) {
+                    return { valid: false, error: 'Ese nombre de usuario contiene palabras no permitidas.' };
+                }
+            }
+            return { valid: true, username: clean };
+        }
+
+        function sanitizeAutoUsername(baseStr) {
+            const lettersOnly = String(baseStr || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-zA-Z0-9_]/g, '');
+            let candidate = lettersOnly.slice(0, 13);
+            if (!/^[a-zA-Z]/.test(candidate)) candidate = `Ufro_${candidate}`;
+            candidate = `${candidate}_${Math.floor(100 + Math.random() * 899)}`.slice(0, 18);
+            const check = validateUsernameStrict(candidate);
+            return check.valid ? check.username : `Jugador_${Math.floor(1000 + Math.random() * 8999)}`;
+        }
+
+        function openAuthModal(mode = 'login') {
+            const modal = document.getElementById('auth-modal');
+            if (!modal) return;
+            switchAuthMode(mode);
+            modal.classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function switchAuthMode(mode) {
+            const titleEl = document.getElementById('auth-modal-title');
+            const tabsEl = document.getElementById('auth-mode-tabs');
+            const formLogin = document.getElementById('form-auth-login');
+            const formReg = document.getElementById('form-auth-register');
+            const formReset = document.getElementById('form-auth-reset');
+            const googleSec = document.getElementById('auth-google-section');
+            const tabLogin = document.getElementById('tab-auth-login');
+            const tabReg = document.getElementById('tab-auth-register');
+
+            formLogin.classList.add('hidden');
+            formReg.classList.add('hidden');
+            formReset.classList.add('hidden');
+
+            if (mode === 'register') {
+                titleEl.textContent = 'Crear Cuenta';
+                tabsEl.classList.remove('hidden');
+                formReg.classList.remove('hidden');
+                googleSec.classList.remove('hidden');
+                tabReg.className = 'py-2 rounded-lg bg-[#717fff] text-white font-black text-xs transition';
+                tabLogin.className = 'py-2 rounded-lg text-gray-400 hover:text-white font-bold text-xs transition';
+            } else if (mode === 'reset') {
+                titleEl.textContent = 'Recuperar Contraseña';
+                tabsEl.classList.add('hidden');
+                formReset.classList.remove('hidden');
+                googleSec.classList.add('hidden');
+            } else {
+                titleEl.textContent = 'Iniciar Sesión';
+                tabsEl.classList.remove('hidden');
+                formLogin.classList.remove('hidden');
+                googleSec.classList.remove('hidden');
+                tabLogin.className = 'py-2 rounded-lg bg-[#717fff] text-white font-black text-xs transition';
+                tabReg.className = 'py-2 rounded-lg text-gray-400 hover:text-white font-bold text-xs transition';
+            }
+        }
+
+        function closePlayerCardModal() {
+            const modal = document.getElementById('player-card-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+    </script>
+
+    <!-- ==================== MÓDULO FIREBASE: PERFIL Y SISTEMA DE AMIGOS ==================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth,
+            setPersistence,
+            browserLocalPersistence,
+            onAuthStateChanged,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            sendPasswordResetEmail,
+            updateProfile,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            initializeFirestore,
+            doc,
+            getDoc,
+            setDoc,
+            deleteDoc,
+            collection,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const DEFAULT_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCCguxq1KNYTng0lK2S5HvaYM03UpFMVmM",
+            authDomain: "leyenda-ufro.firebaseapp.com",
+            projectId: "leyenda-ufro",
+            storageBucket: "leyenda-ufro.firebasestorage.app",
+            messagingSenderId: "885333611273",
+            appId: "1:885333611273:web:6af8b831a964d1a7ea79d8"
+        };
+
+        const firebaseConfig = (typeof __firebase_config !== 'undefined' && __firebase_config)
+            ? JSON.parse(__firebase_config)
+            : DEFAULT_FIREBASE_CONFIG;
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'leyendas-ufro-global';
+        const NICKNAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+
+        let currentUser = null;
+        let allUsernamesDirectory = []; // { id, uid, nickname, email, active, bestOvr, activeCareerName, activePlayerName, activePosition, bestScore }
+        let allLeaderboardEntries = [];
+        let allFriendships = []; // { id, users: [uidA, uidB], fromUid, fromNickname, toUid, toNickname, status: 'pending'|'accepted', createdAt }
+
+        let unsubUsernames = null;
+        let unsubLeaderboard = null;
+        let unsubFriendships = null;
+
+        window.cloudProfile = {
+            nickname: '',
+            nicknameUpdatedAt: 0
+        };
+
+        function isRealUser(user) {
+            return Boolean(user && !user.isAnonymous);
+        }
+
+        function getChileWeekId() {
+            const now = new Date();
+            const chileStr = now.toLocaleString('en-US', { timeZone: 'America/Santiago' });
+            const chileDate = new Date(chileStr);
+            const target = new Date(Date.UTC(chileDate.getFullYear(), chileDate.getMonth(), chileDate.getDate()));
+            const dayNum = target.getUTCDay() || 7;
+            target.setUTCDate(target.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
+            return `${target.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+        }
+
+        function getLocalNicknameTimestampKey(uid) {
+            return `leyenda_ufro_nick_ts_${uid}`;
+        }
+
+        function getNicknameCooldownStatus() {
+            if (!currentUser) return { locked: false, remainingMs: 0 };
+            const localTs = Number(localStorage.getItem(getLocalNicknameTimestampKey(currentUser.uid)) || 0);
+            const lastChangedAt = Math.max(Number(window.cloudProfile.nicknameUpdatedAt || 0), localTs);
+            if (!lastChangedAt) return { locked: false, remainingMs: 0 };
+            const elapsed = Date.now() - lastChangedAt;
+            if (elapsed >= NICKNAME_COOLDOWN_MS) return { locked: false, remainingMs: 0 };
+            return { locked: true, remainingMs: NICKNAME_COOLDOWN_MS - elapsed };
+        }
+
+        function updateNicknameCooldownUI() {
+            const input = document.getElementById('input-cloud-nickname');
+            const btn = document.getElementById('btn-save-cloud-nickname');
+            const badge = document.getElementById('nickname-cooldown-badge');
+            const hint = document.getElementById('nickname-change-hint');
+            if (!input || !btn) return;
+
+            const status = getNicknameCooldownStatus();
+            if (status.locked) {
+                const days = Math.floor(status.remainingMs / (24 * 60 * 60 * 1000));
+                const hours = Math.floor((status.remainingMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                input.disabled = true;
+                btn.disabled = true;
+                if (badge) badge.classList.remove('hidden');
+                if (hint) {
+                    hint.textContent = `Podrás volver a cambiar tu usuario en ${days}d ${hours}h (límite de 1 cambio cada 14 días).`;
+                    hint.className = 'text-[10px] font-bold text-amber-300/90';
+                }
+            } else {
+                input.disabled = false;
+                btn.disabled = false;
+                if (badge) badge.classList.add('hidden');
+                if (hint) {
+                    hint.textContent = 'Solo letras, números y guion bajo (3-18 caracteres). 1 cambio cada 14 días.';
+                    hint.className = 'text-[10px] text-gray-500';
+                }
+            }
+        }
+
+        function promiseWithTimeout(promise, ms = 5000) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject({ code: 'custom/timeout' }), ms))
+            ]);
+        }
+
+        // ==================== SINCRONIZACIÓN DE DIRECTORIO PÚBLICO ====================
+        function getBestCareerSummaryForUid(uid) {
+            const userEntries = allLeaderboardEntries
+                .filter(d => d.uid === uid)
+                .sort((a, b) => (b.ovr || 0) - (a.ovr || 0) || (b.score || 0) - (a.score || 0));
+
+            // Revisar también si tiene una carrera activa guardada en localStorage del mismo navegador
+            let localCareer = null;
+            if (currentUser && currentUser.uid === uid) {
+                try {
+                    const raw = localStorage.getItem('leyenda_ufro_career_v8');
+                    if (raw) localCareer = JSON.parse(raw);
+                } catch (e) {}
+            }
+
+            const topCloud = userEntries[0] || null;
+            const localOvr = localCareer ? Number(localCareer.ovr || 0) : 0;
+            const cloudOvr = topCloud ? Number(topCloud.ovr || 0) : 0;
+
+            if (localCareer && localOvr >= cloudOvr) {
+                return {
+                    bestOvr: localOvr,
+                    activePlayerName: localCareer.playerName || 'Jugador',
+                    activeCareerName: localCareer.studiedCareer || 'Carrera UFRO',
+                    activePosition: localCareer.position || 'MED',
+                    bestScore: topCloud ? (topCloud.score || 0) : 0,
+                    isActiveNow: localCareer.phase !== 'RETIRED'
+                };
+            }
+
+            if (topCloud) {
+                return {
+                    bestOvr: cloudOvr,
+                    activePlayerName: topCloud.playerName || 'Jugador',
+                    activeCareerName: topCloud.studiedCareer || topCloud.headline || 'Leyenda UFRO',
+                    activePosition: topCloud.position || 'MED',
+                    bestScore: topCloud.score || 0,
+                    isActiveNow: false
+                };
+            }
+
+            return {
+                bestOvr: 0,
+                activePlayerName: '',
+                activeCareerName: 'Sin carrera activa',
+                activePosition: '',
+                bestScore: 0,
+                isActiveNow: false
+            };
+        }
+
+        function syncMyPublicCard() {
+            if (!isRealUser(currentUser) || !window.cloudProfile.nickname) return;
+            const cleanKey = window.cloudProfile.nickname.trim().replace(/^@+/, '').toLowerCase();
+            if (!cleanKey) return;
+
+            const summary = getBestCareerSummaryForUid(currentUser.uid);
+            const unameRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', cleanKey);
+            setDoc(unameRef, {
+                nickname: window.cloudProfile.nickname.trim().replace(/^@+/, ''),
+                email: currentUser.email || '',
+                uid: currentUser.uid,
+                active: true,
+                bestOvr: summary.bestOvr,
+                activePlayerName: summary.activePlayerName,
+                activeCareerName: summary.activeCareerName,
+                activePosition: summary.activePosition,
+                bestScore: summary.bestScore,
+                updatedAt: Date.now()
+            }, { merge: true }).catch(() => {});
+        }
+
+        function subscribePublicCollections() {
+            if (unsubUsernames) unsubUsernames();
+            if (unsubLeaderboard) unsubLeaderboard();
+            if (unsubFriendships) unsubFriendships();
+
+            // 1. Directorio público de usuarios (@usuario)
+            const usernamesCol = collection(db, 'artifacts', appId, 'public', 'data', 'usernames');
+            unsubUsernames = onSnapshot(usernamesCol, (snap) => {
+                const list = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (data && data.active !== false && data.uid && data.nickname) {
+                        list.push({ id: d.id, ...data });
+                    }
+                });
+                allUsernamesDirectory = list;
+                renderSocialUI();
+            });
+
+            // 2. Carreras publicadas (para estadísticas personales, OVR y fichas)
+            const lbCol = collection(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard');
+            unsubLeaderboard = onSnapshot(lbCol, (snap) => {
+                const list = [];
+                snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+                allLeaderboardEntries = list;
+                if (isRealUser(currentUser)) {
+                    syncMyPublicCard();
+                }
+                renderProfileStats();
+                renderSocialUI();
+            });
+
+            // 3. Relaciones y solicitudes de amistad
+            const friendsCol = collection(db, 'artifacts', appId, 'public', 'data', 'friendships');
+            unsubFriendships = onSnapshot(friendsCol, (snap) => {
+                const list = [];
+                snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+                allFriendships = list;
+                renderSocialUI();
+            });
+        }
+
+        // ==================== RENDERIZADO PERFIL PERSONAL ====================
+        function renderProfileStats() {
+            if (!isRealUser(currentUser)) return;
+            const weekId = getChileWeekId();
+
+            const myCareers = allLeaderboardEntries
+                .filter(d => d.uid === currentUser.uid)
+                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            const myWeekly = myCareers.filter(d => d.weekId === weekId);
+            const myTop5 = [...myCareers]
+                .sort((a, b) => (b.score || 0) - (a.score || 0) || (b.ovr || 0) - (a.ovr || 0))
+                .slice(0, 5);
+
+            const summary = getBestCareerSummaryForUid(currentUser.uid);
+
+            const bestOvrEl = document.getElementById('profile-best-ovr');
+            const activeSummaryEl = document.getElementById('profile-active-career-summary');
+            const careersCountEl = document.getElementById('stat-careers-count');
+
+            if (bestOvrEl) bestOvrEl.textContent = formatOvr(summary.bestOvr);
+            if (careersCountEl) careersCountEl.textContent = String(myCareers.length);
+            if (activeSummaryEl) {
+                activeSummaryEl.textContent = summary.bestOvr > 0
+                    ? `${summary.activePlayerName} (${summary.activePosition}) · ${summary.activeCareerName}`
+                    : 'Aún sin carrera activa o finalizada en la nube';
+            }
+
+            const weeklyCountEl = document.getElementById('profile-weekly-count');
+            const weeklyListEl = document.getElementById('profile-weekly-list');
+            const top5ListEl = document.getElementById('profile-top5-list');
+
+            if (weeklyCountEl) weeklyCountEl.textContent = `${myWeekly.length} ${myWeekly.length === 1 ? 'carrera' : 'carreras'}`;
+
+            if (weeklyListEl) {
+                weeklyListEl.innerHTML = myWeekly.length === 0
+                    ? `<div class="p-3.5 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras esta semana.</div>`
+                    : myWeekly.map(c => `
+                        <button type="button" onclick="openPlayerCardModal('${escapeHtml(c.uid)}')"
+                            class="w-full text-left p-3 rounded-xl surface-sub hover:border-[#717fff]/50 flex items-center justify-between gap-2 text-xs transition">
+                            <div class="min-w-0">
+                                <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span></div>
+                                <div class="text-[11px] text-gray-400 truncate">${escapeHtml(c.headline || '')}</div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="font-black text-[#a3adff]">${c.score || 0} pts</div>
+                                <div class="text-[10px] text-gray-400">🏆 ${c.titles || 0} · OVR ${formatOvr(c.ovr || 60)}</div>
+                            </div>
+                        </button>
+                    `).join('');
+            }
+
+            if (top5ListEl) {
+                top5ListEl.innerHTML = myTop5.length === 0
+                    ? `<div class="p-3.5 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>`
+                    : myTop5.map((c, idx) => `
+                        <button type="button" onclick="openPlayerCardModal('${escapeHtml(c.uid)}')"
+                            class="w-full text-left p-3 rounded-xl surface-sub hover:border-amber-400/50 flex items-center justify-between gap-2 text-xs transition">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="font-black text-amber-400 w-5 shrink-0">#${idx + 1}</span>
+                                <div class="min-w-0">
+                                    <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span></div>
+                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(c.headline || '')} · ${escapeHtml(c.weekId || '')}</div>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="font-black text-amber-300">${c.score || 0} pts</div>
+                                <div class="text-[10px] text-gray-400">🏆 ${c.titles || 0} · OVR ${formatOvr(c.ovr || 60)}</div>
+                            </div>
+                        </button>
+                    `).join('');
+            }
+        }
+
+        // ==================== SISTEMA DE AMIGOS: BÚSQUEDA, SOLICITUDES Y LISTA ====================
+        function getFriendshipDocId(uid1, uid2) {
+            return [uid1, uid2].sort().join('_');
+        }
+
+        function getRelationWithUid(targetUid) {
+            if (!currentUser) return null;
+            const docId = getFriendshipDocId(currentUser.uid, targetUid);
+            return allFriendships.find(f => f.id === docId) || null;
+        }
+
+        function enrichUserWithLiveStats(userEntry) {
+            const live = getBestCareerSummaryForUid(userEntry.uid);
+            const bestOvr = Math.max(Number(userEntry.bestOvr || 0), live.bestOvr);
+            return {
+                ...userEntry,
+                bestOvr,
+                activePlayerName: live.activePlayerName || userEntry.activePlayerName || 'Sin carrera',
+                activeCareerName: live.activeCareerName || userEntry.activeCareerName || 'Sin carrera activa',
+                activePosition: live.activePosition || userEntry.activePosition || '',
+                bestScore: Math.max(Number(userEntry.bestScore || 0), live.bestScore)
+            };
+        }
+
+        window.handleFriendSearchInput = function () {
+            renderSearchResults();
+        };
+
+        function renderSearchResults() {
+            const container = document.getElementById('friend-search-results');
+            const input = document.getElementById('friend-search-input');
+            if (!container || !input || !isRealUser(currentUser)) return;
+
+            const query = input.value.trim().replace(/^@+/, '').toLowerCase();
+            if (query.length < 2) {
+                container.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-[11px] text-gray-500">Escribe al menos 2 letras para buscar jugadores registrados.</div>`;
+                return;
+            }
+
+            // Deduplicar por uid quedándose con el registro más reciente
+            const uniqueByUid = new Map();
+            allUsernamesDirectory.forEach(u => {
+                if (u.uid === currentUser.uid) return;
+                const prev = uniqueByUid.get(u.uid);
+                if (!prev || (u.updatedAt || 0) > (prev.updatedAt || 0)) {
+                    uniqueByUid.set(u.uid, u);
+                }
+            });
+
+            const matches = Array.from(uniqueByUid.values())
+                .filter(u => u.nickname.toLowerCase().includes(query))
+                .slice(0, 8)
+                .map(enrichUserWithLiveStats);
+
+            if (matches.length === 0) {
+                container.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">No se encontraron usuarios con "@${escapeHtml(query)}".</div>`;
+                return;
+            }
+
+            container.innerHTML = matches.map(u => {
+                const rel = getRelationWithUid(u.uid);
+                let actionBtnHtml = '';
+
+                if (!rel) {
+                    actionBtnHtml = `
+                        <button type="button" onclick="sendFriendRequest('${escapeHtml(u.uid)}', '${escapeHtml(u.nickname)}')"
+                            class="px-3 py-1.5 rounded-lg bg-[#717fff] hover:bg-[#828eff] text-white font-black text-[11px] transition shrink-0">
+                            + Añadir
+                        </button>
+                    `;
+                } else if (rel.status === 'accepted') {
+                    actionBtnHtml = `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] shrink-0">✓ Amigos</span>`;
+                } else if (rel.status === 'pending' && rel.fromUid === currentUser.uid) {
+                    actionBtnHtml = `
+                        <button type="button" onclick="cancelOrRemoveFriend('${escapeHtml(rel.id)}')"
+                            class="px-2.5 py-1 rounded-lg bg-[#222222] hover:bg-rose-950/50 text-gray-300 hover:text-rose-300 border border-[#333333] font-bold text-[10px] transition shrink-0">
+                            Enviada ✕
+                        </button>
+                    `;
+                } else if (rel.status === 'pending' && rel.toUid === currentUser.uid) {
+                    actionBtnHtml = `
+                        <button type="button" onclick="acceptFriendRequest('${escapeHtml(rel.id)}')"
+                            class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] transition shrink-0">
+                            Aceptar
+                        </button>
+                    `;
+                }
+
+                return `
+                    <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2.5">
+                        <button type="button" onclick="openPlayerCardModal('${escapeHtml(u.uid)}')" class="flex items-center gap-2.5 min-w-0 text-left group">
+                            <div class="w-9 h-9 rounded-xl bg-[#717fff]/20 border border-[#717fff]/35 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-[8px] font-bold text-[#a3adff] leading-none">OVR</span>
+                                <span class="text-xs font-black text-white leading-tight">${formatOvr(u.bestOvr)}</span>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-black text-white text-xs truncate group-hover:text-[#a3adff] transition">@${escapeHtml(u.nickname)}</div>
+                                <div class="text-[10px] text-gray-400 truncate">
+                                    ${u.bestOvr > 0 ? `${escapeHtml(u.activePlayerName)} · ${escapeHtml(u.activeCareerName)}` : 'Sin carreras aún'}
+                                </div>
+                            </div>
+                        </button>
+                        ${actionBtnHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSocialUI() {
+            if (!isRealUser(currentUser)) return;
+            renderSearchResults();
+
+            // Solicitudes entrantes pendientes
+            const incomingRequests = allFriendships.filter(
+                f => f.status === 'pending' && f.toUid === currentUser.uid
+            );
+
+            const reqBadge = document.getElementById('pending-requests-badge');
+            const reqList = document.getElementById('friend-requests-list');
+            if (reqBadge) reqBadge.textContent = String(incomingRequests.length);
+
+            if (reqList) {
+                if (incomingRequests.length === 0) {
+                    reqList.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">No tienes solicitudes pendientes.</div>`;
+                } else {
+                    reqList.innerHTML = incomingRequests.map(req => {
+                        const senderDir = allUsernamesDirectory.find(u => u.uid === req.fromUid) || { uid: req.fromUid, nickname: req.fromNickname || 'Jugador' };
+                        const enriched = enrichUserWithLiveStats(senderDir);
+
+                        return `
+                            <div class="p-3 rounded-xl surface-sub border border-amber-500/25 flex items-center justify-between gap-2">
+                                <div class="min-w-0">
+                                    <div class="font-black text-white text-xs truncate">@${escapeHtml(enriched.nickname)}</div>
+                                    <div class="text-[10px] text-gray-400 truncate">
+                                        OVR ${formatOvr(enriched.bestOvr)} · ${escapeHtml(enriched.activeCareerName)}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <button type="button" onclick="acceptFriendRequest('${escapeHtml(req.id)}')"
+                                        class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] transition">
+                                        ✓ Aceptar
+                                    </button>
+                                    <button type="button" onclick="cancelOrRemoveFriend('${escapeHtml(req.id)}')"
+                                        class="px-2 py-1.5 rounded-lg bg-[#222222] hover:bg-rose-950/60 text-gray-300 hover:text-rose-300 font-bold text-[11px] transition">
+                                        ✕
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // Lista de amigos aceptados
+            const acceptedFriends = allFriendships.filter(
+                f => f.status === 'accepted' && Array.isArray(f.users) && f.users.includes(currentUser.uid)
+            );
+
+            const friendsCountHeader = document.getElementById('stat-friends-count');
+            const friendsBadge = document.getElementById('friends-list-badge');
+            const friendsContainer = document.getElementById('friends-list-container');
+
+            if (friendsCountHeader) friendsCountHeader.textContent = String(acceptedFriends.length);
+            if (friendsBadge) friendsBadge.textContent = `${acceptedFriends.length} ${acceptedFriends.length === 1 ? 'amigo' : 'amigos'}`;
+
+            if (friendsContainer) {
+                if (acceptedFriends.length === 0) {
+                    friendsContainer.innerHTML = `
+                        <div class="p-4 rounded-xl surface-sub text-center text-xs text-gray-500">
+                            Aún no tienes amigos agregados. ¡Busca un @usuario arriba y envíale una solicitud!
+                        </div>
+                    `;
+                } else {
+                    const friendsData = acceptedFriends.map(rel => {
+                        const friendUid = rel.users.find(id => id !== currentUser.uid);
+                        const fallbackNick = rel.fromUid === friendUid ? rel.fromNickname : rel.toNickname;
+                        const dirEntry = allUsernamesDirectory.find(u => u.uid === friendUid) || { uid: friendUid, nickname: fallbackNick || 'Amigo' };
+                        return {
+                            relId: rel.id,
+                            ...enrichUserWithLiveStats(dirEntry)
+                        };
+                    }).sort((a, b) => (b.bestOvr || 0) - (a.bestOvr || 0));
+
+                    friendsContainer.innerHTML = friendsData.map(fr => `
+                        <div class="p-3.5 rounded-2xl surface-sub hover:border-[#717fff]/45 flex items-center justify-between gap-3 transition">
+                            <button type="button" onclick="openPlayerCardModal('${escapeHtml(fr.uid)}')" class="flex items-center gap-3 min-w-0 text-left group">
+                                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#717fff] to-[#5866e6] flex flex-col items-center justify-center shrink-0 shadow">
+                                    <span class="text-[8px] font-bold uppercase text-white/80 leading-none">OVR</span>
+                                    <span class="text-sm font-black text-white leading-tight">${formatOvr(fr.bestOvr)}</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="font-black text-white text-sm truncate group-hover:text-[#a3adff] transition">@${escapeHtml(fr.nickname)}</span>
+                                        ${fr.activePosition ? `<span class="px-1.5 py-0.5 rounded bg-[#222222] text-[9px] font-bold text-[#a3adff]">${escapeHtml(fr.activePosition)}</span>` : ''}
+                                    </div>
+                                    <div class="text-xs text-gray-300 truncate mt-0.5">
+                                        ${fr.bestOvr > 0 ? escapeHtml(fr.activePlayerName) : 'Sin carrera registrada'}
+                                    </div>
+                                    <div class="text-[10px] text-gray-500 truncate">
+                                        🎓 ${escapeHtml(fr.activeCareerName)} ${fr.bestScore > 0 ? `· Récord ${fr.bestScore} pts` : ''}
+                                    </div>
+                                </div>
+                            </button>
+                            <div class="flex flex-col items-end gap-1 shrink-0">
+                                <button type="button" onclick="openPlayerCardModal('${escapeHtml(fr.uid)}')"
+                                    class="px-2.5 py-1 rounded-lg bg-[#222222] hover:bg-[#717fff] text-[10px] font-bold text-gray-200 hover:text-white transition">
+                                    Ver ficha
+                                </button>
+                                <button type="button" onclick="cancelOrRemoveFriend('${escapeHtml(fr.relId)}', true)"
+                                    class="text-[10px] text-gray-600 hover:text-rose-400 font-semibold transition">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        window.sendFriendRequest = async function (targetUid, targetNickname) {
+            if (!isRealUser(currentUser) || !targetUid || targetUid === currentUser.uid) return;
+            const docId = getFriendshipDocId(currentUser.uid, targetUid);
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'friendships', docId);
+
+            try {
+                await promiseWithTimeout(setDoc(ref, {
+                    users: [currentUser.uid, targetUid].sort(),
+                    fromUid: currentUser.uid,
+                    fromNickname: window.cloudProfile.nickname || 'Jugador',
+                    toUid: targetUid,
+                    toNickname: targetNickname,
+                    status: 'pending',
+                    createdAt: Date.now()
+                }), 5000);
+                showToast(`📩 Solicitud de amistad enviada a @${targetNickname}`, 'success');
+            } catch (e) {
+                showToast('No se pudo enviar la solicitud. Revisa tu conexión o permisos.', 'error');
+            }
+        };
+
+        window.acceptFriendRequest = async function (relId) {
+            if (!isRealUser(currentUser) || !relId) return;
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'friendships', relId);
+            try {
+                await promiseWithTimeout(setDoc(ref, {
+                    status: 'accepted',
+                    acceptedAt: Date.now()
+                }, { merge: true }), 5000);
+                showToast('🤝 ¡Solicitud aceptada! Ya son amigos en LEYENDAS UFRO.', 'success');
+            } catch (e) {
+                showToast('Error al aceptar la solicitud.', 'error');
+            }
+        };
+
+        window.cancelOrRemoveFriend = async function (relId, isRemoval = false) {
+            if (!isRealUser(currentUser) || !relId) return;
+            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'friendships', relId);
+            try {
+                await promiseWithTimeout(deleteDoc(ref), 5000);
+                showToast(isRemoval ? 'Amigo eliminado de tu lista.' : 'Solicitud cancelada.', 'info');
+            } catch (e) {
+                showToast('No se pudo completar la acción.', 'error');
+            }
+        };
+
+        window.openPlayerCardModal = function (targetUid) {
+            const modal = document.getElementById('player-card-modal');
+            const titleEl = document.getElementById('modal-player-title');
+            const bodyEl = document.getElementById('modal-player-body');
+            if (!modal || !bodyEl) return;
+
+            const dirEntry = allUsernamesDirectory.find(u => u.uid === targetUid) || { uid: targetUid, nickname: 'Jugador' };
+            const enriched = enrichUserWithLiveStats(dirEntry);
+            const userCareers = allLeaderboardEntries
+                .filter(d => d.uid === targetUid)
+                .sort((a, b) => (b.score || 0) - (a.score || 0) || (b.ovr || 0) - (a.ovr || 0));
+
+            const topCareer = userCareers[0] || null;
+            if (titleEl) titleEl.textContent = `@${enriched.nickname}`;
+
+            if (!topCareer && enriched.bestOvr <= 0) {
+                bodyEl.innerHTML = `
+                    <div class="p-6 rounded-2xl surface-sub text-center space-y-2">
+                        <div class="text-3xl">🎓</div>
+                        <div class="font-black text-white text-sm">@${escapeHtml(enriched.nickname)}</div>
+                        <p class="text-xs text-gray-400">Este jugador aún no ha finalizado carreras para mostrar su ficha competitiva.</p>
+                    </div>
+                `;
+                modal.classList.remove('hidden');
+                return;
+            }
+
+            const st = (topCareer && topCareer.stats) || { matches: 0, goals: 0, assists: 0, cleanSheets: 0 };
+            const isArq = (topCareer?.position || enriched.activePosition) === 'ARQ';
+
+            bodyEl.innerHTML = `
+                <div class="p-4 rounded-2xl surface-sub flex items-center justify-between gap-3">
+                    <div>
+                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/20 text-[#a3adff]">
+                            @${escapeHtml(enriched.nickname)}
+                        </span>
+                        <h4 class="text-base font-black text-white mt-1">${escapeHtml(topCareer?.playerName || enriched.activePlayerName)}</h4>
+                        <p class="text-xs text-gray-400">${escapeHtml(topCareer?.studiedCareer || enriched.activeCareerName)} · ${escapeHtml(topCareer?.position || enriched.activePosition || 'MED')}</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="text-lg font-black text-[#8b96ff]">OVR ${formatOvr(enriched.bestOvr)}</div>
+                        ${topCareer ? `<div class="text-xs font-bold text-amber-300">${topCareer.score || 0} pts</div>` : ''}
+                    </div>
+                </div>
+
+                ${topCareer ? `
+                    <div class="px-3.5 py-2.5 rounded-xl bg-[#717fff]/10 border border-[#717fff]/25 text-center">
+                        <span class="text-xs font-black text-white">${escapeHtml(topCareer.headline || 'Leyenda UFRO')}</span>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                        <div class="p-2.5 rounded-xl surface-sub">
+                            <div class="text-base font-black text-white">${st.matches || 0}</div>
+                            <div class="text-[10px] font-bold text-gray-500 uppercase">PJ</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl surface-sub">
+                            <div class="text-base font-black text-[#8b96ff]">${isArq ? (st.cleanSheets || 0) : (st.goals || 0)}</div>
+                            <div class="text-[10px] font-bold text-gray-500 uppercase">${isArq ? 'Vallas' : 'Goles'}</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl surface-sub">
+                            <div class="text-base font-black text-[#717fff]">${isArq ? ((st.goals || 0) + (st.assists || 0)) : (st.assists || 0)}</div>
+                            <div class="text-[10px] font-bold text-gray-500 uppercase">${isArq ? 'G+A' : 'Asist.'}</div>
+                        </div>
+                        <div class="p-2.5 rounded-xl surface-sub">
+                            <div class="text-base font-black text-amber-300">${topCareer.titles || 0}</div>
+                            <div class="text-[10px] font-bold text-gray-500 uppercase">Títulos</div>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="space-y-2">
+                    <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🏅 Historial de Carreras en Ranking (${userCareers.length})</h5>
+                    ${userCareers.length === 0
+                        ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-500">Carrera en curso aún no publicada en ranking semanal.</div>`
+                        : userCareers.slice(0, 5).map((c, i) => `
+                            <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between text-xs">
+                                <div class="min-w-0">
+                                    <span class="font-black text-amber-400 mr-1">#${i + 1}</span>
+                                    <span class="font-bold text-white">${escapeHtml(c.playerName)}</span>
+                                    <span class="text-gray-400">· ${escapeHtml(c.headline || '')}</span>
+                                </div>
+                                <span class="font-black text-[#a3adff] shrink-0 ml-2">${c.score || 0} pts</span>
+                            </div>
+                        `).join('')
+                    }
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        };
+
+        // ==================== AUTENTICACIÓN Y GESTIÓN DE PERFIL ====================
+        function updatePageAuthState(user) {
+            const guestWall = document.getElementById('guest-wall');
+            const dashboard = document.getElementById('social-dashboard');
+            const headerLoginBtn = document.getElementById('btn-header-login');
+            const headerUserPill = document.getElementById('header-user-pill');
+            const headerUsernameText = document.getElementById('header-username-text');
+
+            if (!isRealUser(user)) {
+                if (guestWall) guestWall.classList.remove('hidden');
+                if (dashboard) dashboard.classList.add('hidden');
+                if (headerLoginBtn) headerLoginBtn.classList.remove('hidden');
+                if (headerUserPill) headerUserPill.classList.add('hidden');
+                return;
+            }
+
+            if (guestWall) guestWall.classList.add('hidden');
+            if (dashboard) dashboard.classList.remove('hidden');
+            if (headerLoginBtn) headerLoginBtn.classList.add('hidden');
+            if (headerUserPill) headerUserPill.classList.remove('hidden');
+
+            const nick = window.cloudProfile.nickname || user.displayName || sanitizeAutoUsername(user.email?.split('@')[0] || 'Jugador');
+            window.cloudProfile.nickname = nick;
+
+            if (headerUsernameText) headerUsernameText.textContent = `@${nick}`;
+            const dispNick = document.getElementById('profile-nickname-display');
+            const dispEmail = document.getElementById('profile-email-display');
+            const nickInput = document.getElementById('input-cloud-nickname');
+
+            if (dispNick) dispNick.textContent = `@${nick}`;
+            if (dispEmail) dispEmail.textContent = user.email || 'Cuenta vinculada';
+            if (nickInput) nickInput.value = nick;
+
+            updateNicknameCooldownUI();
+            renderProfileStats();
+            renderSocialUI();
+        }
+
+        async function loadUserProfileData(user) {
+            if (!isRealUser(user)) return;
+            const localTs = Number(localStorage.getItem(getLocalNicknameTimestampKey(user.uid)) || 0);
+            if (localTs > 0) window.cloudProfile.nicknameUpdatedAt = localTs;
+
+            try {
+                const profileRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
+                const snap = await promiseWithTimeout(getDoc(profileRef), 4000);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.nickname) window.cloudProfile.nickname = data.nickname;
+                    if (data.nicknameUpdatedAt) {
+                        window.cloudProfile.nicknameUpdatedAt = Math.max(Number(data.nicknameUpdatedAt) || 0, localTs);
+                        localStorage.setItem(getLocalNicknameTimestampKey(user.uid), String(window.cloudProfile.nicknameUpdatedAt));
+                    }
+                } else {
+                    const generatedNick = sanitizeAutoUsername(user.displayName || user.email?.split('@')[0] || 'Jugador');
+                    window.cloudProfile.nickname = generatedNick;
+                    setDoc(profileRef, {
+                        nickname: generatedNick,
+                        email: user.email || '',
+                        createdAt: Date.now()
+                    }, { merge: true }).catch(() => {});
+                }
+            } catch (e) {}
+
+            updatePageAuthState(user);
+            syncMyPublicCard();
+        }
+
+        async function resolveEmailFromIdentifier(rawIdentifier) {
+            const cleaned = String(rawIdentifier || '').trim();
+            if (!cleaned) return null;
+            if (cleaned.includes('@') && !cleaned.startsWith('@')) return cleaned;
+            const usernameKey = cleaned.replace(/^@+/, '').toLowerCase();
+            if (!usernameKey) return null;
+
+            const cached = allUsernamesDirectory.find(u => u.id === usernameKey || u.nickname.toLowerCase() === usernameKey);
+            if (cached && cached.email) return cached.email;
+
+            try {
+                const unameRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', usernameKey);
+                const snap = await promiseWithTimeout(getDoc(unameRef), 4000);
+                if (snap.exists() && snap.data().email && snap.data().active !== false) {
+                    return snap.data().email;
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        window.handleEmailLogin = async function (e) {
+            e.preventDefault();
+            const rawId = document.getElementById('login-identifier').value.trim();
+            const pass = document.getElementById('login-password').value;
+            const btn = document.getElementById('btn-submit-login');
+            btn.disabled = true;
+            btn.textContent = 'Iniciando sesión...';
+
+            try {
+                const email = await resolveEmailFromIdentifier(rawId);
+                if (!email) {
+                    showToast('No encontramos una cuenta con ese usuario. Prueba con tu correo.', 'error');
+                    return;
+                }
+                const cred = await promiseWithTimeout(signInWithEmailAndPassword(auth, email, pass), 8000);
+                currentUser = cred.user;
+                closeAuthModal();
+                showToast(`✅ Sesión iniciada como @${currentUser.displayName || rawId.replace(/^@+/, '')}`, 'success');
+            } catch (err) {
+                showToast('Usuario/correo o contraseña incorrectos.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Entrar a mi cuenta';
+            }
+        };
+
+        window.handleEmailRegister = async function (e) {
+            e.preventDefault();
+            const rawUser = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value.trim();
+            const pass1 = document.getElementById('reg-password').value;
+            const pass2 = document.getElementById('reg-password-confirm').value;
+
+            const check = validateUsernameStrict(rawUser);
+            if (!check.valid) {
+                showToast(check.error, 'error');
+                return;
+            }
+            if (pass1 !== pass2) {
+                showToast('Las contraseñas no coinciden.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-register');
+            btn.disabled = true;
+            btn.textContent = 'Creando cuenta...';
+
+            try {
+                const existing = await resolveEmailFromIdentifier(check.username);
+                if (existing && existing.toLowerCase() !== email.toLowerCase()) {
+                    showToast('Ese nombre de usuario ya está en uso.', 'error');
+                    return;
+                }
+                const cred = await promiseWithTimeout(createUserWithEmailAndPassword(auth, email, pass1), 8000);
+                currentUser = cred.user;
+                window.cloudProfile.nickname = check.username;
+                await updateProfile(currentUser, { displayName: check.username }).catch(() => {});
+
+                const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
+                await setDoc(profileRef, { nickname: check.username, email, createdAt: Date.now() }, { merge: true }).catch(() => {});
+                syncMyPublicCard();
+
+                closeAuthModal();
+                showToast(`🎉 ¡Cuenta creada! Bienvenido @${check.username}`, 'success');
+            } catch (err) {
+                const code = err?.code || '';
+                if (code === 'auth/email-already-in-use') showToast('Ese correo ya está registrado.', 'error');
+                else showToast('Error al crear la cuenta.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Crear cuenta';
+            }
+        };
+
+        window.handlePasswordReset = async function (e) {
+            e.preventDefault();
+            const email = document.getElementById('reset-email').value.trim();
+            if (!email) return;
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showToast('📩 Te enviamos un enlace para restablecer tu clave.', 'success');
+                switchAuthMode('login');
+            } catch (err) {
+                showToast('No se pudo enviar el correo.', 'error');
+            }
+        };
+
+        window.signInWithGoogleAccount = async function () {
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                closeAuthModal();
+                showToast('✅ Sesión iniciada con Google.', 'success');
+            } catch (err) {
+                showToast('No se pudo iniciar sesión con Google.', 'error');
+            }
+        };
+
+        window.saveCloudNickname = async function () {
+            if (!isRealUser(currentUser)) return;
+            const cooldown = getNicknameCooldownStatus();
+            if (cooldown.locked) {
+                showToast('⏳ Debes esperar 14 días para volver a cambiar tu usuario.', 'error');
+                updateNicknameCooldownUI();
+                return;
+            }
+
+            const input = document.getElementById('input-cloud-nickname');
+            const check = validateUsernameStrict(input ? input.value : '');
+            if (!check.valid) {
+                showToast(check.error, 'error');
+                return;
+            }
+            if (check.username === window.cloudProfile.nickname) {
+                showToast('Ese ya es tu usuario actual.', 'info');
+                return;
+            }
+
+            const existing = await resolveEmailFromIdentifier(check.username);
+            if (existing && existing.toLowerCase() !== (currentUser.email || '').toLowerCase()) {
+                showToast('Ese nombre de usuario ya está ocupado.', 'error');
+                return;
+            }
+
+            const prevNick = window.cloudProfile.nickname;
+            const nowTs = Date.now();
+            window.cloudProfile.nickname = check.username;
+            window.cloudProfile.nicknameUpdatedAt = nowTs;
+            localStorage.setItem(getLocalNicknameTimestampKey(currentUser.uid), String(nowTs));
+
+            updatePageAuthState(currentUser);
+            updateProfile(currentUser, { displayName: check.username }).catch(() => {});
+
+            if (prevNick && prevNick.toLowerCase() !== check.username.toLowerCase()) {
+                const oldRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', prevNick.toLowerCase());
+                setDoc(oldRef, { active: false, replacedBy: check.username.toLowerCase(), updatedAt: nowTs }, { merge: true }).catch(() => {});
+            }
+            syncMyPublicCard();
+
+            const profileRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main');
+            await setDoc(profileRef, { nickname: check.username, nicknameUpdatedAt: nowTs, updatedAt: nowTs }, { merge: true }).catch(() => {});
+            showToast(`✅ Usuario actualizado a @${check.username}`, 'success');
+        };
+
+        window.logoutCloudUser = async function () {
+            try {
+                await signOut(auth);
+                showToast('Has cerrado sesión.', 'info');
+            } catch (e) {
+                showToast('Error al cerrar sesión.', 'error');
+            }
+        };
+
+        // Inicialización de sesión persistente
+        (async function initSocialPage() {
+            await setPersistence(auth, browserLocalPersistence).catch(() => {});
+            subscribePublicCollections();
+
+            if (typeof auth.authStateReady === 'function') {
+                await auth.authStateReady();
+            }
+
+            onAuthStateChanged(auth, async (user) => {
+                currentUser = user;
+                if (isRealUser(user)) {
+                    updatePageAuthState(user);
+                    await loadUserProfileData(user);
+                } else {
+                    updatePageAuthState(null);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
