@@ -4599,14 +4599,18 @@
             serverTimestamp
         } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
 
-        const FIREBASE_CONFIG = {
+        const DEFAULT_FIREBASE_CONFIG = {
             apiKey: "AIzaSyCCguxq1KNYTng0lK2S5HvaYM03UpFMVmM",
-            authDomain: "notintercarreras.firebaseapp.com",
-            projectId: "notintercarreras",
-            storageBucket: "notintercarreras.firebasestorage.app",
+            authDomain: "leyenda-ufro.firebaseapp.com",
+            projectId: "leyenda-ufro",
+            storageBucket: "leyenda-ufro.firebasestorage.app",
             messagingSenderId: "885333611273",
             appId: "1:885333611273:web:6af8b831a964d1a7ea79d8"
         };
+
+        const firebaseConfig = (typeof __firebase_config !== 'undefined' && __firebase_config)
+            ? JSON.parse(__firebase_config)
+            : DEFAULT_FIREBASE_CONFIG;
 
         const FORBIDDEN_WORDS = [
             'weon', 'weona', 'hueon', 'hueona', 'wn', 'wna', 'ctm', 'conchetumare', 'conchatumadre',
