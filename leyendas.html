@@ -96,7 +96,7 @@
                     <h1 class="text-base sm:text-xl font-black tracking-wider text-white leading-none uppercase">
                         LEYENDAS
                     </h1>
-                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.2.4</span>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.2.5</span>
                 </div>
             </div>
 
@@ -1397,233 +1397,112 @@
                 winProb: 0.62,
                 win: { text: '¡Gestión brillante! El equipo llegó motivadísimo y ganó el partido clave. +2 de Media.', ovrDelta: 2, teamBoost: 4.0, suspend: false },
                 lose: { text: 'Subieron las tarifas de arriendo de cancha y hubo que ajustar el presupuesto.', ovrDelta: 0, suspend: false }
-            },
-            {
-                id: 'psi_charla_mental',
-                type: 'CAREER_EXCLUSIVE',
-                careerMatch: ['psicología', 'psicologia'],
-                badge: '🧠 Exclusivo Psicología · Cohesión Grupal',
-                title: 'Dinámica de camarín antes del clásico',
-                desc: 'El plantel viene tenso tras dos empates seguidos. Lideras una sesión de enfoque mental y manejo de ansiedad competitiva.',
-                riskLabel: 'Hacer dinámica profunda de liderazgo (65% / 35%)',
-                safeLabel: 'Charla motivacional breve (+1 Media)',
-                safeEffect: { ovrDelta: 1, text: 'El grupo entró más tranquilo y enfocado. +1 de Media.' },
-                winProb: 0.65,
-                win: { text: '¡Química total! El equipo jugó con una confianza imparable, subes +2 de Media y el plantel rinde al máximo.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
-                lose: { text: 'Salieron a relucir viejas discusiones de camarín y costó conectar en el primer tiempo.', ovrDelta: 0, suspend: false }
-            },
-            {
-                id: 'tso_barra_facultad',
-                type: 'CAREER_EXCLUSIVE',
-                careerMatch: ['trabajo social', 'sociología', 'sociologia'],
-                badge: '📣 Exclusivo Cs. Sociales · Movilización',
-                title: 'Convocatoria masiva de la hinchada en la cancha',
-                desc: 'Organizas a toda la carrera con lienzos, bombos y batucada para transformar la cancha sintética en una caldera.',
-                riskLabel: 'Armar recibimiento histórico en la galería (62% / 38%)',
-                safeLabel: 'Organizar apoyo ordenado en la banda (+1 Media)',
-                safeEffect: { ovrDelta: 1, text: 'El aliento constante levantó al equipo en los momentos difíciles. +1 de Media.' },
-                winProb: 0.62,
-                win: { text: '¡Ambiente de final! El rival sintió la presión desde el minuto 1 y ustedes volaron. +2 de Media.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
-                lose: { text: 'La lluvia torrencial de Temuco dispersó a la barra en el entretiempo.', ovrDelta: 0, suspend: false }
-            },
-            {
-                id: 'per_transmision_vivo',
-                type: 'CAREER_EXCLUSIVE',
-                careerMatch: ['periodismo'],
-                badge: '🎙️ Exclusivo Periodismo · Transmisión en Vivo',
-                title: 'Relato en vivo y previa mediática del clásico',
-                desc: 'Organizaron transmisión con cámaras, relato en vivo y entrevistas post-partido que paralizaron a toda la facultad.',
-                riskLabel: 'Calentar la previa con declaraciones picantes (55% / 45%)',
-                safeLabel: 'Dar declaraciones mesuradas a la prensa (+1 Media)',
-                safeEffect: { ovrDelta: 1, text: 'Manejo escénico impecable frente a las cámaras. +1 de Media.' },
-                winProb: 0.55,
-                win: { text: '¡Cumpliste tu palabra en la cancha! Partidazo viral, subes +2 de Media y la hinchada llenó el borde de la cancha.', ovrDelta: 2, teamBoost: 4.0, suspend: false },
-                lose: { text: 'El rival usó tus declaraciones como motivación extra y salió con todo desde el minuto 1.', ovrDelta: 0, suspend: false }
-            },
-            {
-                id: 'ped_pizarra_maestra',
-                type: 'CAREER_EXCLUSIVE',
-                careerMatch: ['pedagogía en castellano', 'pedagogía en historia', 'pedagogía en inglés', 'pedagogía en matemática', 'pedagogía en ciencias'],
-                badge: '📚 Exclusivo Pedagogías · Clase Táctica',
-                title: 'Clase magistral de estrategia en el entretiempo',
-                desc: 'Con vocación docente y dominio de pizarra, explicas con claridad meridiana cómo cerrar los espacios al rival.',
-                riskLabel: 'Cambiar el sistema táctico completo (60% / 40%)',
-                safeLabel: 'Ajustar marcas individuales (+1 Media)',
-                safeEffect: { ovrDelta: 1, text: 'Todo el equipo entendió su rol al instante. +1 de Media.' },
-                winProb: 0.60,
-                win: { text: '¡Lección magistral! Dieron vuelta el partido en el complemento y subes +2 de Media.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
-                lose: { text: 'El cambio de esquema confundió a los volantes durante los primeros minutos.', ovrDelta: 0, suspend: false }
-            },
-            {
-                id: 'agro_cancha_maquehue',
-                type: 'CAREER_EXCLUSIVE',
-                careerMatch: ['agronomía', 'agronomia', 'recursos naturales', 'biotecnología', 'biotecnologia'],
-                badge: '🌱 Exclusivo FCAM · Campo Experimental Maquehue',
-                title: 'Entrenamiento táctico en las canchas de Maquehue',
-                desc: 'Aprovechas una salida a terreno en Maquehue para organizar un entrenamiento secreto en pasto natural bajo la lluvia.',
-                riskLabel: 'Entrenar bajo el temporal del sur (60% / 40%)',
-                safeLabel: 'Práctica ligera de balón detenido (+1 Media)',
-                safeEffect: { ovrDelta: 1, text: 'Perfeccionaste los tiros libres con viento sur. +1 de Media.' },
-                winProb: 0.60,
-                win: { text: '¡Dominio total en cancha pesada! Mientras los rivales resbalaban, ustedes volaban. +2 de Media y gran impulso.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
-                lose: { text: 'Un resfrío post-lluvia te dejó a media máquina toda la semana.', ovrDelta: 0, suspend: false }
-            },
-            {
-                id: 'odo_protector_bucal',
-                type: 'CAREER_EXCLUSIVE',
-                careerMatch: ['odontología', 'odontologia'],
-                badge: '🦷 Exclusivo Odontología · Clínica Dental',
-                title: 'Protectores bucales personalizados para el plantel',
-                desc: 'Fabricaste protectores bucales a medida en clínica para que todo el equipo vaya a cada balón dividido sin miedo.',
-                riskLabel: 'Equipar a todo el plantel antes del clásico (62% / 38%)',
-                safeLabel: 'Usar tu protector personalizado (+1 Media)',
-                safeEffect: { ovrDelta: 1, text: 'Seguridad total en cada choque aéreo. +1 de Media.' },
-                winProb: 0.62,
-                win: { text: '¡Intensidad máxima! Ganaron todas las pelotas divididas, +2 de Media y gran empuje.', ovrDelta: 2, teamBoost: 4.5, suspend: false },
-                lose: { text: 'Un par de compañeros olvidaron sus protectores en el casillero.', ovrDelta: 0, suspend: false }
             }
         ];
 
         const STANDARD_RANDOM_EVENTS = [
             {
-                id: 'fichaje_estrella',
-                badge: '🕵️ Gestión de Plantel',
-                title: 'Te encargan el fichaje estrella',
-                desc: 'La dirigencia de tu carrera te pide convencer al goleador de otra facultad para reforzar el plantel.',
-                riskLabel: 'Gestionar el fichaje (50% / 50%)',
-                safeLabel: 'Dejarlo pasar',
-                winProb: 0.50,
-                win: { text: '¡Fichaje bomba! El refuerzo la rompe, subes +2 de Media y conquistan una copa.', ovrDelta: 2, forceCupWin: true, suspend: false },
-                lose: { text: 'El fichaje rompió el camarín y perdieron partidos clave.', ovrDelta: 0, forceElimination: true, suspend: false }
-            },
-            {
-                id: 'pildoras_qyf',
-                badge: '🧪 Química y Farmacia',
-                title: 'Cápsulas pre-entreno experimentales',
-                desc: 'Un compañero de Química y Farmacia te ofrece unas cápsulas experimentales para rendir al 200%.',
-                riskLabel: 'Tomar las cápsulas (50% / 50%)',
-                safeLabel: 'Rechazar y tomar agua',
-                winProb: 0.50,
-                win: { text: '¡Efecto brutal! Corres todo el partido sin cansarte. +3 de Media.', ovrDelta: 3, suspend: false },
-                lose: { text: '¡Control sorpresa! Te suspenden todo el semestre (0 PJ).', ovrDelta: 0, suspend: true }
-            },
-            {
-                id: 'carrete_mechon',
-                badge: '🍻 Vida Universitaria',
-                title: 'Carrete mechón antes de la final',
-                desc: 'Tu generación organiza previa masiva el jueves antes del partido decisivo.',
-                riskLabel: 'Ir al carrete (50% / 50%)',
-                safeLabel: 'Quedarse descansando',
-                winProb: 0.50,
-                win: { text: '¡Llegaste inspirado! Química total con el equipo y +2 de Media.', ovrDelta: 2, gradeDelta: -0.35, suspend: false },
-                lose: { text: '¡Caña mortal! Apenas podías correr en la cancha y faltaste a clases.', ovrDelta: 0, gradeDelta: -0.50, suspend: false }
-            },
-            {
-                id: 'ramo_cortacabeza',
-                badge: '📚 Carga Académica',
-                title: 'Certamen cortacabeza mismo día',
-                desc: 'Tienes prueba de un ramo filtro justo 2 horas antes del clásico universitario.',
-                riskLabel: 'Rendir prueba y correr al partido (50% / 50%)',
-                safeLabel: 'Pedir justificativo deportivo (+1 Media)',
-                safeEffect: { ovrDelta: 1, gradeDelta: 0.15, text: 'Te organizaste bien y cumpliste sin arriesgar. +1 de Media.' },
-                winProb: 0.50,
-                win: { text: '¡Aprobaste con azul y clavaste un golazo al ángulo! +2 de Media.', ovrDelta: 2, gradeDelta: 0.45, suspend: false },
-                lose: { text: 'Entraste agotado tras la prueba, te expulsaron y te fue mal en el certamen.', ovrDelta: 0, gradeDelta: -0.55, suspend: false }
-            },
-            {
-                id: 'kine_practica',
-                badge: '🩹 Clínica Kinesiología',
-                title: 'Vendaje experimental de Kine',
-                desc: 'Sientes una sobrecarga muscular y un compañero de Kinesiología te ofrece terapia relámpago.',
-                riskLabel: 'Probar terapia (55% / 45%)',
-                safeLabel: 'Descanso tradicional',
-                winProb: 0.55,
-                win: { text: '¡Recuperación milagrosa! Vuelves más rápido y potente. +2 de Media.', ovrDelta: 2, suspend: false },
-                lose: { text: 'El vendaje falló y te perdiste el semestre por desgarro.', ovrDelta: 0, suspend: true }
-            },
-            {
-                id: 'gimnasio_ufro',
-                badge: '🏋️ Gimnasio Olímpico UFRO',
-                title: 'Rutina extrema con los de Ed. Física',
-                desc: 'Un amigo de Pedagogía en Ed. Física te invita a entrenar doble turno en el gimnasio.',
-                riskLabel: 'Hacer doble turno (60% / 40%)',
-                safeLabel: 'Entrenamiento normal',
+                id: 'clasico_lluvia_temuco',
+                type: 'STANDARD',
+                badge: '🌧️ Clásico bajo la lluvia de Temuco',
+                title: 'Cancha pesada y barro en el partido clave',
+                desc: 'Cae un temporal en Temuco justo antes del clásico universitario. ¿Arriesgas y juegas a máxima intensidad o dosificas esfuerzos?',
+                riskLabel: 'Jugar a muerte cada balón (60% / 40%)',
+                safeLabel: 'Jugar con cautela y cuidar el físico (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'Partidazo inteligente sin desgastarte de más. +1 de Media.' },
                 winProb: 0.60,
-                win: { text: '¡Cambio físico brutal! Imparable en el cuerpo a cuerpo. +2 de Media.', ovrDelta: 2, gradeDelta: -0.25, suspend: false },
-                lose: { text: 'Fatiga muscular durante el semestre.', ovrDelta: 0, suspend: false }
+                win: { text: '¡Figura bajo el diluvio! Lideraste al equipo con garra y subes +2 de Media.', ovrDelta: 2, teamBoost: 4.0, suspend: false },
+                lose: { text: 'Un resbalón en el barro te dejó golpeado y bajas -1 de Media.', ovrDelta: -1, suspend: false }
+            },
+            {
+                id: 'semana_certamenes',
+                type: 'STANDARD',
+                badge: '📚 Semana de Certámenes UFRO',
+                title: 'Tope entre certamen clave y fecha de campeonato',
+                desc: 'Tienes evaluación acumulativa el viernes y partido decisivo esa misma tarde. ¿Cómo manejas la semana?',
+                riskLabel: 'Trasnochar estudiando y jugar igual (55% / 45%)',
+                safeLabel: 'Priorizar estudio y entrar desde la banca (+Notas)',
+                safeEffect: { ovrDelta: 0, gradeDelta: 0.55, text: 'Aprobaste el certamen con tranquilidad y sumaste minutos en el segundo tiempo.' },
+                winProb: 0.55,
+                win: { text: '¡Semana redonda! Aprobaste el ramo y anotaste en el partido. +2 de Media.', ovrDelta: 2, gradeDelta: 0.35, suspend: false },
+                lose: { text: 'Llegaste agotado al partido y bajaste tu rendimiento (-1 Media).', ovrDelta: -1, suspend: false }
+            },
+            {
+                id: 'entreno_extra_tiros_libres',
+                type: 'STANDARD',
+                badge: '🎯 Práctica Extra',
+                title: 'Sesión adicional de balón detenido',
+                desc: 'Te quedas después del entrenamiento ensayando tiros libres y remates de media distancia.',
+                riskLabel: 'Forzar la pegada al límite (65% / 35%)',
+                safeLabel: 'Práctica técnica controlada (+1 Media)',
+                safeEffect: { ovrDelta: 1, text: 'Mejoraste tu precisión sin sobrecarga muscular. +1 de Media.' },
+                winProb: 0.65,
+                win: { text: '¡Pegada quirúrgica! Subes +2 de Media y das un plus ofensivo al plantel.', ovrDelta: 2, teamBoost: 3.5, suspend: false },
+                lose: { text: 'Sobrecarga leve en el cuádriceps; tuviste que bajar el ritmo.', ovrDelta: 0, suspend: false }
             }
         ];
 
         const STORAGE_KEYS = {
-            TEAMS_M: 'leyenda_ufro_teams_m_v8',
-            TEAMS_F: 'leyenda_ufro_teams_f_v8',
             CAREER: 'leyenda_ufro_career_v9',
-            HOF: 'leyenda_ufro_hof_v1',
-            USER_CACHE_PREFIX: 'leyenda_ufro_profile_cache_'
+            HOF: 'leyenda_ufro_hof_v1'
         };
 
-        let maleTeamsDB = [];
-// ... existing code ... -->
-        function saveCareerState() {
-            try {
-                if (careerState) {
-                    localStorage.setItem(STORAGE_KEYS.CAREER, JSON.stringify(careerState));
-                } else {
-                    localStorage.removeItem(STORAGE_KEYS.CAREER);
-                }
-            } catch (e) {}
-        }
-
         function migrateCareerState(rawState) {
-            if (!rawState || typeof rawState !== 'object' || !rawState.team || !rawState.name) {
-                return null;
-            }
-            const regYears = getCareerRegularYears(rawState.careerName || rawState.team.career || '');
-            const migrated = {
-                name: String(rawState.name || 'Leyenda UFRO'),
-                gender: rawState.gender === 'F' ? 'F' : 'M',
-                position: ['DEL', 'MED', 'DEF', 'ARQ'].includes(rawState.position) ? rawState.position : 'MED',
-                careerName: String(rawState.careerName || rawState.team.career || 'Carrera UFRO'),
-                faculty: rawState.faculty || rawState.team.faculty || 'OTRAS',
-                facultyLabel: rawState.facultyLabel || rawState.team.facultyLabel || 'Facultad UFRO',
-                team: {
-                    code: rawState.team.code || 'UFRO_TEAM',
+            if (!rawState || typeof rawState !== 'object') return null;
+
+            const team = rawState.team && typeof rawState.team === 'object'
+                ? {
+                    code: rawState.team.code || 'UFR_1',
                     name: rawState.team.name || 'Equipo UFRO',
                     career: rawState.team.career || rawState.careerName || 'Carrera UFRO',
                     faculty: rawState.team.faculty || rawState.faculty || 'OTRAS',
-                    facultyLabel: rawState.team.facultyLabel || 'Facultad UFRO',
+                    facultyLabel: rawState.team.facultyLabel || rawState.facultyLabel || 'Facultad UFRO',
                     division: Number(rawState.team.division) || 1,
-                    ovr: Number(rawState.team.ovr) || 72,
+                    ovr: Number(rawState.team.ovr) || 75,
                     gender: rawState.team.gender || rawState.gender || 'M',
                     logo: rawState.team.logo || '',
                     palmares: rawState.team.palmares || '',
                     color: rawState.team.color || '#717fff'
-                },
+                }
+                : null;
+
+            if (!team) return null;
+
+            const migrated = {
+                schemaVersion: 2,
+                name: String(rawState.name || 'Leyenda UFRO'),
+                gender: rawState.gender === 'F' ? 'F' : 'M',
+                position: ['DEL', 'MED', 'DEF', 'ARQ'].includes(rawState.position) ? rawState.position : 'MED',
+                careerName: String(rawState.careerName || team.career || 'Carrera UFRO'),
+                faculty: String(rawState.faculty || team.faculty || 'OTRAS'),
+                facultyLabel: String(rawState.facultyLabel || team.facultyLabel || 'Facultad UFRO'),
+                team,
                 ovr: clampOvr(Number(rawState.ovr) || 58),
                 age: Number(rawState.age) || 18,
                 year: Number(rawState.year) || 1,
                 semesterInYear: rawState.semesterInYear === 2 ? 2 : 1,
                 totalSemestersPlayed: Number(rawState.totalSemestersPlayed) || 0,
-                plannedSemesters: Number(rawState.plannedSemesters) || (regYears * 2),
+                plannedSemesters: Number(rawState.plannedSemesters) || (getCareerRegularYears(rawState.careerName) * 2),
                 extraYearsAdded: Number(rawState.extraYearsAdded) || 0,
-                academicRisk: typeof rawState.academicRisk === 'number' ? rawState.academicRisk : 18,
-                phase: ['FOCUS_CHOICE', 'EVENT_CHOICE', 'READY_TO_SIM', 'SEMESTER_SUMMARY', 'RETIRED'].includes(rawState.phase)
-                    ? rawState.phase
-                    : 'FOCUS_CHOICE',
-                focusChoices: (Array.isArray(rawState.focusChoices) && rawState.focusChoices.length > 0)
+                academicRisk: Number.isFinite(Number(rawState.academicRisk)) ? Number(rawState.academicRisk) : 25,
+                isStarPlayer: Boolean(rawState.isStarPlayer) || (Number(rawState.ovr) >= 82),
+                activeFocusId: rawState.activeFocusId && SEMESTER_FOCUSES[rawState.activeFocusId] ? rawState.activeFocusId : null,
+                focusChoices: Array.isArray(rawState.focusChoices) && rawState.focusChoices.length === 4
                     ? rawState.focusChoices.filter(id => Boolean(SEMESTER_FOCUSES[id]))
                     : rollSemesterFocusChoices(4),
-                activeFocusId: (rawState.activeFocusId && SEMESTER_FOCUSES[rawState.activeFocusId]) ? rawState.activeFocusId : null,
+                phase: rawState.phase || 'FOCUS_CHOICE',
+                previousPhaseBeforeReset: rawState.previousPhaseBeforeReset || 'FOCUS_CHOICE',
                 pendingEvent: rawState.pendingEvent || null,
                 pendingEventOutcomeText: rawState.pendingEventOutcomeText || null,
                 lastSemesterSummary: rawState.lastSemesterSummary || null,
+                injuredSemestersLeft: Number(rawState.injuredSemestersLeft) || 0,
                 forcedSuspendThisSem: Boolean(rawState.forcedSuspendThisSem),
                 forcedCupWinThisSem: Boolean(rawState.forcedCupWinThisSem),
                 forcedEliminationThisSem: Boolean(rawState.forcedEliminationThisSem),
                 semTeamBoost: Number(rawState.semTeamBoost) || 0,
-                injuredSemestersLeft: Number(rawState.injuredSemestersLeft) || 0,
-                loanReturnTeam: rawState.loanReturnTeam || null,
-                isStarPlayer: Boolean(rawState.isStarPlayer || (Number(rawState.ovr) >= 82)),
+                ufroCaps: Number(rawState.ufroCaps) || 0,
+                ufroGoals: Number(rawState.ufroGoals) || 0,
+                ufroAssists: Number(rawState.ufroAssists) || 0,
                 stats: {
                     matches: Number(rawState.stats?.matches) || 0,
                     goals: Number(rawState.stats?.goals) || 0,
@@ -1644,109 +1523,263 @@
                     goleador: Number(rawState.individualAwards?.goleador) || 0,
                     mejorJugadorUfro: Number(rawState.individualAwards?.mejorJugadorUfro) || 0
                 },
-                ufroCaps: Number(rawState.ufroCaps) || 0,
-                ufroGoals: Number(rawState.ufroGoals) || 0,
-                ufroAssists: Number(rawState.ufroAssists) || 0,
-                history: Array.isArray(rawState.history) ? rawState.history : [],
-                stints: (Array.isArray(rawState.stints) && rawState.stints.length > 0)
+                stints: Array.isArray(rawState.stints) && rawState.stints.length > 0
                     ? rawState.stints
                     : [{
-                        teamName: rawState.team.name || 'Equipo UFRO',
-                        teamCode: rawState.team.code || 'UFRO_TEAM',
-                        logo: rawState.team.logo || '',
-                        color: rawState.team.color || '#717fff',
-                        division: Number(rawState.team.division) || 1,
-                        isLoan: false,
+                        teamName: team.name,
+                        division: team.division,
                         fromSem: 1,
                         toSem: Math.max(1, Number(rawState.totalSemestersPlayed) || 1),
                         matches: Number(rawState.stats?.matches) || 0,
                         goals: Number(rawState.stats?.goals) || 0,
                         assists: Number(rawState.stats?.assists) || 0,
                         titlesCount: 0
-                    }]
+                    }],
+                history: Array.isArray(rawState.history) ? rawState.history : []
             };
 
-            if (migrated.focusChoices.length === 0) {
+            if (migrated.focusChoices.length < 4) {
                 migrated.focusChoices = rollSemesterFocusChoices(4);
             }
+
             return migrated;
         }
 
-        function migrateLegacyStorage() {
+        function saveCareerState() {
             try {
-                // Rescatar carreras de claves anteriores si la clave actual está vacía
-                if (!localStorage.getItem(STORAGE_KEYS.CAREER)) {
-                    const legacyCareerKeys = [
-                        'leyenda_ufro_career_v8', 'leyenda_ufro_career_v7',
-                        'leyenda_ufro_career_v6', 'leyenda_ufro_career_v5'
-                    ];
-                    for (const oldKey of legacyCareerKeys) {
-                        const oldVal = localStorage.getItem(oldKey);
-                        if (oldVal) {
-                            localStorage.setItem(STORAGE_KEYS.CAREER, oldVal);
-                            break;
-                        }
-                    }
-                }
-                // Rescatar Salón de la Fama si existiera en una clave previa
-                if (!localStorage.getItem(STORAGE_KEYS.HOF)) {
-                    const legacyHofKeys = ['leyenda_ufro_hof', 'leyenda_ufro_hof_v0'];
-                    for (const oldKey of legacyHofKeys) {
-                        const oldVal = localStorage.getItem(oldKey);
-                        if (oldVal) {
-                            localStorage.setItem(STORAGE_KEYS.HOF, oldVal);
-                            break;
-                        }
-                    }
+                if (!careerState) {
+                    localStorage.removeItem(STORAGE_KEYS.CAREER);
+                } else {
+                    localStorage.setItem(STORAGE_KEYS.CAREER, JSON.stringify(careerState));
                 }
             } catch (e) {}
         }
 
         function loadCareerState() {
-            migrateLegacyStorage();
             try {
-                const raw = localStorage.getItem(STORAGE_KEYS.CAREER);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    careerState = migrateCareerState(parsed);
-                    if (careerState) {
-                        saveCareerState();
+                let raw = localStorage.getItem(STORAGE_KEYS.CAREER);
+                if (!raw) {
+                    const legacyKeys = ['leyenda_ufro_career_v8', 'leyenda_ufro_career_v7', 'leyenda_ufro_career_v6'];
+                    for (const k of legacyKeys) {
+                        const candidate = localStorage.getItem(k);
+                        if (candidate) {
+                            raw = candidate;
+                            break;
+                        }
                     }
+                }
+                if (!raw) {
+                    careerState = null;
+                    return;
+                }
+                const parsed = JSON.parse(raw);
+                careerState = migrateCareerState(parsed);
+                if (careerState) {
+                    saveCareerState();
                 }
             } catch (e) {
                 careerState = null;
             }
         }
 
+        function continueToNextSemester() {
+            if (!careerState) return;
+            careerState.lastSemesterSummary = null;
+            careerState.activeFocusId = null;
+            careerState.focusChoices = rollSemesterFocusChoices(4);
+            careerState.phase = 'FOCUS_CHOICE';
+            saveCareerState();
+            renderApp();
+        }
+
         function confirmNewCareer() {
             if (!careerState) return;
+            if (careerState.phase === 'RETIRED') {
+                resetCareer();
+                return;
+            }
+            careerState.previousPhaseBeforeReset = careerState.phase;
             careerState.phase = 'CONFIRM_RESET';
             renderActionPanel();
         }
 
         function cancelResetCareer() {
             if (!careerState) return;
-            if (careerState.lastSemesterSummary && careerState.phaseBeforeReset === 'SEMESTER_SUMMARY') {
-                careerState.phase = 'SEMESTER_SUMMARY';
-            } else {
-                careerState.phase = careerState.activeFocusId ? 'READY_TO_SIM' : 'FOCUS_CHOICE';
+            careerState.phase = careerState.previousPhaseBeforeReset || 'FOCUS_CHOICE';
+            renderActionPanel();
+        }
+
+        let maleTeamsDB = [];
+        let femaleTeamsDB = [];
+        let selectedGender = 'M';
+        let selectedPosition = 'MED';
+        let careerState = null;
+        let showFullHistoryFlag = false;
+
+        function buildFallbackTeams() {
+            maleTeamsDB = [];
+            femaleTeamsDB = [];
+            UFRO_CATALOG.forEach(item => {
+                const fac = canonicalizeFaculty(item.faculty);
+                const color = FACULTY_COLORS[fac.key] || '#717fff';
+                if (Array.isArray(item.m)) {
+                    item.m.forEach((t, idx) => {
+                        maleTeamsDB.push({
+                            code: `${item.id}_M_${idx + 1}`,
+                            name: t[0],
+                            career: item.career,
+                            faculty: fac.key,
+                            facultyLabel: fac.label,
+                            division: idx + 1,
+                            ovr: t[1],
+                            gender: 'M',
+                            logo: '',
+                            palmares: t[2] || '',
+                            color
+                        });
+                    });
+                }
+                if (Array.isArray(item.f)) {
+                    femaleTeamsDB.push({
+                        code: `${item.id}_F_1`,
+                        name: item.f[0],
+                        career: item.career,
+                        faculty: fac.key,
+                        facultyLabel: fac.label,
+                        division: 1,
+                        ovr: item.f[1],
+                        gender: 'F',
+                        logo: '',
+                        palmares: item.f[2] || '',
+                        color
+                    });
+                }
+            });
+        }
+
+        function getCareerRegularYears(careerName) {
+            const cLower = String(careerName || '').toLowerCase();
+            const found = UFRO_CATALOG.find(c => c.career.toLowerCase() === cLower || cLower.includes(c.career.toLowerCase()));
+            return found ? found.years : 5;
+        }
+
+        function populateCareerSelect() {
+            const sel = document.getElementById('input-career-select');
+            if (!sel) return;
+            sel.innerHTML = UFRO_CATALOG.map(c => `<option value="${escapeHtml(c.career)}">${escapeHtml(c.career)}</option>`).join('');
+            updateCareerDurationHint();
+        }
+
+        function updateCareerDurationHint() {
+            const sel = document.getElementById('input-career-select');
+            const hint = document.getElementById('career-duration-hint');
+            if (!sel || !hint) return;
+            const years = getCareerRegularYears(sel.value);
+            hint.textContent = `Duración regular: ${years} años (${years * 2} semestres)`;
+        }
+
+        function selectGender(g) {
+            selectedGender = g === 'F' ? 'F' : 'M';
+            const btnM = document.getElementById('btn-gender-M');
+            const btnF = document.getElementById('btn-gender-F');
+            if (btnM && btnF) {
+                if (selectedGender === 'M') {
+                    btnM.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition';
+                    btnF.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition';
+                } else {
+                    btnF.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition';
+                    btnM.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition';
+                }
             }
-            renderActionPanel();
         }
 
-        function confirmNewCareer() {
-            if (!careerState) return;
-            careerState.phaseBeforeReset = careerState.phase;
-            careerState.phase = 'CONFIRM_RESET';
-            renderActionPanel();
+        function selectPosition(pos) {
+            selectedPosition = pos;
+            document.querySelectorAll('.pos-btn').forEach(btn => {
+                btn.className = 'pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition-all duration-150';
+            });
+            const active = document.getElementById(`pos-btn-${pos}`);
+            if (active) {
+                active.className = 'pos-btn py-2.5 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-xs font-bold text-white scale-[1.03] shadow-md shadow-[#717fff]/20 transition-all duration-150';
+            }
         }
 
-        function continueToNextSemester() {
-            if (!careerState || careerState.phase !== 'SEMESTER_SUMMARY') return;
-            careerState.lastSemesterSummary = null;
-            careerState.activeFocusId = null;
-            careerState.focusChoices = rollSemesterFocusChoices(4);
-            careerState.phase = 'FOCUS_CHOICE';
+        function applyRandomPlayerName(force = false) {
+            const input = document.getElementById('input-player-name');
+            if (!input) return;
+            if (!force && input.value.trim()) return;
+            const pool = selectedGender === 'F' ? RANDOM_NAMES_FEMALE : RANDOM_NAMES_MALE;
+            input.value = pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        function backToStep1() {
+            document.getElementById('step2-team-options').classList.add('hidden');
+            document.getElementById('step1-player-form').classList.remove('hidden');
+        }
+
+        function showAvailableTeamsForCareer(playerName, careerName) {
+            const dbList = selectedGender === 'F' ? femaleTeamsDB : maleTeamsDB;
+            const matching = dbList.filter(t => t.career.toLowerCase() === careerName.toLowerCase());
+            const container = document.getElementById('trial-teams-list');
+            document.getElementById('trial-title').textContent = `Equipos de ${careerName}`;
+            document.getElementById('trial-desc').textContent = selectedGender === 'F'
+                ? 'Selecciona el plantel femenino de tu carrera para debutar en División Única.'
+                : 'Elige en qué equipo de tu carrera iniciarás tu trayectoria universitaria.';
+
+            container.innerHTML = matching.map(team => `
+                <button type="button" onclick="startCareerWithTeam('${escapeHtml(playerName)}', '${escapeHtml(careerName)}', '${escapeHtml(team.code)}')"
+                    class="w-full text-left p-3.5 rounded-2xl surface-sub hover:border-[#717fff] transition flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        ${getTeamBadgeHTML(team, 'w-10 h-10', 'text-xs')}
+                        <div class="min-w-0">
+                            <div class="font-black text-sm text-white truncate">${escapeHtml(team.name)}</div>
+                            <div class="text-[11px] text-gray-400 truncate">${selectedGender === 'F' ? 'División Única' : `${team.division}ª División`} · ${escapeHtml(team.palmares || 'Plantel Oficial UFRO')}</div>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <span class="px-2.5 py-1 rounded-lg bg-[#717fff]/15 text-[#a3adff] font-black text-xs">OVR ${team.ovr}</span>
+                    </div>
+                </button>
+            `).join('');
+
+            document.getElementById('step1-player-form').classList.add('hidden');
+            document.getElementById('step2-team-options').classList.remove('hidden');
+        }
+
+        function joinRandomTeam() {
+            const nameInput = document.getElementById('input-player-name');
+            if (!nameInput.value.trim()) applyRandomPlayerName(true);
+            const playerName = nameInput.value.trim();
+            const dbList = selectedGender === 'F' ? femaleTeamsDB : maleTeamsDB;
+            if (!dbList.length) return;
+            const randomTeam = dbList[Math.floor(Math.random() * dbList.length)];
+            startCareerWithTeam(playerName, randomTeam.career, randomTeam.code);
+        }
+
+        function startCareerWithTeam(playerName, careerName, teamCode) {
+            const dbList = selectedGender === 'F' ? femaleTeamsDB : maleTeamsDB;
+            const team = dbList.find(t => t.code === teamCode) || dbList[0];
+            if (!team) return;
+            const regYears = getCareerRegularYears(careerName);
+            const startOvr = team.division === 1 ? 61 : team.division === 2 ? 58 : 55;
+
+            careerState = migrateCareerState({
+                name: playerName,
+                gender: selectedGender,
+                position: selectedPosition,
+                careerName,
+                faculty: team.faculty,
+                facultyLabel: team.facultyLabel,
+                team,
+                ovr: startOvr,
+                age: 18,
+                year: 1,
+                semesterInYear: 1,
+                totalSemestersPlayed: 0,
+                plannedSemesters: regYears * 2,
+                phase: 'FOCUS_CHOICE',
+                focusChoices: rollSemesterFocusChoices(4)
+            });
             saveCareerState();
             renderApp();
         }
@@ -2737,6 +2770,34 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
         }
+
+        function initApp() {
+            buildFallbackTeams();
+            populateCareerSelect();
+            applyRandomPlayerName(false);
+            loadCareerState();
+            renderApp();
+
+            const form = document.getElementById('step1-player-form');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const playerName = document.getElementById('input-player-name').value.trim();
+                    const careerName = document.getElementById('input-career-select').value;
+                    if (!playerName) {
+                        showToast('Ingresa el nombre de tu jugador/a.', 'error');
+                        return;
+                    }
+                    showAvailableTeamsForCareer(playerName, careerName);
+                });
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
 
     <!-- ==================== MÓDULO FIREBASE (AUTH + TOP GLOBAL SEMANAL) ==================== -->
@@ -3436,6 +3497,7 @@
         }
 
         window.initCloudLeaderboard = function () {
+            if (firebaseAvailable && auth) return;
             startWeeklyCountdownTimer();
 
             try {
@@ -3500,6 +3562,13 @@
                 fetchGlobalWeeklyLeaderboard();
             }
         };
+
+        // Inicializar Firebase Auth y Ranking Global inmediatamente al cargar el módulo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => window.initCloudLeaderboard());
+        } else {
+            window.initCloudLeaderboard();
+        }
     </script>
 </body>
 </html>
