@@ -4324,82 +4324,8 @@
         let unsubscribeWeekly = null;
         let unsubscribeUserCareers = null;
         let countdownTimerId = null;
+        let isAuthenticating = false;
 
-        // Cálculo determinístico de semana competitiva en Hora de Chile (America/Santiago)
-        // Se reinicia cada domingo a las 23:59:59 hrs (inicio lunes 00:00:00)
-        function getChileNowParts() {
-            const now = new Date();
-            const formatter = new Intl.DateTimeFormat('en-CA', {
-                timeZone: 'America/Santiago',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
-            const parts = {};
-            formatter.formatToParts(now).forEach(p => { parts[p.type] = p.value; });
-            return {
-                year: Number(parts.year),
-                month: Number(parts.month),
-                day: Number(parts.day),
-                hour: Number(parts.hour === '24' ? 0 : parts.hour),
-                minute: Number(parts.minute),
-                second: Number(parts.second)
-            };
-        }
-
-        function getCurrentWeeklySeasonInfo() {
-            const p = getChileNowParts();
-            const chileWallUTC = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
-            const dt = new Date(chileWallUTC);
-            const dayOfWeek = dt.getUTCDay(); // 0=Dom, 1=Lun ... 6=Sáb
-            const daysSinceMonday = (dayOfWeek + 6) % 7;
-
-            const mondayStartUTC = Date.UTC(p.year, p.month - 1, p.day - daysSinceMonday, 0, 0, 0);
-            const nextMondayUTC = mondayStartUTC + 7 * 24 * 60 * 60 * 1000;
-            const mondayDate = new Date(mondayStartUTC);
-
-            const weekId = `W_${mondayDate.getUTCFullYear()}-${String(mondayDate.getUTCMonth() + 1).padStart(2, '0')}-${String(mondayDate.getUTCDate()).padStart(2, '0')}`;
-            const label = `Semana del ${String(mondayDate.getUTCDate()).padStart(2, '0')}/${String(mondayDate.getUTCMonth() + 1).padStart(2, '0')}`;
-            const msRemaining = Math.max(0, nextMondayUTC - chileWallUTC);
-
-            return { weekId, label, msRemaining };
-        }
-
-        function startWeeklyCountdown() {
-            if (countdownTimerId) clearInterval(countdownTimerId);
-            let activeWeekId = getCurrentWeeklySeasonInfo().weekId;
-
-            const updateTick = () => {
-                const info = getCurrentWeeklySeasonInfo();
-                const el = document.getElementById('weekly-countdown-text');
-                const badgeEl = document.getElementById('weekly-season-badge');
-                if (badgeEl) badgeEl.textContent = info.label;
-
-                if (el) {
-                    const totalSec = Math.floor(info.msRemaining / 1000);
-                    const d = Math.floor(totalSec / 86400);
-                    const h = Math.floor((totalSec % 86400) / 3600);
-                    const m = Math.floor((totalSec % 3600) / 60);
-                    const s = totalSec % 60;
-                    el.textContent = `${d}d ${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
-                }
-
-                if (info.weekId !== activeWeekId) {
-                    activeWeekId = info.weekId;
-                    subscribeWeeklyLeaderboard();
-                    if (window.renderUserProfileStats) window.renderUserProfileStats();
-                }
-            };
-
-            updateTick();
-            countdownTimerId = setInterval(updateTick, 1000);
-        }
-
-        // Verifica disponibilidad única en colección usernames/{usernameLower}
         function withTimeout(promise, ms = 6000) {
             return Promise.race([
                 promise,
@@ -4407,47 +4333,138 @@
             ]);
         }
 
-        async function reserveUniqueUsername(username, uid, email, oldUsername = null) {
-            const lower = username.toLowerCase();
-            const usernameRef = doc(db, 'usernames', lower);
-            const snap = await withTimeout(getDoc(usernameRef), 5000);
+        // Cálculo determinístico de semana competitiva en Hora de Chile (America/Santiago)
+        function getChileTimeParts(date = new Date()) {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/Santiago',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                weekday: 'short',
+                hour12: false
+            });
+            const parts = formatter.formatToParts(date);
+            const map = {};
+            parts.forEach(p => { map[p.type] = p.value; });
+            return {
+                year: Number(map.year),
+                month: Number(map.month),
+                day: Number(map.day),
+                hour: Number(map.hour === '24' ? 0 : map.hour),
+                minute: Number(map.minute),
+                second: Number(map.second),
+                weekday: map.weekday
+            };
+        }
 
+        function getCompetitiveWeekInfo() {
+            const now = new Date();
+            const cl = getChileTimeParts(now);
+            const dayMap = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
+            const dow = dayMap[cl.weekday] ?? 0;
+
+            const clLocalAsUtc = Date.UTC(cl.year, cl.month - 1, cl.day, cl.hour, cl.minute, cl.second);
+            const mondayStartUtc = Date.UTC(cl.year, cl.month - 1, cl.day - dow, 0, 0, 0);
+            const nextMondayUtc = mondayStartUtc + 7 * 24 * 60 * 60 * 1000;
+
+            const monDate = new Date(mondayStartUtc);
+            const y = monDate.getUTCFullYear();
+            const m = String(monDate.getUTCMonth() + 1).padStart(2, '0');
+            const d = String(monDate.getUTCDate()).padStart(2, '0');
+
+            return {
+                weekId: `${y}-W${m}${d}`,
+                label: `Semana ${d}/${m}/${y}`,
+                msRemaining: Math.max(1000, nextMondayUtc - clLocalAsUtc)
+            };
+        }
+
+        function startWeeklyCountdown() {
+            if (countdownTimerId) clearInterval(countdownTimerId);
+            const update = () => {
+                const info = getCompetitiveWeekInfo();
+                const badgeEl = document.getElementById('weekly-season-badge');
+                const cdEl = document.getElementById('weekly-countdown-text');
+                if (badgeEl) badgeEl.textContent = info.label.toUpperCase();
+                if (cdEl) {
+                    let sec = Math.floor(info.msRemaining / 1000);
+                    const days = Math.floor(sec / 86400);
+                    sec %= 86400;
+                    const hrs = Math.floor(sec / 3600);
+                    sec %= 3600;
+                    const mins = Math.floor(sec / 60);
+                    const secs = sec % 60;
+                    cdEl.textContent = `${days}d ${String(hrs).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+                }
+            };
+            update();
+            countdownTimerId = setInterval(update, 1000);
+        }
+
+        function updateCloudAuthUI() {
+            const guestBox = document.getElementById('guest-auth-buttons');
+            const loggedBox = document.getElementById('logged-user-menu-wrapper');
+            const nickLabel = document.getElementById('header-username-label');
+            const profileHeading = document.getElementById('profile-modal-heading');
+            const profileEmail = document.getElementById('profile-modal-email');
+            const profileLink = document.getElementById('header-profile-link');
+
+            if (cloudUser && window.cloudProfile) {
+                if (guestBox) guestBox.classList.add('hidden');
+                if (loggedBox) loggedBox.classList.remove('hidden');
+                if (nickLabel) nickLabel.textContent = `@${window.cloudProfile.nickname}`;
+                if (profileHeading) profileHeading.textContent = `@${window.cloudProfile.nickname}`;
+                if (profileEmail) profileEmail.textContent = cloudUser.email || window.cloudProfile.email || '';
+                if (profileLink) profileLink.href = getProfilePageUrl();
+            } else {
+                if (guestBox) guestBox.classList.remove('hidden');
+                if (loggedBox) loggedBox.classList.add('hidden');
+            }
+        }
+
+        async function reserveUniqueUsername(username, uid, email) {
+            const key = username.toLowerCase();
+            const uRef = doc(db, 'usernames', key);
+            const snap = await withTimeout(getDoc(uRef), 5000);
             if (snap.exists() && snap.data().uid !== uid) {
                 throw new Error('USERNAME_TAKEN');
             }
-
-            await withTimeout(setDoc(usernameRef, {
+            await withTimeout(setDoc(uRef, {
                 uid,
                 username,
                 email: email || '',
                 updatedAt: serverTimestamp()
             }), 5000);
-
-            if (oldUsername && oldUsername.toLowerCase() !== lower) {
-                try {
-                    const oldRef = doc(db, 'usernames', oldUsername.toLowerCase());
-                    const oldSnap = await withTimeout(getDoc(oldRef), 4000);
-                    if (oldSnap.exists() && oldSnap.data().uid === uid) {
-                        await withTimeout(setDoc(oldRef, { released: true, releasedAt: serverTimestamp() }), 4000);
-                    }
-                } catch (e) {}
-            }
         }
 
         async function loadOrCreateCloudProfile(user, preferredUsername = null) {
             const ref = doc(db, 'users', user.uid);
+            const fallbackNick = preferredUsername || sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
+
+            if (!window.cloudProfile || window.cloudProfile.uid !== user.uid) {
+                window.cloudProfile = {
+                    uid: user.uid,
+                    nickname: fallbackNick,
+                    email: user.email || '',
+                    photoURL: user.photoURL || ''
+                };
+            }
+            updateCloudAuthUI();
+
             try {
-                const snap = await withTimeout(getDoc(ref), 6000);
+                const snap = await withTimeout(getDoc(ref), 5000);
 
                 if (snap.exists()) {
                     window.cloudProfile = snap.data();
                     if (!window.cloudProfile.nickname) {
-                        const fallbackNick = sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
                         window.cloudProfile.nickname = fallbackNick;
-                        withTimeout(setDoc(ref, { nickname: fallbackNick, updatedAt: serverTimestamp() }, { merge: true }), 5000).catch(() => {});
+                        withTimeout(setDoc(ref, { nickname: fallbackNick, updatedAt: serverTimestamp() }, { merge: true }), 4000).catch(() => {});
                     }
                 } else {
-                    let candidate = preferredUsername || sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
+                    let candidate = fallbackNick;
                     const check = validateUsernameStrict(candidate);
                     if (!check.valid) candidate = sanitizeAutoUsername(candidate);
 
@@ -4467,168 +4484,186 @@
                         photoURL: user.photoURL || '',
                         createdAt: serverTimestamp()
                     };
-                    await withTimeout(setDoc(ref, window.cloudProfile, { merge: true }), 5000);
+                    await withTimeout(setDoc(ref, window.cloudProfile, { merge: true }), 4000);
                 }
+                updateCloudAuthUI();
             } catch (err) {
-                console.warn('Fallback local para perfil de usuario:', err);
-                const fallbackNick = preferredUsername || sanitizeAutoUsername(user.displayName || (user.email || '').split('@')[0]);
-                window.cloudProfile = {
-                    uid: user.uid,
-                    nickname: fallbackNick,
-                    email: user.email || '',
-                    photoURL: user.photoURL || ''
-                };
+                console.warn('Perfil sincronizado en modo local (Firestore no respondió a tiempo):', err);
             }
 
-            updateCloudAuthUI();
             subscribeUserCareersHistory(user.uid);
         }
 
         const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
-
-        function getNicknameCooldownStatus() {
-            if (!window.cloudProfile || !window.cloudProfile.nicknameChangedAt) {
-                return { canChange: true, remainingDays: 0 };
-            }
-            const raw = window.cloudProfile.nicknameChangedAt;
-            let changedMs = 0;
-            if (typeof raw === 'number') changedMs = raw;
-            else if (raw && typeof raw.toMillis === 'function') changedMs = raw.toMillis();
-            else if (raw && raw.seconds) changedMs = raw.seconds * 1000;
-
-            if (!changedMs) return { canChange: true, remainingDays: 0 };
-
-            const elapsed = Date.now() - changedMs;
-            if (elapsed >= FOURTEEN_DAYS_MS) {
-                return { canChange: true, remainingDays: 0 };
-            }
-            const remainingDays = Math.max(1, Math.ceil((FOURTEEN_DAYS_MS - elapsed) / (24 * 60 * 60 * 1000)));
-            return { canChange: false, remainingDays };
-        }
 
         window.updateNicknameCooldownUI = function () {
             const input = document.getElementById('input-cloud-nickname');
             const btn = document.getElementById('btn-save-cloud-nickname');
             const badge = document.getElementById('nickname-cooldown-badge');
             const hint = document.getElementById('nickname-change-hint');
-            if (!input || !btn) return;
+            if (!input || !btn || !window.cloudProfile) return;
 
-            const status = getNicknameCooldownStatus();
-            if (status.canChange) {
-                input.disabled = false;
-                btn.disabled = false;
-                if (badge) badge.classList.add('hidden');
-                if (hint) hint.textContent = 'Solo letras, números y guion bajo (3-18 caracteres). Podrás cambiarlo una vez cada 14 días.';
-            } else {
+            const lastChange = Number(window.cloudProfile.lastNicknameChangeAt || 0);
+            const elapsed = Date.now() - lastChange;
+
+            if (lastChange > 0 && elapsed < FOURTEEN_DAYS_MS) {
+                const daysLeft = Math.ceil((FOURTEEN_DAYS_MS - elapsed) / (24 * 60 * 60 * 1000));
                 input.disabled = true;
                 btn.disabled = true;
                 if (badge) {
-                    badge.textContent = `Disponible en ${status.remainingDays} ${status.remainingDays === 1 ? 'día' : 'días'}`;
+                    badge.textContent = `Disponible en ${daysLeft}d`;
                     badge.classList.remove('hidden');
                 }
                 if (hint) {
-                    hint.textContent = `Ya cambiaste tu usuario recientemente. Podrás volver a modificarlo en ${status.remainingDays} ${status.remainingDays === 1 ? 'día' : 'días'}.`;
+                    hint.textContent = `Ya cambiaste tu usuario recientemente. Podrás volver a cambiarlo en ${daysLeft} día(s).`;
                 }
-            }
-        };
-
-        function updateCloudAuthUI() {
-            const guestBox = document.getElementById('guest-auth-buttons');
-            const loggedWrapper = document.getElementById('logged-user-menu-wrapper');
-            const headerLabel = document.getElementById('header-username-label');
-            const profileHeading = document.getElementById('profile-modal-heading');
-            const profileEmail = document.getElementById('profile-modal-email');
-
-            if (cloudUser && window.cloudProfile) {
-                if (guestBox) guestBox.classList.add('hidden');
-                if (loggedWrapper) loggedWrapper.classList.remove('hidden');
-                const nick = window.cloudProfile.nickname || 'usuario';
-                if (headerLabel) headerLabel.textContent = `@${nick}`;
-                if (profileHeading) profileHeading.textContent = `@${nick}`;
-                if (profileEmail) profileEmail.textContent = cloudUser.email || '';
-                const profileLink = document.getElementById('header-profile-link');
-                if (profileLink) profileLink.href = getProfilePageUrl();
-                window.updateNicknameCooldownUI();
             } else {
-                if (guestBox) guestBox.classList.remove('hidden');
-                if (loggedWrapper) loggedWrapper.classList.add('hidden');
-            }
-        }
-
-        // Inicio de sesión con Google
-        window.signInWithGoogleAccount = async function () {
-            try {
-                const res = await signInWithPopup(auth, googleProvider);
-                await loadOrCreateCloudProfile(res.user);
-                closeAuthModal();
-                showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}`, 'success');
-            } catch (err) {
-                console.error(err);
-                if (err.code !== 'auth/popup-closed-by-user') {
-                    showToast('No se pudo iniciar sesión con Google. Revisa la consola de Firebase.', 'error');
+                input.disabled = false;
+                btn.disabled = false;
+                if (badge) badge.classList.add('hidden');
+                if (hint) {
+                    hint.textContent = 'Solo letras, números y guion bajo (3-18 caracteres). Podrás cambiarlo una vez cada 14 días.';
                 }
             }
         };
 
-        // Registro con Correo + Usuario + Contraseña
-        window.handleEmailRegister = async function (e) {
-            e.preventDefault();
-            const rawUser = document.getElementById('reg-username').value;
-            const email = document.getElementById('reg-email').value.trim();
-            const pass = document.getElementById('reg-password').value;
-            const passConfirm = document.getElementById('reg-password-confirm').value;
-
-            const validation = validateUsernameStrict(rawUser);
-            if (!validation.valid) {
-                showToast(validation.error, 'error');
+        window.saveCloudNickname = async function () {
+            if (!cloudUser || !window.cloudProfile) return;
+            const lastChange = Number(window.cloudProfile.lastNicknameChangeAt || 0);
+            if (lastChange > 0 && (Date.now() - lastChange) < FOURTEEN_DAYS_MS) {
+                const daysLeft = Math.ceil((FOURTEEN_DAYS_MS - (Date.now() - lastChange)) / (24 * 60 * 60 * 1000));
+                showToast(`Debes esperar ${daysLeft} día(s) para volver a cambiar tu usuario.`, 'error');
                 return;
             }
 
-            if (pass !== passConfirm) {
+            const input = document.getElementById('input-cloud-nickname');
+            const check = validateUsernameStrict(input ? input.value : '');
+            if (!check.valid) {
+                showToast(check.error, 'error');
+                return;
+            }
+
+            const newNick = check.username;
+            if (newNick === window.cloudProfile.nickname) {
+                showToast('Ese ya es tu nombre de usuario actual.', 'info');
+                return;
+            }
+
+            try {
+                await reserveUniqueUsername(newNick, cloudUser.uid, cloudUser.email);
+                const nowMs = Date.now();
+                await withTimeout(setDoc(doc(db, 'users', cloudUser.uid), {
+                    nickname: newNick,
+                    lastNicknameChangeAt: nowMs,
+                    updatedAt: serverTimestamp()
+                }, { merge: true }), 5000);
+                window.cloudProfile.nickname = newNick;
+                window.cloudProfile.lastNicknameChangeAt = nowMs;
+                updateCloudAuthUI();
+                window.updateNicknameCooldownUI();
+                showToast(`✅ Usuario actualizado a @${newNick}`, 'success');
+            } catch (err) {
+                if (err.message === 'USERNAME_TAKEN') {
+                    showToast('Ese nombre de usuario ya está ocupado por otro jugador.', 'error');
+                } else {
+                    showToast('No se pudo actualizar el usuario.', 'error');
+                }
+            }
+        };
+
+        window.signInWithGoogleAccount = async function () {
+            if (isAuthenticating) return;
+            isAuthenticating = true;
+            try {
+                const cred = await signInWithPopup(auth, googleProvider);
+                cloudUser = cred.user;
+                await loadOrCreateCloudProfile(cred.user);
+                closeAuthModal();
+                showToast(`✅ ¡Bienvenido @${window.cloudProfile.nickname}!`, 'success');
+            } catch (err) {
+                console.error('Google Sign-In error:', err);
+                const code = err?.code || '';
+                if (code === 'auth/popup-closed-by-user') {
+                    showToast('Ventana de Google cerrada antes de completar.', 'info');
+                } else if (code === 'auth/unauthorized-domain') {
+                    showToast('Dominio no autorizado en Firebase Authentication.', 'error');
+                } else {
+                    showToast('No se pudo iniciar sesión con Google.', 'error');
+                }
+            } finally {
+                isAuthenticating = false;
+            }
+        };
+
+        window.handleEmailRegister = async function (e) {
+            e.preventDefault();
+            if (isAuthenticating) return;
+
+            const rawUser = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value.trim();
+            const pass = document.getElementById('reg-password').value;
+            const pass2 = document.getElementById('reg-password-confirm').value;
+
+            const check = validateUsernameStrict(rawUser);
+            if (!check.valid) {
+                showToast(check.error, 'error');
+                return;
+            }
+            if (pass !== pass2) {
                 showToast('Las contraseñas no coinciden.', 'error');
                 return;
             }
 
             const btn = document.getElementById('btn-submit-register');
+            isAuthenticating = true;
             btn.disabled = true;
             btn.textContent = 'Creando cuenta...';
 
             try {
-                // Verificar disponibilidad antes de crear usuario
-                const usernameRef = doc(db, 'usernames', validation.username.toLowerCase());
-                const existingSnap = await getDoc(usernameRef);
-                if (existingSnap.exists() && !existingSnap.data().released) {
+                const key = check.username.toLowerCase();
+                const uSnap = await withTimeout(getDoc(doc(db, 'usernames', key)), 5000);
+                if (uSnap.exists()) {
                     throw new Error('USERNAME_TAKEN');
                 }
 
-                const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                await loadOrCreateCloudProfile(cred.user, validation.username);
+                const cred = await withTimeout(createUserWithEmailAndPassword(auth, email, pass), 12000);
+                cloudUser = cred.user;
+                await loadOrCreateCloudProfile(cred.user, check.username);
                 closeAuthModal();
-                showToast(`🎉 ¡Bienvenido @${window.cloudProfile.nickname}! Tu cuenta está lista.`, 'success');
+                showToast(`🎉 ¡Cuenta creada! Bienvenido @${window.cloudProfile.nickname}`, 'success');
             } catch (err) {
-                console.error(err);
-                if (err.message === 'USERNAME_TAKEN') {
-                    showToast('Ese nombre de usuario ya está ocupado. Elige otro.', 'error');
-                } else if (err.code === 'auth/email-already-in-use') {
-                    showToast('Ese correo electrónico ya tiene una cuenta registrada.', 'error');
-                } else if (err.code === 'auth/weak-password') {
+                console.error('Register error:', err);
+                const code = err?.code || err?.message || '';
+                if (code === 'USERNAME_TAKEN') {
+                    showToast('Ese nombre de usuario ya está en uso. Elige otro.', 'error');
+                } else if (code === 'auth/email-already-in-use') {
+                    showToast('Ese correo electrónico ya está registrado.', 'error');
+                } else if (code === 'auth/weak-password') {
                     showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
+                } else if (code === 'auth/invalid-email') {
+                    showToast('El formato del correo electrónico no es válido.', 'error');
+                } else if (code === 'TIMEOUT') {
+                    showToast('Tiempo de espera agotado al registrar cuenta.', 'error');
                 } else {
-                    showToast('No se pudo completar el registro. Verifica tus datos.', 'error');
+                    showToast(`No se pudo completar el registro (${code || 'error'}).`, 'error');
                 }
             } finally {
+                isAuthenticating = false;
                 btn.disabled = false;
                 btn.textContent = 'Crear cuenta y participar';
             }
         };
 
-        // Inicio de sesión con Correo o @Usuario
+        // Inicio de sesión con Correo + Usuario + Contraseña
         window.handleEmailLogin = async function (e) {
             e.preventDefault();
+            if (isAuthenticating) return;
+
             let identifier = document.getElementById('login-identifier').value.trim();
             const pass = document.getElementById('login-password').value;
 
             const btn = document.getElementById('btn-submit-login');
+            isAuthenticating = true;
             btn.disabled = true;
             btn.textContent = 'Entrando...';
 
@@ -4636,30 +4671,36 @@
                 let targetEmail = identifier;
                 if (!identifier.includes('@') || identifier.startsWith('@')) {
                     const cleanNick = identifier.replace(/^@/, '').toLowerCase();
-                    const uSnap = await withTimeout(getDoc(doc(db, 'usernames', cleanNick)), 6000);
+                    const uSnap = await withTimeout(getDoc(doc(db, 'usernames', cleanNick)), 5000);
                     if (!uSnap.exists() || !uSnap.data().email) {
                         throw new Error('USER_NOT_FOUND');
                     }
                     targetEmail = uSnap.data().email;
                 }
 
-                const cred = await withTimeout(signInWithEmailAndPassword(auth, targetEmail, pass), 10000);
+                const cred = await withTimeout(signInWithEmailAndPassword(auth, targetEmail, pass), 12000);
                 cloudUser = cred.user;
                 await loadOrCreateCloudProfile(cred.user);
                 closeAuthModal();
                 showToast(`✅ ¡Hola de nuevo @${window.cloudProfile.nickname}!`, 'success');
             } catch (err) {
-                console.error(err);
-                if (err.message === 'TIMEOUT') {
-                    showToast('Tiempo de espera agotado. Revisa tu conexión o recarga la página.', 'error');
-                } else if (err.message === 'USER_NOT_FOUND' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+                console.error('Login error:', err);
+                const code = err?.code || err?.message || 'UNKNOWN';
+                if (code === 'TIMEOUT') {
+                    showToast('Firebase Auth tardó demasiado en responder. Verifica tu red o dominios autorizados.', 'error');
+                } else if (code === 'USER_NOT_FOUND' || code === 'auth/user-not-found' || code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/invalid-email') {
                     showToast('Usuario/correo o contraseña incorrectos.', 'error');
-                } else if (err.code === 'auth/too-many-requests') {
+                } else if (code === 'auth/too-many-requests') {
                     showToast('Demasiados intentos fallidos. Espera unos minutos.', 'error');
+                } else if (code === 'auth/operation-not-allowed') {
+                    showToast('El acceso con correo/contraseña no está habilitado en Firebase.', 'error');
+                } else if (code === 'auth/network-request-failed') {
+                    showToast('Error de red al conectar con Firebase Auth.', 'error');
                 } else {
-                    showToast('Error al iniciar sesión. Intenta nuevamente.', 'error');
+                    showToast(`Error al iniciar sesión (${code}).`, 'error');
                 }
             } finally {
+                isAuthenticating = false;
                 btn.disabled = false;
                 btn.textContent = 'Entrar a mi cuenta';
             }
@@ -4677,11 +4718,15 @@
 
             try {
                 await sendPasswordResetEmail(auth, email);
-                showToast('📧 Enlace enviado. Revisa tu bandeja de entrada o carpeta de spam.', 'success');
+                showToast('📧 Enlace de recuperación enviado. Revisa tu bandeja o spam.', 'success');
                 switchAuthMode('login');
             } catch (err) {
-                console.error(err);
-                showToast('No se pudo enviar el correo. Verifica que esté bien escrito.', 'error');
+                const code = err?.code || '';
+                if (code === 'auth/user-not-found' || code === 'auth/invalid-email') {
+                    showToast('No encontramos una cuenta asociada a ese correo.', 'error');
+                } else {
+                    showToast('No se pudo enviar el correo de recuperación.', 'error');
+                }
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Enviar enlace de recuperación';
@@ -4689,81 +4734,39 @@
         };
 
         window.logoutCloudUser = async function () {
+            const menu = document.getElementById('user-dropdown-menu');
+            if (menu) menu.classList.add('hidden');
             try {
-                const menu = document.getElementById('user-dropdown-menu');
-                if (menu) menu.classList.add('hidden');
-                if (unsubscribeUserCareers) unsubscribeUserCareers();
                 await signOut(auth);
                 cloudUser = null;
                 window.cloudProfile = null;
                 userHistoryEntries = [];
+                if (unsubscribeUserCareers) {
+                    unsubscribeUserCareers();
+                    unsubscribeUserCareers = null;
+                }
                 updateCloudAuthUI();
                 showToast('Sesión cerrada.', 'info');
             } catch (e) {}
         };
 
-        window.saveCloudNickname = async function () {
-            if (!cloudUser) return;
-            const cooldown = getNicknameCooldownStatus();
-            if (!cooldown.canChange) {
-                showToast(`Debes esperar ${cooldown.remainingDays} ${cooldown.remainingDays === 1 ? 'día' : 'días'} para volver a cambiar tu usuario.`, 'error');
-                return;
-            }
-
-            const input = document.getElementById('input-cloud-nickname');
-            if (!input) return;
-            const validation = validateUsernameStrict(input.value);
-            if (!validation.valid) {
-                showToast(validation.error, 'error');
-                return;
-            }
-
-            const oldNick = window.cloudProfile ? window.cloudProfile.nickname : null;
-            if (oldNick && oldNick === validation.username) {
-                showToast('Ese ya es tu nombre de usuario actual.', 'info');
-                return;
-            }
-
-            const nowMs = Date.now();
-            try {
-                await reserveUniqueUsername(validation.username, cloudUser.uid, cloudUser.email, oldNick);
-                await setDoc(doc(db, 'users', cloudUser.uid), {
-                    nickname: validation.username,
-                    nicknameChangedAt: nowMs,
-                    updatedAt: serverTimestamp()
-                }, { merge: true });
-
-                if (!window.cloudProfile) window.cloudProfile = {};
-                window.cloudProfile.nickname = validation.username;
-                window.cloudProfile.nicknameChangedAt = nowMs;
-                updateCloudAuthUI();
-                showToast(`✅ Usuario actualizado a @${validation.username}. Próximo cambio disponible en 14 días.`, 'success');
-            } catch (e) {
-                if (e.message === 'USERNAME_TAKEN') {
-                    showToast('Ese nombre de usuario ya está en uso por otro jugador.', 'error');
-                } else {
-                    showToast('No se pudo actualizar el usuario.', 'error');
-                }
-            }
-        };
-
-        // Historial personal de carreras del usuario (Semanal + Top 5 Histórico)
         function subscribeUserCareersHistory(uid) {
             if (unsubscribeUserCareers) unsubscribeUserCareers();
-            const qUser = query(
+            const q = query(
                 collection(db, 'weekly_leaderboard'),
                 where('uid', '==', uid),
                 limit(50)
             );
-
-            unsubscribeUserCareers = onSnapshot(qUser, (snap) => {
-                const docs = [];
-                snap.forEach(d => docs.push({ id: d.id, ...d.data() }));
-                docs.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
-                userHistoryEntries = docs;
+            unsubscribeUserCareers = onSnapshot(q, (snapshot) => {
+                const list = [];
+                snapshot.forEach(docSnap => {
+                    list.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                list.sort((a, b) => (b.score || 0) - (a.score || 0));
+                userHistoryEntries = list;
                 window.renderUserProfileStats();
             }, (err) => {
-                console.warn('Error cargando carreras del usuario:', err);
+                console.warn('Error cargando historial de usuario:', err);
             });
         }
 
@@ -4773,30 +4776,31 @@
             const top5ListEl = document.getElementById('profile-top5-list');
             if (!weeklyListEl || !top5ListEl) return;
 
-            const currentWeekId = getCurrentWeeklySeasonInfo().weekId;
-            const thisWeekRuns = userHistoryEntries.filter(x => x.weekId === currentWeekId);
+            const { weekId } = getCompetitiveWeekInfo();
+            const weeklyRuns = userHistoryEntries
+                .filter(e => e.weekId === weekId)
+                .sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
 
             if (weeklyCountEl) {
-                weeklyCountEl.textContent = `${thisWeekRuns.length} ${thisWeekRuns.length === 1 ? 'carrera' : 'carreras'}`;
+                weeklyCountEl.textContent = `${weeklyRuns.length} ${weeklyRuns.length === 1 ? 'carrera' : 'carreras'}`;
             }
 
-            if (thisWeekRuns.length === 0) {
-                weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras en esta semana. ¡Titúlate para sumar puntos!</div>`;
+            if (weeklyRuns.length === 0) {
+                weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras esta semana.</div>`;
             } else {
-                weeklyListEl.innerHTML = thisWeekRuns.map((item, idx) => {
-                    const tObj = findTeamByCode(item.teamCode);
-                    const isBestWeek = idx === 0 || item.score === Math.max(...thisWeekRuns.map(r => r.score || 0));
+                weeklyListEl.innerHTML = weeklyRuns.map(item => {
+                    const team = findTeamByCode(item.teamCode);
                     return `
-                        <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2.5 text-xs ${isBestWeek ? 'border-[#717fff]/45' : ''}">
+                        <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2.5">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                ${tObj ? getTeamBadgeHTML(tObj, 'w-8 h-8', 'text-[9px]') : ''}
+                                ${team ? getTeamBadgeHTML(team, 'w-8 h-8', 'text-[9px]') : ''}
                                 <div class="min-w-0">
-                                    <div class="font-black text-white truncate">${escapeHtml(item.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(item.position)})</span></div>
-                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.headline)}</div>
+                                    <div class="font-bold text-white text-xs truncate">${escapeHtml(item.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(item.position)})</span></div>
+                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.headline || '')}</div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <div class="font-black text-[#a3adff]">${item.score} pts</div>
+                                <div class="text-xs font-black text-[#a3adff]">${item.score} pts</div>
                                 <div class="text-[10px] text-gray-400">🏆 ${item.titles} · OVR ${formatOvr(item.ovr)}</div>
                             </div>
                         </div>
@@ -4804,27 +4808,27 @@
                 }).join('');
             }
 
-            const top5Historical = [...userHistoryEntries]
+            const top5 = [...userHistoryEntries]
                 .sort((a, b) => (b.score || 0) - (a.score || 0))
                 .slice(0, 5);
 
-            if (top5Historical.length === 0) {
+            if (top5.length === 0) {
                 top5ListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>`;
             } else {
-                top5ListEl.innerHTML = top5Historical.map((item, idx) => {
-                    const tObj = findTeamByCode(item.teamCode);
+                top5ListEl.innerHTML = top5.map((item, idx) => {
+                    const team = findTeamByCode(item.teamCode);
                     return `
-                        <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2.5 text-xs">
+                        <div class="p-3 rounded-xl surface-sub flex items-center justify-between gap-2.5">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <span class="w-5 text-center font-black ${idx === 0 ? 'text-amber-400' : 'text-gray-400'}">#${idx + 1}</span>
-                                ${tObj ? getTeamBadgeHTML(tObj, 'w-8 h-8', 'text-[9px]') : ''}
+                                <span class="w-5 text-center font-black text-xs ${idx === 0 ? 'text-amber-400' : 'text-gray-400'}">#${idx + 1}</span>
+                                ${team ? getTeamBadgeHTML(team, 'w-8 h-8', 'text-[9px]') : ''}
                                 <div class="min-w-0">
-                                    <div class="font-black text-white truncate">${escapeHtml(item.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(item.position)})</span></div>
-                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.studiedCareer || '')} · ${escapeHtml(item.headline)}</div>
+                                    <div class="font-bold text-white text-xs truncate">${escapeHtml(item.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(item.position)})</span></div>
+                                    <div class="text-[11px] text-gray-400 truncate">${escapeHtml(item.headline || '')}</div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <div class="font-black text-amber-300">${item.score} pts</div>
+                                <div class="text-xs font-black text-amber-300">${item.score} pts</div>
                                 <div class="text-[10px] text-gray-400">🏆 ${item.titles} · OVR ${formatOvr(item.ovr)}</div>
                             </div>
                         </div>
@@ -4833,10 +4837,164 @@
             }
         };
 
-        // Escucha en tiempo real del Top Global Semanal (solo cuenta la mejor carrera de la semana por usuario)
+        window.submitCareerToCloudLeaderboard = async function (legacy, score) {
+            if (!careerState || !cloudUser || !window.cloudProfile) {
+                showToast('Inicia sesión para publicar tu puntaje en el Top Global Semanal.', 'info');
+                return;
+            }
+            const { weekId } = getCompetitiveWeekInfo();
+
+            const stintsMap = new Map();
+            [...(careerState.history || [])].reverse().forEach(h => {
+                if (!stintsMap.has(h.teamCode)) {
+                    stintsMap.set(h.teamCode, {
+                        teamCode: h.teamCode,
+                        teamName: h.teamName,
+                        careerName: h.careerName || '',
+                        sems: 0,
+                        goals: 0,
+                        assists: 0,
+                        titles: 0
+                    });
+                }
+                const st = stintsMap.get(h.teamCode);
+                st.sems += 1;
+                st.goals += h.goals || 0;
+                st.assists += h.assists || 0;
+                st.titles += (h.trophies || []).filter(t => t.type !== 'SELECCION').length;
+            });
+
+            const payload = {
+                weekId,
+                uid: cloudUser.uid,
+                nickname: window.cloudProfile.nickname,
+                playerName: careerState.playerName,
+                studiedCareer: careerState.studiedCareer || '',
+                position: careerState.position,
+                gender: careerState.gender,
+                ovr: careerState.ovr,
+                titles: careerState.trophies.length,
+                trophiesList: (careerState.trophies || []).slice(0, 25).map(t => ({
+                    title: t.title,
+                    teamName: t.teamName,
+                    year: t.year
+                })),
+                awardsList: (careerState.awards || []).slice(0, 15).map(a => ({
+                    title: a.title,
+                    year: a.year
+                })),
+                stints: Array.from(stintsMap.values()),
+                matches: careerState.stats.matches || 0,
+                goals: careerState.stats.goals || 0,
+                assists: careerState.stats.assists || 0,
+                cleanSheets: careerState.stats.cleanSheets || 0,
+                headline: legacy.headline,
+                teamCode: legacy.teamCode,
+                score: Number(score) || 0,
+                createdAtMs: Date.now(),
+                createdAt: serverTimestamp()
+            };
+
+            try {
+                await addDoc(collection(db, 'weekly_leaderboard'), payload);
+                careerState.lastSubmittedScore = score;
+                saveCareerState();
+                showToast(`🌍 ¡Puntaje publicado en el Top Global (${score} pts)!`, 'success');
+            } catch (err) {
+                console.error('Error publicando en ranking global:', err);
+            }
+        };
+
+        window.openCareerDetailModal = function (entryId) {
+            const item = currentWeekEntries.find(e => e.id === entryId);
+            if (!item) return;
+
+            const modal = document.getElementById('career-detail-modal');
+            const titleEl = document.getElementById('detail-modal-title');
+            const contentEl = document.getElementById('career-detail-content');
+            if (!modal || !contentEl) return;
+
+            const team = findTeamByCode(item.teamCode);
+            const isArq = item.position === 'ARQ';
+
+            titleEl.textContent = `${item.playerName} (@${item.nickname || 'Leyenda'})`;
+
+            const stintsHtml = Array.isArray(item.stints) && item.stints.length > 0
+                ? item.stints.map(st => {
+                    const stTeam = findTeamByCode(st.teamCode);
+                    return `
+                        <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
+                            <div class="flex items-center gap-2 min-w-0">
+                                ${stTeam ? getTeamBadgeHTML(stTeam, 'w-7 h-7', 'text-[8px]') : ''}
+                                <div class="min-w-0">
+                                    <div class="font-bold text-white truncate">${escapeHtml(st.teamName)}</div>
+                                    <div class="text-[10px] text-gray-400">${st.sems} semestres</div>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0 text-[11px]">
+                                <span class="font-bold text-amber-300">🏆 ${st.titles}</span> · <span class="text-gray-400">${st.goals}G ${st.assists}A</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('')
+                : `<div class="p-3 rounded-xl surface-sub text-xs text-gray-400">Club principal: <strong class="text-white">${escapeHtml(team ? team.name : item.headline)}</strong></div>`;
+
+            const trophiesHtml = Array.isArray(item.trophiesList) && item.trophiesList.length > 0
+                ? `<div class="flex flex-wrap gap-1.5">${item.trophiesList.map(t => `<span class="px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 text-[11px] font-bold">🏆 ${escapeHtml(t.title)} (A${t.year})</span>`).join('')}</div>`
+                : `<p class="text-xs text-gray-500">Total de títulos conquistados: ${item.titles}</p>`;
+
+            contentEl.innerHTML = `
+                <div class="p-4 rounded-2xl surface-sub flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        ${team ? getTeamBadgeHTML(team, 'w-12 h-12', 'text-xs') : ''}
+                        <div>
+                            <div class="text-xs font-black text-[#8b96ff]">@${escapeHtml(item.nickname || 'Leyenda')}</div>
+                            <div class="text-base font-black text-white">${escapeHtml(item.playerName)} (${escapeHtml(item.position)})</div>
+                            <div class="text-xs text-gray-400">${escapeHtml(item.studiedCareer || item.headline)}</div>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="px-2.5 py-1 rounded-xl bg-[#717fff] text-white font-black text-sm">OVR ${formatOvr(item.ovr)}</div>
+                        <div class="text-[11px] font-bold text-[#a3adff] mt-1">${item.score} pts</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-2 text-center">
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-white">${item.matches || 0}</div>
+                        <div class="text-[10px] text-gray-500 uppercase font-bold">PJ</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-[#8b96ff]">${isArq ? (item.cleanSheets || 0) : (item.goals || 0)}</div>
+                        <div class="text-[10px] text-gray-500 uppercase font-bold">${isArq ? 'Vallas' : 'Goles'}</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-[#717fff]">${item.assists || 0}</div>
+                        <div class="text-[10px] text-gray-500 uppercase font-bold">Asist.</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl surface-sub">
+                        <div class="text-base font-black text-amber-300">${item.titles || 0}</div>
+                        <div class="text-[10px] text-gray-500 uppercase font-bold">Títulos</div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">Trayectoria de Clubes</h4>
+                    <div class="space-y-1.5">${stintsHtml}</div>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">Palmarés Destacado</h4>
+                    ${trophiesHtml}
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        };
+
         function subscribeWeeklyLeaderboard() {
             if (unsubscribeWeekly) unsubscribeWeekly();
-            const { weekId } = getCurrentWeeklySeasonInfo();
+            const { weekId } = getCompetitiveWeekInfo();
             const listEl = document.getElementById('global-hof-list');
 
             const q = query(
@@ -4847,229 +5005,66 @@
             );
 
             unsubscribeWeekly = onSnapshot(q, (snapshot) => {
-                const bestByUser = new Map();
+                const rawEntries = [];
                 snapshot.forEach(docSnap => {
-                    const data = { id: docSnap.id, ...docSnap.data() };
-                    const userKey = data.uid || docSnap.id;
+                    rawEntries.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                const bestByUser = new Map();
+                rawEntries.forEach(entry => {
+                    const userKey = entry.uid || entry.id;
                     const existing = bestByUser.get(userKey);
-                    if (!existing || (data.score || 0) > (existing.score || 0)) {
-                        bestByUser.set(userKey, data);
+                    if (!existing || (entry.score || 0) > (existing.score || 0)) {
+                        bestByUser.set(userKey, entry);
                     }
                 });
 
-                const rows = Array.from(bestByUser.values())
+                const entries = Array.from(bestByUser.values())
                     .sort((a, b) => (b.score || 0) - (a.score || 0))
                     .slice(0, 10);
 
-                currentWeekEntries = rows;
-                renderGlobalWeeklyList(rows);
+                currentWeekEntries = entries;
+
+                if (!listEl) return;
+                if (entries.length === 0) {
+                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Nadie ha clasificado aún esta semana. ¡Inicia sesión, termina una carrera y sé el #1!</div>`;
+                    return;
+                }
+
+                listEl.innerHTML = entries.map((item, idx) => {
+                    const hofTeam = findTeamByCode(item.teamCode);
+                    const isMine = cloudUser && item.uid === cloudUser.uid;
+                    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                    return `
+                        <button type="button" onclick="openCareerDetailModal('${item.id}')"
+                            class="w-full text-left p-3.5 rounded-2xl surface-sub ${isMine ? 'border-[#717fff] bg-[#717fff]/10' : 'hover:border-[#717fff]/50'} flex items-center justify-between gap-3 transition cursor-pointer">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="w-7 text-center font-black text-sm ${idx === 0 ? 'text-amber-400' : 'text-gray-400'} shrink-0">${medal}</span>
+                                ${hofTeam ? getTeamBadgeHTML(hofTeam, 'w-10 h-10', 'text-[10px]') : ''}
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-black text-white text-sm truncate">${escapeHtml(item.playerName)}</span>
+                                        <span class="text-[11px] font-bold text-[#8b96ff]">(${escapeHtml(item.position)})</span>
+                                    </div>
+                                    <div class="text-[11px] text-gray-400 truncate">
+                                        <span class="font-bold text-gray-300">@${escapeHtml(item.nickname || 'Leyenda')}</span> · ${escapeHtml(item.headline || '')}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="text-xs font-black text-[#a3adff]">${item.score} pts</div>
+                                <div class="text-[11px] font-bold text-amber-300">🏆 ${item.titles} · OVR ${formatOvr(item.ovr)}</div>
+                            </div>
+                        </button>
+                    `;
+                }).join('');
             }, (err) => {
-                console.warn('Firestore weekly_leaderboard fallback:', err);
+                console.warn('Error leyendo ranking global:', err);
                 if (listEl) {
-                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-400">Ranking global disponible al conectar Firebase.</div>`;
+                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Conectando con el servidor de ranking semanal...</div>`;
                 }
             });
         }
-
-        function renderGlobalWeeklyList(rows) {
-            const listEl = document.getElementById('global-hof-list');
-            if (!listEl) return;
-
-            if (!rows || rows.length === 0) {
-                listEl.innerHTML = `
-                    <div class="p-5 rounded-2xl surface-sub text-center space-y-1.5">
-                        <div class="text-sm font-bold text-gray-300">Aún no hay carreras registradas esta semana</div>
-                        <p class="text-xs text-gray-500">Inicia sesión y titúlate para liderar el ranking semanal de la UFRO.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            listEl.innerHTML = rows.map((item, idx) => {
-                const hofTeam = findTeamByCode(item.teamCode);
-                const isMine = cloudUser && item.uid === cloudUser.uid;
-                const rankColor = idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500';
-
-                return `
-                    <div onclick="openGlobalCareerDetail(${idx})"
-                        class="p-3.5 rounded-2xl surface-sub ${isMine ? 'border-[#717fff]/60 bg-[#717fff]/5' : 'hover:border-[#717fff]/45'} flex items-center justify-between gap-3 cursor-pointer transition group">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <span class="w-6 text-center font-black text-sm ${rankColor} shrink-0">#${idx + 1}</span>
-                            ${hofTeam ? getTeamBadgeHTML(hofTeam, 'w-10 h-10', 'text-[10px]') : ''}
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                    <span class="font-black text-white text-sm truncate group-hover:text-[#a3adff] transition">${escapeHtml(item.playerName)}</span>
-                                    <span class="text-[11px] font-bold text-[#8b96ff]">(${escapeHtml(item.position)})</span>
-                                </div>
-                                <div class="text-[11px] text-gray-400 truncate">
-                                    <span class="text-[#a3adff] font-bold">@${escapeHtml(item.nickname || 'jugador')}</span> · ${escapeHtml(item.headline)}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-right shrink-0">
-                            <div class="text-xs font-black text-amber-300">🏆 ${item.titles} · ${item.score} pts</div>
-                            <div class="text-[11px] font-bold text-gray-400">OVR ${formatOvr(item.ovr)} <span class="text-[#8b96ff]">→</span></div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Vista detallada de cada carrera del Top Global Semanal
-        window.openGlobalCareerDetail = function (index) {
-            const item = currentWeekEntries[index];
-            if (!item) return;
-
-            const modal = document.getElementById('career-detail-modal');
-            const titleEl = document.getElementById('detail-modal-title');
-            const contentEl = document.getElementById('career-detail-content');
-            const mainTeam = findTeamByCode(item.teamCode);
-
-            titleEl.textContent = `${item.playerName} (@${item.nickname || 'jugador'})`;
-
-            const stints = Array.isArray(item.stints) ? item.stints : [];
-            const trophies = Array.isArray(item.trophies) ? item.trophies : [];
-            const awards = Array.isArray(item.awards) ? item.awards : [];
-
-            contentEl.innerHTML = `
-                <div class="p-4 rounded-2xl surface-sub border-[#717fff]/35 flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3">
-                        ${mainTeam ? getTeamBadgeHTML(mainTeam, 'w-12 h-12', 'text-xs') : ''}
-                        <div>
-                            <span class="text-[10px] font-black uppercase text-[#8b96ff]">${escapeHtml(item.headline)}</span>
-                            <div class="font-black text-white text-base">${escapeHtml(item.playerName)} <span class="text-xs text-gray-400">(${escapeHtml(item.position)} · ${item.gender === 'F' ? 'Fem' : 'Masc'})</span></div>
-                            <div class="text-xs text-gray-400">${escapeHtml(item.studiedCareer || '')}</div>
-                        </div>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <div class="text-xl font-black text-amber-300">${item.score} pts</div>
-                        <div class="text-xs font-bold text-[#a3adff]">Media Final ${formatOvr(item.ovr)}</div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-4 gap-2 text-center">
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-white">${item.matches ?? 0}</div>
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">PJ</div>
-                    </div>
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-[#8b96ff]">${item.position === 'ARQ' ? (item.cleanSheets ?? 0) : (item.goals ?? 0)}</div>
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">${item.position === 'ARQ' ? 'Vallas' : 'Goles'}</div>
-                    </div>
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-[#717fff]">${item.assists ?? 0}</div>
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">Asist.</div>
-                    </div>
-                    <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-amber-300">${item.titles ?? 0}</div>
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">Títulos</div>
-                    </div>
-                </div>
-
-                ${stints.length > 0 ? `
-                    <div class="space-y-2">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">Trayectoria por Equipos</h4>
-                        <div class="space-y-1.5">
-                            ${stints.map(st => {
-                                const stT = findTeamByCode(st.teamCode);
-                                return `
-                                    <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
-                                        <div class="flex items-center gap-2">
-                                            ${stT ? getTeamBadgeHTML(stT, 'w-7 h-7', 'text-[9px]') : ''}
-                                            <div>
-                                                <div class="font-bold text-white">${escapeHtml(st.teamName)}</div>
-                                                <div class="text-[11px] text-gray-400">${st.sems} sem. · ${st.goals}G · ${st.assists}A</div>
-                                            </div>
-                                        </div>
-                                        <span class="font-bold text-amber-300">🏆 ${st.titles}</span>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-
-                ${trophies.length > 0 ? `
-                    <div class="space-y-2">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">Palmarés Conquistado (${trophies.length})</h4>
-                        <div class="flex flex-wrap gap-1.5">
-                            ${trophies.map(t => `<span class="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 text-[11px] font-bold">🏆 ${escapeHtml(t.title)} (Año ${t.year})</span>`).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-
-                ${awards.length > 0 ? `
-                    <div class="space-y-2">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-400">Premios Individuales</h4>
-                        <div class="flex flex-wrap gap-1.5">
-                            ${awards.map(a => `<span class="px-2.5 py-1 rounded-lg bg-[#717fff]/15 text-[#d0d5ff] text-[11px] font-bold">${a.icon || '🎖️'} ${escapeHtml(a.title)} (Año ${a.year})</span>`).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-            `;
-
-            modal.classList.remove('hidden');
-        };
-
-        // Publicación automática al titularse (requiere haber iniciado sesión)
-        window.submitCareerToCloudLeaderboard = async function (legacy, score) {
-            if (!careerState || careerState.cloudSubmitted) return;
-
-            if (!cloudUser) {
-                showToast('Inicia sesión para que tus carreras participen en el Top Global Semanal.', 'info');
-                return;
-            }
-
-            try {
-                const { weekId } = getCurrentWeeklySeasonInfo();
-                const nickname = (window.cloudProfile && window.cloudProfile.nickname) || 'JugadorUFRO';
-
-                const stintsMap = new Map();
-                [...(careerState.history || [])].reverse().forEach(h => {
-                    if (!stintsMap.has(h.teamCode)) {
-                        stintsMap.set(h.teamCode, { teamCode: h.teamCode, teamName: h.teamName, sems: 0, goals: 0, assists: 0, titles: 0 });
-                    }
-                    const st = stintsMap.get(h.teamCode);
-                    st.sems += 1;
-                    st.goals += h.goals || 0;
-                    st.assists += h.assists || 0;
-                    st.titles += (h.trophies || []).filter(t => t.type !== 'SELECCION').length;
-                });
-
-                const payload = {
-                    weekId,
-                    uid: cloudUser.uid,
-                    nickname,
-                    playerName: careerState.playerName,
-                    position: careerState.position,
-                    gender: careerState.gender,
-                    studiedCareer: careerState.studiedCareer || '',
-                    ovr: careerState.ovr,
-                    titles: (careerState.trophies || []).length,
-                    matches: careerState.stats?.matches || 0,
-                    goals: careerState.stats?.goals || 0,
-                    assists: careerState.stats?.assists || 0,
-                    cleanSheets: careerState.stats?.cleanSheets || 0,
-                    headline: legacy.headline,
-                    teamCode: legacy.teamCode,
-                    stints: Array.from(stintsMap.values()),
-                    trophies: (careerState.trophies || []).slice(0, 25),
-                    awards: (careerState.awards || []).slice(0, 15),
-                    score,
-                    createdAtMs: Date.now(),
-                    createdAt: serverTimestamp()
-                };
-
-                await addDoc(collection(db, 'weekly_leaderboard'), payload);
-                careerState.cloudSubmitted = true;
-                careerState.lastSubmittedScore = score;
-                saveCareerState();
-                renderApp();
-                showToast(`🌍 ¡Carrera enviada al Top Global Semanal como @${nickname} (${score} pts)!`, 'success');
-            } catch (err) {
-                console.error('Error al publicar en weekly_leaderboard:', err);
-            }
-        };
 
         window.initCloudLeaderboard = function () {
             startWeeklyCountdown();
@@ -5078,7 +5073,9 @@
             onAuthStateChanged(auth, async (user) => {
                 cloudUser = user || null;
                 if (cloudUser) {
-                    await loadOrCreateCloudProfile(cloudUser);
+                    if (!isAuthenticating) {
+                        await loadOrCreateCloudProfile(cloudUser);
+                    }
                 } else {
                     window.cloudProfile = null;
                     updateCloudAuthUI();
