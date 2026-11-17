@@ -96,7 +96,7 @@
                     <h1 class="text-base sm:text-xl font-black tracking-wider text-white leading-none uppercase">
                         LEYENDAS
                     </h1>
-                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.2.2</span>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.2.3</span>
                 </div>
             </div>
 
@@ -2016,11 +2016,12 @@
                 plannedSemesters: regYears * 2,
                 extraYearsAdded: 0,
                 academicRisk: 18,
-                phase: 'FOCUS_CHOICE', // FOCUS_CHOICE | EVENT_CHOICE | READY_TO_SIM | RETIRED
+                phase: 'FOCUS_CHOICE', // FOCUS_CHOICE | EVENT_CHOICE | READY_TO_SIM | SEMESTER_SUMMARY | RETIRED
                 focusChoices: rollSemesterFocusChoices(4),
                 activeFocusId: null,
                 pendingEvent: null,
                 pendingEventOutcomeText: null,
+                lastSemesterSummary: null,
                 forcedSuspendThisSem: false,
                 forcedCupWinThisSem: false,
                 forcedEliminationThisSem: false,
@@ -2106,8 +2107,29 @@
 
         function cancelResetCareer() {
             if (!careerState) return;
-            careerState.phase = careerState.activeFocusId ? 'READY_TO_SIM' : 'FOCUS_CHOICE';
+            if (careerState.lastSemesterSummary && careerState.phaseBeforeReset === 'SEMESTER_SUMMARY') {
+                careerState.phase = 'SEMESTER_SUMMARY';
+            } else {
+                careerState.phase = careerState.activeFocusId ? 'READY_TO_SIM' : 'FOCUS_CHOICE';
+            }
             renderActionPanel();
+        }
+
+        function confirmNewCareer() {
+            if (!careerState) return;
+            careerState.phaseBeforeReset = careerState.phase;
+            careerState.phase = 'CONFIRM_RESET';
+            renderActionPanel();
+        }
+
+        function continueToNextSemester() {
+            if (!careerState || careerState.phase !== 'SEMESTER_SUMMARY') return;
+            careerState.lastSemesterSummary = null;
+            careerState.activeFocusId = null;
+            careerState.focusChoices = rollSemesterFocusChoices(4);
+            careerState.phase = 'FOCUS_CHOICE';
+            saveCareerState();
+            renderApp();
         }
 
         function resetCareer() {
@@ -2350,12 +2372,13 @@
             }
 
             // Registrar historial semestral
-            careerState.history.unshift({
+            const semesterRecord = {
                 semNumber,
                 year: careerState.year,
                 semesterInYear: careerState.semesterInYear,
                 teamName: careerState.team.name,
                 division: careerState.team.division,
+                prevOvr,
                 ovr: careerState.ovr,
                 ovrDelta: careerState.ovr - prevOvr,
                 focusLabel: focus.shortLabel,
@@ -2365,8 +2388,10 @@
                 assists,
                 cleanSheets,
                 trophies: unlockedTrophies.map(t => t.name),
+                trophyDetails: unlockedTrophies,
                 eventSummary: careerState.pendingEventOutcomeText || statusNote
-            });
+            };
+            careerState.history.unshift(semesterRecord);
 
             // Avanzar calendario académico
             careerState.totalSemestersPlayed = semNumber;
@@ -2401,10 +2426,9 @@
                 return;
             }
 
-            // Preparar siguiente semestre
-            careerState.activeFocusId = null;
-            careerState.focusChoices = rollSemesterFocusChoices(4);
-            careerState.phase = 'FOCUS_CHOICE';
+            // Mostrar resumen detallado del semestre antes de pasar a las cartas del siguiente semestre
+            careerState.lastSemesterSummary = semesterRecord;
+            careerState.phase = 'SEMESTER_SUMMARY';
 
             saveCareerState();
             renderApp();
@@ -2564,6 +2588,95 @@
                         </span>
                         <h3 class="text-xl sm:text-2xl font-black text-white">¡${escapeHtml(careerState.name)} se ha titulado!</h3>
                         <p class="text-xs text-gray-400">${escapeHtml(careerState.careerName)} · Puntaje de Leyenda: <strong class="text-[#a3adff] text-sm">${score.toLocaleString('es-CL')} pts</strong></p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (careerState.phase === 'SEMESTER_SUMMARY') {
+                const s = careerState.lastSemesterSummary || careerState.history[0];
+                if (!s) {
+                    continueToNextSemester();
+                    return;
+                }
+
+                const deltaVal = s.ovrDelta || 0;
+                const ovrDiffBadge = deltaVal > 0
+                    ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">▲ +${deltaVal} Media</span>`
+                    : deltaVal < 0
+                        ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/40">▼ ${deltaVal} Media</span>`
+                        : `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#151515] text-gray-400 border border-[#2b2b2b]">= Sin cambio de Media</span>`;
+
+                const trophiesList = (s.trophyDetails && s.trophyDetails.length > 0)
+                    ? s.trophyDetails
+                    : (s.trophies || []).map(name => ({ icon: '🏆', name, desc: `Conquistado con ${s.teamName}` }));
+
+                const trophiesHtml = trophiesList.length > 0
+                    ? `
+                        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-transparent border border-amber-400/40 space-y-2">
+                            <div class="text-[11px] font-black uppercase tracking-wider text-amber-300">🏆 Títulos y Logros Conquistados</div>
+                            <div class="space-y-1.5">
+                                ${trophiesList.map(t => `
+                                    <div class="flex items-center gap-2.5 text-xs">
+                                        <span class="text-lg">${t.icon || '🏆'}</span>
+                                        <div>
+                                            <div class="font-black text-white">${escapeHtml(t.name)}</div>
+                                            ${t.desc ? `<div class="text-[11px] text-amber-200/80">${escapeHtml(t.desc)}</div>` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `
+                    : `
+                        <div class="p-3 rounded-xl surface-sub flex items-center justify-between text-xs text-gray-400">
+                            <span>🏆 Títulos en este semestre</span>
+                            <span class="font-bold text-gray-500">Sin títulos obtenidos</span>
+                        </div>
+                    `;
+
+                panel.innerHTML = `
+                    <div class="space-y-4 animate-pop">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#262626] pb-3">
+                            <div>
+                                <span class="text-[11px] font-black uppercase tracking-wider text-[#8b96ff]">Resumen Oficial · Año ${s.year} Semestre ${s.semesterInYear}</span>
+                                <h3 class="text-lg font-black text-white">Balance del Semestre en ${escapeHtml(s.teamName)}</h3>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-gray-400">OVR ${formatOvr(s.prevOvr ?? (s.ovr - deltaVal))} → <strong class="text-white">${formatOvr(s.ovr)}</strong></span>
+                                ${ovrDiffBadge}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2.5 text-center">
+                            <div class="p-3 rounded-xl surface-sub">
+                                <div class="text-xl font-black text-white">${s.pj}</div>
+                                <div class="text-[10px] font-bold uppercase text-gray-400">Partidos Jugados</div>
+                            </div>
+                            <div class="p-3 rounded-xl surface-sub">
+                                <div class="text-xl font-black text-[#8b96ff]">${careerState.position === 'ARQ' ? s.cleanSheets : s.goals}</div>
+                                <div class="text-[10px] font-bold uppercase text-gray-400">${careerState.position === 'ARQ' ? 'Vallas Invictas' : 'Goles'}</div>
+                            </div>
+                            <div class="p-3 rounded-xl surface-sub">
+                                <div class="text-xl font-black text-[#717fff]">${s.assists}</div>
+                                <div class="text-[10px] font-bold uppercase text-gray-400">Asistencias</div>
+                            </div>
+                        </div>
+
+                        ${trophiesHtml}
+
+                        ${s.eventSummary ? `
+                            <div class="p-3 rounded-xl surface-sub border border-[#717fff]/25 text-xs text-gray-300">
+                                <span class="font-black text-[#a3adff]">Crónica:</span> ${escapeHtml(s.eventSummary)}
+                            </div>
+                        ` : ''}
+
+                        <div class="pt-1 flex justify-end">
+                            <button type="button" onclick="continueToNextSemester()"
+                                class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition">
+                                Continuar al Siguiente Semestre →
+                            </button>
+                        </div>
                     </div>
                 `;
                 return;
