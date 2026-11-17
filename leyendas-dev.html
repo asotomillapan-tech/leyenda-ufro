@@ -116,9 +116,9 @@
                     </button>
 
                     <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 rounded-2xl surface-card border-[#2b2b2b] shadow-2xl py-1.5 z-50 animate-pop">
-                        <a href="https://leyenda-ufro.vercel.app/perfil.html" class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-gray-200 hover:bg-[#242424] hover:text-white flex items-center gap-2 transition">
-                            <span>👤</span> Ver perfil
-                        </a>
+                        <button type="button" onclick="openProfileModal('all')" class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-gray-200 hover:bg-[#242424] hover:text-white flex items-center gap-2 transition">
+                            <span>👤</span> Ver mi perfil
+                        </button>
                         <button type="button" onclick="openProfileModal('username')" class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-gray-200 hover:bg-[#242424] hover:text-white flex items-center gap-2 transition">
                             <span>✏️</span> Cambiar usuario
                         </button>
@@ -209,6 +209,27 @@
                 </button>
                 <button type="button" onclick="switchAuthMode('login')" class="w-full py-2 text-xs font-bold text-gray-400 hover:text-white transition">
                     ← Volver a Iniciar sesión
+                </button>
+            </form>
+
+            <!-- Formulario rápido para elegir tu @usuario al entrar con Google -->
+            <form id="form-auth-google-setup" onsubmit="handleGoogleLocalSetup(event)" class="hidden space-y-3">
+                <div class="p-3 rounded-xl bg-[#717fff]/10 border border-[#717fff]/30 text-xs text-[#d0d5ff]">
+                    Personaliza tu perfil para que tus carreras aparezcan con <strong>tu propio @usuario</strong> en el ranking.
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Tu nombre de usuario</label>
+                    <input type="text" id="google-setup-username" required minlength="3" maxlength="18" placeholder="Ej: El10DeLaUFRO" class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Tu correo electrónico</label>
+                    <input type="email" id="google-setup-email" required placeholder="tu.correo@ufromail.cl" class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
+                    Confirmar y entrar con mi perfil
+                </button>
+                <button type="button" onclick="switchAuthMode('login')" class="w-full py-1.5 text-xs font-bold text-gray-400 hover:text-white transition">
+                    ← Volver atrás
                 </button>
             </form>
 
@@ -4711,11 +4732,15 @@
             try {
                 const savedUid = localStorage.getItem(LOCAL_SESSION_KEY);
                 if (!savedUid) return;
-                const acc = getLocalAccounts().find(a => a.uid === savedUid);
-                if (acc) {
+                const accounts = getLocalAccounts();
+                const acc = accounts.find(a => a.uid === savedUid);
+                // Ignorar la antigua cuenta genérica automática si existe
+                if (acc && acc.uid !== 'local_google_ufro') {
                     currentCloudUser = { uid: acc.uid, email: acc.email, isAnonymous: false, isLocal: true };
                     currentCloudProfile = acc;
                     updateAuthHeaderUI();
+                } else if (acc && acc.uid === 'local_google_ufro') {
+                    localStorage.removeItem(LOCAL_SESSION_KEY);
                 }
             } catch (e) {}
         }
@@ -4850,11 +4875,13 @@
             const formLogin = document.getElementById('form-auth-login');
             const formReg = document.getElementById('form-auth-register');
             const formReset = document.getElementById('form-auth-reset');
+            const formGoogleSetup = document.getElementById('form-auth-google-setup');
             const googleSec = document.getElementById('auth-google-section');
 
             formLogin.classList.add('hidden');
             formReg.classList.add('hidden');
             formReset.classList.add('hidden');
+            if (formGoogleSetup) formGoogleSetup.classList.add('hidden');
 
             if (mode === 'register') {
                 titleEl.textContent = 'Crear Cuenta';
@@ -4868,6 +4895,11 @@
                 tabsEl.classList.add('hidden');
                 googleSec.classList.add('hidden');
                 formReset.classList.remove('hidden');
+            } else if (mode === 'google-setup') {
+                titleEl.textContent = 'Configura tu Perfil';
+                tabsEl.classList.add('hidden');
+                googleSec.classList.add('hidden');
+                if (formGoogleSetup) formGoogleSetup.classList.remove('hidden');
             } else {
                 titleEl.textContent = 'Iniciar Sesión';
                 tabsEl.classList.remove('hidden');
@@ -5126,16 +5158,82 @@
 
         window.signInWithGoogleAccount = async function () {
             if (!firebaseAvailable || !auth) {
-                const accounts = getLocalAccounts();
-                let googleMock = accounts.find(a => a.uid === 'local_google_ufro');
-                if (!googleMock) {
-                    googleMock = {
-                        uid: 'local_google_ufro',
-                        username: 'LeyendaUFRO',
-                        usernameLower: 'leyendaufro',
-                        email: 'jugador@ufromail.cl',
-                        createdAt: Date.now()
-                    };
+                const accounts = getLocalAccounts().filter(a => a.uid !== 'local_google_ufro');
+                // Si el usuario ya había ingresado un correo/usuario en el formulario de login, buscar su cuenta
+                const typedId = (document.getElementById('login-identifier')?.value || '').trim().replace(/^@+/, '').toLowerCase();
+                const matchedAcc = typedId
+                    ? accounts.find(a => a.email === typedId || a.usernameLower === typedId)
+                    : (accounts.length === 1 ? accounts[0] : null);
+
+                if (matchedAcc) {
+                    localStorage.setItem(LOCAL_SESSION_KEY, matchedAcc.uid);
+                    currentCloudUser = { uid: matchedAcc.uid, email: matchedAcc.email, isAnonymous: false, isLocal: true };
+                    currentCloudProfile = matchedAcc;
+                    updateAuthHeaderUI();
+                    window.closeAuthModal();
+                    showToast(`✅ Sesión iniciada como @${matchedAcc.username}`, 'success');
+                    renderOfflineWeeklyLeaderboard();
+                    return;
+                }
+
+                // Si es la primera vez en este dispositivo, pedir su propio @usuario y correo en vez de poner @LeyendaUFRO
+                const setupUser = document.getElementById('google-setup-username');
+                const setupEmail = document.getElementById('google-setup-email');
+                if (typedId) {
+                    if (typedId.includes('@')) setupEmail.value = typedId;
+                    else setupUser.value = typedId;
+                }
+                window.switchAuthMode('google-setup');
+                return;
+            }
+            try {
+                const provider = new GoogleAuthProvider();
+                const cred = await signInWithPopup(auth, provider);
+                currentCloudUser = cred.user;
+                const prof = await loadOrCreateUserProfile(cred.user);
+                window.closeAuthModal();
+                showToast(`✅ Sesión iniciada como @${prof?.username || 'Leyenda'}`, 'success');
+            } catch (err) {
+                showToast('No se pudo completar el inicio con Google.', 'error');
+            }
+        };
+
+        window.handleGoogleLocalSetup = function (e) {
+            e.preventDefault();
+            const rawUser = document.getElementById('google-setup-username').value;
+            const email = document.getElementById('google-setup-email').value.trim().toLowerCase();
+            const validUser = validateCleanUsername(rawUser);
+            if (!validUser.ok) {
+                showToast(validUser.reason, 'error');
+                return;
+            }
+
+            const accounts = getLocalAccounts().filter(a => a.uid !== 'local_google_ufro');
+            let existing = accounts.find(a => a.email === email || a.usernameLower === validUser.clean.toLowerCase());
+
+            if (existing) {
+                existing.username = validUser.clean;
+                existing.usernameLower = validUser.clean.toLowerCase();
+            } else {
+                existing = {
+                    uid: `local_${Date.now()}`,
+                    username: validUser.clean,
+                    usernameLower: validUser.clean.toLowerCase(),
+                    email,
+                    createdAt: Date.now()
+                };
+                accounts.push(existing);
+            }
+
+            saveLocalAccounts(accounts);
+            localStorage.setItem(LOCAL_SESSION_KEY, existing.uid);
+            currentCloudUser = { uid: existing.uid, email: existing.email, isAnonymous: false, isLocal: true };
+            currentCloudProfile = existing;
+            updateAuthHeaderUI();
+            window.closeAuthModal();
+            showToast(`✅ ¡Bienvenido @${existing.username}!`, 'success');
+            renderOfflineWeeklyLeaderboard();
+        };
                     accounts.push(googleMock);
                     saveLocalAccounts(accounts);
                 }
