@@ -31,6 +31,8 @@ import {
   generateSemesterStats,
   computeIndividualAwards,
   getTrophyPrestigePoints,
+  getCareerModeKey,
+  buildWeeklyLeaderboardViews,
   calculateCareerLeaderboardScore,
 } from '../public/leyendas-engine.js';
 
@@ -352,3 +354,109 @@ test('Basketball positions/stats and balanced Football defender/midfielder leade
   });
   assert.ok(heroicScore >= defScore + 120, `Heroic 3ra->1ra ascent (${heroicScore}) should strongly reward (${defScore})`);
 });
+
+test('Weekly leaderboard score is balanced across Football Men, Football Women, and Basketball Men', () => {
+  const sharedContext = {
+    ovr: 87,
+    awards: [{ title: 'Premio 1' }, { title: 'MVP' }],
+    clutchPointsTotal: 35,
+    rival: { wins: 5 },
+    history: Array.from({ length: 10 }, () => ({ avgRating: 8.0 })),
+  };
+
+  const futMale = calculateCareerLeaderboardScore({
+    ...sharedContext,
+    sport: 'FUTBOL',
+    gender: 'M',
+    position: 'DEL',
+    trophies: [
+      { type: 'LEAGUE', division: 1 },
+      { type: 'LEAGUE', division: 1 },
+      { type: 'FACULTY' },
+      { type: 'INTERFACULTADES' },
+      { type: 'SELECCION', title: 'Campeón LDES' },
+    ],
+    stats: { matches: 105, goals: 64, assists: 26, cleanSheets: 0 },
+  });
+
+  const futFemale = calculateCareerLeaderboardScore({
+    ...sharedContext,
+    sport: 'FUTBOL',
+    gender: 'F',
+    position: 'DEL',
+    trophies: [
+      { type: 'LEAGUE', division: 1 },
+      { type: 'LEAGUE', division: 1 },
+      { type: 'INTERFACULTADES' },
+      { type: 'SELECCION', title: 'Campeona LDES' },
+    ],
+    stats: { matches: 105, goals: 64, assists: 26, cleanSheets: 0 },
+  });
+
+  const basketEsc = calculateCareerLeaderboardScore({
+    ...sharedContext,
+    sport: 'BASKET',
+    gender: 'M',
+    position: 'ESC',
+    trophies: [
+      { type: 'LEAGUE', division: 1 },
+      { type: 'LEAGUE', division: 1 },
+      { type: 'FACULTY' },
+      { type: 'INTERFACULTADES' },
+      { type: 'SELECCION', title: 'Campeón LDES' },
+    ],
+    stats: { matches: 85, points: 1750, assists: 340, rebounds: 370, stealsBlocks: 150 },
+  });
+
+  const basketPiv = calculateCareerLeaderboardScore({
+    ...sharedContext,
+    sport: 'BASKET',
+    gender: 'M',
+    position: 'PIV',
+    trophies: [
+      { type: 'LEAGUE', division: 1 },
+      { type: 'LEAGUE', division: 1 },
+      { type: 'FACULTY' },
+      { type: 'INTERFACULTADES' },
+      { type: 'SELECCION', title: 'Campeón LDES' },
+    ],
+    stats: { matches: 85, points: 1250, assists: 190, rebounds: 1040, stealsBlocks: 235 },
+  });
+
+  const minScore = Math.min(futMale, futFemale, basketEsc, basketPiv);
+  const maxScore = Math.max(futMale, futFemale, basketEsc, basketPiv);
+  assert.ok(
+    maxScore - minScore <= 25,
+    `Comparable careers across FUTBOL_M (${futMale}), FUTBOL_F (${futFemale}), BASKET_ESC (${basketEsc}), BASKET_PIV (${basketPiv}) should be within 25 pts`,
+  );
+});
+
+test('getCareerModeKey and buildWeeklyLeaderboardViews separate Global, Men, Women, and Basketball rankings', () => {
+  assert.equal(getCareerModeKey({ teamCode: 'FECSH-EFI-01', position: 'DEL', gender: 'M' }), 'FUTBOL_M');
+  assert.equal(getCareerModeKey({ teamCode: 'FEM-EFI-01', position: 'DEL', gender: 'F' }), 'FUTBOL_F');
+  assert.equal(getCareerModeKey({ teamCode: 'BAS-FICA-IND-01', position: 'BASE' }), 'BASKET_M');
+
+  const docs = [
+    { id: '2026-W47_u1', uid: 'u1', weekId: '2026-W47', playerName: 'Juan', position: 'DEL', gender: 'M', score: 420, ovr: 86 },
+    { id: '2026-W47_u1_FUTBOL_F', uid: 'u1', weekId: '2026-W47', playerName: 'Juana', position: 'DEL', gender: 'F', sport: 'FUTBOL', score: 450, ovr: 88 },
+    { id: '2026-W47_u1_BASKET_M', uid: 'u1', weekId: '2026-W47', playerName: 'Jordan', position: 'BASE', gender: 'M', sport: 'BASKET', score: 410, ovr: 85 },
+    { id: '2026-W47_u2_BASKET_M', uid: 'u2', weekId: '2026-W47', playerName: 'Pedro', position: 'PIV', gender: 'M', sport: 'BASKET', score: 430, ovr: 87 },
+    { id: '2026-W46_u3', uid: 'u3', weekId: '2026-W46', playerName: 'Viejo', position: 'DEL', gender: 'M', score: 999, ovr: 99 },
+  ];
+
+  const views = buildWeeklyLeaderboardViews(docs, '2026-W47', 10);
+  // Global deduplicates per user keeping highest score across all modes (u1's 450 & u2's 430)
+  assert.equal(views.global.length, 2);
+  assert.equal(views.global[0].playerName, 'Juana');
+  assert.equal(views.global[1].playerName, 'Pedro');
+
+  // Category rankings keep u1's entry in EACH mode independently
+  assert.equal(views.futbolM.length, 1);
+  assert.equal(views.futbolM[0].playerName, 'Juan');
+  assert.equal(views.futbolF.length, 1);
+  assert.equal(views.futbolF[0].playerName, 'Juana');
+  assert.equal(views.basketM.length, 2);
+  assert.equal(views.basketM[0].playerName, 'Pedro');
+  assert.equal(views.basketM[1].playerName, 'Jordan');
+});
+

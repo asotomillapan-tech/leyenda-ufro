@@ -60,40 +60,42 @@
 
     <!-- ==================== HEADER ==================== -->
     <header class="sticky top-0 z-40 bg-[#151515]/90 backdrop-blur-md border-b border-[#262626]">
-        <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
-            <!-- Botón Volver al Juego -->
-            <a href="/" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-xs font-bold text-gray-200 hover:text-white transition">
+        <div class="max-w-6xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2 sm:gap-3">
+            <!-- Botón Volver al Portal -->
+            <a href="/" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 rounded-xl bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-xs font-bold text-gray-200 hover:text-white transition shrink-0">
                 <span>←</span>
-                <span class="hidden sm:inline">Volver al Simulador</span>
-                <span class="sm:hidden">Jugar</span>
+                <span class="hidden sm:inline">Portal Juegos</span>
+                <span class="sm:hidden">Inicio</span>
             </a>
 
             <!-- Logo Central -->
-            <div class="flex items-center justify-center gap-2.5">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="w-8 h-8 shrink-0">
+            <div class="flex items-center justify-center gap-2 min-w-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" class="w-7 h-7 sm:w-8 sm:h-8 shrink-0">
                     <path fill="#717fff" d="M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z"/>
                 </svg>
-                <div class="flex items-baseline gap-2">
-                    <h1 class="text-base sm:text-lg font-black tracking-wider text-white leading-none uppercase">
-                        NOTINTERCARRERAS
+                <div class="flex items-baseline gap-2 min-w-0">
+                    <h1 class="text-sm sm:text-lg font-black tracking-wider text-white leading-none uppercase truncate">
+                        <span class="hidden sm:inline">NOTINTERCARRERAS</span>
+                        <span class="sm:hidden">PERFIL</span>
                     </h1>
-                    <span class="text-[10px] font-black tracking-wider text-[#8b96ff] uppercase">v0.2.1 · SOCIAL</span>
+                    <span class="hidden md:inline text-[10px] font-black tracking-wider text-[#8b96ff] uppercase shrink-0">PERFIL &amp; SOCIAL</span>
                 </div>
             </div>
 
             <!-- Estado Sesión Header -->
-            <div class="flex items-center justify-end">
+            <div class="flex items-center justify-end shrink-0">
                 <button id="btn-header-login" type="button" onclick="openAuthModal('login')"
-                    class="px-3.5 py-1.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-[11px] font-black text-white shadow transition">
-                    Inicio o registro
+                    class="px-3 sm:px-3.5 py-1.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-[11px] font-black text-white shadow transition">
+                    <span class="hidden sm:inline">Inicio o registro</span>
+                    <span class="sm:hidden">Entrar</span>
                 </button>
-                <div id="header-user-pill" class="hidden flex items-center gap-2">
-                    <span class="px-3 py-1.5 rounded-xl bg-[#1c1c1c] border border-[#717fff]/45 text-[11px] font-black text-white flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                        <span id="header-username-text">@usuario</span>
+                <div id="header-user-pill" class="hidden flex items-center gap-1.5 sm:gap-2">
+                    <span class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#1c1c1c] border border-[#717fff]/45 text-[11px] font-black text-white flex items-center gap-1.5 max-w-[115px] sm:max-w-[180px]">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                        <span id="header-username-text" class="truncate">@usuario</span>
                     </span>
-                    <button type="button" onclick="window.logoutCloudUser()" title="Cerrar sesión"
-                        class="px-2.5 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-rose-950/40 border border-[#2b2b2b] text-xs font-bold text-rose-400 transition">
+                    <button type="button" onclick="window.logoutCloudUser()" title="Cerrar sesión" aria-label="Cerrar sesión"
+                        class="px-2 sm:px-2.5 py-1.5 rounded-xl bg-[#1c1c1c] hover:bg-rose-950/40 border border-[#2b2b2b] text-xs font-bold text-rose-400 transition">
                         🚪
                     </button>
                 </div>
@@ -223,174 +225,234 @@
     </div>
 
     <!-- ==================== MAIN ==================== -->
-    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-6">
 
         <!-- ESTADO NO AUTENTICADO -->
-        <section id="guest-wall" class="max-w-lg mx-auto surface-card rounded-3xl p-8 text-center space-y-4 shadow-2xl my-8">
-            <div class="w-16 h-16 mx-auto rounded-2xl bg-[#717fff]/15 border border-[#717fff]/30 flex items-center justify-center text-3xl">
+        <section id="guest-wall" class="max-w-2xl mx-auto surface-card rounded-3xl p-5 sm:p-8 text-center space-y-4 sm:space-y-5 shadow-2xl my-2 sm:my-8">
+            <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-2xl bg-[#717fff]/15 border border-[#717fff]/30 flex items-center justify-center text-2xl sm:text-3xl">
                 👥
             </div>
-            <h2 class="text-2xl font-black text-white">Centro Social & Perfil UFRO</h2>
-            <p class="text-xs sm:text-sm text-gray-400">
-                Inicia sesión o regístrate para ver tu perfil competitivo, buscar a tus amigos por su <strong class="text-white">@usuario</strong>, enviar solicitudes de amistad y preparar tu equipo para los clanes.
-            </p>
-            <div class="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
+            <div class="space-y-1.5">
+                <span class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Comunidad UFRO</span>
+                <h2 class="text-xl sm:text-2xl font-black text-white">Centro Social &amp; Perfil</h2>
+                <p class="text-xs sm:text-sm text-gray-400 max-w-lg mx-auto leading-relaxed">
+                    Inicia sesión o regístrate para ver tu perfil competitivo, buscar amigos por su <strong class="text-white">@usuario</strong> y conectar tus carreras de LEYENDAS con NOT F.C.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-left">
+                <div class="p-2.5 sm:p-3 rounded-2xl surface-sub">
+                    <div class="text-base sm:text-lg">🏅</div>
+                    <div class="text-[11px] sm:text-xs font-black text-white mt-0.5">Top 5 &amp; OVR</div>
+                    <div class="text-[10px] text-gray-400 leading-tight mt-0.5">Historial en fútbol y básquet.</div>
+                </div>
+                <div class="p-2.5 sm:p-3 rounded-2xl surface-sub">
+                    <div class="text-base sm:text-lg">🤝</div>
+                    <div class="text-[11px] sm:text-xs font-black text-white mt-0.5">Amigos UFRO</div>
+                    <div class="text-[10px] text-gray-400 leading-tight mt-0.5">Busca por @usuario y compara fichas.</div>
+                </div>
+                <div class="p-2.5 sm:p-3 rounded-2xl surface-sub">
+                    <div class="text-base sm:text-lg">🛡️</div>
+                    <div class="text-[11px] sm:text-xs font-black text-white mt-0.5">Clubes NOT F.C</div>
+                    <div class="text-[10px] text-gray-400 leading-tight mt-0.5">Invita amigos a tu plantel F7.</div>
+                </div>
+            </div>
+
+            <div class="pt-1 flex flex-col sm:flex-row gap-2.5 justify-center">
                 <button type="button" onclick="openAuthModal('login')" class="px-6 py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
                     Iniciar sesión / Registrarse
                 </button>
                 <a href="/" class="px-6 py-3 rounded-xl bg-[#151515] hover:bg-[#222222] border border-[#2b2b2b] text-gray-300 font-bold text-xs transition">
-                    Volver al Simulador
+                    Volver al Portal
                 </a>
             </div>
         </section>
 
-        <!-- DASHBOARD DE PERFIL + PANEL LATERAL DE AMIGOS -->
-        <section id="social-dashboard" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- DASHBOARD DE PERFIL + COMUNIDAD -->
+        <section id="social-dashboard" class="hidden space-y-4 sm:space-y-5">
 
-            <!-- COLUMNA IZQUIERDA (7 cols): PERFIL Y CARRERAS DEL USUARIO -->
-            <div class="lg:col-span-7 space-y-5">
-
-                <!-- Tarjeta Principal de Perfil -->
-                <div class="surface-card rounded-3xl p-6 shadow-xl space-y-5">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#262626] pb-4">
-                        <div class="flex items-center gap-3.5">
-                            <div id="profile-avatar-ovr" class="w-16 h-16 rounded-2xl bg-[#717fff] flex flex-col items-center justify-center shrink-0 shadow-lg">
-                                <span class="text-[9px] font-bold uppercase text-white/80">TOP OVR</span>
-                                <span id="profile-best-ovr" class="text-2xl font-black text-white leading-none">--</span>
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <h2 id="profile-nickname-display" class="text-xl font-black text-white">@usuario</h2>
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                                        En línea
-                                    </span>
-                                </div>
-                                <p id="profile-email-display" class="text-xs text-gray-400 mt-0.5">correo@ufromail.cl</p>
-                                <p id="profile-active-career-summary" class="text-xs text-[#a3adff] font-semibold mt-1">
-                                    Sin carrera récord registrada aún
-                                </p>
-                            </div>
+            <!-- TARJETA HERO SUPERIOR DEL PERFIL (OPTIMIZADA PARA 9:16 Y DESKTOP) -->
+            <div class="surface-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xl space-y-2.5 sm:space-y-3.5">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3.5">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div id="profile-avatar-ovr" class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-[#717fff] flex flex-col items-center justify-center shrink-0 shadow-lg">
+                            <span class="text-[7px] sm:text-[9px] font-bold uppercase text-white/80">TOP OVR</span>
+                            <span id="profile-best-ovr" class="text-lg sm:text-2xl font-black text-white leading-none">--</span>
                         </div>
-
-                        <!-- Resumen rápido social -->
-                        <div class="grid grid-cols-2 gap-2 shrink-0">
-                            <div class="px-3.5 py-2 rounded-xl surface-sub text-center">
-                                <div id="stat-friends-count" class="text-lg font-black text-white">0</div>
-                                <div class="text-[10px] font-bold uppercase text-gray-500">Amigos</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 sm:gap-2">
+                                <h2 id="profile-nickname-display" class="text-base sm:text-xl font-black text-white truncate">@usuario</h2>
+                                <span class="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shrink-0">
+                                    En línea
+                                </span>
+                                <button type="button" id="btn-toggle-nickname-editor" onclick="toggleNicknameEditor()" aria-label="Editar nombre de usuario"
+                                    class="px-2 py-0.5 rounded-lg bg-[#151515] hover:bg-[#242424] border border-[#2b2b2b] text-[10px] font-bold text-gray-300 hover:text-white transition shrink-0">
+                                    ✏️<span class="hidden sm:inline"> Editar</span>
+                                </button>
                             </div>
-                            <div class="px-3.5 py-2 rounded-xl surface-sub text-center">
-                                <div id="stat-careers-count" class="text-lg font-black text-[#8b96ff]">0</div>
-                                <div class="text-[10px] font-bold uppercase text-gray-500">Carreras</div>
-                            </div>
+                            <p id="profile-email-display" class="text-[11px] sm:text-xs text-gray-400 truncate mt-0.5">correo@ufromail.cl</p>
+                            <p id="profile-active-career-summary" class="text-[11px] sm:text-xs text-[#a3adff] font-semibold truncate">
+                                Sin carrera récord registrada aún
+                            </p>
                         </div>
                     </div>
 
-                    <!-- Cambiar nombre de usuario (Cooldown 14 días) -->
-                    <div class="p-4 rounded-2xl surface-sub space-y-2">
-                        <div class="flex items-center justify-between gap-2">
-                            <label class="block text-xs font-bold text-gray-300">Cambiar nombre de usuario</label>
-                            <span id="nickname-cooldown-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                                Bloqueado (14 días)
-                            </span>
+                    <!-- KPIs compactos + accesos rápidos -->
+                    <div class="flex items-center justify-between md:justify-end gap-2 shrink-0">
+                        <div class="grid grid-cols-2 gap-1.5 sm:gap-2 flex-1 md:flex-none">
+                            <div class="px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-xl surface-sub text-center">
+                                <div id="stat-friends-count" class="text-sm sm:text-lg font-black text-white leading-tight">0</div>
+                                <div class="text-[8px] sm:text-[10px] font-bold uppercase text-gray-500">Amigos</div>
+                            </div>
+                            <div class="px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-xl surface-sub text-center">
+                                <div id="stat-careers-count" class="text-sm sm:text-lg font-black text-[#8b96ff] leading-tight">0</div>
+                                <div class="text-[8px] sm:text-[10px] font-bold uppercase text-gray-500">Carreras</div>
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                            <input type="text" id="input-cloud-nickname" minlength="3" maxlength="18" placeholder="Nuevo usuario"
-                                class="flex-1 px-3.5 py-2 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] text-xs sm:text-sm text-white focus:outline-none focus:border-[#717fff] disabled:opacity-50 disabled:cursor-not-allowed">
-                            <button type="button" id="btn-save-cloud-nickname" onclick="saveCloudNickname()"
-                                class="px-4 py-2 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
-                                Guardar
-                            </button>
+                        <div class="grid grid-cols-2 sm:flex sm:flex-row gap-1.5 shrink-0">
+                            <a href="/leyendas.html" class="px-2.5 py-2 rounded-xl bg-[#151515] hover:bg-[#222222] border border-[#2b2b2b] text-[10px] sm:text-[11px] font-bold text-gray-200 hover:text-white text-center transition whitespace-nowrap">
+                                ⚽ LEYENDAS
+                            </a>
+                            <a href="/notfc.html" class="px-2.5 py-2 rounded-xl bg-[#717fff]/15 hover:bg-[#717fff]/25 border border-[#717fff]/40 text-[10px] sm:text-[11px] font-black text-[#a3adff] text-center transition whitespace-nowrap">
+                                🛡️ NOT F.C
+                            </a>
                         </div>
-                        <p id="nickname-change-hint" class="text-[10px] text-gray-500">Solo letras, números y guion bajo (3-18 caracteres). 1 cambio cada 14 días.</p>
                     </div>
                 </div>
 
-                <!-- Carreras de la Semana Actual -->
-                <div class="surface-card rounded-3xl p-6 shadow-xl space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-black uppercase tracking-wider text-[#8b96ff]">📅 Tus Carreras de Esta Semana</h3>
-                        <span id="profile-weekly-count" class="text-[11px] font-bold text-gray-400">0 carreras</span>
+                <!-- Editor colapsable de @usuario (no ocupa alto innecesario en 9:16) -->
+                <div id="nickname-editor-box" class="hidden p-3 sm:p-4 rounded-2xl surface-sub space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <label for="input-cloud-nickname" class="block text-xs font-bold text-gray-300">Cambiar nombre de usuario</label>
+                        <span id="nickname-cooldown-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                            Bloqueado (14 días)
+                        </span>
                     </div>
-                    <div id="profile-weekly-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                        <div class="p-3.5 rounded-xl surface-sub text-center text-xs text-gray-500">Cargando carreras semanales...</div>
+                    <div class="flex gap-2">
+                        <input type="text" id="input-cloud-nickname" minlength="3" maxlength="18" placeholder="Nuevo usuario"
+                            class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] text-xs sm:text-sm text-white focus:outline-none focus:border-[#717fff] disabled:opacity-50 disabled:cursor-not-allowed">
+                        <button type="button" id="btn-save-cloud-nickname" onclick="saveCloudNickname()"
+                            class="px-3.5 sm:px-4 py-2 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Guardar
+                        </button>
                     </div>
+                    <p id="nickname-change-hint" class="text-[10px] text-gray-500">Solo letras, números y guion bajo (3-18 caracteres). 1 cambio cada 14 días.</p>
                 </div>
-
-                <!-- Top 5 Histórico Personal -->
-                <div class="surface-card rounded-3xl p-6 shadow-xl space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-black uppercase tracking-wider text-amber-300">🏆 Tu Top 5 Histórico</h3>
-                        <span class="text-[10px] text-gray-500">Mejores puntajes</span>
-                    </div>
-                    <div id="profile-top5-list" class="space-y-2 max-h-72 overflow-y-auto pr-1">
-                        <div class="p-3.5 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>
-                    </div>
-                </div>
-
             </div>
 
-            <!-- COLUMNA DERECHA (5 cols): MENÚ LATERAL DE AMIGOS (FASE 1) -->
-            <aside class="lg:col-span-5 space-y-5 lg:sticky lg:top-20">
+            <!-- NAVEGACIÓN MÓVIL 9:16 (visible bajo lg, en escritorio se muestran ambas columnas) -->
+            <div class="lg:hidden grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-[#1c1c1c] border border-[#2b2b2b]" role="tablist" aria-label="Secciones de perfil">
+                <button type="button" id="mob-tab-careers" onclick="switchMobileProfileTab('careers')"
+                    class="py-2 px-2 rounded-xl bg-[#717fff] text-white font-black text-[11px] transition">
+                    🏆 Carreras
+                </button>
+                <button type="button" id="mob-tab-friends" onclick="switchMobileProfileTab('friends')"
+                    class="py-2 px-2 rounded-xl text-gray-400 hover:text-white font-bold text-[11px] transition flex items-center justify-center gap-1">
+                    <span>🤝 Amigos</span>
+                    <span id="mobile-pending-badge" class="hidden px-1.5 py-0.2 rounded-full bg-amber-500 text-black text-[9px] font-black">0</span>
+                </button>
+                <button type="button" id="mob-tab-search" onclick="switchMobileProfileTab('search')"
+                    class="py-2 px-2 rounded-xl text-gray-400 hover:text-white font-bold text-[11px] transition">
+                    🔍 Buscar @
+                </button>
+            </div>
 
-                <!-- Buscador de Usuarios Únicos -->
-                <div class="surface-card rounded-3xl p-6 shadow-xl space-y-4 border-[#717fff]/30">
-                    <div>
-                        <span class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Comunidad UFRO · Fase 1</span>
-                        <h3 class="text-lg font-black text-white mt-0.5">👥 Buscar y Añadir Amigos</h3>
-                        <p class="text-xs text-gray-400 mt-0.5">Encuentra jugadores por su <strong class="text-gray-200">@nombre_de_usuario</strong> único.</p>
-                    </div>
+            <!-- GRID PRINCIPAL WEB (2 COLUMNAS) / TABS COMPACTOS EN 9:16 -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
 
-                    <div class="relative">
-                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">@</span>
-                        <input type="text" id="friend-search-input" oninput="handleFriendSearchInput()" placeholder="Buscar usuario (ej: El10DeLaUFRO)..."
-                            class="w-full pl-8 pr-4 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
-                    </div>
+                <!-- COLUMNA IZQUIERDA (7 cols): CARRERAS DEL USUARIO -->
+                <div id="sec-profile-careers" class="lg:col-span-7 lg:block space-y-4 sm:space-y-5">
 
-                    <!-- Resultados de búsqueda -->
-                    <div id="friend-search-results" class="space-y-2 max-h-64 overflow-y-auto pr-1">
-                        <div class="p-3 rounded-xl surface-sub text-center text-[11px] text-gray-500">
-                            Escribe al menos 2 letras para buscar jugadores registrados.
+                    <!-- Carreras de la Semana Actual -->
+                    <div class="surface-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black uppercase tracking-wider text-[#8b96ff]">📅 Tus Carreras de Esta Semana</h3>
+                            <span id="profile-weekly-count" class="text-[11px] font-bold text-gray-400">0 carreras</span>
+                        </div>
+                        <div id="profile-weekly-list" class="space-y-2 max-h-56 sm:max-h-60 overflow-y-auto pr-1">
+                            <div class="p-3.5 rounded-xl surface-sub text-center text-xs text-gray-500">Cargando carreras semanales...</div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Solicitudes de Amistad Pendientes -->
-                <div id="friend-requests-card" class="surface-card rounded-3xl p-6 shadow-xl space-y-3 border-amber-500/30">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-black uppercase tracking-wider text-amber-300">📩 Solicitudes de Amistad</h3>
-                        <span id="pending-requests-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300">0</span>
-                    </div>
-                    <div id="friend-requests-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                        <div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">No tienes solicitudes pendientes.</div>
-                    </div>
-                </div>
-
-                <!-- Lista de Amigos Aceptados -->
-                <div class="surface-card rounded-3xl p-6 shadow-xl space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-black uppercase tracking-wider text-emerald-400">🤝 Tus Amigos</h3>
-                        <span id="friends-list-badge" class="text-[11px] font-bold text-gray-400">0 amigos</span>
-                    </div>
-                    <div id="friends-list-container" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
-                        <div class="p-4 rounded-xl surface-sub text-center text-xs text-gray-500">
-                            Aún no tienes amigos agregados. ¡Busca un @usuario arriba y envíale una solicitud!
+                    <!-- Top 5 Histórico Personal -->
+                    <div class="surface-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black uppercase tracking-wider text-amber-300">🏆 Tu Top 5 Histórico</h3>
+                            <span class="text-[10px] text-gray-500">Mejores puntajes</span>
+                        </div>
+                        <div id="profile-top5-list" class="space-y-2 max-h-64 sm:max-h-72 overflow-y-auto pr-1">
+                            <div class="p-3.5 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>
                         </div>
                     </div>
+
+                    <!-- Acceso directo NOT F.C (visible también bajo carreras en web) -->
+                    <a href="/notfc.html" class="hidden lg:flex surface-card rounded-3xl p-5 border-[#717fff]/30 hover:border-[#717fff] items-center justify-between gap-3 transition group">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-[#8b96ff]">Multijugador Fútbol 7 · Disponible</span>
+                            <div class="text-sm font-black text-white group-hover:text-[#a3adff] transition">🛡️ NOT F.C — Arma tu Club con Amigos</div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Convoca a tus amigos agregados, usa tus jugadores de LEYENDAS y compite en la Liga de 32 equipos.</p>
+                        </div>
+                        <span class="px-3 py-1.5 rounded-xl bg-[#717fff] text-white text-[11px] font-black shrink-0">
+                            Jugar →
+                        </span>
+                    </a>
+
                 </div>
 
-                <!-- Adelanto Fase 2: Clanes / Equipos -->
-                <div class="surface-card rounded-3xl p-5 border-[#2b2b2b] opacity-80 flex items-center justify-between gap-3">
-                    <div>
-                        <span class="text-[10px] font-black uppercase tracking-wider text-[#8b96ff]">Próximamente · Fase 2</span>
-                        <div class="text-sm font-black text-white">⚔️ Equipos / Clanes de Amigos</div>
-                        <p class="text-[11px] text-gray-400 mt-0.5">Funda tu plantel con tus amigos y compite en el Ranking por Equipos.</p>
+                <!-- COLUMNA DERECHA (5 cols): BUSCADOR + SOLICITUDES + AMIGOS -->
+                <aside class="lg:col-span-5 space-y-4 sm:space-y-5 lg:sticky lg:top-20">
+
+                    <!-- Buscador de Usuarios Únicos -->
+                    <div id="sec-profile-search" class="hidden lg:block surface-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-3.5 border-[#717fff]/30">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Comunidad UFRO</span>
+                            <h3 class="text-base sm:text-lg font-black text-white mt-0.5">🔍 Buscar y Añadir Amigos</h3>
+                            <p class="text-xs text-gray-400 mt-0.5">Encuentra jugadores por su <strong class="text-gray-200">@usuario</strong> único.</p>
+                        </div>
+
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">@</span>
+                            <input type="text" id="friend-search-input" oninput="handleFriendSearchInput()" placeholder="Buscar usuario (ej: El10DeLaUFRO)..."
+                                class="w-full pl-8 pr-4 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
+                        </div>
+
+                        <!-- Resultados de búsqueda -->
+                        <div id="friend-search-results" class="space-y-2 max-h-60 sm:max-h-64 overflow-y-auto pr-1">
+                            <div class="p-3 rounded-xl surface-sub text-center text-[11px] text-gray-500">
+                                Escribe al menos 2 letras para buscar jugadores registrados.
+                            </div>
+                        </div>
                     </div>
-                    <span class="px-2.5 py-1 rounded-lg bg-[#151515] border border-[#2b2b2b] text-[10px] font-bold text-gray-400 shrink-0">
-                        Pronto
-                    </span>
-                </div>
 
-            </aside>
+                    <!-- Solicitudes + Lista de Amigos -->
+                    <div id="sec-profile-friends" class="hidden lg:block space-y-4 sm:space-y-5">
+                        <!-- Solicitudes de Amistad Pendientes -->
+                        <div id="friend-requests-card" class="surface-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-3 border-amber-500/30">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xs font-black uppercase tracking-wider text-amber-300">📩 Solicitudes de Amistad</h3>
+                                <span id="pending-requests-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300">0</span>
+                            </div>
+                            <div id="friend-requests-list" class="space-y-2 max-h-52 sm:max-h-60 overflow-y-auto pr-1">
+                                <div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">No tienes solicitudes pendientes.</div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Amigos Aceptados -->
+                        <div class="surface-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xs font-black uppercase tracking-wider text-emerald-400">🤝 Tus Amigos</h3>
+                                <span id="friends-list-badge" class="text-[11px] font-bold text-gray-400">0 amigos</span>
+                            </div>
+                            <div id="friends-list-container" class="space-y-2.5 max-h-72 sm:max-h-96 overflow-y-auto pr-1">
+                                <div class="p-4 rounded-xl surface-sub text-center text-xs text-gray-500">
+                                    Aún no tienes amigos agregados. ¡Busca un @usuario y envíale una solicitud!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </aside>
+            </div>
         </section>
 
     </main>
@@ -550,6 +612,38 @@
         function closePlayerCardModal() {
             const modal = document.getElementById('player-card-modal');
             if (modal) modal.classList.add('hidden');
+        }
+
+        function toggleNicknameEditor() {
+            const box = document.getElementById('nickname-editor-box');
+            const btn = document.getElementById('btn-toggle-nickname-editor');
+            if (!box) return;
+            const willOpen = box.classList.contains('hidden');
+            box.classList.toggle('hidden', !willOpen);
+            if (btn) btn.textContent = willOpen ? '✕ Cerrar' : '✏️ Editar';
+        }
+
+        let currentMobileProfileTab = 'careers';
+        function switchMobileProfileTab(tab) {
+            currentMobileProfileTab = tab;
+            const map = {
+                careers: { sec: 'sec-profile-careers', btn: 'mob-tab-careers' },
+                friends: { sec: 'sec-profile-friends', btn: 'mob-tab-friends' },
+                search: { sec: 'sec-profile-search', btn: 'mob-tab-search' }
+            };
+            Object.entries(map).forEach(([key, cfg]) => {
+                const secEl = document.getElementById(cfg.sec);
+                const btnEl = document.getElementById(cfg.btn);
+                const isActive = key === tab;
+                if (secEl) {
+                    secEl.classList.toggle('hidden', !isActive);
+                }
+                if (btnEl) {
+                    btnEl.className = isActive
+                        ? 'py-2 px-2 rounded-xl bg-[#717fff] text-white font-black text-[11px] transition flex items-center justify-center gap-1'
+                        : 'py-2 px-2 rounded-xl text-gray-400 hover:text-white font-bold text-[11px] transition flex items-center justify-center gap-1';
+                }
+            });
         }
     </script>
 
@@ -838,6 +932,14 @@
 
             if (weeklyCountEl) weeklyCountEl.textContent = `${myWeekly.length} ${myWeekly.length === 1 ? 'carrera' : 'carreras'}`;
 
+            const getModeTag = (c) => {
+                const pos = String(c?.position || '').toUpperCase();
+                const code = String(c?.teamCode || '').toUpperCase();
+                if (c?.modeKey === 'BASKET_M' || c?.sport === 'BASKET' || code.startsWith('BAS-') || ['BASE', 'ESC', 'ALE', 'AP', 'PIV'].includes(pos)) return '🏀 Básquet';
+                if (c?.modeKey === 'FUTBOL_F' || c?.gender === 'F' || code.startsWith('FEM-')) return '⚽ Fem';
+                return '⚽ Masc';
+            };
+
             if (weeklyListEl) {
                 weeklyListEl.innerHTML = myWeekly.length === 0
                     ? `<div class="p-3.5 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras esta semana.</div>`
@@ -845,7 +947,7 @@
                         <button type="button" onclick="openPlayerCardModal('${escapeHtml(c.uid)}')"
                             class="w-full text-left p-3 rounded-xl surface-sub hover:border-[#717fff]/50 flex items-center justify-between gap-2 text-xs transition">
                             <div class="min-w-0">
-                                <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span></div>
+                                <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span> <span class="text-[10px] text-gray-400">${escapeHtml(getModeTag(c))}</span></div>
                                 <div class="text-[11px] text-gray-400 truncate">${escapeHtml(c.headline || '')}</div>
                             </div>
                             <div class="text-right shrink-0">
@@ -865,7 +967,7 @@
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <span class="font-black text-amber-400 w-5 shrink-0">#${idx + 1}</span>
                                 <div class="min-w-0">
-                                    <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span></div>
+                                    <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span> <span class="text-[10px] text-gray-400">${escapeHtml(getModeTag(c))}</span></div>
                                     <div class="text-[11px] text-gray-400 truncate">${escapeHtml(c.headline || '')} · ${escapeHtml(c.weekId || '')}</div>
                                 </div>
                             </div>
@@ -996,8 +1098,13 @@
             );
 
             const reqBadge = document.getElementById('pending-requests-badge');
+            const mobileReqBadge = document.getElementById('mobile-pending-badge');
             const reqList = document.getElementById('friend-requests-list');
             if (reqBadge) reqBadge.textContent = String(incomingRequests.length);
+            if (mobileReqBadge) {
+                mobileReqBadge.textContent = String(incomingRequests.length);
+                mobileReqBadge.classList.toggle('hidden', incomingRequests.length === 0);
+            }
 
             if (reqList) {
                 if (incomingRequests.length === 0) {
@@ -1170,14 +1277,16 @@
                 return;
             }
 
-            const st = (topCareer && topCareer.stats) || { matches: 0, goals: 0, assists: 0, cleanSheets: 0 };
-            const isArq = (topCareer?.position || enriched.activePosition) === 'ARQ';
+            const st = (topCareer && topCareer.stats) || { matches: 0, goals: 0, assists: 0, cleanSheets: 0, points: 0, rebounds: 0 };
+            const topPos = String(topCareer?.position || enriched.activePosition || '').toUpperCase();
+            const isBasket = topCareer?.modeKey === 'BASKET_M' || topCareer?.sport === 'BASKET' || ['BASE', 'ESC', 'ALE', 'AP', 'PIV'].includes(topPos);
+            const isArq = topPos === 'ARQ';
 
             bodyEl.innerHTML = `
                 <div class="p-4 rounded-2xl surface-sub flex items-center justify-between gap-3">
                     <div>
                         <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/20 text-[#a3adff]">
-                            @${escapeHtml(enriched.nickname)}
+                            @${escapeHtml(enriched.nickname)} · ${isBasket ? '🏀 Básquet' : '⚽ Fútbol'}
                         </span>
                         <h4 class="text-base font-black text-white mt-1">${escapeHtml(topCareer?.playerName || enriched.activePlayerName)}</h4>
                         <p class="text-xs text-gray-400">${escapeHtml(topCareer?.studiedCareer || enriched.activeCareerName)} · ${escapeHtml(topCareer?.position || enriched.activePosition || 'MED')}</p>
@@ -1199,12 +1308,12 @@
                             <div class="text-[10px] font-bold text-gray-500 uppercase">PJ</div>
                         </div>
                         <div class="p-2.5 rounded-xl surface-sub">
-                            <div class="text-base font-black text-[#8b96ff]">${isArq ? (st.cleanSheets || 0) : (st.goals || 0)}</div>
-                            <div class="text-[10px] font-bold text-gray-500 uppercase">${isArq ? 'Vallas' : 'Goles'}</div>
+                            <div class="text-base font-black text-[#8b96ff]">${isBasket ? (st.points || 0) : (isArq ? (st.cleanSheets || 0) : (st.goals || 0))}</div>
+                            <div class="text-[10px] font-bold text-gray-500 uppercase">${isBasket ? 'Puntos' : (isArq ? 'Vallas' : 'Goles')}</div>
                         </div>
                         <div class="p-2.5 rounded-xl surface-sub">
-                            <div class="text-base font-black text-[#717fff]">${isArq ? ((st.goals || 0) + (st.assists || 0)) : (st.assists || 0)}</div>
-                            <div class="text-[10px] font-bold text-gray-500 uppercase">${isArq ? 'G+A' : 'Asist.'}</div>
+                            <div class="text-base font-black text-[#717fff]">${isBasket ? `${st.rebounds || 0}/${st.assists || 0}` : (isArq ? ((st.goals || 0) + (st.assists || 0)) : (st.assists || 0))}</div>
+                            <div class="text-[10px] font-bold text-gray-500 uppercase">${isBasket ? 'Reb/Ast' : (isArq ? 'G+A' : 'Asist.')}</div>
                         </div>
                         <div class="p-2.5 rounded-xl surface-sub">
                             <div class="text-base font-black text-amber-300">${topCareer.titles || 0}</div>

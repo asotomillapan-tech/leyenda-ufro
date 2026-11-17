@@ -437,18 +437,39 @@
                     </button>
                 </div>
 
-                <!-- Vista Top Global Semanal -->
+                <!-- Vista Ranking Semanal (Global + por Modalidad) -->
                 <div id="global-leaderboard-view" class="space-y-4">
                     <div class="text-center">
                         <span id="weekly-season-badge" class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#717fff]/15 text-[#8b96ff] border border-[#717fff]/30">
                             SEMANA EN CURSO
                         </span>
-                        <h2 class="text-2xl font-black text-white mt-2.5">🌍 Top Global Semanal</h2>
+                        <h2 id="weekly-ranking-heading" class="text-2xl font-black text-white mt-2.5">🌍 Top Global Semanal</h2>
+                        <p id="weekly-ranking-subtitle" class="text-xs text-gray-400 mt-1">Mejores marcas de la semana combinando Fútbol Masc., Femenino y Básquetbol.</p>
                         <div class="mt-2 inline-flex flex-col items-center px-3.5 py-2 rounded-2xl surface-sub border border-[#717fff]/25">
                             <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Reinicio del ranking en</span>
                             <span id="weekly-countdown-text" class="font-mono text-xs sm:text-sm font-black text-[#a3adff] mt-0.5">--d --h --m --s</span>
                         </div>
                     </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 rounded-2xl bg-[#151515] border border-[#262626]" role="tablist" aria-label="Categorías del ranking semanal">
+                        <button type="button" onclick="selectWeeklyRankingCategory('ALL')" id="tab-rank-ALL"
+                            class="py-2 px-2 rounded-xl bg-[#717fff] text-white font-black text-[11px] transition">
+                            🌍 Global
+                        </button>
+                        <button type="button" onclick="selectWeeklyRankingCategory('FUTBOL_M')" id="tab-rank-FUTBOL_M"
+                            class="py-2 px-2 rounded-xl text-gray-400 hover:text-white font-bold text-[11px] transition">
+                            ⚽ Fútbol H.
+                        </button>
+                        <button type="button" onclick="selectWeeklyRankingCategory('FUTBOL_F')" id="tab-rank-FUTBOL_F"
+                            class="py-2 px-2 rounded-xl text-gray-400 hover:text-white font-bold text-[11px] transition">
+                            ⚽ Fútbol M.
+                        </button>
+                        <button type="button" onclick="selectWeeklyRankingCategory('BASKET_M')" id="tab-rank-BASKET_M"
+                            class="py-2 px-2 rounded-xl text-gray-400 hover:text-white font-bold text-[11px] transition">
+                            🏀 Básquetbol
+                        </button>
+                    </div>
+
                     <div id="global-hof-list" class="space-y-2.5">
                         <div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Cargando ranking global...</div>
                     </div>
@@ -5523,23 +5544,64 @@
             return null;
         }
 
+        let selectedWeeklyRankingCategory = 'ALL';
+        let cachedWeeklyRankingViews = { global: [], futbolM: [], futbolF: [], basketM: [] };
+
+        const WEEKLY_RANKING_VIEW_CONFIG = {
+            ALL: {
+                title: '🌍 Top Global Semanal',
+                subtitle: 'Mejores marcas de la semana combinando Fútbol Masc., Femenino y Básquetbol (puntaje balanceado).',
+                empty: 'Aún no hay carreras registradas esta semana. ¡Inicia sesión y sé el primero en liderar el ranking!',
+                getEntries: (views) => views.global || []
+            },
+            FUTBOL_M: {
+                title: '⚽ Ranking Fútbol Hombres',
+                subtitle: 'Mejores carreras de la semana en Intercarreras Fútbol Masculino.',
+                empty: 'Aún no hay carreras de Fútbol Hombres esta semana. ¡Sé el primero en marcar la pauta!',
+                getEntries: (views) => views.futbolM || []
+            },
+            FUTBOL_F: {
+                title: '⚽ Ranking Fútbol Mujeres',
+                subtitle: 'Mejores carreras de la semana en Intercarreras Fútbol Femenino.',
+                empty: 'Aún no hay carreras de Fútbol Mujeres esta semana. ¡Crea una jugadora femenina y lidera este ranking!',
+                getEntries: (views) => views.futbolF || []
+            },
+            BASKET_M: {
+                title: '🏀 Ranking Básquetbol',
+                subtitle: 'Mejores carreras de la semana en Intercarreras Básquetbol UFRO.',
+                empty: 'Aún no hay carreras de Básquetbol esta semana. ¡Salta a la duela y lidera este ranking!',
+                getEntries: (views) => views.basketM || []
+            }
+        };
+
+        window.selectWeeklyRankingCategory = function (categoryKey) {
+            if (!WEEKLY_RANKING_VIEW_CONFIG[categoryKey]) return;
+            selectedWeeklyRankingCategory = categoryKey;
+
+            ['ALL', 'FUTBOL_M', 'FUTBOL_F', 'BASKET_M'].forEach(key => {
+                const btn = document.getElementById(`tab-rank-${key}`);
+                if (!btn) return;
+                btn.className = key === categoryKey
+                    ? 'py-2 px-2 rounded-xl bg-[#717fff] text-white font-black text-[11px] transition'
+                    : 'py-2 px-2 rounded-xl text-gray-400 hover:text-white font-bold text-[11px] transition';
+            });
+
+            const meta = WEEKLY_RANKING_VIEW_CONFIG[categoryKey];
+            const headingEl = document.getElementById('weekly-ranking-heading');
+            const subtitleEl = document.getElementById('weekly-ranking-subtitle');
+            if (headingEl) headingEl.textContent = meta.title;
+            if (subtitleEl) subtitleEl.textContent = meta.subtitle;
+
+            renderGlobalLeaderboardList(meta.getEntries(cachedWeeklyRankingViews));
+        };
+
         function processLeaderboardDocs(allDocs) {
             cachedAllLeaderboardDocs = allDocs;
             const { weekId } = getChileWeekInfo();
 
-            const currentWeekEntries = allDocs
-                .filter(item => item.weekId === weekId && typeof item.score === 'number')
-                .sort((a, b) => b.score - a.score || (b.ovr || 0) - (a.ovr || 0));
-
-            const bestByUserMap = new Map();
-            for (const item of currentWeekEntries) {
-                const userKey = item.uid || item.id;
-                if (!bestByUserMap.has(userKey)) {
-                    bestByUserMap.set(userKey, item);
-                }
-            }
-            const deduplicatedWeekEntries = Array.from(bestByUserMap.values());
-            renderGlobalLeaderboardList(deduplicatedWeekEntries.slice(0, 10));
+            cachedWeeklyRankingViews = E().buildWeeklyLeaderboardViews(allDocs, weekId, 10);
+            const activeMeta = WEEKLY_RANKING_VIEW_CONFIG[selectedWeeklyRankingCategory] || WEEKLY_RANKING_VIEW_CONFIG.ALL;
+            renderGlobalLeaderboardList(activeMeta.getEntries(cachedWeeklyRankingViews));
 
             const profileModal = document.getElementById('profile-modal');
             if (profileModal && !profileModal.classList.contains('hidden')) {
@@ -5599,8 +5661,9 @@
             const listEl = document.getElementById('global-hof-list');
             if (!listEl) return;
 
+            const activeMeta = WEEKLY_RANKING_VIEW_CONFIG[selectedWeeklyRankingCategory] || WEEKLY_RANKING_VIEW_CONFIG.ALL;
             if (!entries || entries.length === 0) {
-                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">Aún no hay carreras registradas esta semana. ¡Inicia sesión y sé el primero en liderar el ranking!</div>`;
+                listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-500">${escapeHtml(activeMeta.empty)}</div>`;
                 return;
             }
 
@@ -5609,6 +5672,11 @@
                 const isMine = currentUser && item.uid === currentUser.uid;
                 const rankColor = idx === 0 ? 'text-amber-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-500';
                 const safeId = escapeHtml(item.id || '');
+                const modeKey = item.modeKey || E().getCareerModeKey(item);
+                const modeMeta = E().CAREER_MODE_META[modeKey] || E().CAREER_MODE_META.FUTBOL_M;
+                const modeBadgeHtml = selectedWeeklyRankingCategory === 'ALL'
+                    ? `<span class="ml-1 px-1.5 py-0.5 rounded bg-[#1c1c1c] border border-[#2f2f2f] text-[10px] font-bold text-gray-300">${escapeHtml(modeMeta.shortTag)}</span>`
+                    : '';
 
                 return `
                     <button type="button" onclick="openCareerDetailModal('${safeId}')"
@@ -5620,6 +5688,7 @@
                                 <div class="font-black text-white text-sm truncate group-hover:text-[#a3adff] transition">
                                     ${escapeHtml(item.playerName || 'Jugador')}
                                     <span class="text-[11px] font-bold text-[#8b96ff]">(${escapeHtml(item.position || 'MED')})</span>
+                                    ${modeBadgeHtml}
                                 </div>
                                 <div class="text-[11px] font-bold text-emerald-400 truncate">
                                     @${escapeHtml(item.nickname || 'usuario')} ${isMine ? '(Tú)' : ''}
@@ -5762,11 +5831,14 @@
                 if (myWeeklyCareers.length === 0) {
                     weeklyListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no has completado carreras esta semana.</div>`;
                 } else {
-                    weeklyListEl.innerHTML = myWeeklyCareers.map(c => `
+                    weeklyListEl.innerHTML = myWeeklyCareers.map(c => {
+                        const mk = E().getCareerModeKey(c);
+                        const mTag = (E().CAREER_MODE_META[mk] || E().CAREER_MODE_META.FUTBOL_M).shortTag;
+                        return `
                         <button type="button" onclick="openCareerDetailModal('${escapeHtml(c.id)}')"
                             class="w-full text-left p-3 rounded-xl surface-sub hover:border-[#717fff]/50 flex items-center justify-between gap-2 text-xs transition">
                             <div class="min-w-0">
-                                <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span></div>
+                                <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span> <span class="text-[10px] text-gray-400">${escapeHtml(mTag)}</span></div>
                                 <div class="text-[11px] text-gray-400 truncate">${escapeHtml(c.headline || '')}</div>
                             </div>
                             <div class="text-right shrink-0">
@@ -5774,7 +5846,8 @@
                                 <div class="text-[10px] text-gray-400">🏆 ${c.titles || 0} · OVR ${formatOvr(c.ovr || 60)}</div>
                             </div>
                         </button>
-                    `).join('');
+                    `;
+                    }).join('');
                 }
             }
 
@@ -5782,13 +5855,16 @@
                 if (myTop5Historical.length === 0) {
                     top5ListEl.innerHTML = `<div class="p-3 rounded-xl surface-sub text-center text-xs text-gray-500">Aún no tienes carreras registradas en tu cuenta.</div>`;
                 } else {
-                    top5ListEl.innerHTML = myTop5Historical.map((c, idx) => `
+                    top5ListEl.innerHTML = myTop5Historical.map((c, idx) => {
+                        const mk = E().getCareerModeKey(c);
+                        const mTag = (E().CAREER_MODE_META[mk] || E().CAREER_MODE_META.FUTBOL_M).shortTag;
+                        return `
                         <button type="button" onclick="openCareerDetailModal('${escapeHtml(c.id)}')"
                             class="w-full text-left p-3 rounded-xl surface-sub hover:border-amber-400/50 flex items-center justify-between gap-2 text-xs transition">
                             <div class="flex items-center gap-2.5 min-w-0">
                                 <span class="font-black text-amber-400 w-5 shrink-0">#${idx + 1}</span>
                                 <div class="min-w-0">
-                                    <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span></div>
+                                    <div class="font-bold text-white truncate">${escapeHtml(c.playerName)} <span class="text-[#8b96ff]">(${escapeHtml(c.position)})</span> <span class="text-[10px] text-gray-400">${escapeHtml(mTag)}</span></div>
                                     <div class="text-[11px] text-gray-400 truncate">${escapeHtml(c.headline || '')} · ${escapeHtml(c.weekId || '')}</div>
                                 </div>
                             </div>
@@ -5797,7 +5873,8 @@
                                 <div class="text-[10px] text-gray-400">🏆 ${c.titles || 0} · OVR ${formatOvr(c.ovr || 60)}</div>
                             </div>
                         </button>
-                    `).join('');
+                    `;
+                    }).join('');
                 }
             }
         };
@@ -5857,12 +5934,16 @@
                 year: a.year || 1
             }));
 
+            const modeKey = E().getCareerModeKey(careerState);
+            const modeMeta = E().CAREER_MODE_META[modeKey] || E().CAREER_MODE_META.FUTBOL_M;
+
             const careerPayload = {
                 uid: currentUser.uid,
                 nickname: String(nickname).slice(0, 18),
                 playerName: String(careerState.playerName).slice(0, 36),
                 studiedCareer: String(careerState.studiedCareer || '').slice(0, 60),
                 sport: careerState.sport || 'FUTBOL',
+                modeKey,
                 position: careerState.position,
                 gender: careerState.gender,
                 ovr: Math.min(104, Number(careerState.ovr) || 60),
@@ -5888,19 +5969,27 @@
             };
 
             try {
-                const weeklyDocId = `${weekId}_${currentUser.uid}`;
+                const weeklyDocId = `${weekId}_${currentUser.uid}_${modeKey}`;
+                const legacyDocId = `${weekId}_${currentUser.uid}`;
                 const weeklyEntryRef = doc(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard', weeklyDocId);
+                const legacyEntryRef = doc(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard', legacyDocId);
 
-                let previousBestScore = -1;
-                const cachedExisting = cachedAllLeaderboardDocs.find(
-                    d => d.uid === currentUser.uid && d.weekId === weekId
+                let previousBestModeScore = -1;
+                const cachedSameMode = cachedAllLeaderboardDocs.filter(
+                    d => d.uid === currentUser.uid && d.weekId === weekId && E().getCareerModeKey(d) === modeKey
                 );
-                if (cachedExisting && typeof cachedExisting.score === 'number') {
-                    previousBestScore = cachedExisting.score;
+                if (cachedSameMode.length > 0) {
+                    previousBestModeScore = Math.max(...cachedSameMode.map(d => Number(d.score) || 0));
                 } else {
-                    const existingSnap = await promiseWithTimeout(getDoc(weeklyEntryRef), 4500);
-                    if (existingSnap.exists() && typeof existingSnap.data().score === 'number') {
-                        previousBestScore = existingSnap.data().score;
+                    const [modeSnap, legacySnap] = await Promise.all([
+                        promiseWithTimeout(getDoc(weeklyEntryRef), 4500).catch(() => null),
+                        promiseWithTimeout(getDoc(legacyEntryRef), 4500).catch(() => null)
+                    ]);
+                    if (modeSnap && modeSnap.exists() && typeof modeSnap.data().score === 'number') {
+                        previousBestModeScore = Math.max(previousBestModeScore, modeSnap.data().score);
+                    }
+                    if (legacySnap && legacySnap.exists() && E().getCareerModeKey(legacySnap.data()) === modeKey && typeof legacySnap.data().score === 'number') {
+                        previousBestModeScore = Math.max(previousBestModeScore, legacySnap.data().score);
                     }
                 }
 
@@ -5908,21 +5997,21 @@
                 addDoc(userHistoryCol, careerPayload).catch(() => {});
 
                 let leaderboardToastMsg = '';
-                if (previousBestScore < 0) {
+                if (previousBestModeScore < 0) {
                     await promiseWithTimeout(setDoc(weeklyEntryRef, careerPayload), 6000);
-                    leaderboardToastMsg = `🌍 ¡Carrera publicada en el Top Global Semanal (${totalScore} pts)!`;
-                } else if (totalScore > previousBestScore) {
+                    leaderboardToastMsg = `🌍 ¡Publicado en Global y ${modeMeta.fullLabel} (${totalScore} pts)!`;
+                } else if (totalScore > previousBestModeScore) {
                     await promiseWithTimeout(setDoc(weeklyEntryRef, careerPayload), 6000);
-                    leaderboardToastMsg = `🔥 ¡Nuevo récord semanal! Superaste tus ${previousBestScore} pts con ${totalScore} pts en el Top Global.`;
+                    leaderboardToastMsg = `🔥 ¡Nuevo récord semanal en ${modeMeta.fullLabel}! Subiste de ${previousBestModeScore} a ${totalScore} pts.`;
                 } else {
-                    leaderboardToastMsg = `📊 Obtuviste ${totalScore} pts. Se mantiene tu mejor marca semanal de ${previousBestScore} pts en el Top Global.`;
+                    leaderboardToastMsg = `📊 Obtuviste ${totalScore} pts en ${modeMeta.fullLabel}. Se mantiene tu marca semanal de ${previousBestModeScore} pts.`;
                 }
 
                 careerState.submittedToCloud = true;
                 careerState.lastSubmittedScore = totalScore;
                 saveCareerState();
                 renderApp();
-                showToast(leaderboardToastMsg, totalScore >= previousBestScore ? 'success' : 'info');
+                showToast(leaderboardToastMsg, totalScore >= previousBestModeScore ? 'success' : 'info');
             } catch (err) {
                 const code = err?.code || '';
                 if (code === 'permission-denied') {

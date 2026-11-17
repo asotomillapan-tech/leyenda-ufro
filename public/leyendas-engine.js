@@ -729,9 +729,57 @@ export function getTrophyPrestigePoints(trophy) {
   return 14;
 }
 
+export const CAREER_MODE_META = {
+  FUTBOL_M: { key: 'FUTBOL_M', label: 'Fútbol Masc.', fullLabel: 'Fútbol Hombres', shortTag: '⚽ Masc', icon: '⚽' },
+  FUTBOL_F: { key: 'FUTBOL_F', label: 'Fútbol Fem.', fullLabel: 'Fútbol Mujeres', shortTag: '⚽ Fem', icon: '⚽' },
+  BASKET_M: { key: 'BASKET_M', label: 'Básquetbol', fullLabel: 'Básquetbol Masc.', shortTag: '🏀 Básquet', icon: '🏀' },
+};
+
+export function getCareerModeKey(entry) {
+  if (!entry || typeof entry !== 'object') return 'FUTBOL_M';
+  if (entry.modeKey && CAREER_MODE_META[entry.modeKey]) return entry.modeKey;
+  const teamCode = String(entry.teamCode || '').toUpperCase();
+  const pos = String(entry.position || '').toUpperCase();
+  const basketPositions = SPORT_CONFIG.BASKET.positions;
+  if (entry.sport === 'BASKET' || teamCode.startsWith('BAS-') || basketPositions.includes(pos)) {
+    return 'BASKET_M';
+  }
+  if (entry.gender === 'F' || teamCode.startsWith('FEM-')) {
+    return 'FUTBOL_F';
+  }
+  return 'FUTBOL_M';
+}
+
+export function buildWeeklyLeaderboardViews(allDocs = [], weekId, limit = 10) {
+  const safeDocs = Array.isArray(allDocs) ? allDocs : [];
+  const weekEntries = safeDocs
+    .filter((item) => item && item.weekId === weekId && typeof item.score === 'number')
+    .map((item) => ({ ...item, modeKey: getCareerModeKey(item) }))
+    .sort((a, b) => (b.score - a.score) || ((b.ovr || 0) - (a.ovr || 0)) || ((b.createdAt || 0) - (a.createdAt || 0)));
+
+  const dedupeByUser = (list) => {
+    const map = new Map();
+    for (const item of list) {
+      const userKey = item.uid || item.id;
+      if (!map.has(userKey)) {
+        map.set(userKey, item);
+      }
+    }
+    return Array.from(map.values()).slice(0, limit);
+  };
+
+  return {
+    global: dedupeByUser(weekEntries),
+    futbolM: dedupeByUser(weekEntries.filter((item) => item.modeKey === 'FUTBOL_M')),
+    futbolF: dedupeByUser(weekEntries.filter((item) => item.modeKey === 'FUTBOL_F')),
+    basketM: dedupeByUser(weekEntries.filter((item) => item.modeKey === 'BASKET_M')),
+  };
+}
+
 export function calculateCareerLeaderboardScore(careerState) {
   if (!careerState) return 0;
   const sport = careerState.sport || 'FUTBOL';
+  const gender = careerState.gender || 'M';
   const pos = careerState.position || 'MED';
   const trophies = careerState.trophies || [];
   const awards = careerState.awards || [];
@@ -751,14 +799,14 @@ export function calculateCareerLeaderboardScore(careerState) {
   const clutchBonus = Math.min(110, Number(careerState.clutchPointsTotal) || 0);
   const rivalWinsBonus = Math.min(60, ((careerState.rival?.wins) || 0) * 6);
 
-  // 3. Estadísticas balanceadas por posición y deporte
+  // 3. Estadísticas balanceadas por posición y deporte (normalizadas a ~40-60 pts en 10 semestres)
   let statsPoints = 0;
   if (sport === 'BASKET') {
     const pts = stats.points || 0;
     const reb = stats.rebounds || 0;
     const ast = stats.assists || 0;
     const defP = stats.stealsBlocks || 0;
-    statsPoints = Math.round((pts * 0.11) + (ast * 0.42) + (reb * 0.34) + (defP * 0.75));
+    statsPoints = Math.round((pts * 0.013) + (ast * 0.026) + (reb * 0.022) + (defP * 0.048));
   } else {
     const g = stats.goals || 0;
     const a = stats.assists || 0;
@@ -770,7 +818,19 @@ export function calculateCareerLeaderboardScore(careerState) {
     else statsPoints = Math.round(g * 0.58 + a * 0.55);
   }
 
-  // 4. Media final + Premios individuales + Regularidad en cancha
+  // 4. Paridad inter-modos para modalidades de división única (sin ascensos 3ª->1ª)
+  let modeParityBonus = 0;
+  if (sport === 'FUTBOL' && gender === 'F') {
+    const leagueWins = trophies.filter((t) => t.type === 'LEAGUE').length;
+    const interWins = trophies.filter((t) => t.type === 'INTERFACULTADES').length;
+    modeParityBonus = Math.min(48, leagueWins * 6 + interWins * 6);
+  } else if (sport === 'BASKET') {
+    const leagueWins = trophies.filter((t) => t.type === 'LEAGUE').length;
+    const interWins = trophies.filter((t) => t.type === 'INTERFACULTADES').length;
+    modeParityBonus = Math.min(36, leagueWins * 5 + interWins * 3);
+  }
+
+  // 5. Media final + Premios individuales + Regularidad en cancha
   const ovrPoints = Math.round((Number(careerState.ovr) || 60) * 1.25);
   const awardsPoints = awards.length * 16;
   const validRatings = history.map((h) => Number(h.avgRating)).filter((n) => !Number.isNaN(n) && n > 0);
@@ -779,6 +839,6 @@ export function calculateCareerLeaderboardScore(careerState) {
     : 7.0;
   const consistencyBonus = Math.max(0, Math.round((meanRating - 6.8) * 28));
 
-  const total = titlePoints + promotionsBonus + heroicBonus + clutchBonus + rivalWinsBonus + statsPoints + ovrPoints + awardsPoints + consistencyBonus;
+  const total = titlePoints + promotionsBonus + heroicBonus + clutchBonus + rivalWinsBonus + statsPoints + modeParityBonus + ovrPoints + awardsPoints + consistencyBonus;
   return clamp(0, 2500, Math.round(total));
 }
