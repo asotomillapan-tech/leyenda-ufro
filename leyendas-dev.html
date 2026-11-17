@@ -5234,29 +5234,6 @@
             showToast(`✅ ¡Bienvenido @${existing.username}!`, 'success');
             renderOfflineWeeklyLeaderboard();
         };
-                    accounts.push(googleMock);
-                    saveLocalAccounts(accounts);
-                }
-                localStorage.setItem(LOCAL_SESSION_KEY, googleMock.uid);
-                currentCloudUser = { uid: googleMock.uid, email: googleMock.email, isAnonymous: false, isLocal: true };
-                currentCloudProfile = googleMock;
-                updateAuthHeaderUI();
-                window.closeAuthModal();
-                showToast(`✅ Sesión iniciada como @${googleMock.username}`, 'success');
-                renderOfflineWeeklyLeaderboard();
-                return;
-            }
-            try {
-                const provider = new GoogleAuthProvider();
-                const cred = await signInWithPopup(auth, provider);
-                currentCloudUser = cred.user;
-                const prof = await loadOrCreateUserProfile(cred.user);
-                window.closeAuthModal();
-                showToast(`✅ Sesión iniciada como @${prof?.username || 'Leyenda'}`, 'success');
-            } catch (err) {
-                showToast('No se pudo completar el inicio con Google.', 'error');
-            }
-        };
 
         window.logoutCloudUser = async function () {
             if (!firebaseAvailable || !auth) {
