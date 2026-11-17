@@ -4601,10 +4601,9 @@
 
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyCCguxq1KNYTng0lK2S5HvaYM03UpFMVmM",
-            authDomain: "leyenda-ufro.firebaseapp.com",
-            databaseURL: "https://leyenda-ufro-default-rtdb.firebaseio.com",
-            projectId: "leyenda-ufro",
-            storageBucket: "leyenda-ufro.firebasestorage.app",
+            authDomain: "notintercarreras.firebaseapp.com",
+            projectId: "notintercarreras",
+            storageBucket: "notintercarreras.firebasestorage.app",
             messagingSenderId: "885333611273",
             appId: "1:885333611273:web:6af8b831a964d1a7ea79d8"
         };
@@ -4976,10 +4975,13 @@
                 showToast(`👋 ¡Hola de nuevo @${prof?.username || 'Leyenda'}!`, 'success');
             } catch (err) {
                 const code = err?.code || '';
+                console.error('Auth login error:', code, err?.message);
                 if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
-                    showToast('Correo/usuario o contraseña incorrectos.', 'error');
+                    showToast('Correo/usuario o contraseña incorrectos. Si creaste tu cuenta con Google, usa el botón "Continuar con Google".', 'error');
+                } else if (code === 'auth/too-many-requests') {
+                    showToast('Demasiados intentos fallidos. Espera unos minutos o restablece tu contraseña.', 'error');
                 } else {
-                    showToast('No se pudo iniciar sesión. Revisa tus datos.', 'error');
+                    showToast(`Error de acceso (${code || 'desconocido'}). Revisa tu conexión o proyecto Firebase.`, 'error');
                 }
             } finally {
                 btn.disabled = false;
