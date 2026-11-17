@@ -96,7 +96,7 @@
                     <h1 class="text-base sm:text-xl font-black tracking-wider text-white leading-none uppercase">
                         LEYENDAS
                     </h1>
-                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.2.1</span>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.2.2</span>
                 </div>
             </div>
 
@@ -591,13 +591,547 @@
     <!-- ==================== SCRIPT PRINCIPAL ==================== -->
     <script>
         // =========================================================================
-        // 0. LÍMITES DE MEDIA (OVR) — TOPE EN 100 (LA CABRA 🐐)
+        // 1. CONFIGURACIÓN GOOGLE SHEETS Y CONSTANTES GLOBALES
         // =========================================================================
-        const OVR_HARD_CAP = 100;      // Tope máximo real de la media: 100 = 🐐
-        const OVR_DISPLAY_MAX = 99;    // De 52 a 99 se muestra el número; en 100 se muestra 🐐
+        const GOOGLE_SHEET_ID = '1c7W7e9M_fM3H-W790R-L36W1y2k472L6u2P0-S4-R00';
+        const SHEET_TAB_MALE = 'Equipos_Masculino';
+        const SHEET_TAB_FEMALE = 'Equipos_Femenino';
 
-        function formatOvr(v) {
-            return v >= OVR_HARD_CAP ? '🐐' : v;
+        const OVR_HARD_CAP = 100;
+
+        function formatOvr(ovr) {
+            return Number(ovr) >= OVR_HARD_CAP ? '🐐' : String(ovr);
+        }
+
+        const FACULTY_COLORS = {
+            FECSH: '#8b5cf6',
+            FICA: '#3b82f6',
+            MED: '#10b981',
+            FCAM: '#22c55e',
+            FCJE: '#f59e0b',
+            ODO: '#06b6d4',
+            OTRAS: '#717fff'
+        };
+
+        function canonicalizeFaculty(raw) {
+            const s = String(raw || '').toLowerCase();
+            if (s.includes('ingenier') || s.includes('fica') || s.includes('construc') || s.includes('informát') || s.includes('informat') || s.includes('mecán') || s.includes('mecan') || s.includes('eléctr') || s.includes('electr') || s.includes('telemát') || s.includes('telemat')) {
+                return { key: 'FICA', label: 'Fac. de Ingeniería y Ciencias (FICA)' };
+            }
+            if (s.includes('medicina') || s.includes('enfermer') || s.includes('kinesiolog') || s.includes('nutrici') || s.includes('obstetric') || s.includes('tecnología médica') || s.includes('tecnologia medica') || s.includes('fonoaudiolog') || s.includes('terapia ocupacional') || s.includes('química y farmacia') || s.includes('quimica y farmacia') || s.includes('bioquím') || s.includes('bioquim')) {
+                return { key: 'MED', label: 'Fac. de Medicina' };
+            }
+            if (s.includes('odontolog')) {
+                return { key: 'ODO', label: 'Fac. de Odontología' };
+            }
+            if (s.includes('derecho') || s.includes('comercial') || s.includes('contador') || s.includes('auditor') || s.includes('jurídic') || s.includes('juridic') || s.includes('empresarial')) {
+                return { key: 'FCJE', label: 'Fac. de Cs. Jurídicas y Empresariales (FCJE)' };
+            }
+            if (s.includes('agronom') || s.includes('recursos naturales') || s.includes('biotecnolog') || s.includes('agropecuar') || s.includes('forestal')) {
+                return { key: 'FCAM', label: 'Fac. de Cs. Agropecuarias y Medioambiente (FCAM)' };
+            }
+            if (s.includes('educaci') || s.includes('pedagog') || s.includes('psicolog') || s.includes('trabajo social') || s.includes('sociolog') || s.includes('periodismo') || s.includes('humanidades') || s.includes('fecsh')) {
+                return { key: 'FECSH', label: 'Fac. de Educación, Cs. Sociales y Humanidades (FECSH)' };
+            }
+            return { key: 'OTRAS', label: raw || 'Facultad UFRO' };
+        }
+
+        function normalizeLogoUrl(url) {
+            const raw = String(url || '').trim();
+            if (!raw) return '';
+            const driveMatch = raw.match(/\/d\/([a-zA-Z0-9_-]+)/) || raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (raw.includes('drive.google.com') && driveMatch) {
+                return `https://lh3.googleusercontent.com/d/${driveMatch[1]}=s256`;
+            }
+            return raw;
+        }
+
+        function getTeamBadgeHTML(team, sizeClass = 'w-10 h-10', textClass = 'text-xs') {
+            if (!team) {
+                return `<div class="${sizeClass} rounded-xl bg-[#717fff] flex items-center justify-center font-black text-white ${textClass} shrink-0">UFR</div>`;
+            }
+            const cleanLogo = normalizeLogoUrl(team.logo);
+            const abbr = (team.name || 'UFR').replace(/[^A-Za-zÁÉÍÓÚÑ]/g, '').slice(0, 3).toUpperCase() || 'UFR';
+            const bgColor = team.color || '#717fff';
+
+            if (cleanLogo) {
+                return `
+                    <div class="${sizeClass} rounded-xl bg-[#151515] border border-[#2b2b2b] flex items-center justify-center overflow-hidden shrink-0">
+                        <img src="${escapeHtml(cleanLogo)}" alt="${escapeHtml(team.name)}" class="w-full h-full object-contain p-0.5"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <span style="display:none; background:${bgColor}" class="w-full h-full items-center justify-center font-black text-white ${textClass}">${abbr}</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <div style="background:${bgColor}" class="${sizeClass} rounded-xl flex items-center justify-center font-black text-white ${textClass} shrink-0 shadow-sm">
+                    ${abbr}
+                </div>
+            `;
+        }
+
+        const RANDOM_NAMES_MALE = [
+            'Benjamín Muñoz', 'Matías Soto', 'Vicente Contreras', 'Martín Silva', 'Sebastián Sepúlveda',
+            'Nicolás Rojas', 'Joaquín Morales', 'Tomás Fuentes', 'Lucas Valenzuela', 'Diego Araya',
+            'Cristóbal Figueroa', 'Ignacio Carrasco', 'Felipe Navarro', 'Bastián Riquelme', 'Alonso Paredes'
+        ];
+
+        const RANDOM_NAMES_FEMALE = [
+            'Valentina Muñoz', 'Sofía Contreras', 'Camila Soto', 'Javiera Silva', 'Isidora Sepúlveda',
+            'Constanza Rojas', 'Catalina Morales', 'Fernanda Fuentes', 'Antonia Valenzuela', 'Maite Araya',
+            'Francisca Figueroa', 'Emilia Carrasco', 'Florencia Navarro', 'Martina Riquelme', 'Rocío Paredes'
+        ];
+
+        // =========================================================================
+        // 2. CATÁLOGO OFICIAL DE CARRERAS Y EQUIPOS UFRO
+        // =========================================================================
+        const UFRO_CATALOG = [
+            {
+                id: 'EFI', career: 'Pedagogía en Educación Física', faculty: 'FECSH', years: 5,
+                m: [['EFI FC', 85, '4x Campeón 1ª Div · 2x Interfacultades'], ['Atlético EFI', 77, '1x Campeón 2ª Div'], ['EFI Mechones', 69, 'Sin títulos oficiales']],
+                f: ['EFI Femenino', 84, '3x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'IND', career: 'Ingeniería Civil Industrial', faculty: 'FICA', years: 6,
+                m: [['Industrial FC', 83, '3x Campeón 1ª Div · 1x Interfacultades'], ['Real Industrial', 75, '1x Copa Facultad'], ['Industrial B', 68, 'Sin títulos oficiales']],
+                f: ['Industrial Fem', 79, '1x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'DER', career: 'Derecho', faculty: 'FCJE', years: 5,
+                m: [['Leyes FC', 82, '2x Campeón 1ª Div · 2x Copa FCJE'], ['Tribunal FC', 74, '1x Campeón 2ª Div'], ['Jurídica C', 67, 'Sin títulos oficiales']],
+                f: ['Leyes Femenino', 80, '2x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'MED', career: 'Medicina', faculty: 'MED', years: 7,
+                m: [['Medicina FC', 81, '2x Campeón 1ª Div · 2x Copa Medicina'], ['Galenos UFRO', 73, 'Sin títulos oficiales'], ['Internos FC', 66, 'Sin títulos oficiales']],
+                f: ['Medicina Fem', 81, '2x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'INF', career: 'Ingeniería Civil Informática', faculty: 'FICA', years: 6,
+                m: [['Informática FC', 80, '1x Campeón 1ª Div · 1x Copa FICA'], ['Kernel United', 73, '1x Campeón 3ª Div'], ['Compiladores FC', 66, 'Sin títulos oficiales']],
+                f: ['Informática Fem', 76, 'Sin títulos oficiales']
+            },
+            {
+                id: 'ICO', career: 'Ingeniería Comercial', faculty: 'FCJE', years: 5,
+                m: [['Comercial FC', 82, '2x Campeón 1ª Div · 1x Interfacultades'], ['Mercados United', 74, '1x Copa FCJE'], ['ICO Junior', 67, 'Sin títulos oficiales']],
+                f: ['Comercial Fem', 78, '1x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'KIN', career: 'Kinesiología', faculty: 'MED', years: 5,
+                m: [['Kine FC', 81, '2x Campeón 1ª Div · 1x Copa Medicina'], ['Rehab Athletic', 73, '1x Campeón 2ª Div'], ['Kine C', 66, 'Sin títulos oficiales']],
+                f: ['Kine Femenino', 82, '2x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'CON', career: 'Ingeniería en Construcción', faculty: 'FICA', years: 5,
+                m: [['Construcción FC', 80, '1x Campeón 1ª Div · 1x Campeón 2ª Div'], ['Hormigón Armado', 72, 'Sin títulos oficiales'], ['Obra Gruesa FC', 66, 'Sin títulos oficiales']],
+                f: ['Construcción Fem', 74, 'Sin títulos oficiales']
+            },
+            {
+                id: 'AGR', career: 'Agronomía', faculty: 'FCAM', years: 5,
+                m: [['Agronomía FC', 79, '1x Campeón 1ª Div · 3x Copa FCAM'], ['Maquehue United', 72, '1x Campeón 3ª Div'], ['Tractores FC', 65, 'Sin títulos oficiales']],
+                f: ['Agronomía Fem', 77, '1x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'PSI', career: 'Psicología', faculty: 'FECSH', years: 5,
+                m: [['Psicología FC', 78, '1x Campeón 2ª Div · 1x Copa FECSH'], ['Freud Athletic', 71, 'Sin títulos oficiales'], ['Psico C', 65, 'Sin títulos oficiales']],
+                f: ['Psicología Fem', 79, '1x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'ENF', career: 'Enfermería', faculty: 'MED', years: 5,
+                m: [['Enfermería FC', 77, '1x Campeón 2ª Div'], ['Turno Noche FC', 70, 'Sin títulos oficiales'], ['Enfermería C', 65, 'Sin títulos oficiales']],
+                f: ['Enfermería Fem', 80, '2x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'MEC', career: 'Ingeniería Civil Mecánica', faculty: 'FICA', years: 6,
+                m: [['Mecánica FC', 79, '1x Campeón 1ª Div'], ['Torques United', 72, '1x Campeón 3ª Div'], ['Pistones FC', 66, 'Sin títulos oficiales']],
+                f: ['Mecánica Fem', 73, 'Sin títulos oficiales']
+            },
+            {
+                id: 'AUD', career: 'Contador Público y Auditor', faculty: 'FCJE', years: 5,
+                m: [['Auditores FC', 78, '1x Campeón 2ª Div · 1x Copa FCJE'], ['Balance United', 71, 'Sin títulos oficiales'], ['Activos FC', 65, 'Sin títulos oficiales']],
+                f: ['Auditoría Fem', 76, 'Sin títulos oficiales']
+            },
+            {
+                id: 'ODO', career: 'Odontología', faculty: 'ODO', years: 6,
+                m: [['Odonto FC', 79, '1x Campeón 2ª Div · 2x Copa Odonto'], ['Molares United', 71, 'Sin títulos oficiales'], ['Clínica Dental FC', 65, 'Sin títulos oficiales']],
+                f: ['Odonto Femenino', 78, '1x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'TSO', career: 'Trabajo Social', faculty: 'FECSH', years: 5,
+                m: [['Trabajo Social FC', 76, '1x Campeón 2ª Div'], ['Territorio FC', 70, 'Sin títulos oficiales'], ['Social C', 64, 'Sin títulos oficiales']],
+                f: ['Trabajo Social Fem', 77, '1x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'QFA', career: 'Química y Farmacia', faculty: 'MED', years: 5,
+                m: [['Fármacos FC', 77, '1x Campeón 3ª Div'], ['Alquimistas UFRO', 70, 'Sin títulos oficiales'], ['Probeta FC', 65, 'Sin títulos oficiales']],
+                f: ['Farmacia Fem', 76, 'Sin títulos oficiales']
+            },
+            {
+                id: 'NUT', career: 'Nutrición y Dietética', faculty: 'MED', years: 5,
+                m: [['Nutrición FC', 76, '1x Campeón 3ª Div'], ['Proteína United', 69, 'Sin títulos oficiales'], ['Nutri C', 64, 'Sin títulos oficiales']],
+                f: ['Nutrición Fem', 78, '1x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'PER', career: 'Periodismo', faculty: 'FECSH', years: 5,
+                m: [['Periodismo FC', 76, '1x Copa FECSH'], ['Prensa Libre FC', 69, 'Sin títulos oficiales'], ['Crónica C', 64, 'Sin títulos oficiales']],
+                f: ['Periodismo Fem', 75, 'Sin títulos oficiales']
+            },
+            {
+                id: 'ELE', career: 'Ingeniería Civil Eléctrica', faculty: 'FICA', years: 6,
+                m: [['Eléctrica FC', 78, '1x Campeón 2ª Div'], ['Voltaje United', 71, 'Sin títulos oficiales'], ['Circuito C', 65, 'Sin títulos oficiales']],
+                f: ['Eléctrica Fem', 73, 'Sin títulos oficiales']
+            },
+            {
+                id: 'OBS', career: 'Obstetricia y Puericultura', faculty: 'MED', years: 5,
+                m: [['Obstetricia FC', 75, 'Sin títulos oficiales'], ['Guardia Clínica FC', 69, 'Sin títulos oficiales'], ['Matronería C', 64, 'Sin títulos oficiales']],
+                f: ['Obstetricia Fem', 79, '1x Campeona Intercarreras Fem.']
+            },
+            {
+                id: 'TMED', career: 'Tecnología Médica', faculty: 'MED', years: 5,
+                m: [['Tec. Médica FC', 77, '1x Campeón 3ª Div'], ['Laboratorio FC', 70, 'Sin títulos oficiales'], ['Diagnóstico C', 65, 'Sin títulos oficiales']],
+                f: ['Tec. Médica Fem', 77, 'Sin títulos oficiales']
+            },
+            {
+                id: 'BIO', career: 'Biotecnología', faculty: 'FCAM', years: 5,
+                m: [['Biotec FC', 76, '1x Copa FCAM'], ['Genoma United', 69, 'Sin títulos oficiales'], ['Cepas C', 64, 'Sin títulos oficiales']],
+                f: ['Biotec Fem', 75, 'Sin títulos oficiales']
+            },
+            {
+                id: 'PEDH', career: 'Pedagogía en Historia, Geografía y Ed. Cívica', faculty: 'FECSH', years: 5,
+                m: [['Historia FC', 77, '1x Campeón 2ª Div'], ['Crónicas UFRO', 70, 'Sin títulos oficiales'], ['Archivo C', 64, 'Sin títulos oficiales']],
+                f: ['Historia Fem', 76, 'Sin títulos oficiales']
+            },
+            {
+                id: 'PEDM', career: 'Pedagogía en Matemática', faculty: 'FECSH', years: 5,
+                m: [['Matemática FC', 76, '1x Campeón 3ª Div'], ['Infinito United', 69, 'Sin títulos oficiales'], ['Álgebra C', 64, 'Sin títulos oficiales']],
+                f: ['Matemática Fem', 75, 'Sin títulos oficiales']
+            }
+        ];
+
+        // =========================================================================
+        // 3. FOCOS SEMESTRALES (20 CARTAS: BRONCE, PLATA Y ORO), EVENTOS GLOBALES
+        // =========================================================================
+        const FOCUS_TIERS = {
+            BRONCE: {
+                id: 'BRONCE',
+                label: 'Bronce',
+                icon: '🥉',
+                weight: 58,
+                cardClass: 'border-amber-700/45 hover:border-amber-500 bg-gradient-to-b from-amber-950/20 to-[#151515]',
+                badgeClass: 'bg-amber-900/35 text-amber-300 border-amber-600/40',
+                ctaClass: 'text-amber-300'
+            },
+            PLATA: {
+                id: 'PLATA',
+                label: 'Plata',
+                icon: '🥈',
+                weight: 30,
+                cardClass: 'border-slate-400/50 hover:border-slate-200 bg-gradient-to-b from-slate-800/35 to-[#151515]',
+                badgeClass: 'bg-slate-600/30 text-slate-200 border-slate-400/45',
+                ctaClass: 'text-slate-200'
+            },
+            ORO: {
+                id: 'ORO',
+                label: 'Oro',
+                icon: '🥇',
+                weight: 12,
+                cardClass: 'border-yellow-400/65 hover:border-yellow-300 bg-gradient-to-b from-yellow-500/15 via-amber-500/5 to-[#151515] shadow-lg shadow-yellow-500/10',
+                badgeClass: 'bg-yellow-500/20 text-yellow-300 border-yellow-400/50',
+                ctaClass: 'text-yellow-300'
+            }
+        };
+
+        const SEMESTER_FOCUSES = {
+            // --- CATEGORÍA BRONCE (8 OPCIONES · ALTA PROBABILIDAD) ---
+            TROTE_CAMPUS: {
+                id: 'TROTE_CAMPUS',
+                tier: 'BRONCE',
+                icon: '🏃',
+                label: 'Trote por Andrés Bello',
+                shortLabel: 'Trote Campus',
+                desc: 'Cardio suave alrededor del campus entre ventanas de clases. Mantiene tu base física sin descuidar los ramos.',
+                ovrBonus: 1,
+                preventDecline: false,
+                gradeDelta: -0.05,
+                matchBoost: 0.8
+            },
+            BIBLIOTECA_CENTRAL: {
+                id: 'BIBLIOTECA_CENTRAL',
+                tier: 'BRONCE',
+                icon: '📚',
+                label: 'Tardes de Biblioteca',
+                shortLabel: 'Biblioteca',
+                desc: 'Estudio constante en el 3er piso. Asegura tus notas y aleja el riesgo de reprobar, aunque baja -1 de OVR.',
+                ovrBonus: -1,
+                preventDecline: false,
+                gradeDelta: 0.65,
+                matchBoost: -0.8
+            },
+            DOMINADAS_PASTO: {
+                id: 'DOMINADAS_PASTO',
+                tier: 'BRONCE',
+                icon: '⚽',
+                label: 'Pichanga en el Pasto',
+                shortLabel: 'Pichanga',
+                desc: 'Toque rápido y control de balón con compañeros de generación después de clases.',
+                ovrBonus: 1,
+                preventDecline: false,
+                gradeDelta: -0.15,
+                matchBoost: 1.2,
+                assistBonus: 1
+            },
+            DESCANSO_ACTIVO: {
+                id: 'DESCANSO_ACTIVO',
+                tier: 'BRONCE',
+                icon: '🧘',
+                label: 'Descanso & Equilibrio',
+                shortLabel: 'Descanso',
+                desc: 'Sueño ordenado y estiramientos. Evita bajones de nivel y mantiene estables tus evaluaciones.',
+                ovrBonus: 0,
+                preventDecline: true,
+                gradeDelta: 0.20,
+                matchBoost: 1.5
+            },
+            DEFINICION_ARCO: {
+                id: 'DEFINICION_ARCO',
+                tier: 'BRONCE',
+                icon: '🥅',
+                label: 'Remates Post-Entreno',
+                shortLabel: 'Remates',
+                desc: 'Media hora extra pateando al arco al caer la tarde en Temuco.',
+                ovrBonus: 1,
+                preventDecline: false,
+                gradeDelta: -0.15,
+                matchBoost: 1.0,
+                goalBonus: 1
+            },
+            APUNTES_COMPAS: {
+                id: 'APUNTES_COMPAS',
+                tier: 'BRONCE',
+                icon: '📝',
+                label: 'Grupo de Estudio',
+                shortLabel: 'Grupo Estudio',
+                desc: 'Resúmenes compartidos antes de los certámenes para sobrevivir al semestre sin perder ritmo.',
+                ovrBonus: 0,
+                preventDecline: false,
+                gradeDelta: 0.45,
+                matchBoost: 0.2
+            },
+            HIDRATACION_BASICA: {
+                id: 'HIDRATACION_BASICA',
+                tier: 'BRONCE',
+                icon: '💧',
+                label: 'Rutina de Recuperación',
+                shortLabel: 'Recuperación',
+                desc: 'Elongación y buena alimentación en el casino. Previene el desgaste en años superiores.',
+                ovrBonus: 0,
+                preventDecline: true,
+                gradeDelta: 0.10,
+                matchBoost: 1.3
+            },
+            MARCAJE_TACTICO: {
+                id: 'MARCAJE_TACTICO',
+                tier: 'BRONCE',
+                icon: '🛡️',
+                label: 'Orden Defensivo',
+                shortLabel: 'Orden Táctico',
+                desc: 'Trabajo de coberturas y retroceso rápido para cerrar los partidos apretados.',
+                ovrBonus: 1,
+                preventDecline: false,
+                gradeDelta: -0.10,
+                matchBoost: 1.1,
+                csBonus: 1
+            },
+
+            // --- CATEGORÍA PLATA (7 OPCIONES · PROBABILIDAD MEDIA) ---
+            GIMNASIO_OLIMPICO: {
+                id: 'GIMNASIO_OLIMPICO',
+                tier: 'PLATA',
+                icon: '💪',
+                label: 'Gimnasio Olímpico UFRO',
+                shortLabel: 'Gimnasio',
+                desc: 'Fuerza explosiva y potencia física. Sostiene tu media incluso en cursos avanzados y potencia tu juego.',
+                ovrBonus: 1,
+                preventDecline: true,
+                gradeDelta: -0.20,
+                matchBoost: 2.2
+            },
+            DOBLE_TURNO_TECNICO: {
+                id: 'DOBLE_TURNO_TECNICO',
+                tier: 'PLATA',
+                icon: '🎯',
+                label: 'Doble Turno Técnico',
+                shortLabel: 'Técnico Pro',
+                desc: 'Perfeccionamiento de pase filtrado, control orientado y definición. Gran subida de OVR con costo académico.',
+                ovrBonus: 2,
+                preventDecline: false,
+                gradeDelta: -0.35,
+                matchBoost: 2.0,
+                assistBonus: 2
+            },
+            ANALISIS_VIDEO: {
+                id: 'ANALISIS_VIDEO',
+                tier: 'PLATA',
+                icon: '📹',
+                label: 'Pizarra y Videoanálisis',
+                shortLabel: 'Videoanálisis',
+                desc: 'Estudias a los rivales de Intercarreras y optimizas tus tiempos de estudio. Inteligencia pura.',
+                ovrBonus: 1,
+                preventDecline: true,
+                gradeDelta: 0.30,
+                matchBoost: 2.5
+            },
+            AYUDANTIA_ELITE: {
+                id: 'AYUDANTIA_ELITE',
+                tier: 'PLATA',
+                icon: '🎓',
+                label: 'Beca Ayudantía & Deporte',
+                shortLabel: 'Ayudantía',
+                desc: 'Dominas los ramos clave y te ganas el respeto académico sin perder continuidad futbolística.',
+                ovrBonus: 0,
+                preventDecline: true,
+                gradeDelta: 0.75,
+                matchBoost: 1.0
+            },
+            CLINICA_KINE_PREV: {
+                id: 'CLINICA_KINE_PREV',
+                tier: 'PLATA',
+                icon: '🩹',
+                label: 'Fisioterapia Preventiva',
+                shortLabel: 'Fisio Kine',
+                desc: 'Descarga muscular semanal en clínica universitaria. Llegas fresco a cada instancia decisiva.',
+                ovrBonus: 1,
+                preventDecline: true,
+                gradeDelta: 0.05,
+                matchBoost: 2.6
+            },
+            ENTRENAMIENTO_LLUVIA: {
+                id: 'ENTRENAMIENTO_LLUVIA',
+                tier: 'PLATA',
+                icon: '🌧️',
+                label: 'Garra bajo Temporal',
+                shortLabel: 'Temporal Sur',
+                desc: 'Entrenar bajo el diluvio de Temuco forja carácter competitivo y resistencia superior.',
+                ovrBonus: 2,
+                preventDecline: true,
+                gradeDelta: -0.25,
+                matchBoost: 2.4,
+                goalBonus: 1
+            },
+            LABORATORIO_PELOTA_PARADA: {
+                id: 'LABORATORIO_PELOTA_PARADA',
+                tier: 'PLATA',
+                icon: '📐',
+                label: 'Especialista Balón Detenido',
+                shortLabel: 'Balón Parado',
+                desc: 'Tiros libres, córners y penales ensayados al milímetro.',
+                ovrBonus: 1,
+                preventDecline: false,
+                gradeDelta: -0.10,
+                matchBoost: 2.3,
+                goalBonus: 1,
+                assistBonus: 1
+            },
+
+            // --- CATEGORÍA ORO (5 OPCIONES · BAJA PROBABILIDAD · ALTO IMPACTO) ---
+            MENTALIDAD_LEYENDA: {
+                id: 'MENTALIDAD_LEYENDA',
+                tier: 'ORO',
+                icon: '👑',
+                label: 'Mentalidad de Leyenda',
+                shortLabel: 'Leyenda',
+                desc: 'Enfoque total de atleta de élite: +3 de Media, blindaje ante bajones y dominio absoluto en cancha.',
+                ovrBonus: 3,
+                preventDecline: true,
+                gradeDelta: -0.10,
+                matchBoost: 4.0,
+                goalBonus: 2,
+                assistBonus: 1
+            },
+            BECADO_DEPORTIVO_UFRO: {
+                id: 'BECADO_DEPORTIVO_UFRO',
+                tier: 'ORO',
+                icon: '🌟',
+                label: 'Deportista Destacado UFRO',
+                shortLabel: 'Becado UFRO',
+                desc: 'Flexibilidad académica oficial para deportistas seleccionados: subes +2 de Media y +0.55 en tus notas.',
+                ovrBonus: 2,
+                preventDecline: true,
+                gradeDelta: 0.55,
+                matchBoost: 3.2
+            },
+            PRETEMPORADA_PRO: {
+                id: 'PRETEMPORADA_PRO',
+                tier: 'ORO',
+                icon: '🔥',
+                label: 'Preparación Alto Rendimiento',
+                shortLabel: 'Alto Rendimiento',
+                desc: 'Plan físico y técnico de nivel profesional. Impulso explosivo de +3 de Media y resistencia total.',
+                ovrBonus: 3,
+                preventDecline: true,
+                gradeDelta: -0.20,
+                matchBoost: 3.8,
+                csBonus: 2
+            },
+            CAPITAN_TOTAL: {
+                id: 'CAPITAN_TOTAL',
+                tier: 'ORO',
+                icon: '⚡',
+                label: 'Liderazgo de Capitán',
+                shortLabel: 'Capitán',
+                desc: 'Elevas el nivel competitivo de todo tu equipo en partidos clave y potencias tus estadísticas.',
+                ovrBonus: 2,
+                preventDecline: true,
+                gradeDelta: 0.15,
+                matchBoost: 4.5,
+                goalBonus: 1,
+                assistBonus: 2
+            },
+            GENIO_ACADEMICO_CANCHA: {
+                id: 'GENIO_ACADEMICO_CANCHA',
+                tier: 'ORO',
+                icon: '🧠',
+                label: 'Mente Brillante y Crack',
+                shortLabel: 'Mente & Crack',
+                desc: 'Equilibrio perfecto entre excelencia académica (+0.80 notas) y jerarquía futbolística (+2 Media).',
+                ovrBonus: 2,
+                preventDecline: true,
+                gradeDelta: 0.80,
+                matchBoost: 2.8
+            }
+        };
+
+        function rollSemesterFocusChoices(count = 4) {
+            const allKeys = Object.keys(SEMESTER_FOCUSES);
+            const pool = [...allKeys];
+            const picked = [];
+
+            while (picked.length < count && pool.length > 0) {
+                const weighted = pool.map(key => {
+                    const item = SEMESTER_FOCUSES[key];
+                    const tierInfo = FOCUS_TIERS[item.tier] || FOCUS_TIERS.BRONCE;
+                    return { key, weight: tierInfo.weight };
+                });
+
+                const totalWeight = weighted.reduce((acc, w) => acc + w.weight, 0);
+                let r = Math.random() * totalWeight;
+                let chosenKey = weighted[0].key;
+
+                for (const w of weighted) {
+                    r -= w.weight;
+                    if (r <= 0) {
+                        chosenKey = w.key;
+                        break;
+                    }
+                }
+
+                picked.push(chosenKey);
+                const idx = pool.indexOf(chosenKey);
+                if (idx !== -1) pool.splice(idx, 1);
+            }
+
+            return picked;
         }
 
         function clampOvr(val) {
@@ -605,212 +1139,8 @@
         }
 
         // =========================================================================
-        // 0B. SISTEMA UNIVERSAL DE ESCUDOS / INSIGNIAS DE EQUIPO
+        // 3B. EVENTOS GLOBALES Y +22 EVENTOS EXCLUSIVOS DE CARRERA
         // =========================================================================
-        const FACULTY_COLORS = {
-            FECSH: '#8b5cf6',
-            FICA: '#3b82f6',
-            MED: '#10b981',
-            FCAM: '#22c55e',
-            FCJE: '#f59e0b',
-            ODO: '#ec4899',
-            OTRAS: '#717fff'
-        };
-
-        function normalizeLogoUrl(url) {
-            if (!url) return '';
-            const clean = String(url).trim();
-            const driveMatch = clean.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]+)/);
-            if (driveMatch && driveMatch[1]) {
-                return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
-            }
-            return clean;
-        }
-
-        function getTeamBadgeHTML(team, sizeClass = 'w-10 h-10', textClass = 'text-xs') {
-            if (!team) return '';
-            const rawParts = (team.code || '').split('-');
-            const initials = (rawParts.length >= 2 && rawParts[1].length <= 4
-                ? rawParts[1]
-                : (team.name || 'UFR').replace(/[^A-Za-zÁÉÍÓÚÑ]/g, '').slice(0, 3)
-            ).toUpperCase().slice(0, 4);
-
-            const bgColor = team.color || FACULTY_COLORS[team.facultyKey] || '#717fff';
-            const logoUrl = normalizeLogoUrl(team.logo);
-
-            const fallbackDiv = `
-                <div class="${sizeClass} rounded-xl flex items-center justify-center font-black text-white shadow-inner shrink-0 border border-white/15 select-none ${textClass}"
-                     style="background: linear-gradient(135deg, ${bgColor}, #151515);">
-                    ${escapeHtml(initials)}
-                </div>
-            `;
-
-            if (!logoUrl) return fallbackDiv;
-
-            return `
-                <div class="${sizeClass} relative shrink-0 flex items-center justify-center">
-                    <img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(team.name || '')}"
-                         class="w-full h-full object-contain drop-shadow-md rounded-lg"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div style="display:none; background: linear-gradient(135deg, ${bgColor}, #151515);"
-                         class="${sizeClass} rounded-xl items-center justify-center font-black text-white shadow-inner shrink-0 border border-white/15 select-none ${textClass}">
-                        ${escapeHtml(initials)}
-                    </div>
-                </div>
-            `;
-        }
-
-        // =========================================================================
-        // 1. CONFIGURACIÓN GOOGLE SHEETS Y NOMBRES ALEATORIOS
-        // =========================================================================
-        const GOOGLE_SHEET_ID = '1qgwNRN8AyiXRCUeJ82nMq2wG0eEjPnRKEgJp5irYBMI';
-        const SHEET_TAB_MALE = 'Equipos_UFRO';
-        const SHEET_TAB_FEMALE = 'Equipos_UFRO_Femenino';
-
-        const RANDOM_NAMES_MALE = [
-            'Benjamín Rojas', 'Matías Soto', 'Vicente Muñoz', 'Joaquín Morales',
-            'Sebastián Castro', 'Martín Contreras', 'Diego Valenzuela', 'Lucas Sepúlveda',
-            'Tomás Araya', 'Cristóbal Fuentes', 'Felipe Carrasco', 'Nicolás Vega',
-            'Ignacio Alarcón', 'Gabriel Navarro', 'Maximiliano Flores', 'Alonso Riquelme'
-        ];
-
-        const RANDOM_NAMES_FEMALE = [
-            'Sofía Morales', 'Valentina Rojas', 'Martina Soto', 'Catalina Muñoz',
-            'Isidora Contreras', 'Antonia Sepúlveda', 'Florencia Valenzuela', 'Camila Fuentes',
-            'Javiera Carrasco', 'Constanza Vega', 'Fernanda Alarcón', 'Francisca Navarro',
-            'Amanda Flores', 'Rocío Riquelme', 'Emilia Araya', 'Josefa Castro'
-        ];
-
-        function canonicalizeFaculty(rawName) {
-            const s = (rawName || '').toLowerCase();
-            if (s.includes('educación') || s.includes('educacion') || s.includes('humanidades') || s.includes('fecsh')) {
-                return { key: 'FECSH', label: '🎓 Educación, Cs. Sociales y Humanidades (FECSH)' };
-            }
-            if (s.includes('ingeniería') || s.includes('ingenieria') || s.includes('fica')) {
-                return { key: 'FICA', label: '⚙️ Ingeniería y Ciencias (FICA)' };
-            }
-            if (s.includes('medicina')) {
-                return { key: 'MED', label: '🩺 Medicina' };
-            }
-            if (s.includes('agropecuar') || s.includes('medioambiente') || s.includes('fcam')) {
-                return { key: 'FCAM', label: '🌱 Cs. Agropecuarias y Medioambiente (FCAM)' };
-            }
-            if (s.includes('jurídic') || s.includes('juridic') || s.includes('empresarial') || s.includes('fcje')) {
-                return { key: 'FCJE', label: '⚖️ Cs. Jurídicas y Empresariales (FCJE)' };
-            }
-            if (s.includes('odontolog')) {
-                return { key: 'ODO', label: '🦷 Odontología' };
-            }
-            return { key: 'OTRAS', label: rawName || 'Otras Carreras UFRO' };
-        }
-
-        // =========================================================================
-        // 2. CATÁLOGO BASE UFRO (40 CARRERAS · 120 EQUIPOS MASC. + 40 FEM.)
-        // =========================================================================
-        const UFRO_CATALOG = [
-            // FECSH (10)
-            { id: 'EFI', faculty: 'FECSH', years: 5, career: 'Pedagogía en Educación Física, Deportes y Recreación', m: [['Efiorentina', 82, '4x Campeón Torneo UFRO'], ['Atlético Efis', 73, '1x Campeón Copa de Plata'], ['Juvenil Efis', 65, '1x Semifinal Torneo Mechón']], f: ['Efiorentina Femenino', 83, '4x Campeona Torneo Femenino UFRO'] },
-            { id: 'PSI', faculty: 'FECSH', years: 5, career: 'Psicología', m: [['Psico United', 79, '2x Campeón Copa Andrés Bello'], ['Deportivo Freud', 70, '1x Subcampeón Copa Primavera'], ['Conducta F.C.', 61, 'Fase de Grupos Torneo Mechón']], f: ['Valkirias Psicología', 78, '2x Campeona Copa Primavera Fem'] },
-            { id: 'TSO', faculty: 'FECSH', years: 5, career: 'Trabajo Social', m: [['Real Comunitario', 76, '1x Campeón Copa Solidaridad'], ['Social F.C.', 68, '1x Trofeo Fair Play'], ['Atlético Bienestar', 59, 'Sin títulos oficiales']], f: ['Amazonas Social', 74, '1x Campeona Copa Solidaridad Fem'] },
-            { id: 'SOC', faculty: 'FECSH', years: 5, career: 'Sociología', m: [['Dinamo Sociología', 77, '1x Campeón Torneo Humanidades'], ['Estructura F.C.', 69, '1x Cuartos Interfacultades'], ['Cuantitativo Sporting', 58, 'Sin títulos oficiales']], f: ['Atenea Sociología', 71, '1x Trofeo Fair Play'] },
-            { id: 'PER', faculty: 'FECSH', years: 5, career: 'Periodismo', m: [['Prensa Austral F.C.', 78, '2x Campeón Copa de la Prensa'], ['Crónica Central', 71, '1x Campeón Copa Repechaje'], ['Deportivo Redacción', 62, 'Participación Clausura']], f: ['Prensa Femenina F.C.', 76, '2x Campeona Torneo de la Prensa Fem'] },
-            { id: 'CAS', faculty: 'FECSH', years: 5, career: 'Pedagogía en Castellano y Comunicación', m: [['Real Gramática', 75, '1x Campeón Torneo Magisterio'], ['Lingüística F.C.', 67, '1x Subcampeón Copa Pedagogías'], ['Sintaxis Sporting', 57, 'Sin títulos oficiales']], f: ['Letras Unidas Fem', 69, '1x Campeona Copa Magisterio Fem'] },
-            { id: 'HIS', faculty: 'FECSH', years: 5, career: 'Pedagogía en Historia, Geografía y Educación Cívica', m: [['Esparta Histórica', 77, '2x Campeón Copa Bicentenario'], ['Cronos F.C.', 70, '1x Tercer Lugar Primavera'], ['Deportivo Cartografía', 60, 'Sin títulos oficiales']], f: ['Atenea Historia', 75, '1x Campeona Copa Bicentenario Fem'] },
-            { id: 'ING', faculty: 'FECSH', years: 5, career: 'Pedagogía en Inglés', m: [['Cambridge Wanderers', 76, '1x Campeón Copa Británica'], ['Oxford United', 68, '1x Subcampeón Invierno'], ['London City F.C.', 59, 'Fase de Grupos Torneo Mechón']], f: ['Lionesses English F.C.', 72, '1x Campeona Copa Británica Fem'] },
-            { id: 'CIE', faculty: 'FECSH', years: 5, career: 'Pedagogía en Ciencias mención Biología, Química o Física', m: [['Quantum Pedagogía', 75, '1x Campeón Torneo Ciencias'], ['Atómica F.C.', 67, '1x Semifinal Copa Ascenso'], ['Reacción Sporting', 58, 'Sin títulos oficiales']], f: ['Científicas F.C.', 68, '1x Subcampeona Copa Ciencias'] },
-            { id: 'MAT', faculty: 'FECSH', years: 5, career: 'Pedagogía en Matemática', m: [['Infinito F.C.', 78, '2x Campeón Torneo Pitágoras'], ['Pi United', 69, '1x Cuartos Copa de Oro'], ['Derivada Sporting', 60, 'Sin títulos oficiales']], f: ['Éuler Fem', 73, '1x Campeona Copa Pitágoras Fem'] },
-
-            // FICA (15)
-            { id: 'IND', faculty: 'FICA', years: 6, career: 'Ingeniería Civil Industrial', m: [['Industrial United', 81, '3x Campeón Interfacultades UFRO'], ['Optimización F.C.', 72, '1x Subcampeón Copa Ascenso'], ['Cadena de Valor Sporting', 63, '1x Semifinal Torneo Mechón']], f: ['Pioneras Civil Industrial', 81, '3x Campeona Interfacultades Fem'] },
-            { id: 'INF', faculty: 'FICA', years: 6, career: 'Ingeniería Civil Informática', m: [['Real Informática', 80, '2x Campeón Liga Tecnológica'], ['Deportivo Algoritmo', 73, '1x Campeón Copa Consuelo FICA'], ['Byte Juniors', 64, 'Fase de Grupos Torneo Mechón']], f: ['Valkirias Informática', 79, '2x Campeona Liga Tecnológica Fem'] },
-            { id: 'MEC', faculty: 'FICA', years: 6, career: 'Ingeniería Civil Mecánica', m: [['Torno Mecánico F.C.', 79, '2x Campeón Torneo Motores'], ['Dinamo Mecánica', 71, '1x Subcampeón Copa de Plata'], ['Piñón Sporting', 62, 'Sin títulos oficiales']], f: ['Fuerza Mecánica Fem', 74, '1x Campeona Copa Motores Fem'] },
-            { id: 'ELC', faculty: 'FICA', years: 6, career: 'Ingeniería Civil Electrónica', m: [['Voltio Central', 78, '1x Campeón Circuito Abierto'], ['Resistencia F.C.', 70, '1x Semifinalista Copa Ascenso'], ['Microchip United', 61, 'Sin títulos oficiales']], f: ['Tesla Fem F.C.', 72, '1x Subcampeona Circuito Abierto Fem'] },
-            { id: 'ELE', faculty: 'FICA', years: 6, career: 'Ingeniería Civil Eléctrica', m: [['Alta Tensión F.C.', 79, '2x Campeón Trofeo Edison'], ['Rayo Austral', 69, '1x Subcampeón Primavera'], ['Corriente Sporting', 60, 'Sin títulos oficiales']], f: ['Voltias Eléctrica', 75, '1x Campeona Trofeo Alta Tensión Fem'] },
-            { id: 'QUI', faculty: 'FICA', years: 6, career: 'Ingeniería Civil Química', m: [['Alquimia F.C.', 77, '1x Campeón Copa Mendeleiev'], ['Reactor United', 68, '1x Subcampeón Copa Ascenso'], ['Catalizador F.C.', 59, 'Sin títulos oficiales']], f: ['Alquimistas Fem', 73, '1x Campeona Copa Mendeleiev Fem'] },
-            { id: 'AMB', faculty: 'FICA', years: 6, career: 'Ingeniería Civil Ambiental', m: [['Verde Austral F.C.', 76, '1x Campeón Copa Sustentabilidad'], ['Eco Ingeniería', 67, '1x Semifinalista Apertura'], ['Reciclaje Sporting', 58, 'Participación Copa Mechón']], f: ['Gaia Ambiental F.C.', 71, '1x Campeona Copa Sustentabilidad Fem'] },
-            { id: 'IMT', faculty: 'FICA', years: 6, career: 'Ingeniería Civil Matemática', m: [['Caos Matemático', 77, '1x Campeón Copa Euler'], ['Matriz F.C.', 69, '1x Tercer Lugar Copa de Plata'], ['Fractal United', 61, 'Sin títulos oficiales']], f: ['Matriz Polar Fem', 70, '1x Semifinalista Copa FICA Fem'] },
-            { id: 'FIS', faculty: 'FICA', years: 6, career: 'Ingeniería Civil Física', m: [['Gravedad Cero F.C.', 76, '1x Campeón Trofeo Newton'], ['Inercia Sporting', 68, '1x Cuartos Copa Ascenso'], ['Entropía Juniors', 57, 'Sin títulos oficiales']], f: ['Quantum Girls F.C.', 67, '1x Cuartos Copa Newton Fem'] },
-            { id: 'TEL', faculty: 'FICA', years: 6, career: 'Ingeniería Civil Telemática', m: [['Fibra Óptica F.C.', 78, '1x Campeón Copa Conectividad'], ['Redes United', 70, '1x Subcampeón Invierno'], ['Enlace Sporting', 59, 'Sin títulos oficiales']], f: ['Cíber Redes Fem', 69, '1x Subcampeona Copa Conectividad Fem'] },
-            { id: 'IBI', faculty: 'FICA', years: 6, career: 'Ingeniería Civil en Biotecnología', m: [['Genoma F.C.', 77, '1x Campeón Copa Bio-Ingeniería'], ['BioTech United', 68, '1x Semifinalista Repechaje'], ['Celular Sporting', 58, 'Sin títulos oficiales']], f: ['BioLíderes Fem', 74, '1x Campeona Copa Bio-Ingeniería Fem'] },
-            { id: 'PLC', faculty: 'FICA', years: 6, career: 'Ingeniería Civil (Plan Común)', m: [['Fuerza Común F.C.', 75, '1x Campeón Nuevas Generaciones'], ['Semillero Civil', 67, '1x Subcampeón Debutantes'], ['Base F.C.', 56, 'Participación Torneo Mechón']], f: ['Semillero Civil Fem', 65, '1x Campeona Torneo Debutantes Fem'] },
-            { id: 'CON', faculty: 'FICA', years: 5, career: 'Ingeniería en Construcción', m: [['Hormigón Armado F.C.', 80, '2x Campeón Copa Cemento'], ['Obra Gruesa', 72, '1x Campeón Clausura Ascenso'], ['Andamio Sporting', 63, 'Sin títulos oficiales']], f: ['Constructoras Austral F.C.', 77, '2x Campeona Copa Cemento Fem'] },
-            { id: 'BQM', faculty: 'FICA', years: 5, career: 'Bioquímica', m: [['Enzima F.C.', 76, '1x Campeón Bioquímica del Sur'], ['Proteína United', 68, '1x Subcampeón Primavera'], ['Molécula Sporting', 59, 'Sin títulos oficiales']], f: ['Químicas Australes', 72, '1x Campeona Copa Bioquímica Fem'] },
-            { id: 'QFA', faculty: 'FICA', years: 5, career: 'Química y Farmacia', m: [['Botica Real F.C.', 77, '1x Campeón Copa Farmacia Austral'], ['Dosis Perfecta', 69, '1x Semifinalista Copa Ascenso'], ['Píldora Sporting', 60, 'Sin títulos oficiales']], f: ['Botica Austral Fem', 76, '1x Campeona Copa Farmacia Fem'] },
-
-            // MED (8)
-            { id: 'MED', faculty: 'MED', years: 7, career: 'Medicina', m: [['Atlético Medicina', 82, '4x Campeón Torneo de la Salud'], ['Clínico United', 73, '1x Subcampeón Copa Ascenso'], ['Galenos F.C.', 65, '1x Semifinal Torneo Mechón']], f: ['Leonesas Medicina', 82, '3x Campeona Torneo de la Salud Fem'] },
-            { id: 'ENF', faculty: 'MED', years: 5, career: 'Enfermería', m: [['Cruz Roja F.C.', 80, '2x Campeón Copa Nightingale'], ['Cuidados Intensivos', 71, '1x Campeón Clausura Ascenso'], ['Vocación Sporting', 63, 'Sin títulos oficiales']], f: ['Florence Fem Enfermería', 80, '2x Campeona Copa Nightingale Fem'] },
-            { id: 'KIN', faculty: 'MED', years: 5, career: 'Kinesiología', m: [['Kine Máquina F.C.', 81, '3x Campeón Torneo Movimiento'], ['Muscular United', 72, '1x Campeón Copa de Plata'], ['Rehabilitación F.C.', 64, 'Fase de Grupos Torneo Mechón']], f: ['Kine Power Fem', 81, '3x Campeona Copa Movimiento Fem'] },
-            { id: 'NUT', faculty: 'MED', years: 5, career: 'Nutrición y Dietética', m: [['Caloría Cero F.C.', 77, '1x Campeón Salud y Bienestar'], ['Dieta Balanceada', 69, '1x Semifinalista Copa Ascenso'], ['Proteico Sporting', 61, 'Sin títulos oficiales']], f: ['NutriSport Fem', 73, '1x Campeona Salud y Bienestar Fem'] },
-            { id: 'OBS', faculty: 'MED', years: 5, career: 'Obstetricia y Puericultura', m: [['Matronería Real', 78, '2x Campeón Torneo de la Vida'], ['Neonatal F.C.', 70, '1x Subcampeón Primavera'], ['Alumbramiento Sporting', 60, 'Sin títulos oficiales']], f: ['Matronas United', 77, '2x Campeona Torneo de la Vida Fem'] },
-            { id: 'TEC', faculty: 'MED', years: 5, career: 'Tecnología Médica', m: [['Bioanálisis F.C.', 78, '1x Campeón Copa Laboratorio'], ['Rayos X United', 70, '1x Tercer Lugar Copa Ascenso'], ['Microscopio Sporting', 62, 'Sin títulos oficiales']], f: ['BioLab Femenino', 75, '1x Campeona Copa Diagnóstico Fem'] },
-            { id: 'FON', faculty: 'MED', years: 5, career: 'Fonoaudiología', m: [['Voz y Ritmo F.C.', 76, '1x Campeón Comunicación en Salud'], ['Decibel United', 68, '1x Cuartos Copa Ascenso'], ['Acústica Sporting', 59, 'Sin títulos oficiales']], f: ['Voces Australes Fem', 70, '1x Campeona Copa FonoSalud Fem'] },
-            { id: 'TER', faculty: 'MED', years: 5, career: 'Terapia Ocupacional', m: [['Ergonomía F.C.', 76, '1x Campeón Copa Inclusión'], ['Autonomía United', 68, '1x Semifinalista Salud'], ['Ocupacional Sporting', 59, 'Sin títulos oficiales']], f: ['Terapia Activa Fem', 72, '1x Campeona Copa Inclusión Fem'] },
-
-            // FCAM (3)
-            { id: 'AGR', faculty: 'FCAM', years: 5, career: 'Agronomía', m: [['Agrónomos del Sur', 79, '2x Campeón Copa del Campo'], ['Trigo Austral F.C.', 71, '1x Subcampeón Copa Ascenso'], ['Semilla Sporting', 62, 'Sin títulos oficiales']], f: ['Agrónomas del Sur F.C.', 78, '2x Campeona Copa del Campo Fem'] },
-            { id: 'IRN', faculty: 'FCAM', years: 5, career: 'Ingeniería en Recursos Naturales', m: [['Bosque Nativo F.C.', 76, '1x Campeón Cuenca Araucanía'], ['Biodiversidad United', 68, '1x Tercer Lugar FCAM'], ['Fauna Sporting', 59, 'Sin títulos oficiales']], f: ['Bosque Nativo Fem', 71, '1x Campeona Cuenca Araucanía Fem'] },
-            { id: 'BIO', faculty: 'FCAM', years: 5, career: 'Biotecnología', m: [['BioAgro F.C.', 77, '1x Campeón Copa BioAgro'], ['Cultivo Celular', 69, '1x Semifinalista Copa Ascenso'], ['Clonación Sporting', 60, 'Sin títulos oficiales']], f: ['BioGen Fem', 74, '1x Campeona Copa BioAgro Fem'] },
-
-            // FCJE (3)
-            { id: 'DER', faculty: 'FCJE', years: 5, career: 'Derecho', m: [['Iuris Tantum F.C.', 81, '3x Campeón Copa Iustitia'], ['Código Civil United', 72, '1x Subcampeón Interfacultades'], ['Litigio Sporting', 63, '1x Semifinal Torneo Mechón']], f: ['Iuris Fem Derecho', 80, '2x Campeona Copa Iustitia Fem'] },
-            { id: 'ICO', faculty: 'FCJE', years: 5, career: 'Ingeniería Comercial', m: [['Real Mercado F.C.', 80, '2x Campeón Copa Negocios'], ['Capital United', 71, '1x Campeón Clausura Ascenso'], ['Activo Sporting', 62, 'Sin títulos oficiales']], f: ['Emprendedoras F.C.', 79, '2x Campeona Copa Negocios Fem'] },
-            { id: 'AUD', faculty: 'FCJE', years: 5, career: 'Contador Público y Auditor', m: [['Balance General F.C.', 77, '1x Campeón Torneo Auditoría'], ['Tributaria United', 69, '1x Subcampeón FCJE'], ['Libro Mayor Sporting', 60, 'Sin títulos oficiales']], f: ['Auditoras Unidas', 73, '1x Campeona Torneo Auditoría Fem'] },
-
-            // ODO (1)
-            { id: 'ODO', faculty: 'ODO', years: 6, career: 'Odontología', m: [['Odonto Star F.C.', 79, '2x Campeón Copa Sonrisa'], ['Molar United', 70, '1x Subcampeón Salud'], ['Esmalte Sporting', 61, 'Sin títulos oficiales']], f: ['Odonto Star Fem', 77, '2x Campeona Copa Sonrisa Fem'] }
-        ];
-
-        // =========================================================================
-        // 3. FOCOS SEMESTRALES, EVENTOS GLOBALES Y +22 EVENTOS EXCLUSIVOS DE CARRERA
-        // =========================================================================
-        const SEMESTER_FOCUSES = {
-            FISICO: {
-                id: 'FISICO',
-                icon: '💪',
-                label: 'Foco Físico',
-                shortLabel: 'Físico',
-                desc: 'Gimnasio Olímpico y resistencia. Sostiene tu rendimiento y evita bajones incluso en años difíciles.',
-                ovrBonus: 1,
-                preventDecline: true,
-                gradeDelta: -0.25,
-                matchBoost: 1.5
-            },
-            TECNICO: {
-                id: 'TECNICO',
-                icon: '⚽',
-                label: 'Foco Técnico',
-                shortLabel: 'Técnico',
-                desc: 'Doble turno con balón y definición. Potencia al máximo la subida de OVR, pero descuida un poco tus notas.',
-                ovrBonus: 2,
-                preventDecline: false,
-                gradeDelta: -0.45,
-                matchBoost: 2.0
-            },
-            ESTUDIOS: {
-                id: 'ESTUDIOS',
-                icon: '📚',
-                label: 'Foco en Estudios',
-                shortLabel: 'Estudios',
-                desc: 'Biblioteca central y ayudantías. Mejora fuertemente tus notas y te protege de reprobar, aunque baja -1 de OVR.',
-                ovrBonus: -1,
-                preventDecline: false,
-                gradeDelta: 0.70,
-                matchBoost: -1.0
-            },
-            DESCANSO: {
-                id: 'DESCANSO',
-                icon: '🧘',
-                label: 'Descanso & Equilibrio',
-                shortLabel: 'Descanso',
-                desc: 'Recuperación inteligente antes de partidos clave. Mantiene tus notas estables y te da frescura en instancias decisivas.',
-                ovrBonus: 0,
-                preventDecline: true,
-                gradeDelta: 0.20,
-                matchBoost: 2.5
-            }
-        };
-
         const GLOBAL_SUDDEN_EVENTS = [
             {
                 id: 'reprobar_asignatura',
@@ -2126,6 +2456,7 @@
                 failedCoursesCount: 0,
                 hiddenGpa: 5.5,
                 semesterFocus: null,
+                availableFocuses: [],
                 pendingKeyMatch: null,
                 keyMatchBonus: 0,
                 extensionUsed: 0,
@@ -2225,6 +2556,7 @@
 
             if (shouldAskFocus) {
                 careerState.semesterFocus = null;
+                careerState.availableFocuses = rollSemesterFocusChoices(4);
                 careerState.phase = 'SEMESTER_FOCUS';
                 saveCareerState();
                 renderApp();
@@ -2754,19 +3086,19 @@
 
             if (!isSuspended && !isTrainingOnlyS2) {
                 if (careerState.position === 'DEL') {
-                    goals = Math.round(matchesPlayed * 0.60 * perfFactor);
-                    assists = Math.round(matchesPlayed * 0.24 * perfFactor);
+                    goals = Math.round(matchesPlayed * 0.60 * perfFactor) + (focusObj?.goalBonus || 0);
+                    assists = Math.round(matchesPlayed * 0.24 * perfFactor) + (focusObj?.assistBonus || 0);
                 } else if (careerState.position === 'MED') {
-                    goals = Math.round(matchesPlayed * 0.30 * perfFactor);
-                    assists = Math.round(matchesPlayed * 0.50 * perfFactor);
+                    goals = Math.round(matchesPlayed * 0.30 * perfFactor) + (focusObj?.goalBonus || 0);
+                    assists = Math.round(matchesPlayed * 0.50 * perfFactor) + (focusObj?.assistBonus || 0);
                 } else if (careerState.position === 'DEF') {
-                    goals = Math.round(matchesPlayed * 0.11 * perfFactor);
-                    assists = Math.round(matchesPlayed * 0.15 * perfFactor);
-                    cleanSheets = Math.round(matchesPlayed * 0.36);
+                    goals = Math.round(matchesPlayed * 0.11 * perfFactor) + (focusObj?.goalBonus || 0);
+                    assists = Math.round(matchesPlayed * 0.15 * perfFactor) + (focusObj?.assistBonus || 0);
+                    cleanSheets = Math.round(matchesPlayed * 0.36) + (focusObj?.csBonus || 0);
                 } else if (careerState.position === 'ARQ') {
                     goals = Math.random() < 0.04 ? 1 : 0;
                     assists = Math.random() < 0.12 ? 1 : 0;
-                    cleanSheets = Math.round(matchesPlayed * 0.44);
+                    cleanSheets = Math.round(matchesPlayed * 0.44) + (focusObj?.csBonus || 0);
                 }
             }
 
@@ -3519,36 +3851,57 @@
                 `;
             } else if (careerState.phase === 'SEMESTER_FOCUS') {
                 const isLateYears = careerState.currentYear >= 5;
+                const choiceKeys = (Array.isArray(careerState.availableFocuses) && careerState.availableFocuses.length === 4)
+                    ? careerState.availableFocuses
+                    : rollSemesterFocusChoices(4);
+                careerState.availableFocuses = choiceKeys;
+
                 panel.innerHTML = `
                     <div class="space-y-4 animate-pop">
-                        <div class="border-b border-[#262626] pb-3">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">
-                                🎯 Planificación · Año ${careerState.currentYear} Semestre ${careerState.currentSemester}
-                            </span>
-                            <h3 class="text-base sm:text-lg font-black text-white mt-1.5">Define tu foco principal este semestre</h3>
-                            <p class="text-xs text-gray-400 mt-0.5">
-                                ${isLateYears
-                                    ? 'Estás en los años superiores con ramos exigentes: gestionar tu físico, estudios y descanso será clave para no perder nivel.'
-                                    : 'Equilibra tu progresión futbolística con la carga académica para evitar reprobar ramos y aspirar a becas de postgrado.'}
-                            </p>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#262626] pb-3">
+                            <div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">
+                                    🎯 Planificación · Año ${careerState.currentYear} Semestre ${careerState.currentSemester}
+                                </span>
+                                <h3 class="text-base sm:text-lg font-black text-white mt-1.5">Elige una carta de Foco Semestral (4 disponibles)</h3>
+                                <p class="text-xs text-gray-400 mt-0.5">
+                                    ${isLateYears
+                                        ? 'Años superiores con ramos exigentes: gestionar físico, estudios y descanso será clave para no perder nivel.'
+                                        : 'Cada semestre aparecen 4 focos aleatorios de categoría Bronce, Plata u Oro que moldean tu rendimiento.'}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[10px] font-bold shrink-0">
+                                <span class="px-2 py-0.5 rounded border bg-amber-900/35 text-amber-300 border-amber-600/40">🥉 Bronce</span>
+                                <span class="px-2 py-0.5 rounded border bg-slate-600/30 text-slate-200 border-slate-400/45">🥈 Plata</span>
+                                <span class="px-2 py-0.5 rounded border bg-yellow-500/20 text-yellow-300 border-yellow-400/50">🥇 Oro</span>
+                            </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                            ${Object.values(SEMESTER_FOCUSES).map(f => `
-                                <button type="button" onclick="selectSemesterFocus('${f.id}')"
-                                    class="text-left p-4 rounded-2xl surface-sub border border-[#2b2b2b] hover:border-[#717fff] hover:bg-[#202025] flex flex-col justify-between gap-2.5 transition group">
-                                    <div>
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-2xl">${f.icon}</span>
-                                            <span class="text-[10px] font-black px-2 py-0.5 rounded bg-[#1c1c1c] text-[#a3adff] border border-[#2b2b2b]">
-                                                ${f.ovrBonus > 0 ? `+${f.ovrBonus} OVR` : f.ovrBonus < 0 ? `${f.ovrBonus} OVR` : 'Sostiene OVR'}
-                                            </span>
+                            ${choiceKeys.map(k => SEMESTER_FOCUSES[k]).filter(Boolean).map(f => {
+                                const tier = FOCUS_TIERS[f.tier] || FOCUS_TIERS.BRONCE;
+                                const ovrTag = f.ovrBonus > 0 ? `+${f.ovrBonus} OVR` : f.ovrBonus < 0 ? `${f.ovrBonus} OVR` : 'Sostiene OVR';
+                                return `
+                                    <button type="button" onclick="selectSemesterFocus('${f.id}')"
+                                        class="text-left p-4 rounded-2xl border ${tier.cardClass} flex flex-col justify-between gap-2.5 transition transform hover:-translate-y-0.5 group">
+                                        <div>
+                                            <div class="flex items-center justify-between gap-1.5">
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${tier.badgeClass}">
+                                                    ${tier.icon} ${tier.label}
+                                                </span>
+                                                <span class="text-[10px] font-black px-2 py-0.5 rounded bg-[#151515]/90 text-white border border-white/10">
+                                                    ${ovrTag}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-2 mt-2.5">
+                                                <span class="text-2xl">${f.icon}</span>
+                                                <div class="font-black text-white text-sm leading-tight">${f.label}</div>
+                                            </div>
+                                            <p class="text-[11px] text-gray-300/90 mt-2 leading-relaxed">${f.desc}</p>
                                         </div>
-                                        <div class="font-black text-white text-sm mt-2 group-hover:text-[#a3adff] transition">${f.label}</div>
-                                        <p class="text-[11px] text-gray-400 mt-1 leading-relaxed">${f.desc}</p>
-                                    </div>
-                                    <span class="text-[11px] font-bold text-[#8b96ff]">Elegir foco →</span>
-                                </button>
-                            `).join('')}
+                                        <span class="text-[11px] font-black ${tier.ctaClass} pt-1">Elegir foco →</span>
+                                    </button>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
