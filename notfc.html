@@ -145,8 +145,8 @@
 
             <form id="form-auth-login" onsubmit="handleEmailLogin(event)" class="space-y-3">
                 <div>
-                    <label for="login-identifier" class="block text-xs font-bold text-gray-400 mb-1">Correo electrónico</label>
-                    <input type="text" id="login-identifier" required placeholder="tu.correo@ufromail.cl"
+                    <label for="login-identifier" class="block text-xs font-bold text-gray-400 mb-1">Correo electrónico o usuario</label>
+                    <input type="text" id="login-identifier" required placeholder="tu.correo@ufromail.cl o @usuario"
                         class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
                 </div>
                 <div>
@@ -1050,8 +1050,11 @@
             initializeFirestore,
             collection,
             doc,
+            getDoc,
             getDocs,
             setDoc,
+            query,
+            where,
         } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
         const NOTFC_STORAGE_KEY = 'notfc_season_state_v2';
@@ -1216,6 +1219,9 @@
             snapshot.isCreatedByUser = true;
             snapshot.isFictitious = false;
             snapshot.isFiller = false;
+            if (isRealUser(currentUser)) {
+                snapshot.ownerUid = snapshot.ownerUid || currentUser.uid;
+            }
             const idx = realCreatedClubs.findIndex((c) => c.id === snapshot.id);
             if (idx >= 0) realCreatedClubs[idx] = snapshot;
             else realCreatedClubs.unshift(snapshot);
@@ -1226,7 +1232,13 @@
         }
         function syncRequestToCloud(req) {
             if (db && isRealUser(currentUser) && req?.id) {
-                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'notfc_requests', req.id), req).catch(() => {});
+                const payload = {
+                    ...req,
+                    fromUid: req.fromUid || currentUser.uid,
+                    updatedByUid: currentUser.uid,
+                    updatedAt: Date.now()
+                };
+                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'notfc_requests', req.id), payload, { merge: true }).catch(() => {});
             }
         }
 
@@ -3526,6 +3538,115 @@
 
         function isRealUser(user) { return Boolean(user && !user.isAnonymous); }
 
+        function validateUsernameStrict(rawUsername) {
+            const clean = String(rawUsername || '').trim();
+            if (clean.length < 3 || clean.length > 18) {
+                return { valid: false, error: 'El nombre de usuario debe tener entre 3 y 18 caracteres.' };
+            }
+            if (!/^[a-zA-Z0-9_]+$/.test(clean)) {
+                return { valid: false, error: 'Solo se permiten letras (sin tildes), números y guion bajo (_).' };
+            }
+            if (/^[0-9_]/.test(clean)) {
+                return { valid: false, error: 'El usuario debe comenzar con una letra.' };
+            }
+            if (/__/.test(clean)) {
+                return { valid: false, error: 'No uses dos guiones bajos seguidos.' };
+            }
+            return { valid: true, username: clean };
+        }
+
+        function sanitizeAutoUsername(baseStr) {
+            const lettersOnly = String(baseStr || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-zA-Z0-9_]/g, '');
+            let candidate = lettersOnly.slice(0, 13);
+            if (!/^[a-zA-Z]/.test(candidate)) candidate = `Ufro_${candidate}`;
+            candidate = `${candidate}_${Math.floor(100 + Math.random() * 899)}`.slice(0, 18);
+            const check = validateUsernameStrict(candidate);
+            return check.valid ? check.username : `Jugador_${Math.floor(1000 + Math.random() * 8999)}`;
+        }
+
+        function validAuthNickname(user) {
+            const dn = user && user.displayName;
+            return dn && validateUsernameStrict(dn).valid ? dn : '';
+        }
+
+        function registerUsernameLookup(nickname, email, uid) {
+            if (!db || !nickname || !email) return;
+            const cleanNew = String(nickname).trim().replace(/^@+/, '').toLowerCase();
+            if (!cleanNew) return;
+            const newRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', cleanNew);
+            setDoc(newRef, {
+                nickname: String(nickname).trim().replace(/^@+/, ''),
+                email: String(email).trim(),
+                uid: uid || '',
+                updatedAt: Date.now(),
+            }, { merge: true }).catch(() => {});
+        }
+
+        async function loadUserCloudProfile(uid, userObj = null) {
+            const authNick = validAuthNickname(userObj);
+            if (userObj && !userObj.isAnonymous && authNick) {
+                window.cloudProfile.nickname = authNick;
+                updateAuthUI(userObj);
+            }
+            if (!db || !uid) return;
+            try {
+                const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'main');
+                const snap = await getDoc(profileRef);
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data?.nickname) window.cloudProfile.nickname = data.nickname;
+                    if (window.cloudProfile.nickname && userObj?.email) {
+                        registerUsernameLookup(window.cloudProfile.nickname, userObj.email, uid);
+                    }
+                } else if (userObj && !userObj.isAnonymous) {
+                    const sessionNick = validateUsernameStrict(window.cloudProfile.nickname).valid ? window.cloudProfile.nickname : '';
+                    const generatedNick = authNick || sessionNick || sanitizeAutoUsername(userObj.displayName || userObj.email?.split('@')[0] || 'Jugador');
+                    window.cloudProfile.nickname = generatedNick;
+                    if (!authNick) updateProfile(userObj, { displayName: generatedNick }).catch(() => {});
+                    setDoc(profileRef, {
+                        nickname: generatedNick,
+                        email: userObj.email || '',
+                        createdAt: Date.now(),
+                    }, { merge: true }).catch(() => {});
+                    if (userObj.email) registerUsernameLookup(generatedNick, userObj.email, uid);
+                }
+            } catch (e) {}
+            updateAuthUI(currentUser);
+        }
+
+        async function resolveEmailFromIdentifier(rawIdentifier) {
+            const cleaned = String(rawIdentifier || '').trim();
+            if (!cleaned) return null;
+            if (cleaned.includes('@') && !cleaned.startsWith('@')) return cleaned;
+            const usernameKey = cleaned.replace(/^@+/, '').toLowerCase();
+            if (!usernameKey) return null;
+
+            if (db) {
+                try {
+                    const unameRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', usernameKey);
+                    const snap = await getDoc(unameRef);
+                    if (snap.exists() && snap.data().email && snap.data().active !== false) {
+                        return snap.data().email;
+                    }
+                } catch (e) {}
+            }
+
+            try {
+                const restUrl = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/artifacts/${encodeURIComponent(appId)}/public/data/usernames/${encodeURIComponent(usernameKey)}`;
+                const res = await fetch(restUrl);
+                if (res.ok) {
+                    const json = await res.json();
+                    const emailField = json?.fields?.email?.stringValue;
+                    const activeField = json?.fields?.active?.booleanValue;
+                    if (emailField && activeField !== false) return emailField;
+                }
+            } catch (e) {}
+            return null;
+        }
+
         function updateAuthUI(user) {
             const guestBtns = document.getElementById('guest-auth-buttons');
             const loggedMenu = document.getElementById('logged-user-menu-wrapper');
@@ -3537,7 +3658,7 @@
             }
             guestBtns?.classList.add('hidden');
             loggedMenu?.classList.remove('hidden');
-            const nick = window.cloudProfile.nickname || user.displayName || user.email?.split('@')[0] || 'Jugador';
+            const nick = window.cloudProfile.nickname || validAuthNickname(user) || sanitizeAutoUsername(user.displayName || user.email?.split('@')[0] || 'Jugador');
             window.cloudProfile.nickname = nick;
             if (label) label.textContent = `@${nick}`;
         }
@@ -3562,12 +3683,18 @@
                     }
                 });
                 cloudCareersList = cloudCareers;
-                if (cloudCareers.length > 0) {
-                    availableLeyendasSessions = [...cloudCareers, ...availableLeyendasSessions];
-                    renderLeyendasSessionOptions();
-                }
+                availableLeyendasSessions = [
+                    ...cloudCareers,
+                    ...availableLeyendasSessions.filter((s) => !String(s.id || '').startsWith('cloud_')),
+                ];
+                renderLeyendasSessionOptions();
 
-                const friendsSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'friendships'));
+                const friendsSnap = await getDocs(
+                    query(
+                        collection(db, 'artifacts', appId, 'public', 'data', 'friendships'),
+                        where('users', 'array-contains', user.uid)
+                    )
+                );
                 const friends = [];
                 friendsSnap.forEach((d) => {
                     const data = d.data();
@@ -3590,6 +3717,9 @@
                             `).join('')}
                         </div>
                     `;
+                } else if (quickEl) {
+                    quickEl.classList.add('hidden');
+                    quickEl.innerHTML = '';
                 }
             } catch (e) {}
         }
@@ -3597,30 +3727,65 @@
         window.handleEmailLogin = async function (e) {
             e.preventDefault();
             if (!auth) return;
+            const rawIdentifier = document.getElementById('login-identifier').value.trim();
+            const pass = document.getElementById('login-password').value;
             try {
-                const cred = await signInWithEmailAndPassword(auth, document.getElementById('login-identifier').value.trim(), document.getElementById('login-password').value);
+                const resolvedEmail = await resolveEmailFromIdentifier(rawIdentifier);
+                if (!resolvedEmail) {
+                    showToast('No encontramos una cuenta con ese usuario. Prueba con tu correo.', 'error');
+                    return;
+                }
+                const cred = await signInWithEmailAndPassword(auth, resolvedEmail, pass);
                 currentUser = cred.user;
+                const fallbackNick = rawIdentifier.includes('@') && !rawIdentifier.startsWith('@')
+                    ? sanitizeAutoUsername(resolvedEmail.split('@')[0])
+                    : rawIdentifier.replace(/^@+/, '');
+                window.cloudProfile.nickname = validAuthNickname(currentUser) || fallbackNick;
                 updateAuthUI(currentUser);
                 window.closeAuthModal();
-                showToast('✅ Sesión iniciada.', 'success');
-            } catch (err) { showToast('No se pudo iniciar sesión.', 'error'); }
+                showToast(`✅ Sesión iniciada como @${window.cloudProfile.nickname}.`, 'success');
+                loadUserCloudProfile(currentUser.uid, currentUser);
+            } catch (err) { showToast('Usuario/correo o contraseña incorrectos.', 'error'); }
         };
         window.handleEmailRegister = async function (e) {
             e.preventDefault();
-            if (!auth) return;
-            const nick = document.getElementById('reg-username').value.trim();
+            if (!auth || !db) return;
+            const rawUser = document.getElementById('reg-username').value;
             const email = document.getElementById('reg-email').value.trim();
             const p1 = document.getElementById('reg-password').value;
             const p2 = document.getElementById('reg-password-confirm').value;
+
+            const userCheck = validateUsernameStrict(rawUser);
+            if (!userCheck.valid) { showToast(userCheck.error, 'error'); return; }
             if (p1 !== p2) { showToast('Las contraseñas no coinciden.', 'error'); return; }
+
             try {
+                const existingEmail = await resolveEmailFromIdentifier(userCheck.username);
+                if (existingEmail && existingEmail.toLowerCase() !== email.toLowerCase()) {
+                    showToast('Ese nombre de usuario ya está en uso.', 'error');
+                    return;
+                }
                 const cred = await createUserWithEmailAndPassword(auth, email, p1);
-                await updateProfile(cred.user, { displayName: nick }).catch(() => {});
-                window.cloudProfile.nickname = nick;
-                updateAuthUI(cred.user);
+                currentUser = cred.user;
+                window.cloudProfile.nickname = userCheck.username;
+                updateProfile(currentUser, { displayName: userCheck.username }).catch(() => {});
+                setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main'), {
+                    nickname: userCheck.username,
+                    email,
+                    createdAt: Date.now(),
+                }, { merge: true }).catch(() => {});
+                registerUsernameLookup(userCheck.username, email, currentUser.uid);
+
+                updateAuthUI(currentUser);
                 window.closeAuthModal();
-                showToast(`🎉 ¡Bienvenido @${nick}!`, 'success');
-            } catch (err) { showToast('Error al registrar cuenta.', 'error'); }
+                showToast(`🎉 ¡Bienvenido @${userCheck.username}!`, 'success');
+            } catch (err) {
+                const code = err?.code || '';
+                if (code === 'auth/email-already-in-use') showToast('Ese correo ya está registrado.', 'error');
+                else if (code === 'auth/weak-password') showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
+                else if (code === 'auth/invalid-email') showToast('Correo electrónico inválido.', 'error');
+                else showToast('Error al registrar cuenta.', 'error');
+            }
         };
         window.handlePasswordReset = async function (e) {
             e.preventDefault();
@@ -3636,19 +3801,31 @@
             try {
                 const cred = await signInWithPopup(auth, new GoogleAuthProvider());
                 currentUser = cred.user;
-                updateAuthUI(currentUser);
                 window.closeAuthModal();
+                await loadUserCloudProfile(currentUser.uid, currentUser);
+                updateAuthUI(currentUser);
                 showToast('✅ Sesión iniciada con Google.', 'success');
-            } catch (err) { showToast('No se pudo iniciar sesión con Google.', 'error'); }
+            } catch (err) {
+                const code = err?.code || '';
+                if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return;
+                if (code === 'auth/popup-blocked') showToast('Tu navegador bloqueó la ventana de Google. Permite los pop-ups.', 'error');
+                else if (code === 'auth/unauthorized-domain') showToast('Agrega este dominio en Firebase Console → Authorized domains.', 'error');
+                else showToast('No se pudo iniciar sesión con Google.', 'error');
+            }
         };
         window.logoutCloudUser = async function () {
             if (auth) await signOut(auth).catch(() => {});
             window.cloudProfile.nickname = '';
+            const quickEl = document.getElementById('lobby-firebase-friends-quick');
+            if (quickEl) {
+                quickEl.classList.add('hidden');
+                quickEl.innerHTML = '';
+            }
             updateAuthUI(null);
             showToast('Sesión cerrada.', 'info');
         };
 
-        async function syncCommunityClubsAndRequestsFromCloud() {
+        async function syncCommunityClubsAndRequestsFromCloud(includeRequests = false) {
             if (!db) return;
             try {
                 const clubsSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'notfc_clubs'));
@@ -3662,15 +3839,18 @@
                 realCreatedClubs = Array.from(byId.values());
                 saveRealCreatedClubs();
 
-                const reqSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'notfc_requests'));
-                const reqMap = new Map(mutualRequests.map((r) => [r.id, r]));
-                reqSnap.forEach((d) => {
-                    const data = d.data();
-                    if (data && data.id) reqMap.set(data.id, data);
-                });
-                mutualRequests = Array.from(reqMap.values());
-                saveMutualRequests();
-                renderLobbyMutualInvites();
+                if (includeRequests) {
+                    const reqSnap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'notfc_requests'));
+                    const reqMap = new Map(mutualRequests.map((r) => [r.id, r]));
+                    reqSnap.forEach((d) => {
+                        const data = d.data();
+                        if (data && data.id) reqMap.set(data.id, data);
+                    });
+                    mutualRequests = Array.from(reqMap.values());
+                    saveMutualRequests();
+                    renderLobbyMutualInvites();
+                }
+
                 renderOpenClubsDirectory();
                 renderLobbyFreeAgentsBoard();
             } catch (e) {}
@@ -3686,14 +3866,17 @@
                 auth = getAuth(app);
                 await setPersistence(auth, browserLocalPersistence).catch(() => {});
                 db = initializeFirestore(app, { experimentalForceLongPolling: true });
+                syncCommunityClubsAndRequestsFromCloud(false);
                 if (typeof auth.authStateReady === 'function') await auth.authStateReady();
                 onAuthStateChanged(auth, (user) => {
                     currentUser = user;
                     if (isRealUser(user)) {
                         updateAuthUI(user);
+                        loadUserCloudProfile(user.uid, user);
                         loadCloudLeyendasAndFriends(user);
-                        syncCommunityClubsAndRequestsFromCloud();
+                        syncCommunityClubsAndRequestsFromCloud(true);
                     } else {
+                        window.cloudProfile.nickname = '';
                         updateAuthUI(null);
                     }
                 });

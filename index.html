@@ -857,11 +857,6 @@
                     await auth.authStateReady();
                 }
 
-                // Sesión anónima solo para poder consultar el índice de usuarios (login por @usuario)
-                if (!auth.currentUser) {
-                    await signInAnonymously(auth).catch(() => {});
-                }
-
                 onAuthStateChanged(auth, (user) => {
                     currentUser = user;
                     if (isRealAuthenticatedUser(user)) {

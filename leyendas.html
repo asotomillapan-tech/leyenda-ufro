@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7091284927612436"
-     crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LEYENDAS</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath fill='%23717fff' d='M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z'/%3E%3C/svg%3E">
+    <script src="/firebase-config.js"></script>
     <script>
         window.tailwind = window.tailwind || {};
         window.tailwind.config = {
@@ -98,7 +97,7 @@
                     <h1 class="text-base sm:text-xl font-black tracking-wider text-white leading-none uppercase">
                         LEYENDAS
                     </h1>
-                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.2.0</span>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase">v0.2.5</span>
                 </div>
             </div>
 
@@ -123,14 +122,10 @@
 
                     <!-- Menú Desplegable -->
                     <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 rounded-2xl surface-card border-[#2b2b2b] shadow-2xl py-1.5 z-50 animate-pop">
-                        <a href="https://leyenda-ufro.vercel.app/perfil.html"
+                        <a href="/perfil.html"
                             class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-gray-200 hover:bg-[#242424] hover:text-white flex items-center gap-2 transition">
                             <span>👤</span> Ver perfil
                         </a>
-                        <button type="button" onclick="openProfileModal('username')"
-                            class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-gray-200 hover:bg-[#242424] hover:text-white flex items-center gap-2 transition">
-                            <span>✏️</span> Cambiar usuario
-                        </button>
                         <div class="my-1 border-t border-[#262626]"></div>
                         <button type="button" onclick="window.logoutCloudUser()"
                             class="w-full px-3.5 py-2.5 text-left text-xs font-bold text-rose-400 hover:bg-rose-950/30 flex items-center gap-2 transition">
@@ -343,21 +338,35 @@
                         DATOS DE TU JUGADOR
                     </span>
                     <h2 class="text-2xl font-black text-white mt-2.5">Crea tu Leyenda</h2>
-                    <p class="text-xs text-gray-400 mt-1">Elige tu rama, posición y carrera universitaria para iniciar las pruebas.</p>
+                    <p class="text-xs text-gray-400 mt-1">Elige tu deporte, rama, posición y carrera universitaria para iniciar las pruebas.</p>
                 </div>
 
                 <!-- Paso 1A: Datos básicos -->
                 <form id="step1-player-form" class="space-y-4">
                     <div>
+                        <label class="block text-xs font-bold text-gray-400 mb-1.5">Deporte UFRO</label>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <button type="button" onclick="selectSport('FUTBOL')" id="btn-sport-FUTBOL"
+                                class="py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition">
+                                <span>⚽</span> Fútbol
+                            </button>
+                            <button type="button" onclick="selectSport('BASKET')" id="btn-sport-BASKET"
+                                class="py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition">
+                                <span>🏀</span> Básquetbol <span class="text-[10px] text-amber-300">(Masc.)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
                         <label class="block text-xs font-bold text-gray-400 mb-1.5">Rama Competitiva</label>
                         <div class="grid grid-cols-2 gap-2.5">
                             <button type="button" onclick="selectGender('M')" id="btn-gender-M"
                                 class="py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 transition">
-                                <span>👨</span> Hombre <span class="text-[10px] text-[#a3adff]">(3 Div.)</span>
+                                <span>👨</span> Hombre <span id="gender-M-sub" class="text-[10px] text-[#a3adff]">(3 Div.)</span>
                             </button>
                             <button type="button" onclick="selectGender('F')" id="btn-gender-F"
                                 class="py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition">
-                                <span>👩</span> Mujer <span class="text-[10px] text-gray-500">(Div. Única)</span>
+                                <span>👩</span> Mujer <span id="gender-F-sub" class="text-[10px] text-gray-500">(Div. Única)</span>
                             </button>
                         </div>
                     </div>
@@ -375,7 +384,7 @@
 
                     <div>
                         <label class="block text-xs font-bold text-gray-400 mb-1.5">Posición en Cancha</label>
-                        <div class="grid grid-cols-4 gap-2">
+                        <div id="position-buttons-grid" class="grid grid-cols-4 gap-2">
                             <button type="button" onclick="selectPosition('DEL')" id="pos-btn-DEL" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition-all duration-150">DEL</button>
                             <button type="button" onclick="selectPosition('MED')" id="pos-btn-MED" class="pos-btn py-2.5 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-xs font-bold text-white scale-[1.03] shadow-md shadow-[#717fff]/20 transition-all duration-150">MED</button>
                             <button type="button" onclick="selectPosition('DEF')" id="pos-btn-DEF" class="pos-btn py-2.5 rounded-xl border border-[#2b2b2b] bg-[#151515] text-xs font-bold text-gray-400 hover:text-white transition-all duration-150">DEF</button>
@@ -474,9 +483,16 @@
                                 <div>
                                     <div class="flex items-center gap-1.5 flex-wrap">
                                         <h2 id="hud-name" class="text-base sm:text-lg font-black text-white leading-tight">Jugador</h2>
+                                        <span id="hud-sport-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#151515] text-[#a3adff] border border-[#2b2b2b]">⚽ Fútbol</span>
                                         <span id="hud-branch-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#151515] text-gray-300 border border-[#2b2b2b]">Masculino</span>
                                         <span id="hud-star-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">
                                             ⭐ Estrella
+                                        </span>
+                                        <span id="hud-scholarship-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/35">
+                                            🎓 Beca Deportiva
+                                        </span>
+                                        <span id="hud-heroic-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/35">
+                                            🚀 3ª→1ª
                                         </span>
                                         <span id="hud-loan-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/35">
                                             🤝 Cedido
@@ -523,6 +539,7 @@
                         </div>
 
                         <div id="hud-role-projection" class="mt-2.5 px-3 py-2 rounded-xl surface-sub flex items-center justify-between text-xs"></div>
+                        <div id="hud-rival-strip" class="mt-2 px-3 py-2 rounded-xl surface-sub flex flex-col items-start gap-1 text-[11px] text-gray-400"></div>
                     </div>
                 </div>
 
@@ -612,6 +629,15 @@
 
     </main>
 
+    <!-- ==================== MOTOR v0.2.5 ==================== -->
+    <script type="module">
+        import * as LeyendasEngine from '/public/leyendas-engine.js';
+        window.LeyendasEngine = LeyendasEngine;
+        if (window.__leyendasDeferredInit) {
+            window.__leyendasDeferredInit();
+        }
+    </script>
+
     <!-- ==================== SCRIPT PRINCIPAL ==================== -->
     <script>
         // =========================================================================
@@ -687,6 +713,7 @@
         const GOOGLE_SHEET_ID = '1qgwNRN8AyiXRCUeJ82nMq2wG0eEjPnRKEgJp5irYBMI';
         const SHEET_TAB_MALE = 'Equipos_UFRO';
         const SHEET_TAB_FEMALE = 'Equipos_UFRO_Femenino';
+        const SHEET_TAB_BASKET_M = 'Equipos_BAS_Hombres';
 
         const RANDOM_NAMES_MALE = [
             'Benjamín Rojas', 'Matías Soto', 'Vicente Muñoz', 'Joaquín Morales',
@@ -1123,27 +1150,40 @@
         const STORAGE_KEYS = {
             TEAMS_M: 'leyenda_ufro_teams_m_v8',
             TEAMS_F: 'leyenda_ufro_teams_f_v8',
+            TEAMS_BAS_M: 'leyenda_ufro_teams_bas_m_v1',
             CAREER: 'leyenda_ufro_career_v8',
             HOF: 'leyenda_ufro_hof_v1'
         };
 
         let maleTeamsDB = [];
         let femaleTeamsDB = [];
+        let basketballMaleTeamsDB = [];
         let careerState = null;
+        let selectedSport = 'FUTBOL';
         let selectedGender = 'M';
         let selectedPosition = 'MED';
         let showFullHistoryFlag = false;
         let currentTrialTeams = [];
         let failedTrialCodes = [];
+        let inFallbackTryouts = false;
+
+        function E() {
+            return window.LeyendasEngine;
+        }
 
         // =========================================================================
         // 4. INICIALIZACIÓN Y SINCRONIZACIÓN SILENCIOSA CON GOOGLE SHEETS
         // =========================================================================
-        window.onload = function () {
+        function initLeyendasApp() {
+            if (!window.LeyendasEngine) {
+                window.__leyendasDeferredInit = initLeyendasApp;
+                return;
+            }
             buildLocalCatalogTeams();
             loadCachedDatabases();
             loadCareerState();
 
+            renderPositionButtons();
             ensureCareerSelectPopulated();
             applyRandomPlayerName(true);
             renderApp();
@@ -1152,7 +1192,9 @@
             if (window.initCloudLeaderboard) {
                 window.initCloudLeaderboard();
             }
-        };
+        }
+
+        window.onload = initLeyendasApp;
 
         function inferCareerYears(careerName, explicitDurationRaw = '') {
             if (explicitDurationRaw !== undefined && explicitDurationRaw !== null && String(explicitDurationRaw).trim() !== '') {
@@ -1177,7 +1219,10 @@
         function buildLocalCatalogTeams() {
             const mList = [];
             const fList = [];
-            UFRO_CATALOG.forEach(c => {
+            const extraCareers = E() ? (E().EXTRA_FOOTBALL_CAREERS || []) : [];
+            const fullCatalog = [...UFRO_CATALOG, ...extraCareers];
+
+            fullCatalog.forEach(c => {
                 const fac = canonicalizeFaculty(c.faculty);
                 c.m.forEach((item, idx) => {
                     mList.push({
@@ -1193,6 +1238,7 @@
                         years: c.years,
                         color: FACULTY_COLORS[fac.key] || '#717fff',
                         logo: '',
+                        derby: '',
                         hasExplicitDuration: true
                     });
                 });
@@ -1209,9 +1255,49 @@
                     years: c.years,
                     color: FACULTY_COLORS[fac.key] || '#717fff',
                     logo: '',
+                    derby: '',
                     hasExplicitDuration: true
                 });
             });
+
+            const extraLower = E() ? (E().EXTRA_LOWER_DIV_FOOTBALL_TEAMS || []) : [];
+            extraLower.forEach(ex => {
+                if (!mList.some(t => t.code === ex.code)) {
+                    const fac = canonicalizeFaculty(ex.facultyKey);
+                    mList.push({
+                        ...ex,
+                        facultyKey: fac.key,
+                        faculty: fac.label,
+                        color: FACULTY_COLORS[fac.key] || '#717fff',
+                        logo: '',
+                        derby: '',
+                        hasExplicitDuration: true
+                    });
+                }
+            });
+
+            const basketCatalog = E() ? (E().BASKETBALL_MALE_CATALOG || []) : [];
+            basketballMaleTeamsDB = basketCatalog.map(b => {
+                const fac = canonicalizeFaculty(b.facultyKey || b.career);
+                return {
+                    code: b.code,
+                    careerId: (b.code.split('-')[2] || b.career.slice(0, 3)).toUpperCase(),
+                    name: b.name,
+                    career: b.career,
+                    facultyKey: fac.key,
+                    faculty: fac.label,
+                    division: 1,
+                    ovr: b.ovr,
+                    achievements: b.achievements || 'Sin títulos oficiales',
+                    years: b.years || inferCareerYears(b.career),
+                    color: FACULTY_COLORS[fac.key] || '#717fff',
+                    logo: b.logo || '',
+                    derby: b.derby || '',
+                    sport: 'BASKET',
+                    hasExplicitDuration: true
+                };
+            });
+
             maleTeamsDB = mList;
             femaleTeamsDB = fList;
         }
@@ -1220,6 +1306,7 @@
             try {
                 const cachedM = localStorage.getItem(STORAGE_KEYS.TEAMS_M);
                 const cachedF = localStorage.getItem(STORAGE_KEYS.TEAMS_F);
+                const cachedBas = localStorage.getItem(STORAGE_KEYS.TEAMS_BAS_M);
                 if (cachedM) {
                     const parsedM = JSON.parse(cachedM);
                     if (Array.isArray(parsedM) && parsedM.length >= 1) {
@@ -1235,6 +1322,15 @@
                         femaleTeamsDB = parsedF.map(t => {
                             const fac = canonicalizeFaculty(t.faculty);
                             return { ...t, facultyKey: fac.key, faculty: fac.label, color: t.color || FACULTY_COLORS[fac.key] || '#717fff', logo: t.logo || '' };
+                        });
+                    }
+                }
+                if (cachedBas) {
+                    const parsedBas = JSON.parse(cachedBas);
+                    if (Array.isArray(parsedBas) && parsedBas.length >= 1) {
+                        basketballMaleTeamsDB = parsedBas.map(t => {
+                            const fac = canonicalizeFaculty(t.faculty);
+                            return { ...t, sport: 'BASKET', division: 1, facultyKey: fac.key, faculty: fac.label, color: t.color || FACULTY_COLORS[fac.key] || '#717fff', logo: t.logo || '' };
                         });
                     }
                 }
@@ -1277,13 +1373,14 @@
             let syncedAny = false;
 
             try {
-                const [csvMale, csvFemale] = await Promise.all([
+                const [csvMale, csvFemale, csvBasketM] = await Promise.all([
                     fetchSheetTabCSV(SHEET_TAB_MALE),
-                    fetchSheetTabCSV(SHEET_TAB_FEMALE)
+                    fetchSheetTabCSV(SHEET_TAB_FEMALE),
+                    fetchSheetTabCSV(SHEET_TAB_BASKET_M)
                 ]);
 
                 if (csvMale) {
-                    const parsedM = parseSheetCSV(csvMale, 'M', 1);
+                    const parsedM = parseSheetCSV(csvMale, 'M', 1, 'FUTBOL');
                     if (parsedM.length > 0) {
                         maleTeamsDB = parsedM;
                         localStorage.setItem(STORAGE_KEYS.TEAMS_M, JSON.stringify(maleTeamsDB));
@@ -1292,7 +1389,7 @@
                 }
 
                 if (csvFemale) {
-                    const parsedF = parseSheetCSV(csvFemale, 'F', 1);
+                    const parsedF = parseSheetCSV(csvFemale, 'F', 1, 'FUTBOL');
                     if (parsedF.length > 0) {
                         femaleTeamsDB = parsedF;
                         localStorage.setItem(STORAGE_KEYS.TEAMS_F, JSON.stringify(femaleTeamsDB));
@@ -1300,11 +1397,20 @@
                     }
                 }
 
+                if (csvBasketM) {
+                    const parsedBas = parseSheetCSV(csvBasketM, 'M', 1, 'BASKET');
+                    if (parsedBas.length > 0) {
+                        basketballMaleTeamsDB = parsedBas;
+                        localStorage.setItem(STORAGE_KEYS.TEAMS_BAS_M, JSON.stringify(basketballMaleTeamsDB));
+                        syncedAny = true;
+                    }
+                }
+
                 if (syncedAny) {
                     ensureCareerSelectPopulated();
                     if (careerState) renderApp();
-                    updateSyncIndicator('live', `BD en vivo (${maleTeamsDB.length}M / ${femaleTeamsDB.length}F)`);
-                    if (!silent) showToast(`✅ Sincronizado: ${maleTeamsDB.length} equipos Masc. y ${femaleTeamsDB.length} Fem.`, 'success');
+                    updateSyncIndicator('live', `BD en vivo (${maleTeamsDB.length}M / ${femaleTeamsDB.length}F / ${basketballMaleTeamsDB.length}B)`);
+                    if (!silent) showToast(`✅ Sincronizado: ${maleTeamsDB.length} Masc, ${femaleTeamsDB.length} Fem y ${basketballMaleTeamsDB.length} Básquet.`, 'success');
                 } else {
                     updateSyncIndicator('local', 'BD Local');
                     if (!silent) showToast('No se pudo conectar con Google Sheets. Verifica que esté público.', 'error');
@@ -1343,7 +1449,7 @@
             return res;
         }
 
-        function parseSheetCSV(csvText, gender, minValidRows = 1) {
+        function parseSheetCSV(csvText, gender, minValidRows = 1, sport = 'FUTBOL') {
             const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
             if (lines.length < 2) return [];
             const headers = splitCSVLine(lines[0]).map(h => h.toLowerCase().trim());
@@ -1380,7 +1486,7 @@
                 const fac = canonicalizeFaculty(rawFac);
 
                 let divNum = 1;
-                if (gender === 'M' && idxDiv !== -1 && cols[idxDiv]) {
+                if (sport !== 'BASKET' && gender === 'M' && idxDiv !== -1 && cols[idxDiv]) {
                     const dStr = cols[idxDiv].toLowerCase();
                     if (dStr.includes('3') || dStr.includes('tercera')) divNum = 3;
                     else if (dStr.includes('2') || dStr.includes('segunda')) divNum = 2;
@@ -1418,6 +1524,7 @@
                     color,
                     logo,
                     derby,
+                    sport,
                     hasExplicitDuration: rawDur !== ''
                 });
             }
@@ -1427,7 +1534,34 @@
         function loadCareerState() {
             try {
                 const raw = localStorage.getItem(STORAGE_KEYS.CAREER);
-                if (raw) careerState = JSON.parse(raw);
+                if (raw) {
+                    careerState = JSON.parse(raw);
+                    if (careerState) {
+                        if (!careerState.sport) careerState.sport = 'FUTBOL';
+                        if (typeof careerState.gpa !== 'number') careerState.gpa = E().createInitialGpa(careerState.isProdigy);
+                        if (typeof careerState.hasScholarship !== 'boolean') careerState.hasScholarship = false;
+                        if (!careerState.postgradStage) careerState.postgradStage = 'UNDERGRAD';
+                        if (typeof careerState.promotionsCount !== 'number') careerState.promotionsCount = 0;
+                        if (typeof careerState.heroicDiv3ToDiv1 !== 'boolean') careerState.heroicDiv3ToDiv1 = false;
+                        if (typeof careerState.clutchPointsTotal !== 'number') careerState.clutchPointsTotal = 0;
+                        if (!careerState.stats) careerState.stats = {};
+                        careerState.stats = {
+                            matches: careerState.stats.matches || 0,
+                            goals: careerState.stats.goals || 0,
+                            assists: careerState.stats.assists || 0,
+                            cleanSheets: careerState.stats.cleanSheets || 0,
+                            points: careerState.stats.points || 0,
+                            rebounds: careerState.stats.rebounds || 0,
+                            stealsBlocks: careerState.stats.stealsBlocks || 0
+                        };
+                        if (!careerState.usedKeyMomentIds) careerState.usedKeyMomentIds = [];
+                        if (!careerState.rival) {
+                            const db = getActiveDB(careerState.gender, careerState.sport);
+                            const t = findTeamByCode(careerState.teamCode, careerState.gender, careerState.sport);
+                            careerState.rival = E().initRecurringRival(t, db);
+                        }
+                    }
+                }
             } catch (e) {
                 careerState = null;
             }
@@ -1469,8 +1603,8 @@
                 };
             }
 
-            // 3. Salto de categoría en rama masculina
-            if (careerState.gender === 'M' && Number(offerTeam.division) < Number(currentTeam.division)) {
+            // 3. Salto de categoría en fútbol masculino
+            if (careerState.gender === 'M' && careerState.sport !== 'BASKET' && Number(offerTeam.division) < Number(currentTeam.division)) {
                 return {
                     label: '⬆️ Salto de División',
                     badgeClass: 'text-amber-300',
@@ -1669,14 +1803,20 @@
             else localStorage.removeItem(STORAGE_KEYS.CAREER);
         }
 
-        function getActiveDB(gender = null) {
+        function getActiveDB(gender = null, sport = null) {
+            const sp = sport || (careerState ? careerState.sport : selectedSport);
+            if (sp === 'BASKET') return basketballMaleTeamsDB;
             const g = gender || (careerState ? careerState.gender : selectedGender);
             return g === 'F' ? femaleTeamsDB : maleTeamsDB;
         }
 
-        function findTeamByCode(code, gender = null) {
-            const db = getActiveDB(gender);
-            return db.find(t => t.code === code) || maleTeamsDB.find(t => t.code === code) || femaleTeamsDB.find(t => t.code === code) || db[0];
+        function findTeamByCode(code, gender = null, sport = null) {
+            const db = getActiveDB(gender, sport);
+            return db.find(t => t.code === code)
+                || basketballMaleTeamsDB.find(t => t.code === code)
+                || maleTeamsDB.find(t => t.code === code)
+                || femaleTeamsDB.find(t => t.code === code)
+                || db[0];
         }
 
         // =========================================================================
@@ -1700,7 +1840,9 @@
             return { label: 'Suplente', badgeClass: 'bg-[#151515] text-gray-500 border border-[#2b2b2b]', factor: 0.35 };
         }
 
-        function getDivisionLabel(div, gender = 'M') {
+        function getDivisionLabel(div, gender = 'M', sport = null) {
+            const sp = sport || (careerState ? careerState.sport : selectedSport);
+            if (sp === 'BASKET') return 'División Única Básquet';
             if (gender === 'F') return 'División Única Fem.';
             if (Number(div) === 1) return '1ª División';
             if (Number(div) === 2) return '2ª División';
@@ -1734,18 +1876,23 @@
             if (!select) return;
             const previousVal = select.value;
 
-            const activePool = selectedGender === 'F' && femaleTeamsDB.length > 0 ? femaleTeamsDB : maleTeamsDB;
+            const activePool = selectedSport === 'BASKET'
+                ? basketballMaleTeamsDB
+                : (selectedGender === 'F' && femaleTeamsDB.length > 0 ? femaleTeamsDB : maleTeamsDB);
             const careerMap = new Map();
 
-            UFRO_CATALOG.forEach(c => {
-                const fac = canonicalizeFaculty(c.faculty);
-                careerMap.set(c.career.toLowerCase(), {
-                    career: c.career,
-                    facultyKey: fac.key,
-                    faculty: fac.label,
-                    years: c.years
+            if (selectedSport !== 'BASKET') {
+                const extraCareers = E() ? (E().EXTRA_FOOTBALL_CAREERS || []) : [];
+                [...UFRO_CATALOG, ...extraCareers].forEach(c => {
+                    const fac = canonicalizeFaculty(c.faculty);
+                    careerMap.set(c.career.toLowerCase(), {
+                        career: c.career,
+                        facultyKey: fac.key,
+                        faculty: fac.label,
+                        years: c.years
+                    });
                 });
-            });
+            }
 
             activePool.forEach(t => {
                 const key = t.career.toLowerCase();
@@ -1811,7 +1958,66 @@
             document.getElementById('career-duration-hint').textContent = `Duración regular: ${years} años (${years * 2} semestres)`;
         }
 
+        function renderPositionButtons() {
+            const grid = document.getElementById('position-buttons-grid');
+            if (!grid || !E()) return;
+            const positions = E().getSportPositions(selectedSport);
+            if (!positions.includes(selectedPosition)) {
+                selectedPosition = E().SPORT_CONFIG[selectedSport].defaultPosition;
+            }
+            grid.className = positions.length === 5 ? 'grid grid-cols-5 gap-1.5 sm:gap-2' : 'grid grid-cols-4 gap-2';
+            grid.innerHTML = positions.map(pos => {
+                const isActive = pos === selectedPosition;
+                return `<button type="button" onclick="selectPosition('${pos}')" id="pos-btn-${pos}" class="pos-btn py-2.5 rounded-xl border ${isActive ? 'border-[#717fff] bg-[#717fff]/20 text-white scale-[1.03] shadow-md shadow-[#717fff]/20' : 'border-[#2b2b2b] bg-[#151515] text-gray-400 hover:text-white'} text-xs font-bold transition-all duration-150">${pos}</button>`;
+            }).join('');
+        }
+
+        function selectSport(sport) {
+            selectedSport = sport === 'BASKET' ? 'BASKET' : 'FUTBOL';
+            const btnFut = document.getElementById('btn-sport-FUTBOL');
+            const btnBas = document.getElementById('btn-sport-BASKET');
+            const btnM = document.getElementById('btn-gender-M');
+            const btnF = document.getElementById('btn-gender-F');
+            const subM = document.getElementById('gender-M-sub');
+            const subF = document.getElementById('gender-F-sub');
+
+            if (btnFut && btnBas) {
+                if (selectedSport === 'FUTBOL') {
+                    btnFut.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 scale-[1.02] shadow-md shadow-[#717fff]/20 transition-all duration-150';
+                    btnBas.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition-all duration-150';
+                } else {
+                    btnBas.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 scale-[1.02] shadow-md shadow-[#717fff]/20 transition-all duration-150';
+                    btnFut.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition-all duration-150';
+                }
+            }
+
+            if (selectedSport === 'BASKET') {
+                selectedGender = 'M';
+                if (subM) subM.textContent = '(Div. Única)';
+                if (subF) subF.textContent = '(Solo Fútbol)';
+                if (btnF) {
+                    btnF.disabled = true;
+                    btnF.classList.add('opacity-45', 'cursor-not-allowed');
+                }
+                selectGender('M');
+            } else {
+                if (subM) subM.textContent = '(3 Div.)';
+                if (subF) subF.textContent = '(Div. Única)';
+                if (btnF) {
+                    btnF.disabled = false;
+                    btnF.classList.remove('opacity-45', 'cursor-not-allowed');
+                }
+            }
+
+            renderPositionButtons();
+            ensureCareerSelectPopulated();
+        }
+
         function selectGender(g) {
+            if (selectedSport === 'BASKET' && g === 'F') {
+                showToast('🏀 Por ahora Básquetbol UFRO está disponible en rama masculina.', 'info');
+                return;
+            }
             selectedGender = g;
             const btnM = document.getElementById('btn-gender-M');
             const btnF = document.getElementById('btn-gender-F');
@@ -1819,7 +2025,7 @@
             if (btnM && btnF) {
                 if (g === 'M') {
                     btnM.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 scale-[1.02] shadow-md shadow-[#717fff]/20 transition-all duration-150';
-                    btnF.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition-all duration-150';
+                    btnF.className = `py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition-all duration-150 ${selectedSport === 'BASKET' ? 'opacity-45 cursor-not-allowed' : ''}`;
                 } else {
                     btnF.className = 'py-2.5 px-3 rounded-xl border border-[#717fff] bg-[#717fff]/20 text-white font-bold text-xs flex items-center justify-center gap-2 scale-[1.02] shadow-md shadow-[#717fff]/20 transition-all duration-150';
                     btnM.className = 'py-2.5 px-3 rounded-xl border border-[#2b2b2b] bg-[#151515] text-gray-400 font-bold text-xs flex items-center justify-center gap-2 hover:text-white transition-all duration-150';
@@ -1841,12 +2047,8 @@
             }
         }
 
-        function getTrialAcceptanceChance(team, gender) {
-            if (gender === 'F') return 1.0;
-            const div = Number(team.division);
-            if (div === 1) return 0.14;
-            if (div === 2) return 0.36;
-            return 0.94;
+        function getTrialAcceptanceChance(team, gender, sport = selectedSport) {
+            return E().getTrialAcceptanceChance(team, gender, sport);
         }
 
         document.getElementById('step1-player-form').addEventListener('submit', function (e) {
@@ -1859,28 +2061,31 @@
 
             const careerSelect = document.getElementById('input-career-select');
             const selectedCareer = careerSelect.value;
-            const db = getActiveDB();
+            const db = getActiveDB(selectedGender, selectedSport);
 
             let careerTeams = db.filter(t => t.career.toLowerCase() === selectedCareer.toLowerCase());
 
             if (careerTeams.length === 0) {
-                if (selectedGender === 'F') {
-                    showToast('Esta carrera aún no tiene equipo femenino registrado.', 'error');
-                    return;
-                }
                 const facKey = canonicalizeFaculty(selectedCareer).key;
                 const facTeams = db.filter(t => t.facultyKey === facKey);
-                careerTeams = facTeams.length > 0 ? facTeams.slice(0, 3) : db.filter(t => Number(t.division) === 3).slice(0, 3);
+                careerTeams = facTeams.length > 0 ? facTeams.slice(0, 3) : db.slice(0, 3);
             }
 
-            currentTrialTeams = [...careerTeams].sort((a, b) => Number(a.division) - Number(b.division));
+            currentTrialTeams = [...careerTeams].sort((a, b) => Number(a.division) - Number(b.division) || b.ovr - a.ovr);
             failedTrialCodes = [];
+            inFallbackTryouts = false;
 
-            document.getElementById('trial-badge').textContent = selectedGender === 'F' ? 'División Única Femenina' : 'Pruebas Mechonas · Todas las Divisiones';
+            if (selectedSport === 'BASKET') {
+                document.getElementById('trial-badge').textContent = 'Pruebas Mechonas · Básquetbol UFRO';
+                document.getElementById('trial-desc').textContent = 'Pruébate en el plantel de tu carrera: los equipos con mayor media histórica tienen cupos muy competitivos.';
+            } else if (selectedGender === 'F') {
+                document.getElementById('trial-badge').textContent = 'Pruebas Mechonas · Fútbol Femenino UFRO';
+                document.getElementById('trial-desc').textContent = 'Rinde la prueba mechona de tu carrera. Las posibilidades dependen de la exigencia (OVR) del plantel; si no quedas, se abrirán pruebas en clubes de tu facultad.';
+            } else {
+                document.getElementById('trial-badge').textContent = 'Pruebas Mechonas · Todas las Divisiones';
+                document.getElementById('trial-desc').textContent = 'Elige dónde probarte: en 1ª y 2ª División los cupos son muy exigentes, mientras que en 3ª División tienes entrada casi asegurada.';
+            }
             document.getElementById('trial-title').textContent = selectedCareer;
-            document.getElementById('trial-desc').textContent = selectedGender === 'F'
-                ? 'Selecciona el plantel femenino disponible de tu carrera para debutar.'
-                : 'Elige dónde probarte: en 1ª y 2ª División los cupos son muy exigentes, mientras que en 3ª División tienes entrada casi asegurada.';
 
             renderTrialTeamsList();
 
@@ -1893,13 +2098,22 @@
             if (!listEl) return;
 
             listEl.innerHTML = currentTrialTeams.map(t => {
-                const chancePct = Math.round(getTrialAcceptanceChance(t, selectedGender) * 100);
+                const chancePct = Math.round(getTrialAcceptanceChance(t, selectedGender, selectedSport) * 100);
                 const alreadyFailed = failedTrialCodes.includes(t.code);
 
                 let chanceBadgeClass = 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
                 let chanceLabel = `Alta chance (${chancePct}%)`;
-                if (selectedGender === 'F') {
-                    chanceLabel = 'Ingreso directo';
+
+                if (selectedSport === 'BASKET' || selectedGender === 'F') {
+                    if (chancePct < 35) {
+                        chanceBadgeClass = 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+                        chanceLabel = `Cupo exigente (${chancePct}%)`;
+                    } else if (chancePct < 65) {
+                        chanceBadgeClass = 'bg-[#717fff]/15 text-[#a3adff] border-[#717fff]/30';
+                        chanceLabel = `Chance media (${chancePct}%)`;
+                    } else {
+                        chanceLabel = `Alta chance (${chancePct}%)`;
+                    }
                 } else if (Number(t.division) === 1) {
                     chanceBadgeClass = 'bg-amber-500/15 text-amber-300 border-amber-500/30';
                     chanceLabel = `Cupo difícil (${chancePct}%)`;
@@ -1916,13 +2130,13 @@
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="font-black text-white text-sm">${escapeHtml(t.name)}</span>
                                     <span class="px-2 py-0.5 rounded bg-[#222222] text-[10px] font-bold text-[#a3adff] border border-[#2b2b2b]">
-                                        ${getDivisionLabel(t.division, selectedGender)}
+                                        ${getDivisionLabel(t.division, selectedGender, selectedSport)}
                                     </span>
                                     <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${chanceBadgeClass}">
                                         ${chanceLabel}
                                     </span>
                                 </div>
-                                <div class="text-xs text-gray-400 mt-0.5">${escapeHtml(t.faculty)}</div>
+                                <div class="text-xs text-gray-400 mt-0.5">${escapeHtml(t.faculty)} · Media equipo ${t.ovr}</div>
                                 <div class="text-[11px] text-gray-500 mt-1">🏅 ${escapeHtml(t.achievements)}</div>
                             </div>
                         </div>
@@ -1930,7 +2144,7 @@
                             ? `<span class="px-3.5 py-2 rounded-xl bg-rose-950/40 border border-rose-500/35 text-rose-300 font-bold text-xs shrink-0 text-center">No seleccionado</span>`
                             : `<button type="button" onclick="attemptTryout('${t.code}')"
                                 class="px-4 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition shrink-0">
-                                ${selectedGender === 'F' ? 'Fichar y Debutar →' : 'Hacer Prueba →'}
+                                Hacer Prueba →
                             </button>`
                         }
                     </div>
@@ -1939,22 +2153,46 @@
         }
 
         function attemptTryout(teamCode) {
-            const team = findTeamByCode(teamCode, selectedGender);
+            const team = findTeamByCode(teamCode, selectedGender, selectedSport);
             if (!team) return;
 
-            const chance = getTrialAcceptanceChance(team, selectedGender);
+            const chance = getTrialAcceptanceChance(team, selectedGender, selectedSport);
             const remainingTeams = currentTrialTeams.filter(t => !failedTrialCodes.includes(t.code));
 
-            const isLastFallback = remainingTeams.length <= 1;
-            const accepted = isLastFallback || Math.random() < chance;
+            // Solo garantiza pase automático en el último club del pool de respaldo abierto (para no bloquear la partida)
+            const isLastSafetyClub = inFallbackTryouts && remainingTeams.length <= 1;
+            const accepted = isLastSafetyClub || Math.random() < chance;
 
             if (accepted) {
                 startCareerWithTeam(team.code);
-            } else {
-                failedTrialCodes.push(team.code);
-                renderTrialTeamsList();
-                showToast(`❌ El DT de ${team.name} (${getDivisionLabel(team.division, selectedGender)}) te dijo que aún te falta roce. Prueba en otro equipo de tu carrera.`, 'error');
+                return;
             }
+
+            failedTrialCodes.push(team.code);
+            const stillAvailable = currentTrialTeams.filter(t => !failedTrialCodes.includes(t.code));
+
+            if (stillAvailable.length === 0) {
+                const db = getActiveDB(selectedGender, selectedSport);
+                const selectedCareer = document.getElementById('input-career-select')?.value || '';
+                const facKey = canonicalizeFaculty(selectedCareer).key;
+                const fallbackPool = E().buildFallbackTryoutTeams(db, failedTrialCodes, facKey);
+
+                if (fallbackPool.length > 0) {
+                    inFallbackTryouts = true;
+                    currentTrialTeams = fallbackPool;
+                    document.getElementById('trial-badge').textContent = 'Pruebas Abiertas · Clubes Invitados';
+                    document.getElementById('trial-desc').textContent = 'No quedaste en la selección de tu carrera. Estos clubes de tu facultad y del campus abrieron cupos para ti.';
+                    showToast(`❌ No superaste la prueba en ${team.name}. ¡Se abrieron pruebas de repechaje en otros planteles del campus!`, 'error');
+                    renderTrialTeamsList();
+                    return;
+                }
+                // Seguridad extrema si DB tuviera un único club
+                startCareerWithTeam(team.code);
+                return;
+            }
+
+            renderTrialTeamsList();
+            showToast(`❌ El DT de ${team.name} te dijo que aún te falta roce. Intenta en otro equipo.`, 'error');
         }
 
         function backToStep1() {
@@ -1969,20 +2207,19 @@
                 return;
             }
 
-            const db = getActiveDB();
+            const db = getActiveDB(selectedGender, selectedSport);
             if (!db || db.length === 0) return;
 
             const isMathiasBello = playerName.toLowerCase() === 'mathias bello';
             let chosenTeam = null;
 
-            if (selectedGender === 'F') {
+            if (selectedSport === 'BASKET' || selectedGender === 'F') {
                 chosenTeam = db[Math.floor(Math.random() * db.length)];
             } else {
                 const div1 = db.filter(t => Number(t.division) === 1);
                 const div2 = db.filter(t => Number(t.division) === 2);
                 const div3 = db.filter(t => Number(t.division) === 3);
 
-                // Probabilidades ponderadas: ~70% en 3ª Div, ~22% en 2ª Div, ~8% en 1ª Div
                 const roll = Math.random();
                 let targetPool = div3;
 
@@ -2012,17 +2249,17 @@
             const selectedOpt = careerSelect.options[careerSelect.selectedIndex];
             const studiedCareer = careerSelect.value;
             const baseYears = Number(selectedOpt?.dataset?.years || inferCareerYears(studiedCareer));
-            const team = findTeamByCode(teamCode, selectedGender);
+            const team = findTeamByCode(teamCode, selectedGender, selectedSport);
 
             if (!playerName || !team) return;
 
             const isMathiasBello = playerName.toLowerCase() === 'mathias bello';
 
-            const divBonus = selectedGender === 'M'
+            const divBonus = (selectedSport === 'FUTBOL' && selectedGender === 'M')
                 ? (Number(team.division) === 1 ? 5 : Number(team.division) === 2 ? 2 : 0)
-                : 0;
+                : (team.ovr >= 80 ? 3 : 0);
 
-            const isProdigy = isMathiasBello || Math.random() < 0.12 || (selectedGender === 'M' && Number(team.division) === 1);
+            const isProdigy = isMathiasBello || Math.random() < 0.12 || (selectedSport === 'FUTBOL' && selectedGender === 'M' && Number(team.division) === 1);
 
             let initialOvr;
             if (isMathiasBello) {
@@ -2033,8 +2270,12 @@
                     : Math.floor(Math.random() * 5) + 57) + divBonus;
             }
 
+            const activeDb = getActiveDB(selectedGender, selectedSport);
+            const initialRival = E().initRecurringRival(team, activeDb);
+
             careerState = {
                 playerName,
+                sport: selectedSport,
                 gender: selectedGender,
                 position: selectedPosition,
                 studiedCareer,
@@ -2043,16 +2284,30 @@
                 baseYears,
                 maxYears: baseYears,
                 extensionUsed: 0,
+                postgradStage: 'UNDERGRAD',
+                gpa: E().createInitialGpa(isProdigy),
+                hasScholarship: false,
                 academicDelayYears: 0,
                 forcedOutSemesters: 0,
                 currentYear: 1,
                 currentSemester: 1,
                 phase: 'PLAY_SEMESTER',
+                semesterFocusChoices: [],
+                selectedFocusCard: null,
+                activeKeyMoment: null,
+                keyMomentOutcome: null,
+                usedKeyMomentIds: [],
                 activeEvent: null,
                 eventResult: null,
                 eventModifiers: null,
                 triggeredEventIds: [],
                 teamCode: team.code,
+                startingTeamCode: team.code,
+                startedInDiv3: (selectedSport === 'FUTBOL' && selectedGender === 'M' && Number(team.division) === 3),
+                promotionsCount: 0,
+                heroicDiv3ToDiv1: false,
+                clutchPointsTotal: 0,
+                rival: initialRival,
                 pastTeamCodes: [team.code],
                 pendingOffers: [],
                 s1QualifiedCodes: [],
@@ -2062,8 +2317,8 @@
                 interfacultadesQualified: false,
                 fenaudeQualified: false,
                 ufroCitations: [],
-                stats: { matches: 0, goals: 0, assists: 0, cleanSheets: 0 },
-                ufroStats: { matches: 0, goals: 0, assists: 0 },
+                stats: { matches: 0, goals: 0, assists: 0, cleanSheets: 0, points: 0, rebounds: 0, stealsBlocks: 0 },
+                ufroStats: { matches: 0, goals: 0, assists: 0, points: 0, rebounds: 0 },
                 history: [],
                 trophies: [],
                 awards: []
@@ -2074,9 +2329,10 @@
             backToStep1();
             renderApp();
 
+            const sportIcon = selectedSport === 'BASKET' ? '🏀' : '⚽';
             if (isMathiasBello) {
-                showToast(`🌟 ¡EASTER EGG ACTIVADO! Mathias Bello ha ingresado a la UFRO con 90 OVR de superestrella. ¡Todos los equipos te quieren!`, 'success');
-            } else if (selectedGender === 'M' && Number(team.division) === 1) {
+                showToast(`🌟 ¡EASTER EGG ACTIVADO! Mathias Bello ha ingresado a la UFRO con 90 OVR de superestrella.`, 'success');
+            } else if (selectedSport === 'FUTBOL' && selectedGender === 'M' && Number(team.division) === 1) {
                 showToast(
                     isRandomEntry
                         ? `🎰 ¡Golpe de suerte! Caíste directo en ${team.name} (1ª Div · ${team.career}) con ${initialOvr} de Media.`
@@ -2084,11 +2340,11 @@
                     'success'
                 );
             } else if (isRandomEntry) {
-                showToast(`🎲 ¡Destino aleatorio! Debutas en ${team.name} (${getDivisionLabel(team.division, selectedGender)} · ${team.career}) con ${initialOvr} Media.`, 'success');
+                showToast(`${sportIcon} ¡Destino aleatorio! Debutas en ${team.name} (${getDivisionLabel(team.division, selectedGender, selectedSport)} · ${team.career}) con ${initialOvr} Media.`, 'success');
             } else if (isProdigy) {
                 showToast(`⭐ ¡Talento Generacional! Debutas en ${team.name} con ${initialOvr} de Media.`, 'success');
             } else {
-                showToast(`🎓 ¡Quedaste seleccionado! Debutas en ${team.name} (${initialOvr} Media).`, 'success');
+                showToast(`${sportIcon} ¡Quedaste seleccionado! Debutas en ${team.name} (${initialOvr} Media).`, 'success');
             }
         }
 
@@ -2124,35 +2380,58 @@
         // =========================================================================
         // 7. FLUJO DE SIMULACIÓN DE SEMESTRE Y MERCADO DE PASES
         // =========================================================================
-        function triggerPlaySemester() {
+        function selectFocusAndPlay(cardIndex) {
             if (!careerState || careerState.phase !== 'PLAY_SEMESTER') return;
 
             if ((careerState.forcedOutSemesters || 0) > 0) {
                 careerState.forcedOutSemesters -= 1;
+                careerState.selectedFocusCard = null;
                 executeSemesterSimulation({ suspend: true, injuryReason: 'Rehabilitación lesión anual' });
                 return;
             }
 
-            if (Math.random() < 0.68) {
-                careerState.activeEvent = buildContextualRandomEvent();
+            const choices = Array.isArray(careerState.semesterFocusChoices) ? careerState.semesterFocusChoices : [];
+            const chosenCard = choices[cardIndex] || choices[0] || null;
+            careerState.selectedFocusCard = chosenCard ? { ...chosenCard } : null;
+
+            const eventChance = careerState.currentSemester === 2 ? 0.65 : 0.72;
+            if (Math.random() < eventChance) {
+                careerState.activeEvent = buildContextualRandomEvent(chosenCard);
                 careerState.eventResult = null;
                 careerState.phase = 'RANDOM_EVENT';
                 saveCareerState();
                 renderApp();
             } else {
-                executeSemesterSimulation(null);
+                maybeTriggerKeyMoment(null);
             }
         }
 
-        function extendUniversityCareer(extraYears, label) {
-            if (careerState.extensionUsed + extraYears > 2) return;
-            careerState.extensionUsed += extraYears;
-            careerState.maxYears += extraYears;
+        function triggerPlaySemester() {
+            selectFocusAndPlay(0);
+        }
+
+        function acceptPostgradOption(nextStage, yearsToAdd) {
+            const pg = E().getPostgradEligibility({
+                gpa: careerState.gpa,
+                postgradStage: careerState.postgradStage || 'UNDERGRAD'
+            });
+            if (!pg.canContinue || pg.nextStage !== nextStage) {
+                graduateAndRetire();
+                return;
+            }
+            careerState.postgradStage = nextStage;
+            careerState.extensionUsed = (careerState.extensionUsed || 0) + 1;
+            careerState.maxYears += yearsToAdd;
             careerState.pendingOffers = generateTransferOffers();
             careerState.phase = 'TRANSFER_MARKET';
             saveCareerState();
             renderApp();
-            showToast(`📚 Carrera extendida +${extraYears} año(s) (${label})`, 'success');
+            showToast(`🎓 ¡Postgrado UFRO desbloqueado! Ingresas a ${pg.optionTitle}`, 'success');
+        }
+
+        function extendUniversityCareer(extraYears, label) {
+            const nextStage = extraYears >= 3 ? 'PHD' : 'MASTERS';
+            acceptPostgradOption(nextStage, extraYears);
         }
 
         function graduateAndRetire() {
@@ -2168,32 +2447,36 @@
             );
         }
 
-        function buildContextualRandomEvent() {
+        function buildContextualRandomEvent(focusCard = null) {
             const db = getActiveDB();
             const currentTeam = findTeamByCode(careerState.teamCode);
             const pastCodes = (careerState.pastTeamCodes || []).filter(c => c !== careerState.teamCode);
             const icoTeams = db.filter(t => t.career.toLowerCase().includes('comercial') && t.code !== careerState.teamCode);
-            const studiedLower = (careerState.studiedCareer || currentTeam.career || '').toLowerCase();
+            const studied = careerState.studiedCareer || currentTeam.career || '';
             const triggered = careerState.triggeredEventIds || [];
 
             const roll = Math.random();
 
-            const matchingCareerEvents = CAREER_EXCLUSIVE_EVENTS.filter(ev => {
-                const matchesCareer = ev.careerMatch.some(kw => studiedLower.includes(kw));
-                const matchesSem = !ev.semesterOnly || ev.semesterOnly === careerState.currentSemester;
-                const notRepeated = !triggered.includes(`${ev.id}_y${careerState.currentYear}`);
-                return matchesCareer && matchesSem && notRepeated;
-            });
+            // 1. Eventos exclusivos por carrera (42 carreras UFRO)
+            const matchingCareerEvents = E().findCareerExclusiveEvent(
+                studied,
+                careerState.currentSemester,
+                triggered,
+                careerState.currentYear
+            );
 
-            if (matchingCareerEvents.length > 0 && roll < 0.30) {
+            if (matchingCareerEvents.length > 0 && roll < 0.34) {
                 const chosen = matchingCareerEvents[Math.floor(Math.random() * matchingCareerEvents.length)];
                 if (!careerState.triggeredEventIds) careerState.triggeredEventIds = [];
                 careerState.triggeredEventIds.push(`${chosen.id}_y${careerState.currentYear}`);
                 return { ...chosen };
             }
 
-            if (roll >= 0.30 && roll < 0.43) {
-                const isAnnual = careerState.currentSemester === 1 && Math.random() < 0.35;
+            // 2. Riesgo de lesión física (mitigado por cartas de descanso o físico con escudo)
+            const injuryShield = Number(focusCard?.injuryShield) || 0;
+            const injuryBaseProb = Math.max(0.03, 0.13 - injuryShield);
+            if (roll >= 0.34 && roll < (0.34 + injuryBaseProb)) {
+                const isAnnual = careerState.currentSemester === 1 && Math.random() < 0.32;
                 const injuryEv = isAnnual ? GLOBAL_SUDDEN_EVENTS[2] : GLOBAL_SUDDEN_EVENTS[1];
                 if (injuryEv.ovrPenalty) {
                     careerState.ovr = Math.max(54, careerState.ovr + injuryEv.ovrPenalty);
@@ -2208,15 +2491,25 @@
                 return { ...injuryEv };
             }
 
+            // 3. Riesgo académico impulsado por Promedio de Notas oculto (reemplaza el azar puro)
             const currentAcademicDelays = careerState.academicDelayYears || 0;
-            if (currentAcademicDelays < 2 && roll >= 0.43 && roll < 0.54) {
+            const projectedGpa = Math.min(7.0, Math.max(2.8, (careerState.gpa || 5.3) + (focusCard?.gpaDelta || 0)));
+            const failCheck = E().checkAcademicFailRisk(projectedGpa, careerState.hasScholarship);
+            const studyProtected = focusCard && focusCard.category === 'ESTUDIO' && Math.random() < 0.65;
+
+            if (currentAcademicDelays < 2 && !studyProtected && failCheck.failed) {
                 const failEv = GLOBAL_SUDDEN_EVENTS[0];
                 careerState.academicDelayYears = currentAcademicDelays + failEv.extraYears;
                 careerState.maxYears += failEv.extraYears;
-                return { ...failEv };
+                careerState.eventModifiers = { gpaDelta: -0.25 };
+                return {
+                    ...failEv,
+                    desc: `${failEv.desc} Tu carga entre entrenamientos y certámenes pasó la cuenta en Intranet y sumas +1 año de carrera.`
+                };
             }
 
-            if (pastCodes.length > 0 && roll >= 0.54 && roll < 0.68) {
+            // 4. Regreso triunfal a ex club
+            if (pastCodes.length > 0 && roll >= 0.52 && roll < 0.67) {
                 const prevCode = pastCodes[Math.floor(Math.random() * pastCodes.length)];
                 const prevTeam = findTeamByCode(prevCode);
                 if (prevTeam) {
@@ -2232,7 +2525,8 @@
                 }
             }
 
-            if (icoTeams.length > 0 && !currentTeam.career.toLowerCase().includes('comercial') && roll >= 0.68 && roll < 0.82) {
+            // 5. Llamado de Ingeniería Comercial
+            if (icoTeams.length > 0 && !currentTeam.career.toLowerCase().includes('comercial') && roll >= 0.67 && roll < 0.80) {
                 const targetIco = icoTeams[Math.floor(Math.random() * icoTeams.length)];
                 return {
                     type: 'ICO_MONEY',
@@ -2290,16 +2584,16 @@
             if (!ev) return;
 
             if (!takeRisk) {
-                const safeDelta = ev.safeEffect ? Math.max(0, ev.safeEffect.ovrDelta) : 0;
+                const safeDelta = ev.safeEffect ? Math.max(0, ev.safeEffect.ovrDelta || 0) : 0;
                 careerState.ovr = Math.min(OVR_HARD_CAP, careerState.ovr + safeDelta);
                 careerState.eventResult = {
                     success: true,
                     neutral: safeDelta === 0,
                     text: ev.safeEffect ? ev.safeEffect.text : 'Decidiste ir a lo seguro y mantener tu ritmo habitual.'
                 };
-                careerState.eventModifiers = null;
+                careerState.eventModifiers = ev.safeEffect ? { gpaDelta: ev.safeEffect.gpaDelta || 0 } : null;
             } else {
-                const isWin = Math.random() < ev.winProb;
+                const isWin = Math.random() < (ev.winProb || 0.5);
                 const outcome = isWin ? ev.win : ev.lose;
                 const rawDelta = outcome.ovrDelta || 0;
                 const appliedOvrGain = outcome.allowNegativeOvr ? rawDelta : Math.max(0, rawDelta);
@@ -2321,6 +2615,63 @@
             careerState.activeEvent = null;
             careerState.eventResult = null;
             careerState.eventModifiers = null;
+            maybeTriggerKeyMoment(mods);
+        }
+
+        function maybeTriggerKeyMoment(eventMods) {
+            const isSuspended = Boolean(eventMods && eventMods.suspend);
+            const isTrainingOnlyS2 = Boolean(careerState.currentSemester === 2 && careerState.trainingOnlyS2);
+            const kmChance = careerState.currentSemester === 2 ? 0.52 : 0.40;
+
+            if (!isSuspended && !isTrainingOnlyS2 && Math.random() < kmChance) {
+                const picked = E().pickContextualKeyMoment({
+                    sport: careerState.sport || 'FUTBOL',
+                    sem: careerState.currentSemester,
+                    usedIds: careerState.usedKeyMomentIds || []
+                });
+                if (picked) {
+                    careerState.pendingSimModifiers = eventMods || null;
+                    careerState.activeKeyMoment = picked;
+                    careerState.keyMomentOutcome = null;
+                    careerState.phase = 'KEY_MOMENT';
+                    saveCareerState();
+                    renderApp();
+                    return;
+                }
+            }
+
+            careerState.keyMomentOutcome = null;
+            executeSemesterSimulation(eventMods);
+        }
+
+        function resolveKeyMoment(takeRisk) {
+            const moment = careerState.activeKeyMoment;
+            if (!moment) return;
+
+            const outcome = E().resolveKeyMomentChoice(moment, takeRisk, { ovr: careerState.ovr });
+            if (!careerState.usedKeyMomentIds) careerState.usedKeyMomentIds = [];
+            if (!careerState.usedKeyMomentIds.includes(moment.id)) {
+                careerState.usedKeyMomentIds.push(moment.id);
+            }
+
+            const ovrGain = Number(outcome.ovrBonus ?? outcome.ovrDelta ?? 0);
+            if (ovrGain) {
+                careerState.ovr = Math.min(OVR_HARD_CAP, Math.max(52, careerState.ovr + ovrGain));
+            }
+            const clutchGain = Number(outcome.clutchScore ?? outcome.clutchPoints ?? 0);
+            if (clutchGain) {
+                careerState.clutchPointsTotal = (careerState.clutchPointsTotal || 0) + clutchGain;
+            }
+
+            careerState.keyMomentOutcome = outcome;
+            saveCareerState();
+            renderApp();
+        }
+
+        function continueAfterKeyMoment() {
+            const mods = careerState.pendingSimModifiers || null;
+            careerState.pendingSimModifiers = null;
+            careerState.activeKeyMoment = null;
             executeSemesterSimulation(mods);
         }
 
@@ -2329,7 +2680,6 @@
                 return { qualifiedCodes: [], playerGroupPos: 1, groupSize: 1, groupLabel: 'A' };
             }
 
-            // Distribución equitativa en grupos (mín. 4 equipos por grupo, 2 clasificados por grupo)
             const numGroups = Math.max(1, Math.floor(divTeams.length / 4));
             const shuffled = [...divTeams].sort(() => 0.5 - Math.random());
             const groups = Array.from({ length: numGroups }, () => []);
@@ -2344,7 +2694,6 @@
 
             groups.forEach((grp, gIdx) => {
                 const ranked = simulateTournamentRanking(grp, playerTeamCode, playerOvr, playedRatio, false, teamBoost);
-                // Solo los 2 primeros de cada grupo avanzan a Playoffs en el Semestre 2
                 const advanceCount = Math.min(2, ranked.length);
                 for (let i = 0; i < advanceCount; i++) {
                     qualifiedCodes.push(ranked[i].code);
@@ -2362,6 +2711,10 @@
         }
 
         function executeSemesterSimulation(eventMods) {
+            const sport = careerState.sport || 'FUTBOL';
+            const isBasket = sport === 'BASKET';
+            const sportCfg = E().SPORT_CONFIG[sport] || E().SPORT_CONFIG.FUTBOL;
+
             const db = getActiveDB();
             const team = findTeamByCode(careerState.teamCode);
             const role = getPlayingRoleProjection(careerState.ovr, team.ovr);
@@ -2369,7 +2722,10 @@
             const year = careerState.currentYear;
             const sem = careerState.currentSemester;
             const isFemale = careerState.gender === 'F';
-            const div = isFemale ? 1 : Number(team.division);
+            const div = (isFemale || isBasket) ? 1 : Number(team.division);
+
+            const focusCard = careerState.selectedFocusCard || null;
+            const kmOutcome = careerState.keyMomentOutcome || null;
 
             const isTrainingOnlyS2 = Boolean(sem === 2 && careerState.trainingOnlyS2);
             const activeLoan = sem === 2 ? careerState.loanInfo : null;
@@ -2377,9 +2733,34 @@
             const isSuspended = Boolean(eventMods && eventMods.suspend);
             const forceCupWin = Boolean(eventMods && eventMods.forceCupWin);
             const forceElimination = Boolean(eventMods && eventMods.forceElimination);
-            const teamBoost = Number((eventMods && eventMods.teamBoost) || 0);
+            const teamBoost = Number((eventMods && eventMods.teamBoost) || 0)
+                + Number(focusCard?.teamBoost || 0)
+                + Number(kmOutcome?.teamBoost || 0);
 
-            const totalTeamMatches = sem === 2 ? 14 : 11;
+            // 1. Actualizar promedio de notas oculto y evaluar Beca Deportiva
+            const netGpaDelta = Number(focusCard?.gpaDelta || 0) + Number(eventMods?.gpaDelta || 0);
+            careerState.gpa = E().updateHiddenGpa(careerState.gpa, netGpaDelta, {
+                hasScholarship: Boolean(careerState.hasScholarship),
+                currentYear: year
+            });
+
+            const schEval = E().evaluateSportsScholarship({
+                gpa: careerState.gpa,
+                ovr: careerState.ovr,
+                currentlyHas: Boolean(careerState.hasScholarship)
+            });
+            careerState.hasScholarship = schEval.hasScholarship;
+
+            let scholarshipEventText = '';
+            if (schEval.newlyUnlocked) {
+                scholarshipEventText = '🎓 ¡Obtuviste la Beca Deportiva UFRO por combinar buen rendimiento en Intranet y cancha!';
+                showToast('🎓 ¡Desbloqueaste la Beca Deportiva UFRO!', 'success');
+            } else if (schEval.lost) {
+                scholarshipEventText = '⚠️ Perdiste tu Beca Deportiva UFRO tras descuidar el promedio interno.';
+            }
+
+            // 2. Partidos y estadísticas del semestre (Fútbol o Básquetbol)
+            const totalTeamMatches = sem === 2 ? sportCfg.matchesS2 : sportCfg.matchesS1;
             const playedRatio = (isSuspended || isTrainingOnlyS2)
                 ? 0
                 : Math.min(1, Math.max(0.20, role.factor + (Math.random() * 0.14 - 0.07)));
@@ -2387,69 +2768,68 @@
                 ? 0
                 : Math.max(2, Math.round(totalTeamMatches * playedRatio));
 
-            const perfFactor = (careerState.ovr / 68) * (0.88 + Math.random() * 0.44);
-            let goals = 0, assists = 0, cleanSheets = 0;
-
-            if (!isSuspended && !isTrainingOnlyS2) {
-                if (careerState.position === 'DEL') {
-                    goals = Math.round(matchesPlayed * 0.60 * perfFactor);
-                    assists = Math.round(matchesPlayed * 0.24 * perfFactor);
-                } else if (careerState.position === 'MED') {
-                    goals = Math.round(matchesPlayed * 0.30 * perfFactor);
-                    assists = Math.round(matchesPlayed * 0.50 * perfFactor);
-                } else if (careerState.position === 'DEF') {
-                    goals = Math.round(matchesPlayed * 0.11 * perfFactor);
-                    assists = Math.round(matchesPlayed * 0.15 * perfFactor);
-                    cleanSheets = Math.round(matchesPlayed * 0.36);
-                } else if (careerState.position === 'ARQ') {
-                    goals = Math.random() < 0.04 ? 1 : 0;
-                    assists = Math.random() < 0.12 ? 1 : 0;
-                    cleanSheets = Math.round(matchesPlayed * 0.44);
-                }
+            // 3. Rival recurrente del semestre
+            if (!careerState.rival) {
+                careerState.rival = E().initRecurringRival(team, db);
             }
+            const rivalOutcome = (!isSuspended && !isTrainingOnlyS2 && careerState.rival)
+                ? E().simulateRivalEncounter({
+                    rival: careerState.rival,
+                    playerTeam: team,
+                    playerOvr: careerState.ovr,
+                    sport,
+                    playedRatio,
+                    teamBoost
+                })
+                : null;
 
-            const rawRating = (isSuspended || isTrainingOnlyS2)
-                ? 0
-                : (6.4 + (playedRatio * 1.1) + ((goals * 0.12 + assists * 0.09 + cleanSheets * 0.1) / Math.max(1, matchesPlayed)) * 2.4 + (Math.random() * 0.4 - 0.2));
-            const avgRating = isTrainingOnlyS2
-                ? 'ENTR.'
-                : isSuspended
-                    ? 'BAJA'
-                    : Number(Math.min(9.8, Math.max(5.8, rawRating)).toFixed(1));
+            const semStats = E().generateSemesterStats({
+                sport,
+                position: careerState.position,
+                ovr: careerState.ovr,
+                playedRatio,
+                matchesPlayed,
+                isSuspended,
+                isTrainingOnlyS2,
+                focusCard,
+                keyMomentOutcome: kmOutcome,
+                rivalOutcome
+            });
 
-            // Progresión: si eligió entrenar sin equipo en S2, gana mejora por sesiones de entrenamiento
-            let ovrDelta = 1;
-            if (isTrainingOnlyS2) {
-                ovrDelta = careerState.isProdigy
-                    ? (Math.random() < 0.55 ? 3 : 2)
-                    : (careerState.ovr < 74 && Math.random() < 0.55 ? 2 : 1);
-            } else if (careerState.isProdigy) {
-                ovrDelta = Number(avgRating) >= 7.8 ? 4 : 3;
-                if (careerState.ovr < 78 && Math.random() < 0.45) ovrDelta += 1;
-            } else {
-                if (playedRatio >= 0.72 && Number(avgRating) >= 7.7) ovrDelta = 2;
-                else if (careerState.ovr < 66 && Math.random() < 0.55) ovrDelta = 2;
-                else ovrDelta = 1;
-            }
-            if (isSuspended) ovrDelta = 0;
+            const { goals, assists, cleanSheets, points, rebounds, stealsBlocks, avgRating } = semStats;
+
+            // 4. Progresión realista de Media (desarrollo juvenil, meseta 21-22, desgaste 23+)
+            const ovrEval = E().computeSemesterOvrChange({
+                ovr: careerState.ovr,
+                isProdigy: Boolean(careerState.isProdigy),
+                currentYear: year,
+                avgRating,
+                playedRatio,
+                gpa: careerState.gpa,
+                focusCard,
+                isSuspended,
+                isTrainingOnlyS2,
+                hasScholarship: Boolean(careerState.hasScholarship)
+            });
 
             const oldOvr = careerState.ovr;
-            careerState.ovr = Math.min(OVR_HARD_CAP, careerState.ovr + ovrDelta);
+            careerState.ovr = ovrEval.nextOvr;
             const actualOvrDelta = careerState.ovr - oldOvr;
 
+            // 5. Competencias de Clubes
             const semesterTrophies = [];
             let promoted = false, relegated = false, promotedToDiv = null;
+            let heroicDiv3ToDiv1JustCompleted = false;
             let qualifiedForS2Playoffs = true;
             let leaguePosition = 1;
             let leagueSummaryText = '';
 
             if (sem === 1) {
-                // FASE DE GRUPOS POR DIVISIÓN (Avanzan solo los 2 primeros de cada grupo)
                 const allQualifiedS1 = [];
-                const divisionsToRun = isFemale ? [1] : [1, 2, 3];
+                const divisionsToRun = (isFemale || isBasket) ? [1] : [1, 2, 3];
 
                 divisionsToRun.forEach(dNum => {
-                    const teamsInDiv = isFemale ? db : db.filter(t => Number(t.division) === dNum);
+                    const teamsInDiv = (isFemale || isBasket) ? db : db.filter(t => Number(t.division) === dNum);
                     const res = simulateDivisionGroupStage(
                         teamsInDiv,
                         dNum === div ? team.code : null,
@@ -2475,17 +2855,15 @@
 
                 careerState.s1QualifiedCodes = allQualifiedS1;
             } else if (isTrainingOnlyS2) {
-                // NO JUGÓ CAMPEONATO DE CLUBES EN S2 (SESIONES DE ENTRENAMIENTO)
                 leaguePosition = 0;
                 leagueSummaryText = '🏋️ Sesiones de entrenamiento (Sin torneo de clubes)';
             } else {
-                // PLAYOFFS DE INTERCARRERAS EN SEMESTRE 2 (Con los 2 clasificados por grupo)
                 const qualifiedSet = new Set(careerState.s1QualifiedCodes || []);
-                let playoffTeams = (isFemale ? db : db.filter(t => Number(t.division) === div))
+                let playoffTeams = ((isFemale || isBasket) ? db : db.filter(t => Number(t.division) === div))
                     .filter(t => qualifiedSet.has(t.code));
                 if (!playoffTeams.some(t => t.code === team.code)) playoffTeams.push(team);
                 if (playoffTeams.length < 2) {
-                    playoffTeams = isFemale ? db.slice(0, 8) : db.filter(t => Number(t.division) === div).slice(0, 6);
+                    playoffTeams = (isFemale || isBasket) ? db.slice(0, 8) : db.filter(t => Number(t.division) === div).slice(0, 6);
                 }
 
                 const leagueStandings = simulateTournamentRanking(playoffTeams, team.code, careerState.ovr, playedRatio, false, teamBoost);
@@ -2504,7 +2882,11 @@
                 const isBelowDivisionAvg = team.ovr < (targetDivAvg - 1.5);
 
                 if (leaguePosition === 1) {
-                    const divTitle = isFemale ? 'Campeona Intercarreras Femenino UFRO' : `Campeón Intercarreras (${getDivisionLabel(div, 'M')})`;
+                    const divTitle = isBasket
+                        ? 'Campeón Intercarreras Básquetbol UFRO'
+                        : isFemale
+                            ? 'Campeona Intercarreras Femenino UFRO'
+                            : `Campeón Intercarreras (${getDivisionLabel(div, 'M', sport)})`;
                     semesterTrophies.push({
                         type: 'LEAGUE',
                         division: div,
@@ -2515,17 +2897,19 @@
                         sem
                     });
                     team.ovr = Math.min(89, team.ovr + 2);
-                    if (!isFemale && (div === 3 || div === 2)) {
+                    if (!isFemale && !isBasket && (div === 3 || div === 2)) {
                         team.division = div - 1;
                         promoted = true;
                         promotedToDiv = team.division;
+                        careerState.promotionsCount = (careerState.promotionsCount || 0) + 1;
                     }
-                } else if (!isFemale && leaguePosition === 2 && (div === 3 || div === 2) && Math.random() < 0.55) {
+                } else if (!isFemale && !isBasket && leaguePosition === 2 && (div === 3 || div === 2) && Math.random() < 0.55) {
                     team.division = div - 1;
                     promoted = true;
                     promotedToDiv = team.division;
+                    careerState.promotionsCount = (careerState.promotionsCount || 0) + 1;
                     team.ovr = Math.min(89, team.ovr + 1);
-                } else if (!isFemale && !activeLoan && (div === 1 || div === 2)) {
+                } else if (!isFemale && !isBasket && !activeLoan && (div === 1 || div === 2)) {
                     const relegationZone = leaguePosition >= Math.max(4, playoffTeams.length - 1);
                     const relegationChance = isBelowDivisionAvg
                         ? (relegationZone ? 0.65 : 0.30)
@@ -2539,6 +2923,28 @@
 
                 if (leaguePosition <= 3) {
                     team.ovr = Math.min(89, team.ovr + 1);
+                }
+
+                // Hazaña de llevar un club de 3ª División a 1ª División
+                if (
+                    !isFemale && !isBasket &&
+                    careerState.startedInDiv3 &&
+                    !activeLoan &&
+                    team.code === careerState.startingTeamCode &&
+                    Number(team.division) === 1 &&
+                    !careerState.heroicDiv3ToDiv1
+                ) {
+                    careerState.heroicDiv3ToDiv1 = true;
+                    heroicDiv3ToDiv1JustCompleted = true;
+                    semesterTrophies.push({
+                        type: 'HEROIC_ASCENT',
+                        division: 1,
+                        title: 'Hazaña 3ª → 1ª División UFRO',
+                        teamName: team.name,
+                        teamCode: team.code,
+                        year,
+                        sem
+                    });
                 }
             }
 
@@ -2573,8 +2979,8 @@
                 }
             } else if (!isTrainingOnlyS2) {
                 if (careerState.interfacultadesQualified) {
-                    const topPool = isFemale
-                        ? [...db].sort((a, b) => b.ovr - a.ovr).slice(0, 10)
+                    const topPool = (isFemale || isBasket)
+                        ? [...db].sort((a, b) => b.ovr - a.ovr).slice(0, 12)
                         : db.filter(t => Number(t.division) === 1).slice(0, 12);
                     if (!topPool.some(t => t.code === team.code)) topPool.push(team);
 
@@ -2609,30 +3015,36 @@
                 careerState.interfacultadesQualified = false;
             }
 
-            // SELECCIÓN UFRO: sigue activa incluso si no tienes equipo en S2
+            // 6. SELECCIÓN UFRO (Fútbol o Básquetbol)
             let ufroSelectionInfo = null;
             if (!isSuspended && careerState.ovr >= 76) {
                 if (!careerState.ufroCitations) careerState.ufroCitations = [];
                 careerState.ufroCitations.push({ year, sem, label: `Año ${year} S${sem}` });
 
-                const ufroMatches = sem === 1 ? 4 : 6;
-                const ufroG = careerState.position === 'DEL' ? Math.round(ufroMatches * 0.5) : careerState.position === 'MED' ? Math.round(ufroMatches * 0.25) : 0;
-                const ufroA = careerState.position === 'MED' ? Math.round(ufroMatches * 0.45) : Math.round(ufroMatches * 0.2);
-
+                const ufroMatches = sem === 1 ? sportCfg.ufroMatchesS1 : sportCfg.ufroMatchesS2;
                 careerState.ufroStats.matches += ufroMatches;
-                careerState.ufroStats.goals += ufroG;
-                careerState.ufroStats.assists += ufroA;
+                if (isBasket) {
+                    careerState.ufroStats.points = (careerState.ufroStats.points || 0) + Math.round(ufroMatches * 13 * (careerState.ovr / 78));
+                    careerState.ufroStats.rebounds = (careerState.ufroStats.rebounds || 0) + Math.round(ufroMatches * 5.2);
+                    careerState.ufroStats.assists += Math.round(ufroMatches * 3.4);
+                } else {
+                    const ufroG = careerState.position === 'DEL' ? Math.round(ufroMatches * 0.5) : careerState.position === 'MED' ? Math.round(ufroMatches * 0.25) : 0;
+                    const ufroA = careerState.position === 'MED' ? Math.round(ufroMatches * 0.45) : Math.round(ufroMatches * 0.2);
+                    careerState.ufroStats.goals += ufroG;
+                    careerState.ufroStats.assists += ufroA;
+                }
 
                 const selScore = careerState.ovr + (Math.random() * 14 - 7);
+                const selBranchSuffix = isBasket ? 'Sel. UFRO Básquet' : 'Sel. UFRO';
 
                 if (sem === 1) {
                     if (selScore >= 80) {
                         careerState.fenaudeQualified = true;
-                        ufroSelectionInfo = '🇨🇱 Sel. UFRO: Clasificó al Nacional FENAUDE (CNU)';
-                        semesterTrophies.push({ type: 'SELECCION', title: 'Clasificatorio CNU (Sel. UFRO)', teamName: 'Selección UFRO', teamCode: 'SEL-UFRO', year, sem });
+                        ufroSelectionInfo = `🇨🇱 ${selBranchSuffix}: Clasificó al Nacional FENAUDE (CNU)`;
+                        semesterTrophies.push({ type: 'SELECCION', title: `Clasificatorio CNU (${selBranchSuffix})`, teamName: 'Selección UFRO', teamCode: 'SEL-UFRO', year, sem });
                     } else {
                         careerState.fenaudeQualified = false;
-                        ufroSelectionInfo = '🇨🇱 Sel. UFRO: Eliminado en Clasificatorio CNU';
+                        ufroSelectionInfo = `🇨🇱 ${selBranchSuffix}: Eliminado en Clasificatorio CNU`;
                     }
                 } else {
                     const achievementsSel = [];
@@ -2640,7 +3052,7 @@
                         achievementsSel.push('LDES');
                         semesterTrophies.push({
                             type: 'SELECCION',
-                            title: isFemale ? 'Campeona LDES (Sel. UFRO)' : 'Campeón LDES (Sel. UFRO)',
+                            title: isFemale ? `Campeona LDES (${selBranchSuffix})` : `Campeón LDES (${selBranchSuffix})`,
                             teamName: 'Selección UFRO',
                             teamCode: 'SEL-UFRO',
                             year,
@@ -2651,7 +3063,7 @@
                         achievementsSel.push('Univerciudad');
                         semesterTrophies.push({
                             type: 'SELECCION',
-                            title: isFemale ? 'Campeona Univerciudad (Sel. UFRO)' : 'Campeón Univerciudad (Sel. UFRO)',
+                            title: isFemale ? `Campeona Univerciudad (${selBranchSuffix})` : `Campeón Univerciudad (${selBranchSuffix})`,
                             teamName: 'Selección UFRO',
                             teamCode: 'SEL-UFRO',
                             year,
@@ -2659,11 +3071,11 @@
                         });
                     }
                     if (careerState.fenaudeQualified) {
-                        if (careerState.ovr > 90 && Math.random() < 0.45) {
+                        if (careerState.ovr > 88 && Math.random() < 0.45) {
                             achievementsSel.push(isFemale ? '🏆 ¡HISTÓRICA NACIONAL FENAUDE!' : '🏆 ¡HISTÓRICO NACIONAL FENAUDE!');
                             semesterTrophies.push({
                                 type: 'SELECCION',
-                                title: isFemale ? 'Histórica Nacional FENAUDE (Sel. UFRO)' : 'Histórico Nacional FENAUDE (Sel. UFRO)',
+                                title: isFemale ? `Histórica Nacional FENAUDE (${selBranchSuffix})` : `Histórico Nacional FENAUDE (${selBranchSuffix})`,
                                 teamName: 'Selección UFRO',
                                 teamCode: 'SEL-UFRO',
                                 year,
@@ -2675,38 +3087,99 @@
                     }
 
                     ufroSelectionInfo = achievementsSel.length > 0
-                        ? `🇨🇱 Sel. UFRO: ${achievementsSel.join(' · ')}`
-                        : '🇨🇱 Sel. UFRO: Sin títulos en LDES / Univerciudad';
+                        ? `🇨🇱 ${selBranchSuffix}: ${achievementsSel.join(' · ')}`
+                        : `🇨🇱 ${selBranchSuffix}: Sin títulos en LDES / Univerciudad`;
 
                     careerState.fenaudeQualified = false;
                 }
             }
 
+            // 7. Acumular estadísticas totales
             careerState.stats.matches += matchesPlayed;
             careerState.stats.goals += goals;
             careerState.stats.assists += assists;
             careerState.stats.cleanSheets += cleanSheets;
+            careerState.stats.points = (careerState.stats.points || 0) + points;
+            careerState.stats.rebounds = (careerState.stats.rebounds || 0) + rebounds;
+            careerState.stats.stealsBlocks = (careerState.stats.stealsBlocks || 0) + stealsBlocks;
             careerState.trophies.push(...semesterTrophies);
 
+            // 8. Premios Individuales balanceados por posición y deporte
             let semesterAwards = [];
             if (sem === 2 && !isTrainingOnlyS2) {
-                semesterAwards = computeIndividualAwards(year, {
-                    matches: matchesPlayed, goals, assists, cleanSheets, avgRating,
-                    leaguePosition, divisionPlayed: div, teamName: team.name
-                }, isFemale);
+                semesterAwards = E().computeIndividualAwards({
+                    sport,
+                    position: careerState.position,
+                    gender: careerState.gender,
+                    year,
+                    semStats: {
+                        matches: matchesPlayed,
+                        goals,
+                        assists,
+                        cleanSheets,
+                        points,
+                        rebounds,
+                        stealsBlocks,
+                        avgRating,
+                        leaguePosition,
+                        divisionPlayed: div,
+                        teamName: team.name
+                    }
+                });
                 if (!careerState.awards) careerState.awards = [];
                 careerState.awards.push(...semesterAwards);
             }
 
+            // 9. Crónica escrita del semestre (sin exponer promedio numérico)
+            const academicHint = E().getAcademicNarrativeHint(careerState.gpa, Boolean(careerState.hasScholarship));
+            const narrative = E().buildSemesterNarrative({
+                sport,
+                year,
+                sem,
+                teamName: team.name,
+                focusCard,
+                academicHint,
+                keyMomentText: kmOutcome ? kmOutcome.text : '',
+                rivalText: rivalOutcome ? rivalOutcome.text : '',
+                leagueSummaryText,
+                promoted,
+                promotedToDiv,
+                heroicDiv3ToDiv1JustCompleted,
+                scholarshipEventText,
+                isSuspended,
+                isTrainingOnlyS2
+            });
+
             careerState.history.unshift({
-                year, sem,
-                teamCode: team.code, teamName: team.name, careerName: team.career,
+                year,
+                sem,
+                sport,
+                teamCode: team.code,
+                teamName: team.name,
+                careerName: team.career,
                 divisionPlayed: div,
-                ovrAfter: careerState.ovr, ovrDelta: actualOvrDelta,
-                matches: matchesPlayed, goals, assists, cleanSheets, avgRating,
-                leaguePosition, leagueSummaryText,
-                promoted, promotedToDiv, relegated,
-                facultyCupResult, interfacultadesResult, ufroSelectionInfo,
+                ovrAfter: careerState.ovr,
+                ovrDelta: actualOvrDelta,
+                matches: matchesPlayed,
+                goals,
+                assists,
+                cleanSheets,
+                points,
+                rebounds,
+                stealsBlocks,
+                avgRating,
+                leaguePosition,
+                leagueSummaryText,
+                promoted,
+                promotedToDiv,
+                relegated,
+                facultyCupResult,
+                interfacultadesResult,
+                ufroSelectionInfo,
+                focusCard: focusCard ? { id: focusCard.id, title: focusCard.title, tier: focusCard.tier, category: focusCard.category } : null,
+                rivalResultText: rivalOutcome ? rivalOutcome.text : null,
+                keyMomentText: kmOutcome ? kmOutcome.text : null,
+                narrative,
                 trophies: semesterTrophies,
                 awards: semesterAwards,
                 suspended: isSuspended,
@@ -2715,7 +3188,12 @@
                 trainingOnly: isTrainingOnlyS2
             });
 
-            // Si terminó el Semestre 2, cerrar préstamo o modo entrenamiento y volver al club dueño del pase
+            // Limpiar estados efímeros del semestre
+            careerState.selectedFocusCard = null;
+            careerState.semesterFocusChoices = [];
+            careerState.keyMomentOutcome = null;
+            careerState.pendingSimModifiers = null;
+
             if (sem === 2) {
                 if (activeLoan && activeLoan.parentTeamCode) {
                     careerState.teamCode = activeLoan.parentTeamCode;
@@ -2727,10 +3205,22 @@
 
             const isFinalSemester = (careerState.currentYear === careerState.maxYears && careerState.currentSemester === 2);
             if (isFinalSemester) {
-                careerState.phase = careerState.extensionUsed < 2 ? 'EXTENSION_CHOICE' : 'RETIRED';
-                if (careerState.phase === 'RETIRED') inductHallOfFame();
+                const pgCheck = E().getPostgradEligibility({
+                    gpa: careerState.gpa,
+                    postgradStage: careerState.postgradStage || 'UNDERGRAD'
+                });
+                if (pgCheck.canContinue) {
+                    careerState.phase = 'EXTENSION_CHOICE';
+                } else {
+                    careerState.phase = 'RETIRED';
+                    inductHallOfFame();
+                    if (careerState.postgradStage === 'UNDERGRAD') {
+                        showToast('🎓 Te titulas de pregrado en la UFRO. Tus notas no alcanzaron el corte para Magíster.', 'info');
+                    } else if (careerState.postgradStage === 'MASTERS') {
+                        showToast('🎓 ¡Magíster UFRO completado! Cierra tu etapa universitaria aquí.', 'info');
+                    }
+                }
             } else if (sem === 1 && !qualifiedForS2Playoffs) {
-                // Eliminado en Fase de Grupos del Semestre 1 -> Decisión de Cesión o Entrenamiento
                 careerState.loanOptions = buildLoanDecisionOptions();
                 careerState.phase = 'LOAN_CHOICE';
             } else {
@@ -2781,11 +3271,11 @@
             } else if (promotionInfo && trophies.length === 0) {
                 iconEl.textContent = '🚀';
                 badgeEl.textContent = '¡Ascenso de División!';
-                heading.textContent = `¡Ascendiste a ${getDivisionLabel(promotionInfo.newDiv, 'M')}!`;
+                heading.textContent = `¡Ascendiste a ${getDivisionLabel(promotionInfo.newDiv, 'M', careerState.sport)}!`;
             } else if (promotionInfo && trophies.length > 0) {
                 iconEl.textContent = '🏆';
                 badgeEl.textContent = isFemale ? '¡Campeona y Ascenso!' : '¡Campeón y Ascenso!';
-                heading.textContent = `¡Título y Ascenso a ${getDivisionLabel(promotionInfo.newDiv, 'M')}!`;
+                heading.textContent = `¡Título y Ascenso a ${getDivisionLabel(promotionInfo.newDiv, 'M', careerState.sport)}!`;
             } else {
                 iconEl.textContent = '🏆';
                 badgeEl.textContent = '¡Nuevo Título UFRO!';
@@ -2802,7 +3292,7 @@
                     <div class="p-3.5 rounded-2xl bg-[#717fff]/20 border border-[#717fff]/50 flex items-center gap-3">
                         <span class="text-2xl">⬆️</span>
                         <div>
-                            <div class="font-black text-white text-sm">Ascenso a ${getDivisionLabel(promotionInfo.newDiv, 'M')}</div>
+                            <div class="font-black text-white text-sm">Ascenso a ${getDivisionLabel(promotionInfo.newDiv, 'M', careerState.sport)}</div>
                             <div class="text-xs text-[#d0d5ff]">${escapeHtml(promotionInfo.teamName)} sube de categoría</div>
                         </div>
                     </div>
@@ -2895,6 +3385,7 @@
         // =========================================================================
         function computeCreativeLegacyBanner() {
             const isFem = careerState.gender === 'F';
+            const isBasket = (careerState.sport || 'FUTBOL') === 'BASKET';
             const clubMap = new Map();
 
             (careerState.history || []).forEach(h => {
@@ -2907,7 +3398,9 @@
                         titles: 0,
                         goals: 0,
                         assists: 0,
-                        cleanSheets: 0
+                        cleanSheets: 0,
+                        points: 0,
+                        rebounds: 0
                     });
                 }
                 const entry = clubMap.get(h.teamCode);
@@ -2915,6 +3408,8 @@
                 entry.goals += h.goals || 0;
                 entry.assists += h.assists || 0;
                 entry.cleanSheets += h.cleanSheets || 0;
+                entry.points += h.points || 0;
+                entry.rebounds += h.rebounds || 0;
                 const clubTrophies = (h.trophies || []).filter(t => t.type !== 'SELECCION');
                 entry.titles += clubTrophies.length;
             });
@@ -2931,8 +3426,10 @@
             }
 
             clubs.sort((a, b) => {
-                const scoreA = (a.titles * 12) + (a.semesters * 3) + a.goals + a.assists + a.cleanSheets;
-                const scoreB = (b.titles * 12) + (b.semesters * 3) + b.goals + b.assists + b.cleanSheets;
+                const prodA = isBasket ? Math.round((a.points * 0.12) + a.rebounds + a.assists) : (a.goals + a.assists + a.cleanSheets);
+                const prodB = isBasket ? Math.round((b.points * 0.12) + b.rebounds + b.assists) : (b.goals + b.assists + b.cleanSheets);
+                const scoreA = (a.titles * 12) + (a.semesters * 3) + prodA;
+                const scoreB = (b.titles * 12) + (b.semesters * 3) + prodB;
                 return scoreB - scoreA;
             });
 
@@ -2985,14 +3482,32 @@
             hofSection.classList.add('hidden');
             activeScreen.classList.remove('hidden');
 
+            const sport = careerState.sport || 'FUTBOL';
+            const isBasket = sport === 'BASKET';
             const team = findTeamByCode(careerState.teamCode);
             const isFemale = careerState.gender === 'F';
             const role = getPlayingRoleProjection(careerState.ovr, team.ovr);
+            const playerAge = E().getPlayerAge(careerState.currentYear);
 
             document.getElementById('hud-ovr').textContent = formatOvr(careerState.ovr);
             document.getElementById('hud-pos').textContent = careerState.position;
             document.getElementById('hud-name').textContent = careerState.playerName;
             document.getElementById('hud-branch-badge').textContent = isFemale ? 'Femenino' : 'Masculino';
+
+            const sportBadge = document.getElementById('hud-sport-badge');
+            if (sportBadge) {
+                sportBadge.textContent = isBasket ? '🏀 Básquetbol' : '⚽ Fútbol';
+            }
+
+            const schBadge = document.getElementById('hud-scholarship-badge');
+            if (schBadge) {
+                schBadge.classList.toggle('hidden', !careerState.hasScholarship);
+            }
+
+            const heroicBadge = document.getElementById('hud-heroic-badge');
+            if (heroicBadge) {
+                heroicBadge.classList.toggle('hidden', !careerState.heroicDiv3ToDiv1);
+            }
 
             const ovrBox = document.getElementById('hud-ovr-box');
             const ovrPos = document.getElementById('hud-pos');
@@ -3030,21 +3545,32 @@
                 <span class="text-gray-500">·</span>
                 <span class="text-[#a3adff]">${escapeHtml(careerState.studiedCareer || team.career)}</span>
                 <span class="text-gray-500">·</span>
-                <span class="text-gray-400">${getDivisionLabel(team.division, careerState.gender)}</span>
+                <span class="text-gray-400">${getDivisionLabel(team.division, careerState.gender, sport)}</span>
             `;
 
             const totalSem = careerState.maxYears * 2;
             const doneSem = careerState.history.length;
             const pct = Math.min(100, Math.round((doneSem / totalSem) * 100));
 
+            const postgradLabel = careerState.postgradStage === 'PHD'
+                ? 'Doctorado UFRO'
+                : careerState.postgradStage === 'MASTERS'
+                    ? 'Magíster UFRO'
+                    : 'Pregrado';
+
             document.getElementById('hud-timeline-label').textContent = careerState.phase === 'RETIRED'
-                ? 'Carrera Titulada'
-                : `Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}`;
+                ? `Carrera Titulada (${postgradLabel})`
+                : `Año ${careerState.currentYear} (${playerAge} años) · Semestre ${careerState.currentSemester}`;
             document.getElementById('hud-timeline-sub').textContent = `Sem ${Math.min(totalSem, doneSem + 1)} / ${totalSem}`;
             document.getElementById('hud-progress-bar').style.width = `${Math.max(8, pct)}%`;
 
             document.getElementById('stat-total-matches').textContent = careerState.stats.matches;
-            if (careerState.position === 'ARQ') {
+            if (isBasket) {
+                document.getElementById('stat-total-goals').textContent = careerState.stats.points || 0;
+                document.getElementById('stat-label-goals').textContent = 'Puntos';
+                document.getElementById('stat-total-assists').textContent = `${careerState.stats.rebounds || 0}/${careerState.stats.assists || 0}`;
+                document.getElementById('stat-label-assists').textContent = 'Reb/Ast';
+            } else if (careerState.position === 'ARQ') {
                 document.getElementById('stat-total-goals').textContent = careerState.stats.cleanSheets;
                 document.getElementById('stat-label-goals').textContent = 'Vallas';
                 document.getElementById('stat-total-assists').textContent = careerState.stats.goals + careerState.stats.assists;
@@ -3062,6 +3588,19 @@
                 <span class="px-2 py-0.5 rounded font-bold ${role.badgeClass}">${role.label}</span>
             `;
 
+            const rivalStrip = document.getElementById('hud-rival-strip');
+            if (rivalStrip) {
+                const academicHint = E().getAcademicNarrativeHint(careerState.gpa, Boolean(careerState.hasScholarship));
+                const r = careerState.rival;
+                const rivalHtml = r
+                    ? `<span class="text-gray-300 font-semibold">⚔️ Rival: <strong class="text-white">${escapeHtml(r.name)}</strong> <span class="text-gray-500">(${r.wins || 0}-${r.ties || 0}-${r.losses || 0})</span></span>`
+                    : `<span class="text-gray-500">⚔️ Rival UFRO por definir</span>`;
+                rivalStrip.innerHTML = `
+                    <div class="w-full flex items-center justify-between gap-2 flex-wrap">${rivalHtml}</div>
+                    <span class="text-[11px] text-[#a3adff] leading-snug">${escapeHtml(academicHint)}</span>
+                `;
+            }
+
             const isRetired = careerState.phase === 'RETIRED';
             document.getElementById('hud-restart-btn').classList.toggle('hidden', isRetired);
             document.getElementById('retired-new-career-bar').classList.toggle('hidden', !isRetired);
@@ -3073,34 +3612,165 @@
             else renderTimeline();
         }
 
+        function getFocusCardUiStyles(card) {
+            const tierStyles = {
+                ORO: {
+                    border: 'border-amber-400/65 hover:border-amber-300 bg-gradient-to-b from-amber-500/12 to-[#151515]',
+                    tierBadge: 'bg-amber-500/25 text-amber-200 border border-amber-400/50',
+                    tierLabel: 'ORO',
+                    btnBg: 'bg-amber-500/20 text-amber-200'
+                },
+                PLATA: {
+                    border: 'border-slate-300/45 hover:border-slate-200 bg-gradient-to-b from-slate-300/10 to-[#151515]',
+                    tierBadge: 'bg-slate-400/20 text-slate-200 border border-slate-300/40',
+                    tierLabel: 'PLATA',
+                    btnBg: 'bg-slate-400/15 text-slate-200'
+                },
+                BRONCE: {
+                    border: 'border-orange-500/35 hover:border-orange-400/65 bg-gradient-to-b from-orange-950/25 to-[#151515]',
+                    tierBadge: 'bg-orange-500/20 text-orange-200 border border-orange-400/40',
+                    tierLabel: 'BRONCE',
+                    btnBg: 'bg-orange-500/15 text-orange-200'
+                }
+            };
+            const catLabels = {
+                FISICO: { label: '💪 Físico', color: 'text-emerald-300' },
+                TECNICO: { label: '🎯 Técnico', color: 'text-[#8b96ff]' },
+                ESTUDIO: { label: '📚 Estudio', color: 'text-sky-300' },
+                DESCANSO: { label: '🛌 Descanso', color: 'text-purple-300' }
+            };
+            return {
+                tier: tierStyles[card.tier] || tierStyles.BRONCE,
+                cat: catLabels[card.category] || { label: card.category, color: 'text-gray-300' }
+            };
+        }
+
         function renderActionPanel(team) {
             const panel = document.getElementById('action-panel');
+            const sport = careerState.sport || 'FUTBOL';
+            const isBasket = sport === 'BASKET';
 
             if (careerState.phase === 'PLAY_SEMESTER') {
                 const isS2 = careerState.currentSemester === 2;
                 const isTrainingS2 = isS2 && careerState.trainingOnlyS2;
                 const activeLoan = isS2 ? careerState.loanInfo : null;
 
-                let subtitle = isS2 ? 'Playoffs Intercarreras + Interfacultades' : 'Fase de Grupos Intercarreras + Copa Facultad';
+                let subtitle = isS2
+                    ? (isBasket ? 'Playoffs Básquet UFRO + Interfacultades' : 'Playoffs Intercarreras + Interfacultades')
+                    : (isBasket ? 'Fase de Grupos Básquet UFRO + Copa Facultad' : 'Fase de Grupos Intercarreras + Copa Facultad');
                 if (isTrainingS2) subtitle = 'Sesiones de Entrenamiento + Selección UFRO';
                 else if (activeLoan) subtitle = `Cedido desde ${activeLoan.parentTeamName} · Playoffs + Interfacultades`;
 
-                panel.innerHTML = `
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-xs font-extrabold uppercase text-[#8b96ff]">Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}</span>
-                                ${isS2 && !isTrainingS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/20 text-[#d0d5ff]">🌍 Playoffs + Interfacultades</span>' : ''}
-                                ${activeLoan ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">🤝 Préstamo en ${escapeHtml(activeLoan.loanTeamName)}</span>` : ''}
-                                ${isTrainingS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">🏋️ Modo Entrenamiento</span>' : ''}
+                if ((careerState.forcedOutSemesters || 0) > 0) {
+                    panel.innerHTML = `
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-rose-500/20 text-rose-300 border border-rose-500/35">🏥 Baja Médica Activa</span>
+                                <h3 class="text-lg font-black text-white mt-1.5">Semestre de Rehabilitación Física</h3>
+                                <p class="text-xs text-gray-400 mt-0.5">Tu recuperación continúa este semestre antes de volver a competir.</p>
                             </div>
-                            <h3 class="text-lg font-black text-white mt-1">${subtitle}</h3>
+                            <button type="button" onclick="selectFocusAndPlay(0)" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-sm shadow-lg transition">
+                                ▶ Cumplir Rehabilitación S${careerState.currentSemester}
+                            </button>
                         </div>
-                        <button onclick="triggerPlaySemester()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition transform active:scale-95">
-                            ▶ ${isTrainingS2 ? 'Simular Entrenamientos S2' : `Simular Semestre ${careerState.currentSemester}`}
-                        </button>
+                    `;
+                    return;
+                }
+
+                if (!Array.isArray(careerState.semesterFocusChoices) || careerState.semesterFocusChoices.length === 0) {
+                    careerState.semesterFocusChoices = E().drawSemesterFocusCards({
+                        hasScholarship: Boolean(careerState.hasScholarship),
+                        isProdigy: Boolean(careerState.isProdigy)
+                    });
+                    saveCareerState();
+                }
+
+                const cards = careerState.semesterFocusChoices;
+
+                panel.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#262626] pb-3">
+                            <div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-xs font-extrabold uppercase text-[#8b96ff]">Año ${careerState.currentYear} · Semestre ${careerState.currentSemester}</span>
+                                    ${isS2 && !isTrainingS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/20 text-[#d0d5ff]">🌍 Playoffs + Interfacultades</span>' : ''}
+                                    ${activeLoan ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">🤝 Préstamo en ${escapeHtml(activeLoan.loanTeamName)}</span>` : ''}
+                                    ${isTrainingS2 ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">🏋️ Modo Entrenamiento</span>' : ''}
+                                </div>
+                                <h3 class="text-lg font-black text-white mt-1">${subtitle}</h3>
+                                <p class="text-xs text-gray-400 mt-0.5">Elige 1 carta de enfoque para equilibrar cancha, cuerpo y estudios este semestre.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" data-testid="focus-cards-grid">
+                            ${cards.map((card, idx) => {
+                                const st = getFocusCardUiStyles(card);
+                                return `
+                                    <button type="button" onclick="selectFocusAndPlay(${idx})"
+                                        data-focus-tier="${escapeHtml(card.tier)}"
+                                        data-focus-cat="${escapeHtml(card.category)}"
+                                        class="text-left p-4 rounded-2xl border ${st.tier.border} flex flex-col justify-between gap-3 transition transform hover:-translate-y-0.5 active:scale-[0.98] group">
+                                        <div class="space-y-2">
+                                            <div class="flex items-center justify-between gap-2">
+                                                <span class="text-[10px] font-black uppercase ${st.cat.color}">${st.cat.label}</span>
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${st.tier.tierBadge}">${st.tier.tierLabel}</span>
+                                            </div>
+                                            <div class="flex items-start gap-2">
+                                                <span class="text-2xl leading-none shrink-0">${card.icon || '⚡'}</span>
+                                                <div class="font-black text-white text-sm leading-snug group-hover:text-[#a3adff] transition">${escapeHtml(card.title)}</div>
+                                            </div>
+                                            <p class="text-[11px] text-gray-400 leading-relaxed">${escapeHtml(card.desc)}</p>
+                                        </div>
+                                        <div class="w-full py-2 px-3 rounded-xl ${st.tier.btnBg} text-center text-xs font-black tracking-wide">
+                                            Elegir y Simular S${careerState.currentSemester} →
+                                        </div>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
                 `;
+            } else if (careerState.phase === 'KEY_MOMENT' && careerState.activeKeyMoment) {
+                const km = careerState.activeKeyMoment;
+                const res = careerState.keyMomentOutcome;
+
+                if (!res) {
+                    panel.innerHTML = `
+                        <div class="animate-pop space-y-4">
+                            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                ${escapeHtml(km.badge)}
+                            </span>
+                            <div>
+                                <h3 class="text-xl font-black text-white">${escapeHtml(km.title)}</h3>
+                                <p class="text-sm text-gray-300 mt-1">${escapeHtml(km.desc)}</p>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                <button type="button" onclick="resolveKeyMoment(true)" class="py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg transition">
+                                    🔥 ${escapeHtml(km.riskyLabel)}
+                                </button>
+                                <button type="button" onclick="resolveKeyMoment(false)" class="py-3 px-4 rounded-xl bg-[#151515] hover:bg-[#222222] text-gray-200 font-bold text-xs sm:text-sm border border-[#2b2b2b] transition">
+                                    🛡️ ${escapeHtml(km.safeLabel)}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const boxStyle = !res.risky
+                        ? 'surface-sub text-gray-200 border-[#717fff]/40'
+                        : res.won
+                            ? 'bg-emerald-950/35 border-emerald-500/40 text-emerald-200'
+                            : 'bg-rose-950/35 border-rose-500/40 text-rose-200';
+                    panel.innerHTML = `
+                        <div class="animate-pop space-y-4">
+                            <div class="p-4 rounded-xl border ${boxStyle}">
+                                <p class="text-sm font-bold">${escapeHtml(res.text)}</p>
+                            </div>
+                            <button type="button" onclick="continueAfterKeyMoment()" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-extrabold text-sm transition">
+                                Ver Resultado del Semestre →
+                            </button>
+                        </div>
+                    `;
+                }
             } else if (careerState.phase === 'LOAN_CHOICE') {
                 const opts = careerState.loanOptions || buildLoanDecisionOptions();
                 const sameTeam = opts.sameCareerCode ? findTeamByCode(opts.sameCareerCode) : null;
@@ -3124,7 +3794,6 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <!-- Opción 1: Cesión a equipo de tu carrera en competencia -->
                             ${sameTeam ? `
                                 <div class="p-4 rounded-2xl surface-sub border border-[#717fff]/50 hover:border-[#717fff] flex flex-col justify-between gap-3 transition">
                                     <div>
@@ -3133,7 +3802,7 @@
                                             ${getTeamBadgeHTML(sameTeam, 'w-10 h-10', 'text-[10px]')}
                                         </div>
                                         <div class="font-black text-white text-sm">${escapeHtml(sameTeam.name)}</div>
-                                        <div class="text-xs text-gray-400 mt-0.5">${escapeHtml(sameTeam.career)} · ${getDivisionLabel(sameTeam.division, careerState.gender)}</div>
+                                        <div class="text-xs text-gray-400 mt-0.5">${escapeHtml(sameTeam.career)} · ${getDivisionLabel(sameTeam.division, careerState.gender, sport)}</div>
                                         <p class="text-[11px] text-[#a3adff] mt-2">Sigue en Playoffs. Juega cedido el S2 y vuelve a ${escapeHtml(team.name)} a fin de año.</p>
                                     </div>
                                     <button onclick="resolveLoanDecision('SAME_CAREER', '${sameTeam.code}')" class="w-full py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white text-xs font-black transition">
@@ -3151,7 +3820,6 @@
                                 </div>
                             `}
 
-                            <!-- Opción 2: Cesión a equipo aleatorio que siga en competencia -->
                             ${randTeam ? `
                                 <div class="p-4 rounded-2xl surface-sub border border-emerald-500/40 hover:border-emerald-400 flex flex-col justify-between gap-3 transition">
                                     <div>
@@ -3160,7 +3828,7 @@
                                             ${getTeamBadgeHTML(randTeam, 'w-10 h-10', 'text-[10px]')}
                                         </div>
                                         <div class="font-black text-white text-sm">${escapeHtml(randTeam.name)}</div>
-                                        <div class="text-xs text-gray-400 mt-0.5">${escapeHtml(randTeam.career)} · ${getDivisionLabel(randTeam.division, careerState.gender)}</div>
+                                        <div class="text-xs text-gray-400 mt-0.5">${escapeHtml(randTeam.career)} · ${getDivisionLabel(randTeam.division, careerState.gender, sport)}</div>
                                         <p class="text-[11px] text-emerald-300/90 mt-2">Clasificado a Playoffs. Refuerza su plantel por 1 semestre y regresa al terminar.</p>
                                     </div>
                                     <button onclick="resolveLoanDecision('RANDOM_TEAM', '${randTeam.code}')" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition">
@@ -3169,12 +3837,11 @@
                                 </div>
                             ` : ''}
 
-                            <!-- Opción 3: No jugar campeonato y entrenar -->
                             <div class="p-4 rounded-2xl surface-sub border border-[#2b2b2b] hover:border-gray-500 flex flex-col justify-between gap-3 transition">
                                 <div>
                                     <div class="flex items-center justify-between gap-2 mb-2">
                                         <span class="text-[10px] font-black uppercase text-gray-300">🏋️ Quedarse Entrenando</span>
-                                        <span class="w-10 h-10 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] flex items-center justify-center text-lg">⚽</span>
+                                        <span class="w-10 h-10 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] flex items-center justify-center text-lg">${isBasket ? '🏀' : '⚽'}</span>
                                     </div>
                                     <div class="font-black text-white text-sm">Sesiones de Entrenamiento</div>
                                     <div class="text-xs text-gray-400 mt-0.5">Sin partidos de liga este semestre</div>
@@ -3300,7 +3967,7 @@
                                         ${getTeamBadgeHTML(team, 'w-9 h-9', 'text-[10px]')}
                                     </div>
                                     <div class="font-extrabold text-white text-sm">${escapeHtml(team.name)}</div>
-                                    <div class="text-xs text-gray-400">${escapeHtml(team.career)} · ${getDivisionLabel(team.division, careerState.gender)}</div>
+                                    <div class="text-xs text-gray-400">${escapeHtml(team.career)} · ${getDivisionLabel(team.division, careerState.gender, sport)}</div>
                                     <span class="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded font-bold ${stayRole.badgeClass}">${stayRole.label}</span>
                                 </div>
                                 <button onclick="resolveTransferDecision('${team.code}')" class="w-full py-2 rounded-lg bg-[#717fff] hover:bg-[#828eff] text-white text-xs font-bold">
@@ -3318,7 +3985,7 @@
                                                 ${getTeamBadgeHTML(o, 'w-9 h-9', 'text-[10px]')}
                                             </div>
                                             <div class="font-extrabold text-white text-sm">${escapeHtml(o.name)}</div>
-                                            <div class="text-xs text-gray-400">${escapeHtml(o.career)} · ${getDivisionLabel(o.division, careerState.gender)}</div>
+                                            <div class="text-xs text-gray-400">${escapeHtml(o.career)} · ${getDivisionLabel(o.division, careerState.gender, sport)}</div>
                                             <span class="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded font-bold ${oRole.badgeClass}">${oRole.label}</span>
                                         </div>
                                         <button onclick="resolveTransferDecision('${o.code}')" class="w-full py-2 rounded-lg ${tag.btnClass} text-xs font-bold transition">
@@ -3331,17 +3998,26 @@
                     </div>
                 `;
             } else if (careerState.phase === 'EXTENSION_CHOICE') {
-                const rem = 2 - careerState.extensionUsed;
+                const pg = E().getPostgradEligibility({
+                    gpa: careerState.gpa,
+                    postgradStage: careerState.postgradStage || 'UNDERGRAD'
+                });
                 panel.innerHTML = `
-                    <div class="space-y-3">
-                        <h3 class="text-lg font-black text-white">🎓 Completaste tus ${careerState.maxYears} años universitarios</h3>
-                        <p class="text-xs text-gray-400">¿Te titulas hoy o extiendes tu etapa universitaria para ganar más copas?</p>
+                    <div class="space-y-3 animate-pop">
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/35">
+                            🎓 Mérito Académico UFRO Desbloqueado
+                        </span>
+                        <h3 class="text-lg font-black text-white">Completaste tus ${careerState.maxYears} años en la UFRO</h3>
+                        <p class="text-xs text-gray-300 leading-relaxed">${escapeHtml(pg.reason)}</p>
                         <div class="flex flex-wrap gap-2.5 pt-1">
-                            <button onclick="graduateAndRetire()" class="px-4 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm">
+                            <button onclick="graduateAndRetire()" class="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#222222] border border-[#2b2b2b] text-white font-bold text-xs sm:text-sm">
                                 🎓 Titularse y Finalizar
                             </button>
-                            ${rem >= 1 ? `<button onclick="extendUniversityCareer(1, 'Magíster')" class="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#222222] border border-[#2b2b2b] text-white font-bold text-xs sm:text-sm">+1 Año (Magíster)</button>` : ''}
-                            ${rem >= 2 ? `<button onclick="extendUniversityCareer(2, 'Doble Título')" class="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#222222] border border-[#2b2b2b] text-white font-bold text-xs sm:text-sm">+2 Años (Doble Título)</button>` : ''}
+                            ${pg.canContinue ? `
+                                <button onclick="acceptPostgradOption('${pg.nextStage}', ${pg.yearsToAdd})" class="px-5 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs sm:text-sm shadow-lg shadow-[#717fff]/25">
+                                    📚 Cursar ${escapeHtml(pg.optionTitle)} →
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -3372,40 +4048,62 @@
         function renderTimeline() {
             const container = document.getElementById('timeline-container');
             if (!careerState || careerState.history.length === 0) {
-                container.innerHTML = `<div class="surface-card rounded-xl p-6 text-center text-xs text-gray-500">Simula tu primer semestre para ver tu historial aquí.</div>`;
+                container.innerHTML = `<div class="surface-card rounded-xl p-6 text-center text-xs text-gray-500">Elige una carta de enfoque arriba para simular tu primer semestre.</div>`;
                 return;
             }
 
             container.innerHTML = careerState.history.map(s => {
                 const hTeam = findTeamByCode(s.teamCode);
+                const hSport = s.sport || careerState.sport || 'FUTBOL';
+                const isBasket = hSport === 'BASKET';
+                const deltaSign = s.ovrDelta >= 0 ? `+${s.ovrDelta}` : `${s.ovrDelta}`;
+                const deltaColor = s.ovrDelta > 0 ? 'text-emerald-400' : s.ovrDelta < 0 ? 'text-rose-400' : 'text-gray-400';
+
                 return `
                     <div class="surface-card rounded-2xl p-4 space-y-2.5 text-xs">
                         <div class="flex justify-between items-start gap-2">
                             <div class="flex items-center gap-2.5">
                                 ${getTeamBadgeHTML(hTeam, 'w-10 h-10', 'text-[10px]')}
                                 <div>
-                                    <span class="font-bold text-[#8b96ff]">Año ${s.year} · Semestre ${s.sem}</span> · <span class="text-gray-400">${getDivisionLabel(s.divisionPlayed, careerState.gender)}</span>
+                                    <span class="font-bold text-[#8b96ff]">Año ${s.year} · Semestre ${s.sem}</span> · <span class="text-gray-400">${getDivisionLabel(s.divisionPlayed, careerState.gender, hSport)}</span>
                                     <div class="font-extrabold text-white text-sm flex items-center gap-1.5 flex-wrap">
                                         <span>${escapeHtml(s.teamName)}</span>
                                         ${s.isLoan ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">🤝 Cedido</span>` : ''}
                                         ${s.trainingOnly ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">🏋️ Entrenamiento</span>` : ''}
+                                        ${s.focusCard ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#717fff]/15 text-[#d0d5ff]">${escapeHtml(s.focusCard.tier)}: ${escapeHtml(s.focusCard.title)}</span>` : ''}
                                     </div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
                                 <span class="px-2 py-0.5 rounded bg-[#151515] border border-[#2b2b2b] font-bold text-white">
-                                    OVR ${formatOvr(s.ovrAfter)} <span class="text-emerald-400">(+${s.ovrDelta})</span>
+                                    OVR ${formatOvr(s.ovrAfter)} <span class="${deltaColor}">(${deltaSign})</span>
                                 </span>
-                                <div class="text-[11px] text-gray-400 mt-0.5">${s.trainingOnly ? 'Modo' : 'Nota'}: <strong class="text-[#a3adff]">${s.avgRating}</strong></div>
+                                <div class="text-[11px] text-gray-400 mt-0.5">${s.avgRating === 'BAJA' ? 'Estado' : s.trainingOnly ? 'Modo' : 'Val.'}: <strong class="${s.avgRating === 'BAJA' ? 'text-rose-400' : 'text-[#a3adff]'}">${s.avgRating}</strong></div>
                             </div>
                         </div>
 
-                        <div class="flex justify-between surface-sub px-3 py-2 rounded-xl">
-                            <span>PJ: <strong>${s.matches}</strong></span>
-                            <span>${careerState.position === 'ARQ' ? 'VI' : 'Goles'}: <strong class="text-emerald-400">${careerState.position === 'ARQ' ? s.cleanSheets : s.goals}</strong></span>
-                            <span>Asist: <strong class="text-[#8b96ff]">${s.assists}</strong></span>
-                            <span>${s.leagueSummaryText} ${s.promoted ? '⬆️' : s.relegated ? '⬇️' : ''}</span>
-                        </div>
+                        ${isBasket ? `
+                            <div class="flex justify-between surface-sub px-3 py-2 rounded-xl flex-wrap gap-2">
+                                <span>PJ: <strong>${s.matches}</strong></span>
+                                <span>Pts: <strong class="text-emerald-400">${s.points || 0}</strong></span>
+                                <span>Reb: <strong class="text-[#8b96ff]">${s.rebounds || 0}</strong></span>
+                                <span>Ast: <strong class="text-[#a3adff]">${s.assists || 0}</strong></span>
+                                <span>${s.leagueSummaryText}</span>
+                            </div>
+                        ` : `
+                            <div class="flex justify-between surface-sub px-3 py-2 rounded-xl flex-wrap gap-2">
+                                <span>PJ: <strong>${s.matches}</strong></span>
+                                <span>${careerState.position === 'ARQ' ? 'VI' : 'Goles'}: <strong class="text-emerald-400">${careerState.position === 'ARQ' ? s.cleanSheets : s.goals}</strong></span>
+                                <span>Asist: <strong class="text-[#8b96ff]">${s.assists}</strong></span>
+                                <span>${s.leagueSummaryText} ${s.promoted ? '⬆️' : s.relegated ? '⬇️' : ''}</span>
+                            </div>
+                        `}
+
+                        ${s.narrative ? `
+                            <p class="text-[11.5px] text-gray-300 leading-relaxed bg-[#151515] border border-[#262626] rounded-xl px-3 py-2">
+                                ${escapeHtml(s.narrative)}
+                            </p>
+                        ` : ''}
 
                         <div class="flex flex-wrap gap-1.5 text-[11px]">
                             ${s.facultyCupResult ? `<span class="px-2 py-0.5 rounded surface-sub text-gray-300">${escapeHtml(s.facultyCupResult)}</span>` : ''}
@@ -3415,7 +4113,7 @@
 
                         ${s.trophies && s.trophies.length > 0 ? `
                             <div class="flex flex-wrap gap-1 pt-0.5">
-                                ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[11px]">🏆 ${escapeHtml(t.title)}</span>`).join('')}
+                                ${s.trophies.map(t => `<span class="px-2 py-0.5 rounded ${t.type === 'HEROIC_ASCENT' ? 'bg-amber-400/25 text-amber-200 border border-amber-400/50' : 'bg-amber-500/20 text-amber-300'} font-bold text-[11px]">🏆 ${escapeHtml(t.title)}</span>`).join('')}
                             </div>
                         ` : ''}
                     </div>
@@ -3427,33 +4125,19 @@
         // 11. PREMIOS INDIVIDUALES, RESUMEN FINAL Y SALÓN DE LA FAMA UFRO
         // =========================================================================
         function computeIndividualAwards(year, semStats, isFemale) {
-            const awards = [];
-            if (semStats.matches === 0) return awards;
-
-            if (careerState.position !== 'ARQ' && semStats.goals >= 9 && Number(semStats.avgRating) >= 7.8) {
-                awards.push({
-                    icon: '⚽',
-                    title: isFemale ? 'Goleadora del Torneo UFRO' : `Goleador ${getDivisionLabel(semStats.divisionPlayed, 'M')}`,
-                    detail: `${semStats.goals} goles en el Clausura`,
-                    teamName: semStats.teamName,
-                    year
-                });
-            }
-            if (Number(semStats.avgRating) >= 8.4 && semStats.matches >= 9) {
-                awards.push({
-                    icon: '🌟',
-                    title: isFemale ? 'Mejor Jugadora del Año (MVP)' : 'Mejor Jugador del Año (MVP)',
-                    detail: `Nota media ${semStats.avgRating}`,
-                    teamName: semStats.teamName,
-                    year
-                });
-            }
-            return awards;
+            return E().computeIndividualAwards({
+                sport: careerState.sport || 'FUTBOL',
+                position: careerState.position,
+                gender: isFemale ? 'F' : 'M',
+                year,
+                semStats
+            });
         }
 
         function renderRetiredSummary() {
             const trophies = careerState.trophies || [];
             const awards = careerState.awards || [];
+            const isBasket = (careerState.sport || 'FUTBOL') === 'BASKET';
 
             const countLeague = trophies.filter(t => t.type === 'LEAGUE').length;
             const countFac = trophies.filter(t => t.type === 'FACULTY').length;
@@ -3477,6 +4161,7 @@
                 <div class="flex items-center justify-between flex-wrap gap-2">
                     <h3 class="text-sm font-black uppercase tracking-wider text-white">🎖️ Distinciones Individuales</h3>
                     <div class="flex items-center gap-2 flex-wrap">
+                        ${careerState.heroicDiv3ToDiv1 ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-200 border border-amber-400/45">🚀 Hazaña 3ª → 1ª Div.</span>` : ''}
                         ${careerState.lastSubmittedScore ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">🌍 ${careerState.lastSubmittedScore} pts Ranking Semanal</span>` : ''}
                         ${careerState.hofRank ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/35">🏛️ Top #${careerState.hofRank} Salón de la Fama</span>` : ''}
                     </div>
@@ -3507,21 +4192,25 @@
                 }
             `;
 
-            // Agrupar trayectoria por equipo
             const stintsMap = new Map();
             [...careerState.history].reverse().forEach(h => {
                 if (!stintsMap.has(h.teamCode)) {
-                    stintsMap.set(h.teamCode, { teamCode: h.teamCode, teamName: h.teamName, careerName: h.careerName, sems: 0, goals: 0, assists: 0, titles: 0 });
+                    stintsMap.set(h.teamCode, { teamCode: h.teamCode, teamName: h.teamName, careerName: h.careerName, sems: 0, goals: 0, assists: 0, points: 0, rebounds: 0, titles: 0 });
                 }
                 const st = stintsMap.get(h.teamCode);
                 st.sems += 1;
-                st.goals += h.goals;
-                st.assists += h.assists;
+                st.goals += h.goals || 0;
+                st.assists += h.assists || 0;
+                st.points += h.points || 0;
+                st.rebounds += h.rebounds || 0;
                 st.titles += (h.trophies || []).filter(t => t.type !== 'SELECCION').length;
             });
 
             document.getElementById('career-stints-list').innerHTML = Array.from(stintsMap.values()).map(st => {
                 const stTeam = findTeamByCode(st.teamCode);
+                const prodLine = isBasket
+                    ? `${st.points} PTS · ${st.rebounds} REB · ${st.assists} AST`
+                    : `${st.goals}G · ${st.assists}A`;
                 return `
                     <div class="p-3.5 rounded-xl surface-sub flex items-center justify-between gap-3 text-xs">
                         <div class="flex items-center gap-3">
@@ -3533,16 +4222,16 @@
                         </div>
                         <div class="text-right">
                             <div class="font-bold text-amber-300">🏆 ${st.titles} títulos</div>
-                            <div class="text-gray-400">${st.goals}G · ${st.assists}A</div>
+                            <div class="text-gray-400">${prodLine}</div>
                         </div>
                     </div>
                 `;
             }).join('');
 
             document.getElementById('full-career-semesters-list').innerHTML = careerState.history.map(h => `
-                <div class="p-2.5 rounded-lg surface-sub flex items-center justify-between text-xs">
+                <div class="p-2.5 rounded-lg surface-sub flex items-center justify-between gap-2 text-xs">
                     <span><strong>Año ${h.year} S${h.sem}</strong> · ${escapeHtml(h.teamName)} ${h.isLoan ? '(Cedido)' : ''} (${h.leagueSummaryText})</span>
-                    <span class="text-gray-400">OVR ${formatOvr(h.ovrAfter)} · ${h.trainingOnly ? 'Entr.' : `Nota ${h.avgRating}`}</span>
+                    <span class="text-gray-400 shrink-0">OVR ${formatOvr(h.ovrAfter)} · ${h.trainingOnly ? 'Entr.' : h.avgRating === 'BAJA' ? 'BAJA' : `Val. ${h.avgRating}`}</span>
                 </div>
             `).join('');
         }
@@ -3562,10 +4251,11 @@
             } catch (e) { hof = []; }
 
             const legacy = computeCreativeLegacyBanner();
-            const score = (careerState.trophies.length * 15) + careerState.ovr + Math.round((careerState.stats.goals + careerState.stats.assists) * 0.5);
+            const score = E().calculateCareerLeaderboardScore(careerState);
             const entry = {
                 id: Date.now(),
                 playerName: careerState.playerName,
+                sport: careerState.sport || 'FUTBOL',
                 position: careerState.position,
                 gender: careerState.gender,
                 ovr: careerState.ovr,
@@ -4014,9 +4704,10 @@
             ctx.font = '900 94px Inter, sans-serif';
             ctx.fillText(String(formatOvr(careerState.ovr)), W / 2, ovrBoxY + 142);
 
+            const isBasketPoster = (careerState.sport || 'FUTBOL') === 'BASKET';
             ctx.fillStyle = isGoat ? '#451a03' : '#d0d5ff';
             ctx.font = '800 24px Inter, sans-serif';
-            ctx.fillText(`${careerState.position} · ${careerState.gender === 'F' ? 'FEM' : 'MASC'}`, W / 2, ovrBoxY + 186);
+            ctx.fillText(`${careerState.position} · ${isBasketPoster ? 'BÁSQUET' : (careerState.gender === 'F' ? 'FEM' : 'MASC')}`, W / 2, ovrBoxY + 186);
 
             // Nombre completo
             const nameY = ovrBoxY + ovrBoxSize + gapAfterOvr;
@@ -4052,7 +4743,6 @@
             let drewExternalImage = false;
             if (loadedLogo) {
                 try {
-                    // Verificar en un canvas auxiliar si permite exportar sin CORS taint
                     const probe = document.createElement('canvas');
                     probe.width = 4;
                     probe.height = 4;
@@ -4060,7 +4750,6 @@
                     pCtx.drawImage(loadedLogo, 0, 0, 4, 4);
                     probe.toDataURL('image/png');
 
-                    // Mantener proporción original del escudo dentro del cuadrado de 104x104
                     const ratio = Math.min(badgeSize / (loadedLogo.naturalWidth || badgeSize), badgeSize / (loadedLogo.naturalHeight || badgeSize));
                     const drawW = (loadedLogo.naturalWidth || badgeSize) * ratio;
                     const drawH = (loadedLogo.naturalHeight || badgeSize) * ratio;
@@ -4094,12 +4783,19 @@
             const statBoxW = (cardW - statGap * 3) / 4;
             const isArq = careerState.position === 'ARQ';
 
-            const statItems = [
-                { label: 'PJ', val: careerState.stats.matches, color: '#f3f4f6' },
-                { label: isArq ? 'VALLAS' : 'GOLES', val: isArq ? careerState.stats.cleanSheets : careerState.stats.goals, color: '#8b96ff' },
-                { label: isArq ? 'G + A' : 'ASIST.', val: isArq ? (careerState.stats.goals + careerState.stats.assists) : careerState.stats.assists, color: '#a3adff' },
-                { label: 'TÍTULOS', val: trophies.length, color: '#ffffff' }
-            ];
+            const statItems = isBasketPoster
+                ? [
+                    { label: 'PJ', val: careerState.stats.matches, color: '#f3f4f6' },
+                    { label: 'PUNTOS', val: careerState.stats.points || 0, color: '#8b96ff' },
+                    { label: 'REB/AST', val: `${careerState.stats.rebounds || 0}/${careerState.stats.assists || 0}`, color: '#a3adff' },
+                    { label: 'TÍTULOS', val: trophies.length, color: '#ffffff' }
+                ]
+                : [
+                    { label: 'PJ', val: careerState.stats.matches, color: '#f3f4f6' },
+                    { label: isArq ? 'VALLAS' : 'GOLES', val: isArq ? careerState.stats.cleanSheets : careerState.stats.goals, color: '#8b96ff' },
+                    { label: isArq ? 'G + A' : 'ASIST.', val: isArq ? (careerState.stats.goals + careerState.stats.assists) : careerState.stats.assists, color: '#a3adff' },
+                    { label: 'TÍTULOS', val: trophies.length, color: '#ffffff' }
+                ];
 
             statItems.forEach((st, i) => {
                 const bx = cardX + i * (statBoxW + statGap);
@@ -4312,14 +5008,14 @@
             onSnapshot
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuración del proyecto (usa __firebase_config del entorno o pega aquí el firebaseConfig de tu otra webapp)
+        // Configuración del proyecto (usa __firebase_config del entorno / variables de entorno)
         const DEFAULT_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyCCguxq1KNYTng0lK2S5HvaYM03UpFMVmM",
-            authDomain: "leyenda-ufro.firebaseapp.com",
-            projectId: "leyenda-ufro",
-            storageBucket: "leyenda-ufro.firebasestorage.app",
-            messagingSenderId: "885333611273",
-            appId: "1:885333611273:web:6af8b831a964d1a7ea79d8"
+            apiKey: "TU_API_KEY",
+            authDomain: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: ""
         };
 
         const firebaseConfig = (typeof __firebase_config !== 'undefined' && __firebase_config)
@@ -4444,6 +5140,11 @@
             weeklyCountdownInterval = setInterval(updateWeeklyHeaderUI, 1000);
         }
 
+        function validAuthNickname(user) {
+            const dn = user && user.displayName;
+            return dn && validateUsernameStrict(dn).valid ? dn : '';
+        }
+
         function updateAuthUI(user) {
             const guestBtns = document.getElementById('guest-auth-buttons');
             const loggedMenu = document.getElementById('logged-user-menu-wrapper');
@@ -4460,7 +5161,7 @@
             if (guestBtns) guestBtns.classList.add('hidden');
             if (loggedMenu) loggedMenu.classList.remove('hidden');
 
-            const displayNick = window.cloudProfile.nickname || user.displayName || sanitizeAutoUsername(user.email?.split('@')[0] || 'Jugador');
+            const displayNick = window.cloudProfile.nickname || validAuthNickname(user) || sanitizeAutoUsername(user.displayName || user.email?.split('@')[0] || 'Jugador');
             window.cloudProfile.nickname = displayNick;
             if (usernameLabel) usernameLabel.textContent = `@${displayNick}`;
             if (profileHeading) profileHeading.textContent = `@${displayNick}`;
@@ -4475,9 +5176,10 @@
         }
 
         async function loadUserCloudProfile(uid, userObj = null) {
-            // Prioridad inmediata: displayName guardado en Auth (sin esperar red)
-            if (userObj && !userObj.isAnonymous && userObj.displayName) {
-                window.cloudProfile.nickname = userObj.displayName;
+            // Prioridad inmediata: displayName válido guardado en Auth (sin esperar red)
+            const authNick = validAuthNickname(userObj);
+            if (userObj && !userObj.isAnonymous && authNick) {
+                window.cloudProfile.nickname = authNick;
                 updateAuthUI(userObj);
             }
 
@@ -4501,8 +5203,10 @@
                         registerUsernameLookup(window.cloudProfile.nickname, userObj.email, uid);
                     }
                 } else if (userObj && !userObj.isAnonymous) {
-                    const generatedNick = window.cloudProfile.nickname || sanitizeAutoUsername(userObj.displayName || userObj.email?.split('@')[0] || 'Jugador');
+                    const sessionNick = validateUsernameStrict(window.cloudProfile.nickname).valid ? window.cloudProfile.nickname : '';
+                    const generatedNick = authNick || sessionNick || sanitizeAutoUsername(userObj.displayName || userObj.email?.split('@')[0] || 'Jugador');
                     window.cloudProfile.nickname = generatedNick;
+                    if (!authNick) updateProfile(userObj, { displayName: generatedNick }).catch(() => {});
                     promiseWithTimeout(setDoc(profileRef, {
                         nickname: generatedNick,
                         email: userObj.email || '',
@@ -4665,8 +5369,8 @@
                 const fallbackNick = rawIdentifier.includes('@') && !rawIdentifier.startsWith('@')
                     ? sanitizeAutoUsername(resolvedEmail.split('@')[0])
                     : rawIdentifier.replace(/^@+/, '');
-                window.cloudProfile.nickname = currentUser.displayName || fallbackNick;
-                if (currentUser.displayName && currentUser.email) {
+                window.cloudProfile.nickname = validAuthNickname(currentUser) || fallbackNick;
+                if (validAuthNickname(currentUser) && currentUser.email) {
                     registerUsernameLookup(currentUser.displayName, currentUser.email, currentUser.uid);
                 }
                 updateAuthUI(currentUser);
@@ -4685,6 +5389,29 @@
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Entrar a mi cuenta';
+            }
+        };
+
+        window.signInWithGoogleAccount = async function () {
+            if (!auth) {
+                showToast('Servicio de cuentas no disponible aún.', 'error');
+                return;
+            }
+            try {
+                const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+                currentUser = cred.user;
+                closeAuthModal();
+                await loadUserCloudProfile(currentUser.uid, currentUser);
+                updateAuthUI(currentUser);
+                showToast('✅ Sesión iniciada con Google', 'success');
+            } catch (err) {
+                const code = err?.code || '';
+                if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return;
+                if (code === 'auth/popup-blocked') showToast('Tu navegador bloqueó la ventana de Google. Permite los pop-ups e inténtalo de nuevo.', 'error');
+                else if (code === 'auth/unauthorized-domain') showToast('Agrega este dominio en Firebase Console → Authentication → Authorized domains.', 'error');
+                else if (code === 'auth/operation-not-allowed') showToast('Activa el proveedor Google en Firebase Console → Authentication.', 'error');
+                else if (code === 'auth/network-request-failed') showToast('Error de red al conectar con Google.', 'error');
+                else showToast(`No se pudo iniciar sesión con Google (${code || 'desconocido'}).`, 'error');
             }
         };
 
@@ -4915,7 +5642,8 @@
 
             const mainTeam = findTeamByCode(entry.teamCode);
             const isArq = entry.position === 'ARQ';
-            const st = entry.stats || { matches: 0, goals: 0, assists: 0, cleanSheets: 0 };
+            const isBasketEntry = (entry.sport || 'FUTBOL') === 'BASKET';
+            const st = entry.stats || { matches: 0, goals: 0, assists: 0, cleanSheets: 0, points: 0, rebounds: 0 };
             const trajectory = Array.isArray(entry.trajectory) ? entry.trajectory : [];
             const trophyList = Array.isArray(entry.trophyList) ? entry.trophyList : [];
             const awardList = Array.isArray(entry.awardList) ? entry.awardList : [];
@@ -4928,7 +5656,7 @@
                         ${mainTeam ? getTeamBadgeHTML(mainTeam, 'w-12 h-12', 'text-xs') : ''}
                         <div>
                             <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/20 text-[#a3adff]">
-                                @${escapeHtml(entry.nickname || 'usuario')}
+                                @${escapeHtml(entry.nickname || 'usuario')} · ${isBasketEntry ? '🏀 Básquetbol' : '⚽ Fútbol'}
                             </span>
                             <h4 class="text-base font-black text-white mt-0.5">${escapeHtml(entry.playerName || 'Jugador')}</h4>
                             <p class="text-xs text-gray-400">${escapeHtml(entry.studiedCareer || 'Carrera UFRO')} · ${escapeHtml(entry.position || 'MED')} (${entry.gender === 'F' ? 'Fem.' : 'Masc.'})</p>
@@ -4950,12 +5678,12 @@
                         <div class="text-[10px] font-bold text-gray-500 uppercase">PJ</div>
                     </div>
                     <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-[#8b96ff]">${isArq ? (st.cleanSheets || 0) : (st.goals || 0)}</div>
-                        <div class="text-[10px] font-bold text-gray-500 uppercase">${isArq ? 'Vallas' : 'Goles'}</div>
+                        <div class="text-base font-black text-[#8b96ff]">${isBasketEntry ? (st.points || 0) : (isArq ? (st.cleanSheets || 0) : (st.goals || 0))}</div>
+                        <div class="text-[10px] font-bold text-gray-500 uppercase">${isBasketEntry ? 'Puntos' : (isArq ? 'Vallas' : 'Goles')}</div>
                     </div>
                     <div class="p-2.5 rounded-xl surface-sub">
-                        <div class="text-base font-black text-[#717fff]">${isArq ? ((st.goals || 0) + (st.assists || 0)) : (st.assists || 0)}</div>
-                        <div class="text-[10px] font-bold text-gray-500 uppercase">${isArq ? 'G+A' : 'Asist.'}</div>
+                        <div class="text-base font-black text-[#717fff]">${isBasketEntry ? `${st.rebounds || 0}/${st.assists || 0}` : (isArq ? ((st.goals || 0) + (st.assists || 0)) : (st.assists || 0))}</div>
+                        <div class="text-[10px] font-bold text-gray-500 uppercase">${isBasketEntry ? 'Reb/Ast' : (isArq ? 'G+A' : 'Asist.')}</div>
                     </div>
                     <div class="p-2.5 rounded-xl surface-sub">
                         <div class="text-base font-black text-amber-300">${entry.titles || 0}</div>
@@ -4969,13 +5697,16 @@
                         ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-500">Sin desglose de clubes disponible.</div>`
                         : trajectory.map(tr => {
                             const tObj = findTeamByCode(tr.teamCode);
+                            const trProd = isBasketEntry
+                                ? `${tr.points || 0} PTS · ${tr.rebounds || 0} REB · ${tr.assists || 0} AST`
+                                : `${tr.goals || 0}G · ${tr.assists || 0}A`;
                             return `
                                 <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
                                     <div class="flex items-center gap-2.5">
                                         ${tObj ? getTeamBadgeHTML(tObj, 'w-8 h-8', 'text-[9px]') : ''}
                                         <div>
                                             <div class="font-bold text-white">${escapeHtml(tr.teamName || 'Equipo')}</div>
-                                            <div class="text-[11px] text-gray-400">${tr.sems || 1} sem. · ${tr.goals || 0}G · ${tr.assists || 0}A</div>
+                                            <div class="text-[11px] text-gray-400">${tr.sems || 1} sem. · ${trProd}</div>
                                         </div>
                                     </div>
                                     <span class="font-bold text-amber-300">🏆 ${tr.titles || 0}</span>
@@ -5079,8 +5810,7 @@
 
             if (careerState.submittedToCloud) return;
 
-            const awardsBonus = (careerState.awards || []).length * 10;
-            const totalScore = Math.min(2500, Math.max(0, Math.round(baseScore + awardsBonus)));
+            const totalScore = Math.min(2500, Math.max(0, Math.round(baseScore)));
             const { weekId } = getChileWeekInfo();
 
             const nickname = window.cloudProfile.nickname
@@ -5095,6 +5825,8 @@
                         sems: 0,
                         goals: 0,
                         assists: 0,
+                        points: 0,
+                        rebounds: 0,
                         titles: 0
                     });
                 }
@@ -5102,6 +5834,8 @@
                 st.sems += 1;
                 st.goals += h.goals || 0;
                 st.assists += h.assists || 0;
+                st.points += h.points || 0;
+                st.rebounds += h.rebounds || 0;
                 st.titles += (h.trophies || []).filter(t => t.type !== 'SELECCION').length;
             });
 
@@ -5122,6 +5856,7 @@
                 nickname: String(nickname).slice(0, 18),
                 playerName: String(careerState.playerName).slice(0, 36),
                 studiedCareer: String(careerState.studiedCareer || '').slice(0, 60),
+                sport: careerState.sport || 'FUTBOL',
                 position: careerState.position,
                 gender: careerState.gender,
                 ovr: Math.min(104, Number(careerState.ovr) || 60),
@@ -5133,7 +5868,10 @@
                     matches: careerState.stats?.matches || 0,
                     goals: careerState.stats?.goals || 0,
                     assists: careerState.stats?.assists || 0,
-                    cleanSheets: careerState.stats?.cleanSheets || 0
+                    cleanSheets: careerState.stats?.cleanSheets || 0,
+                    points: careerState.stats?.points || 0,
+                    rebounds: careerState.stats?.rebounds || 0,
+                    stealsBlocks: careerState.stats?.stealsBlocks || 0
                 },
                 trajectory,
                 trophyList,
@@ -5203,14 +5941,16 @@
                 }
                 const menu = document.getElementById('user-dropdown-menu');
                 if (menu) menu.classList.add('hidden');
+                window.cloudProfile.nickname = '';
+                window.cloudProfile.nicknameUpdatedAt = 0;
                 updateAuthUI(null);
             };
 
-            if (!firebaseConfig || firebaseConfig.apiKey === 'TU_API_KEY') {
+            if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey === 'TU_API_KEY') {
                 updateAuthUI(null);
                 const listEl = document.getElementById('global-hof-list');
                 if (listEl) {
-                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-400">Pega las credenciales de tu proyecto Firebase en <code>DEFAULT_FIREBASE_CONFIG</code> para activar las cuentas y el Top Global Semanal.</div>`;
+                    listEl.innerHTML = `<div class="p-4 rounded-2xl surface-sub text-center text-xs text-gray-400">Configura las variables <code>FIREBASE_*</code> en tu entorno para activar las cuentas y el Top Global Semanal.</div>`;
                 }
                 return;
             }
@@ -5229,17 +5969,16 @@
 
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token).catch(() => {});
-                } else if (!auth.currentUser) {
-                    await signInAnonymously(auth).catch(() => {});
                 }
 
                 onAuthStateChanged(auth, async (user) => {
                     currentUser = user;
-                    subscribeWeeklyLeaderboard();
-                    if (user) {
+                    if (isRealAuthenticatedUser(user)) {
                         updateAuthUI(user);
                         loadUserCloudProfile(user.uid, user);
                     } else {
+                        window.cloudProfile.nickname = '';
+                        window.cloudProfile.nicknameUpdatedAt = 0;
                         updateAuthUI(null);
                     }
                 });

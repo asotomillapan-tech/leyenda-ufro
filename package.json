@@ -1,0 +1,15 @@
+{
+  "name": "leyenda-ufro",
+  "version": "0.2.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "node --check server.js && node --check public/notfc-engine.js && node --check public/notfc-minigames.js && node --check public/leyendas-data.js && node --check public/leyendas-engine.js",
+    "lint": "node --check server.js && node --check public/notfc-engine.js && node --check public/notfc-minigames.js && node --check public/leyendas-data.js && node --check public/leyendas-engine.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_.-]+$');
+    }
+
+    // Datos privados del usuario (perfil y carreras guardadas en LEYENDAS)
+    match /artifacts/{appId}/users/{userId}/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Índice público de @usuarios (login por @usuario + buscador en perfil.html)
+    match /artifacts/{appId}/public/data/usernames/{usernameKey} {
+      // get permite login por @usuario antes de iniciar sesión; list requiere sesión iniciada
+      allow get: if true;
+      allow list: if isSignedIn();
+      allow create: if isSignedIn()
+        && isValidId(usernameKey)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.nickname is string
+        && request.resource.data.nickname.size() >= 3
+        && request.resource.data.nickname.size() <= 18;
+      allow update: if isSignedIn()
+        && isValidId(usernameKey)
+        && (!('uid' in resource.data) || resource.data.uid == '' || resource.data.uid == request.auth.uid)
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // Top Global Semanal de LEYENDAS
+    match /artifacts/{appId}/public/data/weekly_leaderboard/{entryId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && isValidId(entryId)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.score is number
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 2500;
+      allow update: if isSignedIn()
+        && isValidId(entryId)
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.score is number
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 2500;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // Relaciones y solicitudes de amistad (perfil.html y notfc.html)
+    match /artifacts/{appId}/public/data/friendships/{relId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.users;
+      allow create: if isSignedIn()
+        && isValidId(relId)
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.users is list
+        && request.resource.data.users.size() == 2
+        && request.auth.uid in request.resource.data.users;
+      allow update: if isSignedIn()
+        && isValidId(relId)
+        && resource.data.toUid == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'accepted'
+        && request.resource.data.users == resource.data.users
+        && request.resource.data.fromUid == resource.data.fromUid
+        && request.resource.data.toUid == resource.data.toUid;
+      allow delete: if isSignedIn() && request.auth.uid in resource.data.users;
+    }
+
+    // Clubes comunitarios de NOT F.C
+    match /artifacts/{appId}/public/data/notfc_clubs/{clubId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && isValidId(clubId)
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.isCreatedByUser == true
+        && request.resource.data.isFictitious == false;
+      allow update: if isSignedIn()
+        && isValidId(clubId)
+        && request.resource.data.isCreatedByUser == true
+        && request.resource.data.isFictitious == false
+        && (!('ownerUid' in resource.data) || request.resource.data.ownerUid == resource.data.ownerUid);
+      allow delete: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Solicitudes mutuas de NOT F.C
+    match /artifacts/{appId}/public/data/notfc_requests/{reqId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && isValidId(reqId)
+        && request.resource.data.updatedByUid == request.auth.uid;
+      allow delete: if isSignedIn()
+        && (resource.data.updatedByUid == request.auth.uid || resource.data.fromUid == request.auth.uid);
+    }
+  }
+}

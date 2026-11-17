@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7091284927612436"
-     crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil · NOTINTERCARRERAS</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath fill='%23717fff' d='M171.5,28.5V0H28.7v28.5h57.1v23.7H28.7v85.6h57.1v29.8l-57.1-12v29.4l71.3,15.1h0s0,0,0,0h0s0,0,0,0l71.4-15.1v-29.4l-57.1,12v-29.7h57.1v-28.7h-57.1v-28.4h57.1v-28.5h-57.1v-23.7h57.1ZM85.8,109.2h-28.5v-28.4h28.5v28.4Z'/%3E%3C/svg%3E">
+    <script src="/firebase-config.js"></script>
     <script>
         window.tailwind = window.tailwind || {};
         window.tailwind.config = {
@@ -577,16 +576,18 @@
             setDoc,
             deleteDoc,
             collection,
+            query,
+            where,
             onSnapshot
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const DEFAULT_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyCCguxq1KNYTng0lK2S5HvaYM03UpFMVmM",
-            authDomain: "leyenda-ufro.firebaseapp.com",
-            projectId: "leyenda-ufro",
-            storageBucket: "leyenda-ufro.firebasestorage.app",
-            messagingSenderId: "885333611273",
-            appId: "1:885333611273:web:6af8b831a964d1a7ea79d8"
+            apiKey: "TU_API_KEY",
+            authDomain: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: ""
         };
 
         const firebaseConfig = (typeof __firebase_config !== 'undefined' && __firebase_config)
@@ -595,10 +596,11 @@
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'leyendas-ufro-global';
         const NICKNAME_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+        const hasFirebaseConfig = Boolean(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== 'TU_API_KEY');
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+        const app = hasFirebaseConfig ? initializeApp(firebaseConfig) : null;
+        const auth = app ? getAuth(app) : null;
+        const db = app ? initializeFirestore(app, { experimentalForceLongPolling: true }) : null;
 
         let currentUser = null;
         let allUsernamesDirectory = []; // { id, uid, nickname, email, active, bestOvr, activeCareerName, activePlayerName, activePosition, bestScore }
@@ -752,10 +754,15 @@
             }, { merge: true }).catch(() => {});
         }
 
-        function subscribePublicCollections() {
-            if (unsubUsernames) unsubUsernames();
-            if (unsubLeaderboard) unsubLeaderboard();
-            if (unsubFriendships) unsubFriendships();
+        function unsubscribePublicCollections() {
+            if (unsubUsernames) { unsubUsernames(); unsubUsernames = null; }
+            if (unsubLeaderboard) { unsubLeaderboard(); unsubLeaderboard = null; }
+            if (unsubFriendships) { unsubFriendships(); unsubFriendships = null; }
+        }
+
+        function subscribePublicCollections(uid) {
+            unsubscribePublicCollections();
+            if (!db || !uid) return;
 
             // 1. Directorio público de usuarios (@usuario)
             const usernamesCol = collection(db, 'artifacts', appId, 'public', 'data', 'usernames');
@@ -769,7 +776,7 @@
                 });
                 allUsernamesDirectory = list;
                 renderSocialUI();
-            });
+            }, () => {});
 
             // 2. Carreras publicadas (para estadísticas personales, OVR y fichas)
             const lbCol = collection(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard');
@@ -782,16 +789,19 @@
                 }
                 renderProfileStats();
                 renderSocialUI();
-            });
+            }, () => {});
 
-            // 3. Relaciones y solicitudes de amistad
-            const friendsCol = collection(db, 'artifacts', appId, 'public', 'data', 'friendships');
+            // 3. Relaciones y solicitudes de amistad (solo las del usuario actual)
+            const friendsCol = query(
+                collection(db, 'artifacts', appId, 'public', 'data', 'friendships'),
+                where('users', 'array-contains', uid)
+            );
             unsubFriendships = onSnapshot(friendsCol, (snap) => {
                 const list = [];
                 snap.forEach(d => list.push({ id: d.id, ...d.data() }));
                 allFriendships = list;
                 renderSocialUI();
-            });
+            }, () => {});
         }
 
         // ==================== RENDERIZADO PERFIL PERSONAL ====================
@@ -1262,8 +1272,16 @@
             renderSocialUI();
         }
 
+        function validAuthNickname(user) {
+            const dn = user && user.displayName;
+            return dn && validateUsernameStrict(dn).valid ? dn : '';
+        }
+
         async function loadUserProfileData(user) {
             if (!isRealUser(user)) return;
+            const authNick = validAuthNickname(user);
+            if (authNick) window.cloudProfile.nickname = authNick;
+
             const localTs = Number(localStorage.getItem(getLocalNicknameTimestampKey(user.uid)) || 0);
             if (localTs > 0) window.cloudProfile.nicknameUpdatedAt = localTs;
 
@@ -1278,8 +1296,10 @@
                         localStorage.setItem(getLocalNicknameTimestampKey(user.uid), String(window.cloudProfile.nicknameUpdatedAt));
                     }
                 } else {
-                    const generatedNick = sanitizeAutoUsername(user.displayName || user.email?.split('@')[0] || 'Jugador');
+                    const sessionNick = validateUsernameStrict(window.cloudProfile.nickname).valid ? window.cloudProfile.nickname : '';
+                    const generatedNick = authNick || sessionNick || sanitizeAutoUsername(user.displayName || user.email?.split('@')[0] || 'Jugador');
                     window.cloudProfile.nickname = generatedNick;
+                    if (!authNick) updateProfile(user, { displayName: generatedNick }).catch(() => {});
                     setDoc(profileRef, {
                         nickname: generatedNick,
                         email: user.email || '',
@@ -1302,11 +1322,24 @@
             const cached = allUsernamesDirectory.find(u => u.id === usernameKey || u.nickname.toLowerCase() === usernameKey);
             if (cached && cached.email) return cached.email;
 
+            if (db) {
+                try {
+                    const unameRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', usernameKey);
+                    const snap = await promiseWithTimeout(getDoc(unameRef), 4000);
+                    if (snap.exists() && snap.data().email && snap.data().active !== false) {
+                        return snap.data().email;
+                    }
+                } catch (e) {}
+            }
+
             try {
-                const unameRef = doc(db, 'artifacts', appId, 'public', 'data', 'usernames', usernameKey);
-                const snap = await promiseWithTimeout(getDoc(unameRef), 4000);
-                if (snap.exists() && snap.data().email && snap.data().active !== false) {
-                    return snap.data().email;
+                const restUrl = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/artifacts/${encodeURIComponent(appId)}/public/data/usernames/${encodeURIComponent(usernameKey)}`;
+                const res = await fetch(restUrl);
+                if (res.ok) {
+                    const json = await res.json();
+                    const emailField = json?.fields?.email?.stringValue;
+                    const activeField = json?.fields?.active?.booleanValue;
+                    if (emailField && activeField !== false) return emailField;
                 }
             } catch (e) {}
             return null;
@@ -1378,7 +1411,11 @@
                 showToast(`🎉 ¡Cuenta creada! Bienvenido @${check.username}`, 'success');
             } catch (err) {
                 const code = err?.code || '';
-                if (code === 'auth/email-already-in-use') showToast('Ese correo ya está registrado.', 'error');
+                if (code === 'auth/email-already-in-use') showToast('Ese correo ya está registrado. Intenta iniciar sesión.', 'error');
+                else if (code === 'auth/weak-password') showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
+                else if (code === 'auth/invalid-email') showToast('Correo electrónico inválido.', 'error');
+                else if (code === 'auth/operation-not-allowed') showToast('Activa "Correo electrónico/contraseña" en Firebase Console.', 'error');
+                else if (code === 'auth/unauthorized-domain') showToast('Agrega este dominio en Firebase Console → Authorized domains.', 'error');
                 else showToast('Error al crear la cuenta.', 'error');
             } finally {
                 btn.disabled = false;
@@ -1400,13 +1437,21 @@
         };
 
         window.signInWithGoogleAccount = async function () {
+            if (!auth) return;
             try {
                 const provider = new GoogleAuthProvider();
-                await signInWithPopup(auth, provider);
+                const cred = await signInWithPopup(auth, provider);
+                currentUser = cred.user;
                 closeAuthModal();
+                await loadUserProfileData(currentUser);
                 showToast('✅ Sesión iniciada con Google.', 'success');
             } catch (err) {
-                showToast('No se pudo iniciar sesión con Google.', 'error');
+                const code = err?.code || '';
+                if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return;
+                if (code === 'auth/popup-blocked') showToast('Tu navegador bloqueó la ventana de Google. Permite los pop-ups.', 'error');
+                else if (code === 'auth/unauthorized-domain') showToast('Agrega este dominio en Firebase Console → Authorized domains.', 'error');
+                else if (code === 'auth/operation-not-allowed') showToast('Activa el proveedor Google en Firebase Console → Authentication.', 'error');
+                else showToast('No se pudo iniciar sesión con Google.', 'error');
             }
         };
 
@@ -1457,6 +1502,11 @@
         };
 
         window.logoutCloudUser = async function () {
+            unsubscribePublicCollections();
+            allFriendships = [];
+            allLeaderboardEntries = [];
+            allUsernamesDirectory = [];
+            window.cloudProfile = { nickname: '', nicknameUpdatedAt: 0 };
             try {
                 await signOut(auth);
                 showToast('Has cerrado sesión.', 'info');
@@ -1467,8 +1517,11 @@
 
         // Inicialización de sesión persistente
         (async function initSocialPage() {
+            if (!auth || !db) {
+                updatePageAuthState(null);
+                return;
+            }
             await setPersistence(auth, browserLocalPersistence).catch(() => {});
-            subscribePublicCollections();
 
             if (typeof auth.authStateReady === 'function') {
                 await auth.authStateReady();
@@ -1478,8 +1531,14 @@
                 currentUser = user;
                 if (isRealUser(user)) {
                     updatePageAuthState(user);
+                    subscribePublicCollections(user.uid);
                     await loadUserProfileData(user);
                 } else {
+                    unsubscribePublicCollections();
+                    allFriendships = [];
+                    allLeaderboardEntries = [];
+                    allUsernamesDirectory = [];
+                    window.cloudProfile = { nickname: '', nicknameUpdatedAt: 0 };
                     updatePageAuthState(null);
                 }
             });
