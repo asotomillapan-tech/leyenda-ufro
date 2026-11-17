@@ -2851,6 +2851,13 @@
         let currentUserProfile = null;
         let cachedGlobalEntries = [];
 
+        function withTimeout(promise, ms = 4500, label = 'timeout') {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error(label)), ms))
+            ]);
+        }
+
         function getCachedNickname(uid) {
             if (!uid) return '';
             try {
@@ -2987,8 +2994,8 @@
             if (!db) return;
 
             const userRef = doc(db, 'users', user.uid);
-            // Lectura protegida: si falla por red/permisos, NO sobreescribir el documento existente
-            const snap = await getDoc(userRef);
+            // Lectura protegida con timeout para evitar bloqueos de UI
+            const snap = await withTimeout(getDoc(userRef), 4500, 'getDoc_timeout');
 
             if (snap.exists()) {
                 const data = snap.data() || {};
@@ -2996,13 +3003,21 @@
                 currentUserProfile = { uid: user.uid, ...data, nickname: storedNick };
                 setCachedNickname(user.uid, storedNick, user.email || data.email || '');
 
-                // Si el documento existía sin campo nickname, completarlo sin borrar nada más
+                // Completar campos faltantes en usuarios antiguos sin borrar sus datos previos
+                const patch = {};
                 if (!data.nickname && storedNick) {
+                    patch.nickname = storedNick;
+                    patch.nicknameLower = storedNick.toLowerCase();
+                }
+                if (!data.nicknameLower && storedNick) {
+                    patch.nicknameLower = storedNick.toLowerCase();
+                }
+                if (!data.email && user.email) {
+                    patch.email = user.email;
+                }
+                if (Object.keys(patch).length > 0) {
                     try {
-                        await updateDoc(userRef, {
-                            nickname: storedNick,
-                            nicknameLower: storedNick.toLowerCase()
-                        });
+                        await withTimeout(updateDoc(userRef, patch), 4000, 'updateDoc_timeout');
                     } catch (e) {}
                 }
 
@@ -3026,7 +3041,7 @@
                     nicknameLower: nickname.toLowerCase(),
                     createdAt: serverTimestamp()
                 };
-                await setDoc(userRef, profileData, { merge: true });
+                await withTimeout(setDoc(userRef, profileData, { merge: true }), 4500, 'setDoc_timeout');
                 currentUserProfile = profileData;
                 setCachedNickname(user.uid, nickname, user.email || '');
                 try { await updateProfile(user, { displayName: nickname }); } catch (e) {}
@@ -3122,9 +3137,15 @@
                     }
                     const cleanUser = identifier.replace(/^@/, '').toLowerCase();
                     const q = query(collection(db, 'users'), where('nicknameLower', '==', cleanUser), limit(1));
-                    const snap = await getDocs(q);
+                    let snap;
+                    try {
+                        snap = await withTimeout(getDocs(q), 4500, 'lookup_user_timeout');
+                    } catch (lookupErr) {
+                        showToast('No se pudo buscar el @usuario. Inicia sesión escribiendo tu correo electrónico completo.', 'error');
+                        return;
+                    }
                     if (snap.empty) {
-                        showToast(`No encontramos el usuario @${cleanUser}. Prueba iniciar sesión con tu correo electrónico completo.`, 'error');
+                        showToast(`No encontramos el usuario @${cleanUser}. Si es una cuenta antigua, inicia sesión con tu correo electrónico completo.`, 'error');
                         return;
                     }
                     const foundData = snap.docs[0].data() || {};
@@ -3134,14 +3155,82 @@
                     }
                     emailToUse = foundData.email;
                 }
-                const cred = await signInWithEmailAndPassword(auth, emailToUse, password);
+                const cred = await withTimeout(signInWithEmailAndPassword(auth, emailToUse, password), 8000, 'signin_timeout');
                 currentCloudUser = cred.user;
                 window.closeAuthModal();
                 showToast('¡Bienvenido de vuelta!', 'success');
             } catch (err) {
                 const code = err && err.code ? String(err.code) : '';
-                if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+                if (err && err.message === 'signin_timeout') {
+                    showToast('La conexión tardó demasiado. Verifica tu internet e intenta de nuevo.', 'error');
+                } else if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
                     showToast('Contraseña incorrecta, cuenta no registrada o creada con Google. Prueba "Continuar con Google" o "Registrarse".', 'error');
+                } else {
+                    showToast(formatFirebaseAuthError(err), 'error');
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = prevLabel;
+                }
+            }
+        };
+
+        window.handleEmailRegister = async function (e) {
+            e.preventDefault();
+            if (!firebaseAvailable || !auth) {
+                showToast('El servicio de registro aún está cargando. Intenta en un segundo.', 'error');
+                return;
+            }
+            const nickname = document.getElementById('reg-username').value.trim().replace(/^@/, '');
+            const email = document.getElementById('reg-email').value.trim();
+            const pass = document.getElementById('reg-password').value;
+            const pass2 = document.getElementById('reg-password-confirm').value;
+            const btn = document.getElementById('btn-submit-register');
+            const prevLabel = btn ? btn.textContent : 'Crear cuenta y participar';
+
+            if (!/^[a-zA-Z0-9_]{3,18}$/.test(nickname)) {
+                showToast('El usuario debe tener 3-18 caracteres alfanuméricos o "_".', 'error');
+                return;
+            }
+            if (pass !== pass2) {
+                showToast('Las contraseñas no coinciden.', 'error');
+                return;
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Creando cuenta...';
+            }
+
+            try {
+                if (db) {
+                    try {
+                        const dupQ = query(collection(db, 'users'), where('nicknameLower', '==', nickname.toLowerCase()), limit(1));
+                        const dupSnap = await withTimeout(getDocs(dupQ), 4000, 'dup_check_timeout');
+                        if (!dupSnap.empty) {
+                            showToast(`El usuario @${nickname} ya está en uso. Elige otro.`, 'error');
+                            return;
+                        }
+                    } catch (dupErr) {
+                        // Si la consulta de duplicados tarda o falla por reglas, no bloquear el registro
+                        console.warn('Omitiendo verificación previa de @usuario:', dupErr);
+                    }
+                }
+
+                sessionStorage.setItem('pending_reg_nickname', nickname);
+                const cred = await withTimeout(createUserWithEmailAndPassword(auth, email, pass), 8000, 'signup_timeout');
+                setCachedNickname(cred.user.uid, nickname, email);
+                try { await updateProfile(cred.user, { displayName: nickname }); } catch (e) {}
+                currentUserProfile = { uid: cred.user.uid, email, nickname };
+                currentCloudUser = cred.user;
+                updateHeaderAuthUI();
+                window.closeAuthModal();
+                showToast(`¡Cuenta @${nickname} creada!`, 'success');
+            } catch (err) {
+                sessionStorage.removeItem('pending_reg_nickname');
+                if (err && err.message === 'signup_timeout') {
+                    showToast('El registro tardó demasiado en responder. Intenta de nuevo.', 'error');
                 } else {
                     showToast(formatFirebaseAuthError(err), 'error');
                 }
