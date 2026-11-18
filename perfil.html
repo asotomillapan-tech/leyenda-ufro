@@ -878,7 +878,12 @@
             const lbCol = collection(db, 'artifacts', appId, 'public', 'data', 'weekly_leaderboard');
             unsubLeaderboard = onSnapshot(lbCol, (snap) => {
                 const list = [];
-                snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (data && data.modeKey !== 'NOTFC_DT' && data.game !== 'NOTFC_DT') {
+                        list.push({ id: d.id, ...data });
+                    }
+                });
                 allLeaderboardEntries = list;
                 if (isRealUser(currentUser)) {
                     syncMyPublicCard();

@@ -705,6 +705,53 @@
             return `<img src="/public/copas/premio-mvp.svg" alt="Premio" class="${sizeClass} object-contain shrink-0 ${extraClass}" loading="lazy">`;
         }
 
+        function getCupTileHTML(trophy, options = {}) {
+            if (window.UFROCopas && window.UFROCopas.renderTrophyTileHTML) {
+                return window.UFROCopas.renderTrophyTileHTML(trophy, options);
+            }
+            const title = (trophy && trophy.title) || 'Trofeo UFRO';
+            return `<button type="button" data-trophy-tile="1" data-reveal-target="${escapeHtml(options.targetId || '')}" data-reveal-title="${escapeHtml(title)}" data-reveal-sub="${escapeHtml(options.sub || '')}" onclick="window.__handleTrophyTileClick && window.__handleTrophyTileClick(this)" class="w-16 h-20 rounded-xl surface-sub border border-[#2b2b2b] flex items-center justify-center p-1.5">${getCupHTML(trophy, options.imgSize || 'w-12 h-14')}</button>`;
+        }
+
+        function getAwardTileHTML(award, options = {}) {
+            if (window.UFROCopas && window.UFROCopas.renderAwardTileHTML) {
+                return window.UFROCopas.renderAwardTileHTML(award, options);
+            }
+            const title = (award && award.title) || 'Premio Individual';
+            return `<button type="button" data-trophy-tile="1" data-reveal-target="${escapeHtml(options.targetId || '')}" data-reveal-title="${escapeHtml(title)}" data-reveal-sub="${escapeHtml(options.sub || '')}" onclick="window.__handleTrophyTileClick && window.__handleTrophyTileClick(this)" class="w-16 h-20 rounded-xl surface-sub border border-[#2b2b2b] flex items-center justify-center p-1.5">${getAwardHTML(award, options.imgSize || 'w-12 h-12')}</button>`;
+        }
+
+        window.__handleTrophyTileClick = function (btn) {
+            if (!btn) return;
+            const targetId = btn.getAttribute('data-reveal-target');
+            const title = btn.getAttribute('data-reveal-title') || '';
+            const sub = btn.getAttribute('data-reveal-sub') || '';
+            const box = targetId ? document.getElementById(targetId) : null;
+            const wasActive = btn.getAttribute('data-active') === '1';
+
+            const scope = btn.parentElement || document;
+            scope.querySelectorAll('[data-trophy-tile="1"]').forEach(el => {
+                el.setAttribute('data-active', '0');
+                el.classList.remove('border-[#717fff]', 'bg-[#717fff]/15', 'ring-2', 'ring-[#717fff]/40');
+            });
+
+            if (wasActive) {
+                if (box) {
+                    box.classList.add('hidden');
+                    box.innerHTML = '';
+                }
+                return;
+            }
+
+            btn.setAttribute('data-active', '1');
+            btn.classList.add('border-[#717fff]', 'bg-[#717fff]/15', 'ring-2', 'ring-[#717fff]/40');
+
+            if (box && title) {
+                box.classList.remove('hidden');
+                box.innerHTML = `<span class="font-black text-white">${escapeHtml(title)}</span>${sub ? `<span class="text-gray-400"> · ${escapeHtml(sub)}</span>` : ''}`;
+            }
+        };
+
         // =========================================================================
         // 0B. SISTEMA UNIVERSAL DE ESCUDOS / INSIGNIAS DE EQUIPO
         // =========================================================================
@@ -4168,8 +4215,17 @@
                         </div>
 
                         ${s.trophies && s.trophies.length > 0 ? `
-                            <div class="flex flex-wrap gap-1.5 pt-0.5">
-                                ${s.trophies.map(t => `<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg ${t.type === 'HEROIC_ASCENT' ? 'bg-amber-400/20 text-amber-200 border border-amber-400/45' : 'bg-amber-500/15 text-amber-300 border border-amber-500/25'} font-bold text-[11px]">${getCupHTML(t, 'w-4 h-4')}<span>${escapeHtml(t.title)}</span></span>`).join('')}
+                            <div class="pt-1 space-y-1.5">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    ${s.trophies.map(t => getCupTileHTML(t, {
+                                        targetId: `timeline-trophy-caption-${s.year}-${s.sem}`,
+                                        badgeText: t.type === 'SELECCION' ? 'SEL' : '',
+                                        sub: `${t.teamName || 'UFRO'} · Año ${t.year || s.year}`,
+                                        imgSize: 'w-9 h-10',
+                                        btnSize: 'w-12 h-12'
+                                    })).join('')}
+                                </div>
+                                <div id="timeline-trophy-caption-${s.year}-${s.sem}" class="hidden px-2.5 py-1.5 rounded-lg bg-[#151515] border border-[#717fff]/35 text-[11px]"></div>
                             </div>
                         ` : ''}
                     </div>
@@ -4207,9 +4263,9 @@
                 { cupKey: 'FENAUDE', label: 'Selección UFRO', val: countSel }
             ].map(c => `
                 <div class="surface-card rounded-2xl p-4 text-center flex flex-col items-center">
-                    ${getCupHTML(c.cupKey, 'w-11 h-11', c.val === 0 ? 'opacity-40 grayscale' : '')}
+                    ${getCupHTML(c.cupKey, 'w-14 h-14', c.val === 0 ? 'opacity-35 grayscale' : '')}
                     <div class="text-2xl font-black text-white mt-1.5 tabular-nums">${c.val}</div>
-                    <div class="text-[11px] font-bold text-gray-400 uppercase">${c.label}</div>
+                    <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">${c.label}</div>
                 </div>
             `).join('');
 
@@ -4222,19 +4278,22 @@
                     vitrinaEl.classList.remove('hidden');
                     vitrinaEl.innerHTML = `
                         <div class="flex items-center justify-between gap-2">
-                            <h3 class="text-sm font-black uppercase tracking-wider text-white">Vitrina de Copas y Medallas</h3>
+                            <div>
+                                <h3 class="text-sm font-black uppercase tracking-wider text-white">Vitrina de Copas y Medallas</h3>
+                                <p class="text-[11px] text-gray-500">Presiona un trofeo para ver el nombre del título</p>
+                            </div>
                             <span class="text-xs font-bold text-amber-300 tabular-nums">${trophies.length} ${trophies.length === 1 ? 'trofeo' : 'trofeos'}</span>
                         </div>
-                        <div class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-2.5">
-                            ${groupedVitrina.map(({ asset, count, years }) => `
-                                <div class="p-2.5 rounded-xl surface-sub border border-[#2b2b2b] flex flex-col items-center text-center relative">
-                                    ${count > 1 ? `<span class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-[#717fff] text-white text-[10px] font-black tabular-nums">×${count}</span>` : ''}
-                                    <img src="${asset.src}" alt="${escapeHtml(asset.label)}" title="${escapeHtml(asset.label)}" class="w-12 h-14 object-contain drop-shadow-md">
-                                    <div class="text-[11px] font-extrabold text-white mt-1.5 leading-tight">${escapeHtml(asset.shortLabel)}</div>
-                                    ${years.length > 0 ? `<div class="text-[10px] text-gray-500 mt-0.5 tabular-nums">Año ${years.slice(0, 3).join(', ')}${years.length > 3 ? '…' : ''}</div>` : ''}
-                                </div>
-                            `).join('')}
+                        <div class="flex flex-wrap gap-2.5">
+                            ${groupedVitrina.map(({ asset, count, years }) => getCupTileHTML(asset.key, {
+                                targetId: 'vitrina-reveal-box',
+                                badgeText: count > 1 ? `×${count}` : (years.length > 0 ? `A${years[0]}` : ''),
+                                sub: years.length > 0 ? `Año ${years.join(', ')}` : '',
+                                imgSize: 'w-14 h-16',
+                                btnSize: 'w-20 h-24 py-2'
+                            })).join('')}
                         </div>
+                        <div id="vitrina-reveal-box" class="hidden px-3 py-2 rounded-xl bg-[#151515] border border-[#717fff]/35 text-xs"></div>
                     `;
                 } else {
                     vitrinaEl.classList.add('hidden');
@@ -4244,48 +4303,65 @@
 
             document.getElementById('individual-awards-card').innerHTML = `
                 <div class="flex items-center justify-between flex-wrap gap-2">
-                    <h3 class="text-sm font-black uppercase tracking-wider text-white">Distinciones Individuales</h3>
+                    <div>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-white">Distinciones Individuales</h3>
+                        ${awards.length > 0 ? `<p class="text-[11px] text-gray-500">Toca una insignia para ver el detalle del premio</p>` : ''}
+                    </div>
                     <div class="flex items-center gap-2 flex-wrap">
-                        ${careerState.heroicDiv3ToDiv1 ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-200 border border-amber-400/45">${getCupHTML('HEROIC_ASCENT', 'w-4 h-4')}<span>Hazaña 3ª → 1ª Div.</span></span>` : ''}
-                        ${careerState.lastSubmittedScore ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">🌍 ${careerState.lastSubmittedScore} pts Ranking Semanal</span>` : ''}
-                        ${careerState.hofRank ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/35">🏛️ Top #${careerState.hofRank} Salón de la Fama</span>` : ''}
+                        ${careerState.heroicDiv3ToDiv1 ? getCupTileHTML('HEROIC_ASCENT', {
+                            targetId: 'awards-reveal-box',
+                            badgeText: '3ª→1ª',
+                            sub: 'Ascenso histórico desde Tercera hasta Primera División',
+                            imgSize: 'w-8 h-8',
+                            btnSize: 'w-11 h-11'
+                        }) : ''}
+                        ${careerState.lastSubmittedScore ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">🌍 ${careerState.lastSubmittedScore} pts</span>` : ''}
+                        ${careerState.hofRank ? `<span class="px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/35">🏛️ Top #${careerState.hofRank}</span>` : ''}
                     </div>
                 </div>
                 ${awards.length === 0
                     ? `<p class="text-xs text-gray-500">Sin premios individuales anuales registrados.</p>`
-                    : `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">${awards.map(a => `
-                        <div class="p-3 rounded-xl surface-sub flex items-center gap-3 text-xs">
-                            ${getAwardHTML(a, 'w-11 h-11')}
-                            <div class="min-w-0">
-                                <div class="font-bold text-white truncate">${escapeHtml(a.title)} (Año ${a.year})</div>
-                                <div class="text-gray-400 truncate">${escapeHtml(a.detail)} · ${escapeHtml(a.teamName)}</div>
-                            </div>
-                        </div>
-                    `).join('')}</div>`
+                    : `<div class="flex flex-wrap gap-2.5">${awards.map(a => getAwardTileHTML(a, {
+                        targetId: 'awards-reveal-box',
+                        badgeText: `A${a.year}`,
+                        imgSize: 'w-12 h-12',
+                        btnSize: 'w-16 h-20 px-2 py-2'
+                    })).join('')}</div>
+                    <div id="awards-reveal-box" class="hidden px-3 py-2 rounded-xl bg-[#151515] border border-[#717fff]/35 text-xs"></div>`
                 }
             `;
 
             const selTrophies = trophies.filter(t => t.type === 'SELECCION');
             document.getElementById('ufro-selection-summary-card').innerHTML = `
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-black uppercase tracking-wider text-white">🇨🇱 Selección Universitaria UFRO</h3>
-                    <span class="text-xs text-gray-400">${(careerState.ufroCitations || []).length} nominaciones · ${careerState.ufroStats.matches} PJ</span>
+                <div class="flex items-center justify-between gap-2">
+                    <div>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-white">🇨🇱 Selección Universitaria UFRO</h3>
+                        <p class="text-[11px] text-gray-500">Casilla exclusiva de copas y medallas con la Selección</p>
+                    </div>
+                    <span class="text-xs font-bold text-[#a3adff] tabular-nums">${(careerState.ufroCitations || []).length} nom. · ${careerState.ufroStats.matches} PJ</span>
                 </div>
-                ${selTrophies.length === 0
-                    ? `<p class="text-xs text-gray-500">No se registraron títulos con la Selección UFRO.</p>`
-                    : `<div class="flex flex-wrap gap-2">${selTrophies.map(t => `
-                        <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/12 border border-emerald-500/25 text-emerald-200 text-xs font-bold">
-                            ${getCupHTML(t, 'w-6 h-6')}
-                            <span>${escapeHtml(t.title)} (Año ${t.year})</span>
-                        </span>
-                    `).join('')}</div>`
-                }
+                <div class="p-3 rounded-xl surface-sub border border-[#2b2b2b] space-y-2.5">
+                    ${selTrophies.length === 0
+                        ? `<div class="flex items-center gap-3 text-xs text-gray-500 py-1">
+                            ${getCupHTML('FENAUDE', 'w-10 h-10', 'opacity-25 grayscale')}
+                            <span>Sin copas o medallas registradas con la Selección UFRO.</span>
+                        </div>`
+                        : `<div class="flex flex-wrap gap-2.5">${selTrophies.map(t => getCupTileHTML(t, {
+                            targetId: 'selection-reveal-box',
+                            badgeText: `A${t.year}`,
+                            sub: `Selección UFRO · Año ${t.year}`,
+                            imgSize: 'w-14 h-14',
+                            btnSize: 'w-20 h-24 py-2'
+                        })).join('')}</div>
+                        <div id="selection-reveal-box" class="hidden px-3 py-2 rounded-xl bg-[#1c1c1c] border border-emerald-500/35 text-xs"></div>`
+                    }
+                </div>
             `;
 
             const stintsMap = new Map();
             [...careerState.history].reverse().forEach(h => {
                 if (!stintsMap.has(h.teamCode)) {
-                    stintsMap.set(h.teamCode, { teamCode: h.teamCode, teamName: h.teamName, careerName: h.careerName, sems: 0, goals: 0, assists: 0, points: 0, rebounds: 0, titles: 0 });
+                    stintsMap.set(h.teamCode, { teamCode: h.teamCode, teamName: h.teamName, careerName: h.careerName, sems: 0, goals: 0, assists: 0, points: 0, rebounds: 0, titles: 0, trophies: [] });
                 }
                 const st = stintsMap.get(h.teamCode);
                 st.sems += 1;
@@ -4293,27 +4369,48 @@
                 st.assists += h.assists || 0;
                 st.points += h.points || 0;
                 st.rebounds += h.rebounds || 0;
-                st.titles += (h.trophies || []).filter(t => t.type !== 'SELECCION').length;
+                const clubCups = (h.trophies || []).filter(t => t.type !== 'SELECCION');
+                st.titles += clubCups.length;
+                clubCups.forEach(c => st.trophies.push(c));
             });
 
-            document.getElementById('career-stints-list').innerHTML = Array.from(stintsMap.values()).map(st => {
+            document.getElementById('career-stints-list').innerHTML = Array.from(stintsMap.values()).map((st, idx) => {
                 const stTeam = findTeamByCode(st.teamCode);
                 const prodLine = isBasket
                     ? `${st.points} PTS · ${st.rebounds} REB · ${st.assists} AST`
                     : `${st.goals}G · ${st.assists}A`;
+                const stintTargetId = `stint-reveal-box-${idx}`;
                 return `
-                    <div class="p-3.5 rounded-xl surface-sub flex items-center justify-between gap-3 text-xs">
-                        <div class="flex items-center gap-3">
-                            ${getTeamBadgeHTML(stTeam, 'w-10 h-10', 'text-[10px]')}
-                            <div>
-                                <div class="font-black text-white text-sm">${escapeHtml(st.teamName)}</div>
-                                <div class="text-gray-400">${escapeHtml(st.careerName)} · ${st.sems} semestres</div>
+                    <div class="p-3.5 rounded-xl surface-sub space-y-2.5 text-xs border border-[#262626]">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                ${getTeamBadgeHTML(stTeam, 'w-10 h-10', 'text-[10px]')}
+                                <div class="min-w-0">
+                                    <div class="font-black text-white text-sm truncate">${escapeHtml(st.teamName)}</div>
+                                    <div class="text-gray-400 truncate">${escapeHtml(st.careerName)} · ${st.sems} semestres</div>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="font-bold text-amber-300 tabular-nums">${st.trophies.length} ${st.trophies.length === 1 ? 'copa' : 'copas'}</div>
+                                <div class="text-gray-400 tabular-nums">${prodLine}</div>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <div class="font-bold text-amber-300 inline-flex items-center justify-end gap-1">${getCupHTML('LEAGUE_1', 'w-4 h-4')}<span>${st.titles} títulos</span></div>
-                            <div class="text-gray-400">${prodLine}</div>
-                        </div>
+                        ${st.trophies.length > 0 ? `
+                            <div class="pt-2 border-t border-[#222228] space-y-2">
+                                <div class="flex flex-wrap gap-2">
+                                    ${st.trophies.map(t => getCupTileHTML(t, {
+                                        targetId: stintTargetId,
+                                        badgeText: `A${t.year}`,
+                                        sub: `${st.teamName} · Año ${t.year}`,
+                                        imgSize: 'w-10 h-12',
+                                        btnSize: 'w-14 h-16'
+                                    })).join('')}
+                                </div>
+                                <div id="${stintTargetId}" class="hidden px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] border border-[#717fff]/35 text-[11px]"></div>
+                            </div>
+                        ` : `
+                            <div class="pt-1.5 border-t border-[#222228] text-[11px] text-gray-500">Sin copas de club conquistadas en esta etapa</div>
+                        `}
                     </div>
                 `;
             }).join('');
@@ -6122,37 +6219,64 @@
                     <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🛡️ Trayectoria por Equipos</h5>
                     ${trajectory.length === 0
                         ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-500">Sin desglose de clubes disponible.</div>`
-                        : trajectory.map(tr => {
+                        : trajectory.map((tr, trIdx) => {
                             const tObj = findTeamByCode(tr.teamCode);
                             const trProd = isBasketEntry
                                 ? `${tr.points || 0} PTS · ${tr.rebounds || 0} REB · ${tr.assists || 0} AST`
                                 : `${tr.goals || 0}G · ${tr.assists || 0}A`;
+                            const trCups = Array.isArray(tr.trophies) ? tr.trophies : [];
+                            const revealId = `modal-stint-reveal-${trIdx}`;
                             return `
-                                <div class="p-2.5 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
-                                    <div class="flex items-center gap-2.5">
-                                        ${tObj ? getTeamBadgeHTML(tObj, 'w-8 h-8', 'text-[9px]') : ''}
-                                        <div>
-                                            <div class="font-bold text-white">${escapeHtml(tr.teamName || 'Equipo')}</div>
-                                            <div class="text-[11px] text-gray-400">${tr.sems || 1} sem. · ${trProd}</div>
+                                <div class="p-3 rounded-xl surface-sub space-y-2 text-xs">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2.5">
+                                            ${tObj ? getTeamBadgeHTML(tObj, 'w-8 h-8', 'text-[9px]') : ''}
+                                            <div>
+                                                <div class="font-bold text-white">${escapeHtml(tr.teamName || 'Equipo')}</div>
+                                                <div class="text-[11px] text-gray-400">${tr.sems || 1} sem. · ${trProd}</div>
+                                            </div>
                                         </div>
+                                        <span class="font-bold text-amber-300">${tr.titles || 0}</span>
                                     </div>
-                                    <span class="font-bold text-amber-300">🏆 ${tr.titles || 0}</span>
+                                    ${trCups.length > 0 ? `
+                                        <div class="flex flex-wrap gap-1.5 pt-1 border-t border-[#222228]">
+                                            ${trCups.map(c => getCupTileHTML(c, { targetId: revealId, badgeText: c.year ? `A${c.year}` : '', imgSize: 'w-8 h-9', btnSize: 'w-11 h-12' })).join('')}
+                                        </div>
+                                        <div id="${revealId}" class="hidden px-2 py-1 rounded bg-[#1c1c1c] border border-[#717fff]/35 text-[11px]"></div>
+                                    ` : ''}
                                 </div>
                             `;
                         }).join('')
                     }
                 </div>
 
-                <div class="space-y-2">
-                    <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🏆 Logros y Títulos Conquistados</h5>
-                    ${trophyList.length === 0 && awardList.length === 0
-                        ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-500">Sin títulos oficiales registrados en esta carrera.</div>`
-                        : `<div class="flex flex-wrap gap-1.5">
-                            ${awardList.map(a => `<span class="px-2.5 py-1 rounded-lg bg-[#717fff]/15 border border-[#717fff]/30 text-[#d0d5ff] text-[11px] font-bold">${escapeHtml(a.icon || '⭐')} ${escapeHtml(a.title || '')} (Año ${a.year || 1})</span>`).join('')}
-                            ${trophyList.map(t => `<span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[11px] font-bold">🏆 ${escapeHtml(t.title || '')} (Año ${t.year || 1})</span>`).join('')}
-                        </div>`
-                    }
-                </div>
+                ${(() => {
+                    const selCups = trophyList.filter(t => t.type === 'SELECCION' || /fenaude|ldes|univerciudad|cnu|sel\./i.test(t.title || ''));
+                    const clubCups = trophyList.filter(t => !selCups.includes(t));
+                    return `
+                        <div class="space-y-2">
+                            <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🇨🇱 Casilla Selección UFRO</h5>
+                            <div class="p-3 rounded-xl surface-sub">
+                                ${selCups.length === 0
+                                    ? `<span class="text-xs text-gray-500">Sin copas con Selección UFRO</span>`
+                                    : `<div class="flex flex-wrap gap-2">${selCups.map(t => getCupTileHTML(t, { targetId: 'modal-sel-reveal', badgeText: `A${t.year || 1}`, imgSize: 'w-10 h-11', btnSize: 'w-14 h-16' })).join('')}</div>
+                                       <div id="modal-sel-reveal" class="hidden mt-2 px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] border border-emerald-500/35 text-[11px]"></div>`
+                                }
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <h5 class="text-xs font-black uppercase tracking-wider text-gray-400">🏆 Vitrina de Trofeos y Premios</h5>
+                            ${clubCups.length === 0 && awardList.length === 0
+                                ? `<div class="p-3 rounded-xl surface-sub text-xs text-gray-500">Sin títulos oficiales registrados en esta carrera.</div>`
+                                : `<div class="flex flex-wrap gap-2">
+                                    ${awardList.map(a => getAwardTileHTML(a, { targetId: 'modal-honors-reveal', badgeText: `A${a.year || 1}`, imgSize: 'w-10 h-10', btnSize: 'w-14 h-16' })).join('')}
+                                    ${clubCups.map(t => getCupTileHTML(t, { targetId: 'modal-honors-reveal', badgeText: `A${t.year || 1}`, imgSize: 'w-10 h-11', btnSize: 'w-14 h-16' })).join('')}
+                                   </div>
+                                   <div id="modal-honors-reveal" class="hidden px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] border border-[#717fff]/35 text-[11px]"></div>`
+                            }
+                        </div>
+                    `;
+                })()}
             `;
 
             modal.classList.remove('hidden');
@@ -6262,7 +6386,8 @@
                         assists: 0,
                         points: 0,
                         rebounds: 0,
-                        titles: 0
+                        titles: 0,
+                        trophies: []
                     });
                 }
                 const st = stintsMap.get(h.teamCode);
@@ -6271,11 +6396,24 @@
                 st.assists += h.assists || 0;
                 st.points += h.points || 0;
                 st.rebounds += h.rebounds || 0;
-                st.titles += (h.trophies || []).filter(t => t.type !== 'SELECCION').length;
+                const clubCups = (h.trophies || []).filter(t => t.type !== 'SELECCION');
+                st.titles += clubCups.length;
+                clubCups.forEach(c => {
+                    if (st.trophies.length < 12) {
+                        st.trophies.push({
+                            type: c.type || 'LEAGUE',
+                            division: c.division || 1,
+                            title: String(c.title || '').slice(0, 60),
+                            year: c.year || h.year || 1
+                        });
+                    }
+                });
             });
 
             const trajectory = Array.from(stintsMap.values()).slice(0, 12);
             const trophyList = (careerState.trophies || []).slice(0, 25).map(t => ({
+                type: t.type || 'LEAGUE',
+                division: t.division || 1,
                 title: String(t.title || '').slice(0, 60),
                 teamName: String(t.teamName || '').slice(0, 45),
                 year: t.year || 1

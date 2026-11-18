@@ -753,7 +753,7 @@ export function getCareerModeKey(entry) {
 export function buildWeeklyLeaderboardViews(allDocs = [], weekId, limit = 10) {
   const safeDocs = Array.isArray(allDocs) ? allDocs : [];
   const weekEntries = safeDocs
-    .filter((item) => item && item.weekId === weekId && typeof item.score === 'number')
+    .filter((item) => item && item.weekId === weekId && typeof item.score === 'number' && item.modeKey !== 'NOTFC_DT' && item.game !== 'NOTFC_DT')
     .map((item) => ({ ...item, modeKey: getCareerModeKey(item) }))
     .sort((a, b) => (b.score - a.score) || ((b.ovr || 0) - (a.ovr || 0)) || ((b.createdAt || 0) - (a.createdAt || 0)));
 

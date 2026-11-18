@@ -257,3 +257,35 @@ export function renderAwardImgHTML(award, sizeClass = 'w-10 h-10', extraClass = 
   const alt = escAttr((award && award.title) || asset.label);
   return `<img src="${asset.src}" alt="${alt}" title="${alt}" class="${sizeClass} object-contain shrink-0 drop-shadow-md ${extraClass}" loading="lazy">`;
 }
+
+export function renderTrophyTileHTML(trophy, options = {}) {
+  const asset = resolveTrophyAsset(trophy);
+  const title = (trophy && trophy.title) || asset.label;
+  const sub = options.sub || (trophy && trophy.year ? `Año ${trophy.year}` : '');
+  const badgeText = options.badgeText || (trophy && trophy.year ? `A${trophy.year}` : '');
+  const imgSize = options.imgSize || 'w-12 h-14';
+  const btnSize = options.btnSize || 'w-16 h-20';
+  const targetId = options.targetId || '';
+  return `<button type="button" data-trophy-tile="1" data-reveal-target="${escAttr(targetId)}" data-reveal-title="${escAttr(title)}" data-reveal-sub="${escAttr(sub)}" onclick="window.__handleTrophyTileClick && window.__handleTrophyTileClick(this)" aria-label="${escAttr(title)}" class="group relative ${btnSize} rounded-xl surface-sub border border-[#2b2b2b] hover:border-[#717fff]/70 focus:border-[#717fff] flex flex-col items-center justify-center p-1.5 pb-2.5 transition transform hover:scale-[1.04] active:scale-95 cursor-pointer shrink-0">
+    <img src="${asset.src}" alt="${escAttr(title)}" class="${imgSize} object-contain drop-shadow-md pointer-events-none" loading="lazy">
+    ${badgeText ? `<span class="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-[#141418]/95 border border-[#32323c] text-[9px] font-black text-amber-300 tabular-nums leading-none">${escAttr(badgeText)}</span>` : ''}
+  </button>`;
+}
+
+export function renderAwardTileHTML(award, options = {}) {
+  const asset = resolveAwardAsset(award);
+  const title = (award && award.title) || asset.label;
+  const parts = [];
+  if (award && award.year) parts.push(`Año ${award.year}`);
+  if (award && award.detail) parts.push(award.detail);
+  if (award && award.teamName) parts.push(award.teamName);
+  const sub = options.sub || parts.join(' · ');
+  const badgeText = options.badgeText || (award && award.year ? `A${award.year}` : '');
+  const imgSize = options.imgSize || 'w-12 h-12';
+  const btnSize = options.btnSize || 'w-16 h-20';
+  const targetId = options.targetId || '';
+  return `<button type="button" data-trophy-tile="1" data-reveal-target="${escAttr(targetId)}" data-reveal-title="${escAttr(title)}" data-reveal-sub="${escAttr(sub)}" onclick="window.__handleTrophyTileClick && window.__handleTrophyTileClick(this)" aria-label="${escAttr(title)}" class="group relative ${btnSize} rounded-xl surface-sub border border-[#2b2b2b] hover:border-[#717fff]/70 focus:border-[#717fff] flex flex-col items-center justify-center p-1.5 pb-2.5 transition transform hover:scale-[1.04] active:scale-95 cursor-pointer shrink-0">
+    <img src="${asset.src}" alt="${escAttr(title)}" class="${imgSize} object-contain drop-shadow-md pointer-events-none" loading="lazy">
+    ${badgeText ? `<span class="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-[#141418]/95 border border-[#32323c] text-[9px] font-black text-[#a3adff] tabular-nums leading-none">${escAttr(badgeText)}</span>` : ''}
+  </button>`;
+}

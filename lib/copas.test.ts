@@ -10,6 +10,8 @@ import {
   groupTrophiesForVitrina,
   renderTrophyImgHTML,
   renderAwardImgHTML,
+  renderTrophyTileHTML,
+  renderAwardTileHTML,
 } from '../public/copas.js';
 
 const publicCopasDir = path.resolve(process.cwd(), 'public', 'copas');
@@ -76,4 +78,25 @@ test('HTML renderers escape attributes and embed SVG asset paths', () => {
   assert.match(tHtml, /alt="Copa &quot;FICA&quot;"/);
   const aHtml = renderAwardImgHTML({ title: 'Guante de Oro', icon: '🧤' }, 'w-9 h-9');
   assert.match(aHtml, /src="\/public\/copas\/premio-guante\.svg"/);
+});
+
+test('Interactive trophy and award tiles prioritize SVG imagery and store reveal title metadata', () => {
+  const tTile = renderTrophyTileHTML(
+    { type: 'SELECCION', title: 'Campeón "LDES"', year: 3 },
+    { targetId: 'box-sel', badgeText: 'A3' }
+  );
+  assert.match(tTile, /data-trophy-tile="1"/);
+  assert.match(tTile, /data-reveal-target="box-sel"/);
+  assert.match(tTile, /data-reveal-title="Campeón &quot;LDES&quot;"/);
+  assert.match(tTile, /src="\/public\/copas\/ldes\.svg"/);
+
+  const aTile = renderAwardTileHTML(
+    { title: 'Guante de Oro', icon: '🧤', year: 2, detail: '4 vallas invictas', teamName: 'Real Efineza' },
+    { targetId: 'box-aw' }
+  );
+  assert.match(aTile, /data-trophy-tile="1"/);
+  assert.match(aTile, /data-reveal-target="box-aw"/);
+  assert.match(aTile, /data-reveal-title="Guante de Oro"/);
+  assert.match(aTile, /Año 2 · 4 vallas invictas · Real Efineza/);
+  assert.match(aTile, /src="\/public\/copas\/premio-guante\.svg"/);
 });
