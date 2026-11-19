@@ -1346,23 +1346,68 @@ export function initializePostseasonStructure(state, rng = Math.random) {
   };
 }
 
-export function advancePostseasonPhase(state, phase, rng = Math.random, userMatchOverride = null) {
+function recordPostseasonUserOutcome(state, match, { isRoundRobin = false, isFinal = false } = {}) {
+  if (!state || !match) return;
+  const uid = state.userTeamId;
+  if (match.homeId !== uid && match.awayId !== uid) return;
+  const userGoals = match.homeId === uid ? match.homeScore : match.awayScore;
+  const oppGoals = match.homeId === uid ? match.awayScore : match.homeScore;
+  const userWon = isRoundRobin ? userGoals > oppGoals : match.winnerId === uid;
+  const isDraw = isRoundRobin && userGoals === oppGoals;
+  const penTxt = !isRoundRobin && match.homeScore === match.awayScore ? ' (P)' : '';
+
+  state.lastPostseasonResult = {
+    matchId: match.id,
+    roundLabel: match.roundLabel || 'Postemporada',
+    homeId: match.homeId,
+    awayId: match.awayId,
+    homeName: match.homeName,
+    awayName: match.awayName,
+    homeScore: match.homeScore,
+    awayScore: match.awayScore,
+    penWinner: match.penWinner || null,
+    winnerId: match.winnerId || null,
+    isRoundRobin,
+    isFinal,
+    userWon,
+    isDraw,
+  };
+
+  const verdict = isRoundRobin
+    ? (userWon ? 'Victoria en Liguilla' : isDraw ? 'Empate en Liguilla' : 'Derrota en Liguilla')
+    : isFinal
+      ? (userWon ? '¡CAMPEÓN DE DIVISIÓN!' : 'Subcampeón')
+      : (userWon ? '¡Avanzas de ronda!' : 'Eliminado');
+
+  state.news = [{
+    id: `news_po_user_${match.id}_${Date.now()}`,
+    dateLabel: 'Playoffs',
+    category: 'PLAYOFFS',
+    headline: `${match.roundLabel}: ${match.homeName} ${match.homeScore}-${match.awayScore}${penTxt} ${match.awayName}`,
+    body: `${verdict}${penTxt ? ' tras definición a penales' : ''}.`,
+  }, ...(state.news || [])].slice(0, 28);
+}
+
+export function advancePostseasonPhase(state, phase, rng = Math.random, userMatchOverride = null, options = {}) {
   const po = state.postseason;
   if (!po) return state;
   const byId = new Map(state.teams.map((t) => [t.id, t]));
+  const deferUserSubRound = Boolean(options?.deferUserSubRound);
+  const uid = state.userTeamId;
 
-  const runTie = (tie) => {
+  const runTie = (tie, isFinalTie = false) => {
     if (tie.played) return tie;
     let resolved = tie;
     if (userMatchOverride && userMatchOverride.matchId === tie.id) {
       const hg = userMatchOverride.homeScore;
       const ag = userMatchOverride.awayScore;
-      const winnerId = hg > ag ? tie.homeId : ag > hg ? tie.awayId : userMatchOverride.penWinner;
+      const penWin = hg === ag ? (userMatchOverride.penWinner || (rng() < 0.5 ? tie.homeId : tie.awayId)) : null;
+      const winnerId = hg > ag ? tie.homeId : ag > hg ? tie.awayId : penWin;
       resolved = {
         ...tie,
         homeScore: hg,
         awayScore: ag,
-        penWinner: userMatchOverride.penWinner || null,
+        penWinner: penWin,
         winnerId,
         loserId: winnerId === tie.homeId ? tie.awayId : tie.homeId,
         played: true,
@@ -1370,21 +1415,31 @@ export function advancePostseasonPhase(state, phase, rng = Math.random, userMatc
     } else {
       resolved = resolvePlayoffMatch(byId.get(tie.homeId), byId.get(tie.awayId), tie.id, tie.roundLabel, rng);
     }
-    const uWon = resolved.winnerId === state.userTeamId;
-    const adjH = resolved.homeId === state.userTeamId && uWon && resolved.homeScore === resolved.awayScore ? resolved.homeScore + 1 : resolved.homeScore;
-    const adjA = resolved.awayId === state.userTeamId && uWon && resolved.homeScore === resolved.awayScore ? resolved.awayScore + 1 : resolved.awayScore;
+    const uWon = resolved.winnerId === uid;
+    const adjH = resolved.homeId === uid && uWon && resolved.homeScore === resolved.awayScore ? resolved.homeScore + 1 : resolved.homeScore;
+    const adjA = resolved.awayId === uid && uWon && resolved.homeScore === resolved.awayScore ? resolved.awayScore + 1 : resolved.awayScore;
     recordUserMatchStats(state, byId.get(resolved.homeId), byId.get(resolved.awayId), adjH, adjA);
+    recordPostseasonUserOutcome(state, resolved, { isRoundRobin: false, isFinal: isFinalTie });
     return resolved;
   };
 
   if (phase === 'R1') {
-    po.div1.r1 = po.div1.r1.map(runTie);
-    po.div2.r1 = po.div2.r1.map(runTie);
+    po.div1.r1 = po.div1.r1.map((t) => runTie(t, false));
+    po.div2.r1 = po.div2.r1.map((t) => runTie(t, false));
 
     // 3ª División Liguilla Final todos contra todos (Rondas 1..7)
+    const userInDiv3Final = (po.div3.participants || []).includes(uid);
+    const shouldStepDiv3 = deferUserSubRound && userInDiv3Final;
+    let resolvedOneDiv3Round = false;
+
     for (const r of po.div3.rounds) {
+      const roundHasUnplayed = r.matches.some((m) => !m.played);
+      if (!roundHasUnplayed) continue;
+      if (shouldStepDiv3 && resolvedOneDiv3Round) break;
+
       for (const m of r.matches) {
         if (m.played) continue;
+        if (!m.roundLabel) m.roundLabel = `Liguilla Final 3ª · Fecha ${r.round}/7`;
         if (userMatchOverride && userMatchOverride.matchId === m.id) {
           m.homeScore = userMatchOverride.homeScore;
           m.awayScore = userMatchOverride.awayScore;
@@ -1397,157 +1452,210 @@ export function advancePostseasonPhase(state, phase, rng = Math.random, userMatc
         }
         po.div3.standings = applyMatchToStandings(po.div3.standings, m.homeId, m.awayId, m.homeScore, m.awayScore);
         recordUserMatchStats(state, byId.get(m.homeId), byId.get(m.awayId), m.homeScore, m.awayScore);
+        recordPostseasonUserOutcome(state, m, { isRoundRobin: true, isFinal: false });
       }
+      resolvedOneDiv3Round = true;
     }
-    const d3Ranked = sortStandings(po.div3.standings);
-    po.div3.championId = d3Ranked[0]?.teamId || null;
-    po.div3.runnerUpId = d3Ranked[1]?.teamId || null;
-    po.div3.liguillaIds = d3Ranked.slice(2, 6).map((x) => x.teamId);
 
-    // Sorteo Cuartos 1ª Div: 1°-4° vs 4 ganadores de 1ª Ronda mezclados aleatoriamente
-    const d1Winners = po.div1.r1.map((t) => t.winnerId);
-    const shuffledWinners = [...d1Winners].sort(() => rng() - 0.5);
-    po.div1.qf = po.div1.top4Ids.map((seedId, i) => {
-      const oppId = shuffledWinners[i];
-      return {
-        id: `PO_D1_QF_${i + 1}`,
-        roundLabel: 'Cuartos de Final (1ª Div)',
-        homeId: seedId,
-        awayId: oppId,
-        homeName: byId.get(seedId)?.name || seedId,
-        awayName: byId.get(oppId)?.name || oppId,
-        homeScore: null,
-        awayScore: null,
-        winnerId: null,
-        played: false,
-      };
-    });
+    const allDiv3Played = (po.div3.rounds || []).every((r) => r.matches.every((m) => m.played));
+    if (allDiv3Played) {
+      const d3Ranked = sortStandings(po.div3.standings);
+      po.div3.championId = d3Ranked[0]?.teamId || null;
+      po.div3.runnerUpId = d3Ranked[1]?.teamId || null;
+      po.div3.liguillaIds = d3Ranked.slice(2, 6).map((x) => x.teamId);
+    }
 
-    // 2ª Div Ronda de ajuste hacia Cuartos: top 1°-3° directo a Cuartos, 4°-8° (5 equipos) enfrentan a los 5 ganadores de 1ª Ronda
-    const d2Winners = po.div2.r1.map((t) => t.winnerId);
-    const d2Seeded4to8 = po.div2.top8Ids.slice(3, 8);
-    po.div2.r2 = d2Seeded4to8.map((seedId, i) => {
-      const oppId = d2Winners[d2Winners.length - 1 - i];
-      return {
-        id: `PO_D2_OCT_${i + 1}`,
-        roundLabel: 'Octavos / Reclasificación (2ª Div)',
-        homeId: seedId,
-        awayId: oppId,
-        homeName: byId.get(seedId)?.name || seedId,
-        awayName: byId.get(oppId)?.name || oppId,
-        homeScore: null,
-        awayScore: null,
-        winnerId: null,
-        played: false,
-      };
-    });
+    // Sorteo Cuartos 1ª Div (idempotente)
+    if (po.div1.qf.length === 0 && po.div1.r1.every((t) => t.played)) {
+      const d1Winners = po.div1.r1.map((t) => t.winnerId);
+      const shuffledWinners = [...d1Winners].sort(() => rng() - 0.5);
+      po.div1.qf = po.div1.top4Ids.map((seedId, i) => {
+        const oppId = shuffledWinners[i];
+        return {
+          id: `PO_D1_QF_${i + 1}`,
+          roundLabel: 'Cuartos de Final (1ª Div)',
+          homeId: seedId,
+          awayId: oppId,
+          homeName: byId.get(seedId)?.name || seedId,
+          awayName: byId.get(oppId)?.name || oppId,
+          homeScore: null,
+          awayScore: null,
+          winnerId: null,
+          played: false,
+        };
+      });
+    }
+
+    // 2ª Div Octavos / Reclasificación (idempotente)
+    if (po.div2.r2.length === 0 && po.div2.r1.every((t) => t.played)) {
+      const d2Winners = po.div2.r1.map((t) => t.winnerId);
+      const d2Seeded4to8 = po.div2.top8Ids.slice(3, 8);
+      po.div2.r2 = d2Seeded4to8.map((seedId, i) => {
+        const oppId = d2Winners[d2Winners.length - 1 - i];
+        return {
+          id: `PO_D2_OCT_${i + 1}`,
+          roundLabel: 'Octavos / Reclasificación (2ª Div)',
+          homeId: seedId,
+          awayId: oppId,
+          homeName: byId.get(seedId)?.name || seedId,
+          awayName: byId.get(oppId)?.name || oppId,
+          homeScore: null,
+          awayScore: null,
+          winnerId: null,
+          played: false,
+        };
+      });
+    }
   } else if (phase === 'QF') {
-    po.div1.qf = po.div1.qf.map(runTie);
-    po.div2.r2 = po.div2.r2.map(runTie);
+    po.div1.qf = po.div1.qf.map((t) => runTie(t, false));
+    po.div2.r2 = po.div2.r2.map((t) => runTie(t, false));
 
-    // Semifinales 1ª Div
-    const d1QfWin = po.div1.qf.map((t) => t.winnerId);
-    po.div1.sf = [
-      { id: 'PO_D1_SF_1', roundLabel: 'Semifinal 1 (1ª Div)', homeId: d1QfWin[0], awayId: d1QfWin[3], homeName: byId.get(d1QfWin[0])?.name, awayName: byId.get(d1QfWin[3])?.name, played: false },
-      { id: 'PO_D1_SF_2', roundLabel: 'Semifinal 2 (1ª Div)', homeId: d1QfWin[1], awayId: d1QfWin[2], homeName: byId.get(d1QfWin[1])?.name, awayName: byId.get(d1QfWin[2])?.name, played: false },
-    ];
+    // Semifinales 1ª Div (idempotente)
+    if (po.div1.sf.length === 0 && po.div1.qf.every((t) => t.played)) {
+      const d1QfWin = po.div1.qf.map((t) => t.winnerId);
+      po.div1.sf = [
+        { id: 'PO_D1_SF_1', roundLabel: 'Semifinal 1 (1ª Div)', homeId: d1QfWin[0], awayId: d1QfWin[3], homeName: byId.get(d1QfWin[0])?.name, awayName: byId.get(d1QfWin[3])?.name, homeScore: null, awayScore: null, winnerId: null, played: false },
+        { id: 'PO_D1_SF_2', roundLabel: 'Semifinal 2 (1ª Div)', homeId: d1QfWin[1], awayId: d1QfWin[2], homeName: byId.get(d1QfWin[1])?.name, awayName: byId.get(d1QfWin[2])?.name, homeScore: null, awayScore: null, winnerId: null, played: false },
+      ];
+    }
 
-    // Cuartos 2ª Div: 1°-3° + 5 ganadores de Octavos = 8 equipos
-    const d2Top3 = po.div2.top8Ids.slice(0, 3);
-    const d2OctWin = po.div2.r2.map((t) => t.winnerId);
-    const qfPool = [...d2Top3, ...d2OctWin];
-    po.div2.qf = [
-      [qfPool[0], qfPool[7]],
-      [qfPool[1], qfPool[6]],
-      [qfPool[2], qfPool[5]],
-      [qfPool[3], qfPool[4]],
-    ].map(([h, a], idx) => ({
-      id: `PO_D2_QF_${idx + 1}`,
-      roundLabel: 'Cuartos de Final (2ª Div)',
-      homeId: h,
-      awayId: a,
-      homeName: byId.get(h)?.name || h,
-      awayName: byId.get(a)?.name || a,
-      played: false,
-    }));
-  } else if (phase === 'SF') {
-    po.div1.sf = po.div1.sf.map(runTie);
-    po.div2.qf = po.div2.qf.map(runTie);
-
-    const d2QfWin = po.div2.qf.map((t) => t.winnerId);
-    po.div2.sf = [
-      { id: 'PO_D2_SF_1', roundLabel: 'Semifinal 1 (2ª Div)', homeId: d2QfWin[0], awayId: d2QfWin[3], homeName: byId.get(d2QfWin[0])?.name, awayName: byId.get(d2QfWin[3])?.name, played: false },
-      { id: 'PO_D2_SF_2', roundLabel: 'Semifinal 2 (2ª Div)', homeId: d2QfWin[1], awayId: d2QfWin[2], homeName: byId.get(d2QfWin[1])?.name, awayName: byId.get(d2QfWin[2])?.name, played: false },
-    ];
-    po.div2.sf = po.div2.sf.map(runTie);
-
-    // Finales
-    const d1SfWin = po.div1.sf.map((t) => t.winnerId);
-    po.div1.final = [{
-      id: 'PO_D1_FINAL',
-      roundLabel: 'Gran Final 1ª División',
-      homeId: d1SfWin[0],
-      awayId: d1SfWin[1],
-      homeName: byId.get(d1SfWin[0])?.name,
-      awayName: byId.get(d1SfWin[1])?.name,
-      played: false,
-    }];
-
-    const d2SfWin = po.div2.sf.map((t) => t.winnerId);
-    po.div2.final = [{
-      id: 'PO_D2_FINAL',
-      roundLabel: 'Gran Final 2ª División',
-      homeId: d2SfWin[0],
-      awayId: d2SfWin[1],
-      homeName: byId.get(d2SfWin[0])?.name,
-      awayName: byId.get(d2SfWin[1])?.name,
-      played: false,
-    }];
-
-    // Liguilla 2ª/3ª: 21°-24° de 2ª vs 3°-6° de 3ª
-    const d2Lig = po.div2.liguillaZoneIds;
-    const d3Lig = po.div3.liguillaIds;
-    po.liguilla2v3 = d2Lig.map((d2Id, i) => {
-      const d3Id = d3Lig[d3Lig.length - 1 - i];
-      if (!d2Id || !d3Id) return null;
-      return {
-        id: `LIG_2V3_${i + 1}`,
-        roundLabel: 'Liguilla Ascenso 2ª/3ª',
-        homeId: d2Id,
-        awayId: d3Id,
-        homeName: byId.get(d2Id)?.name,
-        awayName: byId.get(d3Id)?.name,
+    // Cuartos 2ª Div: 1°-3° + 5 ganadores de Octavos = 8 equipos (idempotente)
+    if (po.div2.qf.length === 0 && po.div2.r2.every((t) => t.played)) {
+      const d2Top3 = po.div2.top8Ids.slice(0, 3);
+      const d2OctWin = po.div2.r2.map((t) => t.winnerId);
+      const qfPool = [...d2Top3, ...d2OctWin];
+      po.div2.qf = [
+        [qfPool[0], qfPool[7]],
+        [qfPool[1], qfPool[6]],
+        [qfPool[2], qfPool[5]],
+        [qfPool[3], qfPool[4]],
+      ].map(([h, a], idx) => ({
+        id: `PO_D2_QF_${idx + 1}`,
+        roundLabel: 'Cuartos de Final (2ª Div)',
+        homeId: h,
+        awayId: a,
+        homeName: byId.get(h)?.name || h,
+        awayName: byId.get(a)?.name || a,
+        homeScore: null,
+        awayScore: null,
+        winnerId: null,
         played: false,
-      };
-    }).filter(Boolean);
+      }));
+    }
+  } else if (phase === 'SF') {
+    po.div1.sf = po.div1.sf.map((t) => runTie(t, false));
+    po.div2.qf = po.div2.qf.map((t) => runTie(t, false));
+
+    const div2SfJustBuilt = po.div2.sf.length === 0 && po.div2.qf.every((t) => t.played);
+    if (div2SfJustBuilt) {
+      const d2QfWin = po.div2.qf.map((t) => t.winnerId);
+      po.div2.sf = [
+        { id: 'PO_D2_SF_1', roundLabel: 'Semifinal 1 (2ª Div)', homeId: d2QfWin[0], awayId: d2QfWin[3], homeName: byId.get(d2QfWin[0])?.name, awayName: byId.get(d2QfWin[3])?.name, homeScore: null, awayScore: null, winnerId: null, played: false },
+        { id: 'PO_D2_SF_2', roundLabel: 'Semifinal 2 (2ª Div)', homeId: d2QfWin[1], awayId: d2QfWin[2], homeName: byId.get(d2QfWin[1])?.name, awayName: byId.get(d2QfWin[2])?.name, homeScore: null, awayScore: null, winnerId: null, played: false },
+      ];
+    }
+
+    // Si el usuario clasificó a Semifinales de 2ª Div y recién terminó Cuartos, dejarle jugar su Semifinal en vivo
+    const userInDiv2Sf = po.div2.sf.some((t) => !t.played && (t.homeId === uid || t.awayId === uid));
+    const overrideIsDiv2Sf = userMatchOverride && po.div2.sf.some((t) => t.id === userMatchOverride.matchId);
+    if (!deferUserSubRound || !div2SfJustBuilt || !userInDiv2Sf || overrideIsDiv2Sf) {
+      po.div2.sf = po.div2.sf.map((t) => runTie(t, false));
+    }
+
+    // Finales (idempotente)
+    if (po.div1.final.length === 0 && po.div1.sf.every((t) => t.played)) {
+      const d1SfWin = po.div1.sf.map((t) => t.winnerId);
+      po.div1.final = [{
+        id: 'PO_D1_FINAL',
+        roundLabel: 'Gran Final 1ª División',
+        homeId: d1SfWin[0],
+        awayId: d1SfWin[1],
+        homeName: byId.get(d1SfWin[0])?.name,
+        awayName: byId.get(d1SfWin[1])?.name,
+        homeScore: null,
+        awayScore: null,
+        winnerId: null,
+        played: false,
+      }];
+    }
+
+    if (po.div2.final.length === 0 && po.div2.sf.length > 0 && po.div2.sf.every((t) => t.played)) {
+      const d2SfWin = po.div2.sf.map((t) => t.winnerId);
+      po.div2.final = [{
+        id: 'PO_D2_FINAL',
+        roundLabel: 'Gran Final 2ª División',
+        homeId: d2SfWin[0],
+        awayId: d2SfWin[1],
+        homeName: byId.get(d2SfWin[0])?.name,
+        awayName: byId.get(d2SfWin[1])?.name,
+        homeScore: null,
+        awayScore: null,
+        winnerId: null,
+        played: false,
+      }];
+    }
+
+    // Liguilla 2ª/3ª: 21°-24° de 2ª vs 3°-6° de 3ª (idempotente)
+    if (po.liguilla2v3.length === 0 && (po.div3.liguillaIds || []).length > 0) {
+      const d2Lig = po.div2.liguillaZoneIds;
+      const d3Lig = po.div3.liguillaIds;
+      po.liguilla2v3 = d2Lig.map((d2Id, i) => {
+        const d3Id = d3Lig[d3Lig.length - 1 - i];
+        if (!d2Id || !d3Id) return null;
+        return {
+          id: `LIG_2V3_${i + 1}`,
+          roundLabel: 'Liguilla Ascenso 2ª/3ª',
+          homeId: d2Id,
+          awayId: d3Id,
+          homeName: byId.get(d2Id)?.name,
+          awayName: byId.get(d3Id)?.name,
+          homeScore: null,
+          awayScore: null,
+          winnerId: null,
+          played: false,
+        };
+      }).filter(Boolean);
+    }
   } else if (phase === 'FINAL') {
-    po.div1.final = po.div1.final.map(runTie);
-    po.div2.final = po.div2.final.map(runTie);
+    po.div1.final = po.div1.final.map((t) => runTie(t, true));
+    po.div2.final = po.div2.final.map((t) => runTie(t, true));
     po.div1.championId = po.div1.final[0]?.winnerId || null;
     po.div2.championId = po.div2.final[0]?.winnerId || null;
 
-    // Elegir 2°, 3° y 4° mejores de 2ª Div excluyendo al campeón (para Liguilla 1ª/2ª vs 16°,17°,18°)
-    const d2SortedIds = sortStandings(state.standings.div2)
-      .map((r) => r.teamId)
-      .filter((id) => id !== po.div2.championId);
-    const d2Top3Challengers = d2SortedIds.slice(0, 3);
-    po.div2.runnerUpAndPlayoffIds = d2Top3Challengers;
+    po.liguilla2v3 = po.liguilla2v3.map((t) => runTie(t, false));
 
-    po.liguilla1v2 = po.div1.liguillaZoneIds.map((d1Id, i) => {
-      const d2Id = d2Top3Challengers[2 - i];
-      if (!d1Id || !d2Id) return null;
-      return runTie({
-        id: `LIG_1V2_${i + 1}`,
-        roundLabel: 'Liguilla Ascenso 1ª/2ª',
-        homeId: d1Id,
-        awayId: d2Id,
-        homeName: byId.get(d1Id)?.name,
-        awayName: byId.get(d2Id)?.name,
-        played: false,
-      });
-    }).filter(Boolean);
+    // Construir Liguilla 1ª/2ª (idempotente)
+    const lig1v2JustBuilt = po.liguilla1v2.length === 0 && Boolean(po.div2.championId);
+    if (lig1v2JustBuilt) {
+      const d2SortedIds = sortStandings(state.standings.div2)
+        .map((r) => r.teamId)
+        .filter((id) => id !== po.div2.championId);
+      const d2Top3Challengers = d2SortedIds.slice(0, 3);
+      po.div2.runnerUpAndPlayoffIds = d2Top3Challengers;
 
-    po.liguilla2v3 = po.liguilla2v3.map(runTie);
+      po.liguilla1v2 = po.div1.liguillaZoneIds.map((d1Id, i) => {
+        const d2Id = d2Top3Challengers[2 - i];
+        if (!d1Id || !d2Id) return null;
+        return {
+          id: `LIG_1V2_${i + 1}`,
+          roundLabel: 'Liguilla Ascenso 1ª/2ª',
+          homeId: d1Id,
+          awayId: d2Id,
+          homeName: byId.get(d1Id)?.name,
+          awayName: byId.get(d2Id)?.name,
+          homeScore: null,
+          awayScore: null,
+          winnerId: null,
+          played: false,
+        };
+      }).filter(Boolean);
+    }
+
+    const userInLig1v2 = po.liguilla1v2.some((t) => !t.played && (t.homeId === uid || t.awayId === uid));
+    const overrideIsLig1v2 = userMatchOverride && po.liguilla1v2.some((t) => t.id === userMatchOverride.matchId);
+    if (!deferUserSubRound || !lig1v2JustBuilt || !userInLig1v2 || overrideIsLig1v2) {
+      po.liguilla1v2 = po.liguilla1v2.map((t) => runTie(t, false));
+    }
   }
 
   return state;
@@ -2281,27 +2389,99 @@ export function getNextUserMatchInfo(state) {
   return null;
 }
 
-export function findUserPostseasonMatch(state) {
-  const po = state.postseason;
-  if (!po) return null;
+export function getPendingUserPostseasonMatch(state) {
+  const po = state?.postseason;
+  if (!po || state.seasonCompleted) return null;
   const uid = state.userTeamId;
-  const pools = [
-    ...(po.div1?.r1 || []),
-    ...(po.div1?.qf || []),
-    ...(po.div1?.sf || []),
-    ...(po.div1?.final || []),
-    ...(po.div2?.r1 || []),
-    ...(po.div2?.r2 || []),
-    ...(po.div2?.qf || []),
-    ...(po.div2?.sf || []),
-    ...(po.div2?.final || []),
-    ...(po.liguilla1v2 || []),
-    ...(po.liguilla2v3 || []),
+
+  const phasePools = [
+    { phase: 'R1', list: po.div1?.r1 || [], isRoundRobin: false },
+    { phase: 'R1', list: po.div2?.r1 || [], isRoundRobin: false },
+    { phase: 'QF', list: po.div1?.qf || [], isRoundRobin: false },
+    { phase: 'QF', list: po.div2?.r2 || [], isRoundRobin: false },
+    { phase: 'SF', list: po.div1?.sf || [], isRoundRobin: false },
+    { phase: 'SF', list: po.div2?.qf || [], isRoundRobin: false },
+    { phase: 'SF', list: po.div2?.sf || [], isRoundRobin: false },
+    { phase: 'FINAL', list: po.div1?.final || [], isRoundRobin: false },
+    { phase: 'FINAL', list: po.div2?.final || [], isRoundRobin: false },
+    { phase: 'FINAL', list: po.liguilla2v3 || [], isRoundRobin: false },
+    { phase: 'FINAL', list: po.liguilla1v2 || [], isRoundRobin: false },
   ];
-  for (const r of po.div3?.rounds || []) {
-    pools.push(...r.matches);
+
+  for (const pool of phasePools) {
+    const found = pool.list.find((m) => !m.played && (m.homeId === uid || m.awayId === uid));
+    if (found) {
+      return {
+        match: found,
+        phase: pool.phase,
+        isRoundRobin: false,
+        roundLabel: found.roundLabel || 'Playoffs Intercarreras',
+      };
+    }
   }
-  return pools.find((m) => !m.played && (m.homeId === uid || m.awayId === uid)) || null;
+
+  for (const r of po.div3?.rounds || []) {
+    const found = r.matches.find((m) => !m.played && (m.homeId === uid || m.awayId === uid));
+    if (found) {
+      return {
+        match: found,
+        phase: 'R1',
+        isRoundRobin: true,
+        roundLabel: `Liguilla Final 3ª · Fecha ${r.round}/7`,
+      };
+    }
+  }
+  return null;
+}
+
+export function findUserPostseasonMatch(state) {
+  return getPendingUserPostseasonMatch(state)?.match || null;
+}
+
+function isPostseasonPhaseFullyDone(state, phase) {
+  const po = state?.postseason;
+  if (!po) return true;
+  if (phase === 'R1') {
+    const d1Done = (po.div1?.r1 || []).every((m) => m.played);
+    const d2Done = (po.div2?.r1 || []).every((m) => m.played);
+    const d3Done = (po.div3?.rounds || []).every((r) => r.matches.every((m) => m.played));
+    return d1Done && d2Done && d3Done;
+  }
+  if (phase === 'QF') {
+    return (po.div1?.qf || []).every((m) => m.played) && (po.div2?.r2 || []).every((m) => m.played);
+  }
+  if (phase === 'SF') {
+    return (po.div1?.sf || []).every((m) => m.played)
+      && (po.div2?.qf || []).every((m) => m.played)
+      && (po.div2?.sf || []).length > 0
+      && (po.div2?.sf || []).every((m) => m.played);
+  }
+  if (phase === 'FINAL') {
+    return (po.div1?.final || []).every((m) => m.played)
+      && (po.div2?.final || []).every((m) => m.played)
+      && (po.liguilla2v3 || []).every((m) => m.played)
+      && (po.liguilla1v2 || []).every((m) => m.played);
+  }
+  return true;
+}
+
+function finalizePostseasonSeason(state, dateLabel, rng) {
+  state.seasonCompleted = true;
+  state.marketOpen = true;
+  processPendingIncomingTransfers(state, 'Postemporada');
+  recordSeasonAchievementsAndStats(state);
+  generateIncomingSaleOffers(state, rng, { dateLabel: dateLabel || '30 Nov' });
+  evaluateAndGenerateDtJobOffers(state, rng, 'SEASON_END');
+  const d1Champ = state.teams.find((t) => t.id === state.postseason?.div1?.championId);
+  const d2Champ = state.teams.find((t) => t.id === state.postseason?.div2?.championId);
+  const d3Champ = state.teams.find((t) => t.id === state.postseason?.div3?.championId);
+  state.news = [{
+    id: `news_champs_${state.season}`,
+    dateLabel: dateLabel || '30 Nov',
+    category: 'CAMPEONES',
+    headline: `Campeones Temp. ${state.season}: ${d1Champ?.name || '1ª'}, ${d2Champ?.name || '2ª'} y ${d3Champ?.name || '3ª'}`,
+    body: 'Se cerraron los Playoffs y Liguillas de Ascenso Intercarreras. Se abre la ventana de postemporada.',
+  }, ...(state.news || [])].slice(0, 28);
 }
 
 export function advanceSimulationStep(state, mode = 'next_event', rng = Math.random) {
@@ -2497,6 +2677,7 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
           advanceCopaRound(state, rng, { simulateMatchFn: simulateMatchQuick });
         }
         state.postseason = initializePostseasonStructure(state, rng);
+        state.lastPostseasonResult = null;
         ev.done = true;
         state.timelineIndex += 1;
         state.news = [{
@@ -2512,27 +2693,37 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
         continue;
       }
 
-      advancePostseasonPhase(state, ev.phase, rng);
-      ev.done = true;
-      state.timelineIndex += 1;
+      // En modo normal (siguiente evento / siguiente partido), si el DT tiene un partido de Playoff o Liguilla listo -> jugable en vivo!
+      if (mode === 'next_event' || mode === 'next_match') {
+        const pendingPo = getPendingUserPostseasonMatch(state);
+        if (pendingPo && pendingPo.phase === ev.phase) {
+          const prep = prepareUserPostseasonLiveMatch(state, rng);
+          if (prep.ok) {
+            return { status: 'MATCH_READY', event: ev, liveMatch: prep.liveMatch };
+          }
+        }
+      }
 
-      if (ev.phase === 'FINAL') {
-        state.seasonCompleted = true;
-        state.marketOpen = true;
-        processPendingIncomingTransfers(state, 'Postemporada');
-        recordSeasonAchievementsAndStats(state);
-        generateIncomingSaleOffers(state, rng, { dateLabel: ev.dateLabel });
-        evaluateAndGenerateDtJobOffers(state, rng, 'SEASON_END');
-        const d1Champ = state.teams.find((t) => t.id === state.postseason?.div1?.championId);
-        const d2Champ = state.teams.find((t) => t.id === state.postseason?.div2?.championId);
-        const d3Champ = state.teams.find((t) => t.id === state.postseason?.div3?.championId);
-        state.news = [{
-          id: `news_champs_${state.season}`,
-          dateLabel: ev.dateLabel,
-          category: 'CAMPEONES',
-          headline: `Campeones Temp. ${state.season}: ${d1Champ?.name || '1ª'}, ${d2Champ?.name || '2ª'} y ${d3Champ?.name || '3ª'}`,
-          body: 'Se cerraron los Playoffs y Liguillas de Ascenso Intercarreras. Se abre la ventana de postemporada.',
-        }, ...(state.news || [])].slice(0, 28);
+      advancePostseasonPhase(state, ev.phase, rng, null, { deferUserSubRound: mode !== 'mid_or_end' });
+
+      // Verificar si surgió una sub-ronda jugable para el DT dentro de la misma fase (ej. Semifinal 2ª Div o Liguilla 1ª/2ª)
+      if (mode !== 'mid_or_end') {
+        const nextPending = getPendingUserPostseasonMatch(state);
+        if (nextPending && nextPending.phase === ev.phase) {
+          const prep = prepareUserPostseasonLiveMatch(state, rng);
+          if (prep.ok) {
+            return { status: 'MATCH_READY', event: ev, liveMatch: prep.liveMatch };
+          }
+        }
+      }
+
+      if (isPostseasonPhaseFullyDone(state, ev.phase)) {
+        ev.done = true;
+        state.timelineIndex += 1;
+      }
+
+      if (ev.phase === 'FINAL' && isPostseasonPhaseFullyDone(state, 'FINAL')) {
+        finalizePostseasonSeason(state, ev.dateLabel, rng);
         return { status: 'SEASON_ENDED', event: ev, message: '¡Finalizó la temporada completa!' };
       }
 
@@ -2602,6 +2793,106 @@ export function simulateUserCopaRoundNow(state, rng = Math.random) {
   });
 }
 
+export function prepareUserPostseasonLiveMatch(state, rng = Math.random) {
+  if (!state?.postseason || state.seasonCompleted) {
+    return { ok: false, message: 'No hay fase de Playoffs activa.' };
+  }
+  const pending = getPendingUserPostseasonMatch(state);
+  if (!pending) {
+    return { ok: false, message: 'Tu club no tiene un partido pendiente en esta ronda de Playoffs.' };
+  }
+  const home = state.teams.find((t) => t.id === pending.match.homeId);
+  const away = state.teams.find((t) => t.id === pending.match.awayId);
+  if (!home || !away) return { ok: false, message: 'Equipos de Playoff no encontrados.' };
+  const userTeam = state.teams.find((t) => t.id === state.userTeamId);
+  if (userTeam) ensureAvailableStarters(userTeam);
+
+  const activeEv = state.timeline[state.timelineIndex];
+  const timeline = generateLiveMatchTimeline({
+    matchId: pending.match.id,
+    homeTeam: home,
+    awayTeam: away,
+    label: `Playoffs · ${pending.roundLabel}`,
+    allowDraw: pending.isRoundRobin,
+    rng,
+  });
+
+  state.pendingLiveMatch = {
+    eventId: activeEv?.id || `PO_${pending.phase}`,
+    round: pending.roundLabel,
+    matchId: pending.match.id,
+    homeId: home.id,
+    awayId: away.id,
+    label: timeline.label,
+    allowDraw: pending.isRoundRobin,
+    isPostseason: true,
+    postseasonPhase: pending.phase,
+    isRoundRobin: pending.isRoundRobin,
+    isCopa: false,
+    timeline,
+  };
+  return { ok: true, liveMatch: state.pendingLiveMatch };
+}
+
+export function simulateUserPostseasonRoundNow(state, rng = Math.random) {
+  if (!state?.postseason || state.seasonCompleted) {
+    return { ok: false, message: 'La Postemporada no está activa.' };
+  }
+  const userTeam = state.teams.find((t) => t.id === state.userTeamId);
+  if (userTeam) ensureAvailableStarters(userTeam);
+
+  const pending = getPendingUserPostseasonMatch(state);
+  const activeEv = state.timeline[state.timelineIndex];
+  const phase = pending?.phase || (activeEv?.type === 'POSTSEASON_PHASE' ? activeEv.phase : null);
+  if (!phase || phase === 'INIT') {
+    return { ok: false, message: 'No hay una ronda de Playoffs pendiente por simular.' };
+  }
+
+  const prevResultId = state.lastPostseasonResult?.matchId || null;
+  advancePostseasonPhase(state, phase, rng, null, { deferUserSubRound: true });
+
+  if (activeEv && activeEv.phase === phase && isPostseasonPhaseFullyDone(state, phase)) {
+    activeEv.done = true;
+    state.timelineIndex += 1;
+  }
+
+  if (phase === 'FINAL' && isPostseasonPhaseFullyDone(state, 'FINAL')) {
+    finalizePostseasonSeason(state, activeEv?.dateLabel, rng);
+  }
+
+  const newResult = state.lastPostseasonResult && state.lastPostseasonResult.matchId !== prevResultId
+    ? state.lastPostseasonResult
+    : null;
+
+  if (newResult && userTeam) {
+    applyPostMatchConditionAndCards(userTeam, new Set(userTeam.starterIds || []), rng);
+    const bonus = newResult.userWon ? 30000 : newResult.isDraw ? 12000 : 8000;
+    userTeam.budgetEur += bonus;
+    const penTxt = !newResult.isRoundRobin && newResult.homeScore === newResult.awayScore ? ' (P)' : '';
+    const verdict = newResult.isRoundRobin
+      ? (newResult.userWon ? 'Victoria' : newResult.isDraw ? 'Empate' : 'Derrota')
+      : newResult.isFinal
+        ? (newResult.userWon ? '¡CAMPEÓN!' : 'Subcampeón')
+        : (newResult.userWon ? '¡Clasificado!' : 'Eliminado');
+    return {
+      ok: true,
+      userResult: newResult,
+      matchBonus: bonus,
+      seasonEnded: state.seasonCompleted,
+      message: `${newResult.roundLabel}: ${newResult.homeName} ${newResult.homeScore}-${newResult.awayScore}${penTxt} ${newResult.awayName} · ${verdict} (+${formatClp(bonus)} CLP)`,
+    };
+  }
+
+  return {
+    ok: true,
+    userResult: null,
+    seasonEnded: state.seasonCompleted,
+    message: state.seasonCompleted
+      ? '¡Finalizó la Postemporada! Ya puedes iniciar la siguiente temporada.'
+      : `Ronda ${activeEv?.title || phase} simulada. Revisa el cuadro de Playoffs.`,
+  };
+}
+
 export function commitCompletedLiveMatch(state, finalHomeScore, finalAwayScore, timelineEvents = [], penWinner = null, rng = Math.random) {
   const pm = state.pendingLiveMatch;
   if (!pm) return { ok: false };
@@ -2653,6 +2944,56 @@ export function commitCompletedLiveMatch(state, finalHomeScore, finalAwayScore, 
     });
     state.pendingLiveMatch = null;
     return { ok: true, isCopa: true, matchBonus: res?.userResult?.prize || 0, penWinner, copaResult: res };
+  }
+
+  if (pm.isPostseason) {
+    applyLiveScorers();
+    const resolvedPen = !pm.allowDraw && finalHomeScore === finalAwayScore
+      ? (penWinner || (rng() < 0.5 ? pm.homeId : pm.awayId))
+      : null;
+
+    advancePostseasonPhase(
+      state,
+      pm.postseasonPhase,
+      rng,
+      {
+        matchId: pm.matchId,
+        homeScore: finalHomeScore,
+        awayScore: finalAwayScore,
+        penWinner: resolvedPen,
+      },
+      { deferUserSubRound: true }
+    );
+
+    if (userTeam) {
+      applyPostMatchConditionAndCards(userTeam, new Set(userTeam.starterIds || []), rng);
+    }
+
+    const userResult = state.lastPostseasonResult;
+    const matchBonus = userResult?.userWon ? 30000 : userResult?.isDraw ? 12000 : 8000;
+    if (userTeam) userTeam.budgetEur += matchBonus;
+
+    const evObj = state.timeline.find((e) => e.id === pm.eventId) || state.timeline[state.timelineIndex];
+    if (evObj && evObj.type === 'POSTSEASON_PHASE' && isPostseasonPhaseFullyDone(state, pm.postseasonPhase)) {
+      evObj.done = true;
+      if (state.timeline[state.timelineIndex]?.id === evObj.id) {
+        state.timelineIndex += 1;
+      }
+    }
+
+    if (pm.postseasonPhase === 'FINAL' && isPostseasonPhaseFullyDone(state, 'FINAL')) {
+      finalizePostseasonSeason(state, evObj?.dateLabel, rng);
+    }
+
+    state.pendingLiveMatch = null;
+    return {
+      ok: true,
+      isPostseason: true,
+      matchBonus,
+      penWinner: resolvedPen,
+      userResult,
+      seasonEnded: state.seasonCompleted,
+    };
   }
 
   const divKey = userTeam.division === 1 ? 'div1' : userTeam.division === 2 ? 'div2' : (userTeam.conf === 'B' ? 'div3B' : 'div3A');
@@ -4541,6 +4882,7 @@ export function startNextSeason(state, rng = Math.random) {
   state.seasonCompleted = false;
   state.seasonAchievementsRecorded = false;
   state.postseason = null;
+  state.lastPostseasonResult = null;
   state.activeDecision = null;
   state.pendingLiveMatch = null;
   state.incomingSaleOffers = [];

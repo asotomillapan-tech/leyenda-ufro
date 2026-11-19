@@ -86,6 +86,10 @@ import {
   prepareUserCopaLiveMatch,
   simulateUserCopaRoundNow,
   ensureAvailableStarters,
+  initializePostseasonStructure,
+  getPendingUserPostseasonMatch,
+  prepareUserPostseasonLiveMatch,
+  simulateUserPostseasonRoundNow,
 } from '../public/notfc-engine.js';
 
 function makeSeededRng(seed = 42) {
@@ -1030,6 +1034,82 @@ test('v0.2.0: Copa Intercarreras (32 clubes), Estadísticas/7 Ideal y Historial 
   assert.ok(ledger.stints[0].matches > 0);
   assert.ok(ledger.biggestWin && ledger.biggestWin.uf >= 3, 'Debe registrar la goleada 3-0 de Copa o una mayor');
 });
+
+test('Playoffs jugables en vivo y simulables ronda a ronda con marcador visible y penales', () => {
+  const rng = makeSeededRng(5050);
+  const db = buildSeedDatabase(rng);
+  const state = initializeDtCareerState({
+    database: db,
+    dtName: 'DT Playoffs',
+    selectedTeamId: 'FECSH-EFI-01',
+    rng,
+  });
+
+  // Ubicar al club del usuario en zona de 1ª Ronda Playoffs (puesto 6° de 1ª División)
+  const sortedIds = state.standings.div1.map((r) => r.teamId);
+  const userIdx = sortedIds.indexOf(state.userTeamId);
+  assert.ok(userIdx !== -1);
+  // Dar puntos claros para quedar 6° (índice 5 -> juega 1ª Ronda 6v11)
+  state.standings.div1.forEach((row, i) => {
+    row.pts = 30 - i;
+    row.gf = 25;
+    row.ga = 10;
+  });
+  const uRow = state.standings.div1.find((r) => r.teamId === state.userTeamId);
+  const sixthRow = state.standings.div1[5];
+  const tmpPts = uRow.pts;
+  uRow.pts = sixthRow.pts;
+  sixthRow.pts = tmpPts;
+
+  // Posicionar timeline justo en el inicio de Playoffs (R1)
+  const r1Idx = state.timeline.findIndex((e) => e.type === 'POSTSEASON_PHASE' && e.phase === 'R1');
+  assert.ok(r1Idx > 0);
+  state.postseason = initializePostseasonStructure(state, rng);
+  state.timelineIndex = r1Idx;
+
+  // 1) Detectar llave pendiente de 1ª Ronda y abrir partido en vivo al simular siguiente partido
+  const pendingR1 = getPendingUserPostseasonMatch(state);
+  assert.ok(pendingR1 && pendingR1.phase === 'R1');
+  const step = advanceSimulationStep(state, 'next_match', rng);
+  assert.equal(step.status, 'MATCH_READY', 'Playoffs debe abrir partido jugable en vivo');
+  assert.equal(step.liveMatch.isPostseason, true);
+  assert.equal(step.liveMatch.allowDraw, false);
+
+  // 2) Empatar 2-2 en tiempo regular y ganar en penales
+  const commitR1 = commitCompletedLiveMatch(state, 2, 2, [], state.userTeamId, rng);
+  assert.equal(commitR1.ok, true);
+  assert.equal(commitR1.isPostseason, true);
+  assert.equal(state.lastPostseasonResult.homeScore, 2);
+  assert.equal(state.lastPostseasonResult.awayScore, 2);
+  assert.equal(state.lastPostseasonResult.penWinner, state.userTeamId);
+  assert.equal(state.lastPostseasonResult.userWon, true);
+  assert.ok(state.news[0].headline.includes('2-2 (P)'), 'Debe registrar noticia con resultado y penales');
+
+  // 3) Debe haber avanzado a Cuartos de Final con el club del usuario en una llave pendiente
+  const pendingQF = getPendingUserPostseasonMatch(state);
+  assert.ok(pendingQF && pendingQF.phase === 'QF', 'El ganador de 1ª Ronda debe pasar a Cuartos');
+
+  // 4) Preparar Cuartos en vivo manualmente y ganar 3-1
+  const prepQF = prepareUserPostseasonLiveMatch(state, rng);
+  assert.equal(prepQF.ok, true);
+  const qfIsHome = state.pendingLiveMatch.homeId === state.userTeamId;
+  const commitQF = commitCompletedLiveMatch(state, qfIsHome ? 3 : 1, qfIsHome ? 1 : 3, [], null, rng);
+  assert.equal(commitQF.ok, true);
+  assert.equal(state.lastPostseasonResult.userWon, true);
+
+  // 5) Simular rondas restantes con simulateUserPostseasonRoundNow hasta cerrar temporada
+  let guard = 0;
+  while (!state.seasonCompleted && guard < 10) {
+    const simRes = simulateUserPostseasonRoundNow(state, rng);
+    assert.equal(simRes.ok, true);
+    guard += 1;
+  }
+  assert.equal(state.seasonCompleted, true, 'Simular rondas de Playoffs debe cerrar la temporada');
+  assert.ok(state.postseason.div1.championId);
+  assert.ok(state.postseason.div2.championId);
+  assert.ok(state.postseason.div3.championId);
+});
+
 
 
 

@@ -1729,9 +1729,37 @@
             const nextMatchInfo = Engine.getNextUserMatchInfo(state);
             const nextEv = Engine.getNextEvent(state);
 
-            // Next Match Card
+            // Next Match Card (Liga Regular + Playoffs jugables/simulables)
             const nmEl = document.getElementById('next-match-card');
             if (nmEl) {
+                const lastPo = state.lastPostseasonResult;
+                const lastPoBanner = lastPo ? (() => {
+                    const penTxt = !lastPo.isRoundRobin && lastPo.homeScore === lastPo.awayScore ? ' (P)' : '';
+                    const badgeCls = lastPo.userWon
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/35'
+                        : lastPo.isDraw
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/35'
+                            : 'bg-rose-500/20 text-rose-300 border-rose-500/35';
+                    const badgeLbl = lastPo.isRoundRobin
+                        ? (lastPo.userWon ? 'VICTORIA' : lastPo.isDraw ? 'EMPATE' : 'DERROTA')
+                        : lastPo.isFinal
+                            ? (lastPo.userWon ? '🏆 CAMPEÓN' : 'SUBCAMPEÓN')
+                            : (lastPo.userWon ? 'CLASIFICADO' : 'ELIMINADO');
+                    return `
+                        <div class="p-2.5 rounded-xl bg-[#151519] border border-[#2b2b34] flex items-center justify-between gap-2 text-[11px]">
+                            <div class="min-w-0">
+                                <div class="text-[9px] font-black uppercase tracking-wider text-gray-400">Último Playoff · ${esc(lastPo.roundLabel)}</div>
+                                <div class="font-black text-white truncate mt-0.5 tabular-nums">${esc(lastPo.homeName)} ${lastPo.homeScore} - ${lastPo.awayScore}${penTxt} ${esc(lastPo.awayName)}</div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-lg border text-[10px] font-black shrink-0 ${badgeCls}">${badgeLbl}</span>
+                        </div>
+                    `;
+                })() : '';
+
+                const pendingPo = state.postseason && !state.seasonCompleted
+                    ? Engine.getPendingUserPostseasonMatch(state)
+                    : null;
+
                 if (state.pendingLiveMatch) {
                     const pm = state.pendingLiveMatch;
                     const home = state.teams.find((t) => t.id === pm.homeId);
@@ -1749,6 +1777,56 @@
                         <button type="button" onclick="openLiveMatchModal()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs transition shadow-lg">
                             ⚽ Jugar Partido en Vivo (2 min/tiempo)
                         </button>
+                    `;
+                } else if (pendingPo) {
+                    const isHome = pendingPo.match.homeId === team.id;
+                    const oppId = isHome ? pendingPo.match.awayId : pendingPo.match.homeId;
+                    const opp = state.teams.find((t) => t.id === oppId);
+                    nmEl.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-widest text-[#a3adff]">Playoffs · ${esc(pendingPo.roundLabel)}</span>
+                            <span class="text-[10px] font-bold text-emerald-300">${pendingPo.isRoundRobin ? 'Liguilla Final' : 'Eliminación directa'}</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 p-3 rounded-xl surface-sub border border-[#717fff]/35">
+                            <div class="flex items-center gap-3 min-w-0">
+                                ${renderBadgeHTML(opp, 'w-11 h-11')}
+                                <div class="min-w-0">
+                                    <div class="text-sm font-black text-white truncate">vs ${esc(opp?.name || 'Rival')}</div>
+                                    <div class="text-[11px] text-gray-400 truncate">${isHome ? 'Local' : 'Visita'} · OVR ${Engine.getTeamAverageOvr(opp)} · ${esc(opp?.career || '')}</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-1 shrink-0">
+                                <button type="button" onclick="switchCareerMenu('tablas'); switchStandingsSubTab('postseason')" class="text-[11px] font-bold text-[#a3adff] hover:text-white transition">Ver cuadro →</button>
+                                <button type="button" onclick="switchCareerMenu('tactica')" class="text-[10px] font-bold text-gray-400 hover:text-white transition">Táctica</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="handlePlayPostseasonLive()" class="py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs transition shadow-lg">
+                                ⚽ Jugar Playoff en Vivo
+                            </button>
+                            <button type="button" onclick="handleSimPostseasonRound()" class="py-2.5 px-3 rounded-xl surface-sub hover:bg-[#242424] border border-[#2b2b2b] text-white font-bold text-xs transition">
+                                Simular Ronda
+                            </button>
+                        </div>
+                        ${lastPoBanner}
+                    `;
+                } else if (state.postseason && !state.seasonCompleted) {
+                    const po = state.postseason;
+                    const waitingSeed = (team.division === 1 && po.div1?.top4Ids?.includes(team.id) && po.div1.qf.length === 0)
+                        || (team.division === 2 && po.div2?.top8Ids?.includes(team.id) && po.div2.r2.length === 0);
+                    const statusLabel = waitingSeed
+                        ? 'Clasificado directo · Esperando rival en la siguiente llave'
+                        : 'Tu club no disputa esta llave · Sigue las definiciones';
+                    nmEl.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-widest text-[#a3adff]">Postemporada en Curso</span>
+                            <button type="button" onclick="switchCareerMenu('tablas'); switchStandingsSubTab('postseason')" class="text-[11px] font-bold text-[#a3adff] hover:text-white transition">Ver cuadro →</button>
+                        </div>
+                        <p class="text-xs text-gray-300">${esc(statusLabel)}</p>
+                        <button type="button" onclick="handleSimPostseasonRound()" class="w-full py-2.5 px-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition">
+                            Simular Siguiente Ronda de Playoffs →
+                        </button>
+                        ${lastPoBanner}
                     `;
                 } else if (nextMatchInfo) {
                     const opp = nextMatchInfo.opponent;
@@ -1776,8 +1854,12 @@
                     `;
                 } else {
                     nmEl.innerHTML = `
-                        <div class="text-xs font-black uppercase text-gray-400">Calendario Regular Completo</div>
-                        <p class="text-xs text-gray-400">Revisa la fase de Playoffs, Liguillas o inicia la siguiente temporada al concluir.</p>
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="text-xs font-black uppercase text-gray-400">${state.seasonCompleted ? `Temporada ${state.season} Finalizada` : 'Calendario Regular Completo'}</div>
+                            ${state.postseason ? `<button type="button" onclick="switchCareerMenu('tablas'); switchStandingsSubTab('postseason')" class="text-[11px] font-bold text-[#a3adff] hover:text-white transition">Ver Playoffs →</button>` : ''}
+                        </div>
+                        <p class="text-xs text-gray-400">${state.seasonCompleted ? 'Revisa los resultados de Playoffs o inicia la siguiente temporada.' : 'Avanza al inicio de Playoffs y Liguillas para disputar la fase final.'}</p>
+                        ${lastPoBanner}
                     `;
                 }
             }
@@ -2140,6 +2222,33 @@
                     `${ur.roundLabel}: ${ur.homeName} ${ur.hg}-${ur.ag} ${ur.awayName} (${ur.userWon ? 'Avanzas' : 'Eliminado'}) · +${Engine.formatClp(ur.prize)}`,
                     ur.userWon ? 'success' : 'brand'
                 );
+            } else if (res.message) {
+                showToast(res.message, 'error');
+            }
+        };
+
+        window.handlePlayPostseasonLive = () => {
+            if (!state) return;
+            const res = Engine.prepareUserPostseasonLiveMatch(state);
+            if (!res.ok) {
+                showToast(res.message, 'error');
+                return;
+            }
+            saveCareerState();
+            renderAllCareerViews();
+            openLiveMatchModal();
+        };
+
+        window.handleSimPostseasonRound = () => {
+            if (!state) return;
+            const res = Engine.simulateUserPostseasonRoundNow(state);
+            saveCareerState();
+            renderAllCareerViews();
+            if (res.seasonEnded) {
+                window.saveAndPublishCareerRanking(true);
+            }
+            if (res.ok) {
+                showToast(res.message, res.userResult?.userWon || res.seasonEnded ? 'success' : 'brand');
             } else if (res.message) {
                 showToast(res.message, 'error');
             }
@@ -3261,32 +3370,131 @@
                     mount.innerHTML = `<div class="p-6 text-center text-xs text-gray-400">La Postemporada y Liguillas comienzan tras completar las 12 fechas regulares.</div>`;
                     return;
                 }
+                const byId = new Map(state.teams.map((t) => [t.id, t]));
+                const pendingPo = !state.seasonCompleted ? Engine.getPendingUserPostseasonMatch(state) : null;
+                const lastPo = state.lastPostseasonResult;
+                const d1Champ = po.div1?.championId ? byId.get(po.div1.championId) : null;
+                const d2Champ = po.div2?.championId ? byId.get(po.div2.championId) : null;
+                const d3Champ = po.div3?.championId ? byId.get(po.div3.championId) : null;
+
                 const tieList = (title, ties) => `
                     <div class="space-y-1.5">
-                        <h4 class="text-xs font-black uppercase text-[#a3adff]">${esc(title)}</h4>
-                        ${(!ties || ties.length === 0) ? '<p class="text-xs text-gray-500">Por disputarse.</p>' : ties.map((t) => `
-                            <div class="px-3 py-2 rounded-xl surface-sub flex justify-between items-center text-xs">
-                                <span class="font-bold text-white">${esc(t.homeName)} vs ${esc(t.awayName)}</span>
-                                <span class="font-black text-emerald-400 tabular-nums">${t.played ? `${t.homeScore} - ${t.awayScore}` : 'Pendiente'}</span>
-                            </div>
-                        `).join('')}
+                        <h4 class="text-[11px] font-black uppercase tracking-wider text-[#a3adff]">${esc(title)}</h4>
+                        ${(!ties || ties.length === 0) ? '<p class="text-xs text-gray-500">Por disputarse.</p>' : ties.map((t) => {
+                            const h = byId.get(t.homeId);
+                            const a = byId.get(t.awayId);
+                            const isUser = t.homeId === state.userTeamId || t.awayId === state.userTeamId;
+                            const isPen = t.played && t.homeScore === t.awayScore && t.winnerId;
+                            const scoreTxt = t.played
+                                ? `${t.homeScore} - ${t.awayScore}${isPen ? ' (P)' : ''}`
+                                : 'Pendiente';
+                            const penSub = isPen
+                                ? `<div class="text-[9px] text-amber-300 font-bold text-right">Penales: ${esc(byId.get(t.winnerId)?.name || '')}</div>`
+                                : '';
+                            return `
+                                <div class="px-3 py-2 rounded-xl surface-sub border ${isUser ? 'border-[#717fff]/65 bg-[#717fff]/10' : 'border-[#262626]'} flex items-center justify-between gap-2 text-xs">
+                                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                                        ${h ? renderBadgeHTML(h, 'w-5 h-5') : ''}
+                                        <span class="truncate ${t.winnerId === t.homeId ? 'font-black text-emerald-400' : t.played && t.winnerId ? 'text-gray-400 font-medium' : 'font-bold text-white'}">${esc(t.homeName || h?.name || '?')}</span>
+                                        <span class="text-gray-500 shrink-0 text-[10px]">vs</span>
+                                        <span class="truncate ${t.winnerId === t.awayId ? 'font-black text-emerald-400' : t.played && t.winnerId ? 'text-gray-400 font-medium' : 'font-bold text-white'}">${esc(t.awayName || a?.name || '?')}</span>
+                                        ${a ? renderBadgeHTML(a, 'w-5 h-5') : ''}
+                                    </div>
+                                    <div class="shrink-0 text-right">
+                                        <span class="font-black tabular-nums ${t.played ? 'text-white' : 'text-gray-500'}">${scoreTxt}</span>
+                                        ${penSub}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 `;
-                mount.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-3">
-                            ${tieList('1ª División · 1ª Ronda (5°-12°)', po.div1.r1)}
-                            ${tieList('1ª División · Cuartos (Sorteo 1°-4° vs Ganadores)', po.div1.qf)}
-                            ${tieList('1ª División · Semifinales & Final', [...po.div1.sf, ...po.div1.final])}
-                            ${tieList('Liguilla Ascenso 1ª / 2ª (16°-18° vs 2°-4°)', po.liguilla1v2)}
+
+                const d3RoundsHtml = (po.div3?.rounds || []).some((r) => r.matches.some((m) => m.played))
+                    ? `
+                        <div class="space-y-1.5 pt-2">
+                            <h5 class="text-[10px] font-black uppercase tracking-wider text-gray-400">Resultados por Fecha · Liguilla Final 3ª</h5>
+                            <div class="grid grid-cols-1 gap-1.5 max-h-60 overflow-y-auto pr-1">
+                                ${(po.div3.rounds || []).map((r) => {
+                                    const playedInRound = r.matches.filter((m) => m.played);
+                                    if (playedInRound.length === 0) return '';
+                                    return `
+                                        <div class="p-2 rounded-xl bg-[#151518] border border-[#24242a] space-y-1">
+                                            <div class="text-[9px] font-black uppercase text-emerald-400">Fecha ${r.round}/7</div>
+                                            ${playedInRound.map((m) => {
+                                                const isU = m.homeId === state.userTeamId || m.awayId === state.userTeamId;
+                                                return `
+                                                    <div class="flex items-center justify-between gap-2 text-[11px] ${isU ? 'text-white font-black' : 'text-gray-300'}">
+                                                        <span class="truncate">${esc(m.homeName)} vs ${esc(m.awayName)}</span>
+                                                        <span class="font-black tabular-nums text-emerald-300 shrink-0">${m.homeScore} - ${m.awayScore}</span>
+                                                    </div>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
                         </div>
-                        <div class="space-y-3">
-                            ${tieList('2ª División · 1ª Ronda (9°-18°)', po.div2.r1)}
-                            ${tieList('2ª División · Octavos, Cuartos & Final', [...po.div2.r2, ...po.div2.qf, ...po.div2.final])}
-                            ${tieList('Liguilla Ascenso 2ª / 3ª (21°-24° vs 3°-6°)', po.liguilla2v3)}
-                            <div class="space-y-1.5">
-                                <h4 class="text-xs font-black uppercase text-emerald-400">3ª División · Liguilla Final 1°-8° (Todos contra todos)</h4>
-                                ${renderStandingsTableHTML(po.div3.standings, 'div3A')}
+                    `
+                    : '';
+
+                mount.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#262626]">
+                            <div>
+                                <h4 class="text-sm font-black text-white">Playoffs & Liguillas · Temporada ${state.season}</h4>
+                                <p class="text-[11px] text-gray-400">Juega tus llaves en vivo o simúlalas ronda por ronda con resultados detallados.</p>
+                            </div>
+                            ${state.seasonCompleted
+                                ? `<div class="flex flex-wrap gap-2 text-[11px] font-black">
+                                    ${d1Champ ? `<span class="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30">🏆 1ª: ${esc(d1Champ.name)}</span>` : ''}
+                                    ${d2Champ ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">🏆 2ª: ${esc(d2Champ.name)}</span>` : ''}
+                                    ${d3Champ ? `<span class="px-2.5 py-1 rounded-lg bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">🏆 3ª: ${esc(d3Champ.name)}</span>` : ''}
+                                   </div>`
+                                : pendingPo
+                                    ? `<div class="flex flex-wrap items-center gap-2">
+                                        <button type="button" onclick="handlePlayPostseasonLive()" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs transition shadow">
+                                            ⚽ Jugar ${esc(pendingPo.roundLabel)}
+                                        </button>
+                                        <button type="button" onclick="handleSimPostseasonRound()" class="px-3.5 py-2 rounded-xl surface-sub hover:bg-[#242424] border border-[#2b2b2b] text-white font-bold text-xs transition">
+                                            Simular Ronda
+                                        </button>
+                                       </div>`
+                                    : `<button type="button" onclick="handleSimPostseasonRound()" class="px-3.5 py-2 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition">
+                                        Simular Siguiente Ronda →
+                                       </button>`}
+                        </div>
+                        ${lastPo ? `
+                            <div class="p-3 rounded-xl surface-sub border border-[#717fff]/40 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                <div>
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-[#a3adff]">Tu Último Resultado · ${esc(lastPo.roundLabel)}</span>
+                                    <div class="font-black text-white mt-0.5 tabular-nums">${esc(lastPo.homeName)} ${lastPo.homeScore} - ${lastPo.awayScore}${!lastPo.isRoundRobin && lastPo.homeScore === lastPo.awayScore ? ' (P)' : ''} ${esc(lastPo.awayName)}</div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg font-black text-[11px] ${lastPo.userWon ? 'bg-emerald-500/20 text-emerald-300' : lastPo.isDraw ? 'bg-amber-500/20 text-amber-300' : 'bg-rose-500/20 text-rose-300'}">
+                                    ${lastPo.isRoundRobin ? (lastPo.userWon ? 'Victoria' : lastPo.isDraw ? 'Empate' : 'Derrota') : lastPo.isFinal ? (lastPo.userWon ? '🏆 CAMPEÓN' : 'Subcampeón') : (lastPo.userWon ? '¡Clasificado!' : 'Eliminado')}
+                                </span>
+                            </div>
+                        ` : ''}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-3">
+                                ${tieList('1ª División · 1ª Ronda (5°-12°)', po.div1.r1)}
+                                ${tieList('1ª División · Cuartos (Sorteo 1°-4° vs Ganadores)', po.div1.qf)}
+                                ${tieList('1ª División · Semifinales', po.div1.sf)}
+                                ${tieList('1ª División · Gran Final', po.div1.final)}
+                                ${tieList('Liguilla Ascenso 1ª / 2ª (16°-18° vs 2°-4°)', po.liguilla1v2)}
+                            </div>
+                            <div class="space-y-3">
+                                ${tieList('2ª División · 1ª Ronda (9°-18°)', po.div2.r1)}
+                                ${tieList('2ª División · Octavos / Reclasificación', po.div2.r2)}
+                                ${tieList('2ª División · Cuartos de Final', po.div2.qf)}
+                                ${tieList('2ª División · Semifinales', po.div2.sf)}
+                                ${tieList('2ª División · Gran Final', po.div2.final)}
+                                ${tieList('Liguilla Ascenso 2ª / 3ª (21°-24° vs 3°-6°)', po.liguilla2v3)}
+                                <div class="space-y-1.5">
+                                    <h4 class="text-[11px] font-black uppercase tracking-wider text-emerald-400">3ª División · Liguilla Final 1°-8° (Todos contra todos)</h4>
+                                    ${renderStandingsTableHTML(po.div3.standings, 'div3A')}
+                                    ${d3RoundsHtml}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -3721,7 +3929,12 @@
             const phaseBadge = document.getElementById('live-match-phase-badge');
             const pauseBtn = document.getElementById('btn-live-pause');
             if (liveSession.finished) {
-                phaseBadge.textContent = 'Final del Partido (50\')';
+                let finTxt = 'Final del Partido (50\')';
+                if (!liveSession.timeline?.allowDraw && hg === ag && liveSession.timeline?.penWinner) {
+                    const pwClub = state?.teams?.find((t) => t.id === liveSession.timeline.penWinner);
+                    finTxt = `Final (50') · Penales: gana ${pwClub?.name || 'Ganador'}`;
+                }
+                phaseBadge.textContent = finTxt;
                 phaseBadge.className = 'text-xs font-black text-emerald-400 mt-0.5';
                 if (pauseBtn) pauseBtn.classList.add('hidden');
             } else if (liveSession.halftimePaused) {
@@ -3896,8 +4109,25 @@
             document.getElementById('live-match-modal')?.classList.add('hidden');
             saveCareerState();
             renderAllCareerViews();
+            if (res.seasonEnded) {
+                window.saveAndPublishCareerRanking(true);
+            }
             if (res.ok) {
-                showToast(`Resultado guardado (${hg}-${ag}). +${Engine.formatClp(res.matchBonus)} CLP recaudación.`, 'success');
+                if (res.isPostseason && res.userResult) {
+                    const ur = res.userResult;
+                    const penTxt = !ur.isRoundRobin && ur.homeScore === ur.awayScore ? ' (P)' : '';
+                    const verdict = ur.isRoundRobin
+                        ? (ur.userWon ? 'Victoria' : ur.isDraw ? 'Empate' : 'Derrota')
+                        : ur.isFinal
+                            ? (ur.userWon ? '¡CAMPEÓN!' : 'Subcampeón')
+                            : (ur.userWon ? '¡Avanzas de ronda!' : 'Eliminado');
+                    showToast(
+                        `${ur.roundLabel}: ${ur.homeName} ${ur.homeScore}-${ur.awayScore}${penTxt} ${ur.awayName} · ${verdict} (+${Engine.formatClp(res.matchBonus)} CLP)`,
+                        ur.userWon ? 'success' : 'brand'
+                    );
+                } else {
+                    showToast(`Resultado guardado (${hg}-${ag}). +${Engine.formatClp(res.matchBonus)} CLP recaudación.`, 'success');
+                }
             }
         };
 
