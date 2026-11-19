@@ -79,7 +79,7 @@
                 </svg>
                 <div class="flex items-baseline gap-1.5 sm:gap-2 min-w-0">
                     <h1 class="text-sm sm:text-lg font-black tracking-wider text-white leading-none uppercase whitespace-nowrap">NOT F.C</h1>
-                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase shrink-0">v0.1.1</span>
+                    <span id="app-version-tag" class="text-[10px] font-bold tracking-wider text-gray-500 uppercase shrink-0">v0.2.0</span>
                 </div>
             </div>
 
@@ -387,6 +387,14 @@
                     </button>
                 </div>
 
+                <div id="live-halftime-talk-box" class="hidden pt-2 border-t border-[#262626] space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[11px] font-black uppercase tracking-wider text-amber-300">Charla de Entretiempo</span>
+                        <span id="live-halftime-talk-status" class="text-[10px] text-gray-400">Elige un mensaje para el 2° tiempo</span>
+                    </div>
+                    <div id="live-halftime-talk-options" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
                     <div class="sm:col-span-4 space-y-1.5">
                         <label for="live-formation-select" class="block text-[11px] font-bold text-gray-400 uppercase">Esquema F7</label>
@@ -416,6 +424,53 @@
                 <button type="button" id="btn-live-finish" onclick="finalizeLiveMatchModal()" class="px-6 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
                     Finalizar y Volver al Club →
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NEGOCIACIÓN PERSONALIZADA (OFERTA CLP + TRUEQUE) -->
+    <div id="transfer-negotiation-modal" class="hidden fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="surface-card rounded-3xl w-full max-w-lg p-5 sm:p-6 space-y-4 shadow-2xl animate-pop">
+            <div class="flex items-start justify-between gap-3 border-b border-[#262626] pb-3">
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-wider text-[#a3adff]">Mesa de Negociación</div>
+                    <h3 id="neg-modal-title" class="text-base font-black text-white mt-0.5">Negociar Fichaje</h3>
+                    <p id="neg-modal-sub" class="text-xs text-gray-400 mt-0.5"></p>
+                </div>
+                <button type="button" onclick="closeTransferNegotiationModal()" class="px-2.5 py-1 rounded-lg surface-sub text-xs text-gray-400 hover:text-white font-bold">✕</button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                        <div class="text-[10px] font-bold uppercase text-gray-400">Valor Referencial</div>
+                        <div id="neg-target-val" class="text-sm font-black text-white tabular-nums mt-0.5">$0</div>
+                    </div>
+                    <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                        <div class="text-[10px] font-bold uppercase text-gray-400">Tu Presupuesto</div>
+                        <div id="neg-user-budget" class="text-sm font-black text-emerald-400 tabular-nums mt-0.5">$0</div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="neg-cash-input" class="block text-[11px] font-bold text-gray-300 mb-1">Dinero ofertado (CLP)</label>
+                    <input type="number" id="neg-cash-input" min="0" step="1000" value="0" oninput="updateNegPreview()"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm font-black text-white tabular-nums focus:outline-none focus:border-[#717fff]">
+                </div>
+
+                <div>
+                    <label for="neg-swap-select" class="block text-[11px] font-bold text-gray-300 mb-1">Incluir jugador en trueque (opcional)</label>
+                    <select id="neg-swap-select" onchange="updateNegPreview()"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-xs font-bold text-white focus:outline-none focus:border-[#717fff]"></select>
+                </div>
+
+                <div id="neg-preview-line" class="p-3 rounded-xl surface-sub border border-[#262626] text-[11px] text-gray-300"></div>
+                <div id="neg-feedback-box" class="hidden p-3 rounded-xl border text-xs leading-relaxed"></div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-[#262626]">
+                <button type="button" onclick="closeTransferNegotiationModal()" class="px-4 py-2 rounded-xl surface-sub text-gray-300 hover:text-white font-bold text-xs transition">Cancelar</button>
+                <button type="button" id="btn-submit-custom-offer" onclick="handleSubmitCustomOffer()" class="px-5 py-2 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition">Enviar Propuesta</button>
             </div>
         </div>
     </div>
@@ -588,6 +643,12 @@
                             </div>
                         </div>
 
+                        <!-- Copa Intercarreras (Partidos Pendientes del Usuario) -->
+                        <div id="copa-match-card" class="hidden surface-card rounded-2xl p-4 space-y-3 border-amber-500/35"></div>
+
+                        <!-- Pruebas Masivas · Captación de Mechones -->
+                        <div id="tryouts-card" class="hidden surface-card rounded-2xl p-4 space-y-3 border-[#717fff]/35"></div>
+
                         <!-- Ofertas de otros clubes para el DT -->
                         <div id="dt-job-offers-card" class="hidden surface-card rounded-2xl p-4 space-y-3 border-emerald-500/40"></div>
 
@@ -627,6 +688,22 @@
                         <div class="flex items-center gap-2">
                             <label for="tactics-formation-select" class="text-[11px] font-bold text-gray-400 uppercase">Esquema</label>
                             <select id="tactics-formation-select" onchange="handleChangeFormation(this.value)" class="px-3 py-2 rounded-xl bg-[#151515] border border-[#2b2b2b] text-xs font-black text-white focus:outline-none focus:border-[#717fff]"></select>
+                        </div>
+                    </div>
+
+                    <!-- Instrucciones Tácticas Simples -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3 rounded-xl surface-sub border border-[#262626]">
+                        <div>
+                            <label for="tactics-mentality-select" class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Mentalidad</label>
+                            <select id="tactics-mentality-select" onchange="handleChangeTactics()" class="w-full px-3 py-2 rounded-lg bg-[#151515] border border-[#2b2b2b] text-xs font-bold text-white focus:outline-none focus:border-[#717fff]"></select>
+                        </div>
+                        <div>
+                            <label for="tactics-pressing-select" class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Presión</label>
+                            <select id="tactics-pressing-select" onchange="handleChangeTactics()" class="w-full px-3 py-2 rounded-lg bg-[#151515] border border-[#2b2b2b] text-xs font-bold text-white focus:outline-none focus:border-[#717fff]"></select>
+                        </div>
+                        <div>
+                            <label for="tactics-style-select" class="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Estilo de Juego</label>
+                            <select id="tactics-style-select" onchange="handleChangeTactics()" class="w-full px-3 py-2 rounded-lg bg-[#151515] border border-[#2b2b2b] text-xs font-bold text-white focus:outline-none focus:border-[#717fff]"></select>
                         </div>
                     </div>
 
@@ -689,6 +766,7 @@
                         </div>
                     </div>
                     <div id="squad-sale-offers-box" class="hidden space-y-2.5 pb-3 border-b border-[#262626]"></div>
+                    <div id="squad-loans-box" class="hidden space-y-2 pb-3 border-b border-[#262626]"></div>
                     <div id="squad-list-container" class="space-y-2"></div>
                 </div>
             </div>
@@ -720,6 +798,9 @@
 
                 <!-- Jugadores Recomendados -->
                 <div id="market-recommended-box" class="surface-card rounded-2xl p-4 sm:p-5 space-y-3"></div>
+
+                <!-- Lista de Seguimiento / Ojeador -->
+                <div id="market-watchlist-box" class="surface-card rounded-2xl p-4 sm:p-5 space-y-3"></div>
 
                 <!-- Pre-Acuerdos Pendientes -->
                 <div id="market-pending-transfers-box" class="hidden surface-card rounded-2xl p-4 sm:p-5 space-y-2.5 border-[#717fff]/35"></div>
@@ -787,6 +868,9 @@
                         <button type="button" data-table-tab="div3A" onclick="switchStandingsSubTab('div3A')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">3ª Conf. A</button>
                         <button type="button" data-table-tab="div3B" onclick="switchStandingsSubTab('div3B')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">3ª Conf. B</button>
                         <button type="button" data-table-tab="postseason" onclick="switchStandingsSubTab('postseason')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">Playoffs</button>
+                        <button type="button" data-table-tab="copa" onclick="switchStandingsSubTab('copa')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">Copa</button>
+                        <button type="button" data-table-tab="stats" onclick="switchStandingsSubTab('stats')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">Estadísticas</button>
+                        <button type="button" data-table-tab="history" onclick="switchStandingsSubTab('history')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">Historial DT</button>
                         <button type="button" data-table-tab="calendar" onclick="switchStandingsSubTab('calendar')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">Calendario</button>
                     </div>
                     <div id="standings-content-mount" class="min-w-0 max-w-full"></div>
@@ -1270,11 +1354,16 @@
             if (!Array.isArray(parsed.incomingSaleOffers)) parsed.incomingSaleOffers = [];
             if (!Array.isArray(parsed.dtJobOffers)) parsed.dtJobOffers = [];
             if (!Array.isArray(parsed.careerAchievements)) parsed.careerAchievements = [];
+            if (!Array.isArray(parsed.activeLoans)) parsed.activeLoans = [];
+            if (!Array.isArray(parsed.watchlist)) parsed.watchlist = [];
             if (!parsed.careerStats) {
                 parsed.careerStats = { seasonsPlayed: 0, totalMatches: 0, totalWins: 0, derbyWins: 0, titlesDiv1: 0, titlesDiv2: 0, titlesDiv3: 0, promotions: 0, runnerUps: 0 };
             }
             if (!parsed.sponsorSession) parsed.sponsorSession = Engine.generatePreseasonSponsorOffers(parsed);
+            if (!parsed.tryoutSession) parsed.tryoutSession = Engine.generateFreshmenTryouts(parsed);
+            if (!parsed.copa) parsed.copa = Engine.initializeCopaIntercarreras(parsed);
             for (const t of parsed.teams || []) {
+                Engine.ensureTeamTactics(t);
                 for (const p of t.players || []) {
                     if (!p.secondaryPositions || typeof p.secondaryPositions !== 'object') p.secondaryPositions = {};
                     if (p.trainingTargetPos === undefined) p.trainingTargetPos = null;
@@ -1284,8 +1373,14 @@
                         p.academicStage = inf.academicStage;
                         p.academicYearsCompleted = inf.academicYearsCompleted;
                     }
+                    Engine.ensurePlayerCondition(p);
                 }
+                Engine.ensureClubCaptain(t);
             }
+            for (const fa of parsed.freeAgents || []) {
+                Engine.ensurePlayerCondition(fa);
+            }
+            Engine.ensureDtLedger(parsed);
             return parsed;
         }
 
@@ -1303,7 +1398,7 @@
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
-                if (parsed && parsed.version === 2 && Array.isArray(parsed.teams) && parsed.userTeamId) {
+                if (parsed && parsed.version >= 2 && Array.isArray(parsed.teams) && parsed.userTeamId) {
                     return hydrateLoadedState(parsed);
                 }
             } catch { /* ignore */ }
@@ -1708,6 +1803,80 @@
                 nextSeasonBtn.classList.toggle('hidden', !state.seasonCompleted);
             }
 
+            // Copa Intercarreras Card
+            const copaCard = document.getElementById('copa-match-card');
+            if (copaCard) {
+                const pendingCopa = Engine.getPendingUserCopaMatch(state);
+                if (!pendingCopa || state.pendingLiveMatch) {
+                    copaCard.classList.add('hidden');
+                    copaCard.innerHTML = '';
+                } else {
+                    const isHome = pendingCopa.match.homeId === team.id;
+                    const oppId = isHome ? pendingCopa.match.awayId : pendingCopa.match.homeId;
+                    const opp = state.teams.find((t) => t.id === oppId);
+                    copaCard.classList.remove('hidden');
+                    copaCard.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-amber-300">Copa Intercarreras · ${esc(pendingCopa.roundLabel)}</span>
+                            <span class="text-[10px] font-bold text-gray-400">Eliminación directa</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-3 p-3 rounded-xl surface-sub border border-[#262626]">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                ${renderBadgeHTML(opp, 'w-9 h-9')}
+                                <div class="min-w-0">
+                                    <div class="text-xs font-black text-white truncate">vs ${esc(opp?.name || 'Rival')}</div>
+                                    <div class="text-[10px] text-gray-400 truncate">${isHome ? 'Local' : 'Visita'} · ${opp?.division || '?'}ª Div · OVR ${Engine.getTeamAverageOvr(opp)}</div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="switchCareerMenu('tablas'); switchStandingsSubTab('copa')" class="text-[11px] font-bold text-amber-300 hover:text-amber-200 shrink-0 transition">Ver cuadro →</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="handlePlayCopaLive()" class="py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 font-black text-xs transition">
+                                Jugar Copa en Vivo
+                            </button>
+                            <button type="button" onclick="handleSimCopaRound()" class="py-2 px-3 rounded-xl surface-sub hover:bg-[#242424] border border-[#2b2b2b] text-white font-bold text-xs transition">
+                                Simular Llave
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+
+            // Captación de Mechones (Pruebas Masivas Pretemporada)
+            const tryoutCard = document.getElementById('tryouts-card');
+            if (tryoutCard) {
+                const ts = state.tryoutSession;
+                const showTryouts = Boolean(ts && !ts.dismissed && ts.picksUsed < ts.maxPicks && state.semester === 1);
+                if (!showTryouts) {
+                    tryoutCard.classList.add('hidden');
+                    tryoutCard.innerHTML = '';
+                } else {
+                    tryoutCard.classList.remove('hidden');
+                    tryoutCard.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <div>
+                                <div class="text-[10px] font-black uppercase tracking-wider text-[#a3adff]">Captación de Mechones</div>
+                                <div class="text-[11px] text-gray-400">${esc(ts.career)} · Gratis ($0 CLP) · ${ts.picksUsed}/${ts.maxPicks} cupos</div>
+                            </div>
+                            <button type="button" onclick="handleDismissTryouts()" class="text-[11px] text-gray-400 hover:text-white font-bold transition">Cerrar</button>
+                        </div>
+                        <div class="space-y-2">
+                            ${(ts.candidates || []).map((c) => `
+                                <div class="p-2.5 rounded-xl surface-sub border border-[#262626] flex items-center justify-between gap-2 text-xs">
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-white truncate">${esc(c.position)} · ${esc(c.name)} <span class="text-gray-500 font-normal">(${c.age}a)</span></div>
+                                        <div class="text-[10px] text-gray-400 truncate">${c.signed ? `<span class="text-emerald-400 font-black">OVR real: ${c.revealedOvr}</span>` : `OVR est. <span class="text-white font-bold tabular-nums">${c.estimatedOvrMin}–${c.estimatedOvrMax}</span>`} · ${esc(c.scoutingNote)}</div>
+                                    </div>
+                                    ${c.signed
+                                        ? `<span class="text-[10px] font-black text-emerald-400 shrink-0">Fichado</span>`
+                                        : `<button type="button" onclick="handleSignTryout('${esc(c.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#717fff] hover:bg-[#828eff] text-white font-black text-[11px] transition shrink-0">Fichar Gratis</button>`}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+
             // Ofertas de otros clubes para el DT
             const dtOffersBox = document.getElementById('dt-job-offers-card');
             if (dtOffersBox) {
@@ -1948,6 +2117,50 @@
             showToast(res.message, res.ok ? 'brand' : 'error');
         };
 
+        window.handlePlayCopaLive = () => {
+            if (!state) return;
+            const res = Engine.prepareUserCopaLiveMatch(state);
+            if (!res.ok) {
+                showToast(res.message, 'error');
+                return;
+            }
+            saveCareerState();
+            renderAllCareerViews();
+            openLiveMatchModal();
+        };
+
+        window.handleSimCopaRound = () => {
+            if (!state) return;
+            const res = Engine.simulateUserCopaRoundNow(state);
+            saveCareerState();
+            renderAllCareerViews();
+            if (res.ok && res.userResult) {
+                const ur = res.userResult;
+                showToast(
+                    `${ur.roundLabel}: ${ur.homeName} ${ur.hg}-${ur.ag} ${ur.awayName} (${ur.userWon ? 'Avanzas' : 'Eliminado'}) · +${Engine.formatClp(ur.prize)}`,
+                    ur.userWon ? 'success' : 'brand'
+                );
+            } else if (res.message) {
+                showToast(res.message, 'error');
+            }
+        };
+
+        window.handleSignTryout = (candId) => {
+            if (!state) return;
+            const res = Engine.signTryoutCandidate(state, candId);
+            saveCareerState();
+            renderAllCareerViews();
+            showToast(res.message, res.ok ? 'success' : 'error');
+        };
+
+        window.handleDismissTryouts = () => {
+            if (!state) return;
+            Engine.dismissTryoutSession(state);
+            saveCareerState();
+            renderPrincipalMenu();
+            showToast('Jornada de pruebas masivas cerrada.', 'brand');
+        };
+
         window.handleStartNextSeason = () => {
             if (!state) return;
             const res = Engine.startNextSeason(state);
@@ -1957,7 +2170,7 @@
             }
             saveCareerState();
             renderAllCareerViews();
-            showToast(`¡Temporada ${res.season} iniciada! Nuevos acuerdos comerciales disponibles.`, 'success');
+            showToast(`¡Temporada ${res.season} iniciada! Nuevos acuerdos comerciales, pruebas masivas y Copa disponibles.`, 'success');
         };
 
         // =================================================================
@@ -1974,10 +2187,30 @@
         function renderTacticsView() {
             const team = getUserTeam();
             if (!team) return;
+            const tac = Engine.ensureTeamTactics(team);
             const sel = document.getElementById('tactics-formation-select');
             if (sel) {
                 sel.innerHTML = Object.entries(Engine.FORMATIONS_F7).map(([k, v]) =>
                     `<option value="${esc(k)}" ${team.formation === k ? 'selected' : ''}>${esc(v.label)}</option>`
+                ).join('');
+            }
+
+            const mentSel = document.getElementById('tactics-mentality-select');
+            const pressSel = document.getElementById('tactics-pressing-select');
+            const styleSel = document.getElementById('tactics-style-select');
+            if (mentSel) {
+                mentSel.innerHTML = Engine.TACTICS_OPTIONS.mentality.map((o) =>
+                    `<option value="${esc(o.id)}" ${tac.mentality === o.id ? 'selected' : ''}>${esc(o.label)}</option>`
+                ).join('');
+            }
+            if (pressSel) {
+                pressSel.innerHTML = Engine.TACTICS_OPTIONS.pressing.map((o) =>
+                    `<option value="${esc(o.id)}" ${tac.pressing === o.id ? 'selected' : ''}>${esc(o.label)}</option>`
+                ).join('');
+            }
+            if (styleSel) {
+                styleSel.innerHTML = Engine.TACTICS_OPTIONS.style.map((o) =>
+                    `<option value="${esc(o.id)}" ${tac.style === o.id ? 'selected' : ''}>${esc(o.label)}</option>`
                 ).join('');
             }
 
@@ -2001,19 +2234,22 @@
             const pitchMount = document.getElementById('tactics-pitch-players');
             if (pitchMount) {
                 pitchMount.innerHTML = starters.map((p, idx) => {
+                    Engine.ensurePlayerCondition(p);
                     const coord = layout[idx] || { role: p.position, x: 50, y: 50 };
                     const slotPos = coord.role || p.position;
                     const effOvr = Engine.getPlayerEffectiveOvr(p, slotPos);
                     effSum += effOvr;
                     const isSelected = selectedTacticsStarterId === p.id;
                     const outOfPos = slotPos !== p.position;
+                    const isCap = team.captainId === p.id;
+                    const lowEnergy = p.energy < 55;
                     const shortName = getShortPitchName(p);
                     const ringCls = isSelected
                         ? 'border-[#717fff] bg-[#717fff] text-white ring-4 ring-[#717fff]/35 scale-105'
                         : outOfPos
                             ? 'border-amber-400/80 bg-[#1a1a1d]/95 text-amber-300 hover:border-amber-300'
                             : 'border-emerald-400/70 bg-[#151518]/95 text-white hover:border-[#717fff]';
-                    const titleTip = `${p.name} · Rol ${slotPos} (Nat. ${p.position}) · OVR efectivo ${effOvr}`;
+                    const titleTip = `${p.name} · Rol ${slotPos} (Nat. ${p.position}) · OVR ${effOvr} · Energía ${p.energy}%`;
 
                     return `
                         <button type="button" onclick="selectTacticsStarter('${esc(p.id)}')" title="${esc(titleTip)}"
@@ -2023,8 +2259,9 @@
                                 <span class="text-xs sm:text-sm font-black leading-none tabular-nums">${effOvr}</span>
                                 <span class="text-[8px] font-black uppercase tracking-wider leading-none mt-0.5 ${isSelected ? 'text-white/90' : outOfPos ? 'text-amber-300' : 'text-emerald-300'}">${esc(slotPos)}</span>
                             </span>
-                            <span class="px-2 py-0.5 rounded-md bg-black/80 border border-white/10 text-[10px] sm:text-[11px] font-bold text-white whitespace-nowrap max-w-[92px] truncate shadow">
-                                ${esc(shortName)}
+                            <span class="px-2 py-0.5 rounded-md bg-black/85 border border-white/10 text-[10px] sm:text-[11px] font-bold text-white flex items-center gap-1 max-w-[132px] shadow">
+                                <span class="truncate max-w-[82px]">${isCap ? '© ' : ''}${esc(shortName)}</span>
+                                <span class="${lowEnergy ? 'text-rose-400' : 'text-emerald-400'} text-[9px] tabular-nums shrink-0">${p.energy}%</span>
                             </span>
                         </button>
                     `;
@@ -2036,19 +2273,38 @@
                 xiOvrEl.textContent = `Media titular: ${Math.round(effSum / starters.length)}`;
             }
 
-            document.getElementById('tactics-bench-list').innerHTML = bench.map((p) => `
-                <button type="button" onclick="swapWithBench('${esc(p.id)}')" class="w-full px-3 py-2.5 rounded-xl surface-sub border border-[#262626] hover:border-emerald-400/60 text-left flex items-center justify-between gap-2 transition">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                        <span class="w-8 h-7 rounded-lg bg-[#1c1c1c] flex items-center justify-center text-[10px] font-black text-[#a3adff] shrink-0">${esc(p.position)}</span>
-                        <div class="min-w-0">
-                            <div class="text-xs font-bold text-gray-100 truncate">#${p.jerseyNumber} ${esc(p.name)}</div>
-                            <div class="text-[10px] text-gray-500 truncate">${p.age} años</div>
+            document.getElementById('tactics-bench-list').innerHTML = bench.map((p) => {
+                Engine.ensurePlayerCondition(p);
+                const unavail = Engine.getPlayerUnavailableReason(p);
+                const enColor = p.energy >= 75 ? 'text-emerald-400' : p.energy >= 50 ? 'text-amber-300' : 'text-rose-400';
+                return `
+                    <button type="button" onclick="swapWithBench('${esc(p.id)}')" class="w-full px-3 py-2.5 rounded-xl surface-sub border ${unavail ? 'border-rose-500/35 opacity-70' : 'border-[#262626] hover:border-emerald-400/60'} text-left flex items-center justify-between gap-2 transition">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <span class="w-8 h-7 rounded-lg bg-[#1c1c1c] flex items-center justify-center text-[10px] font-black text-[#a3adff] shrink-0">${esc(p.position)}</span>
+                            <div class="min-w-0">
+                                <div class="text-xs font-bold text-gray-100 truncate">#${p.jerseyNumber} ${esc(p.name)}</div>
+                                <div class="text-[10px] text-gray-500 truncate">${unavail ? `<span class="text-rose-400 font-bold">${esc(unavail)}</span>` : `${p.age}a · <span class="${enColor} font-bold tabular-nums">${p.energy}% energía</span>`}</div>
+                            </div>
                         </div>
-                    </div>
-                    <span class="text-xs font-black text-white tabular-nums shrink-0">${p.ovr}</span>
-                </button>
-            `).join('');
+                        <span class="text-xs font-black text-white tabular-nums shrink-0">${p.ovr}</span>
+                    </button>
+                `;
+            }).join('');
         }
+
+        window.handleChangeTactics = () => {
+            const team = getUserTeam();
+            if (!team) return;
+            const res = Engine.setClubTactics(team, {
+                mentality: document.getElementById('tactics-mentality-select')?.value,
+                pressing: document.getElementById('tactics-pressing-select')?.value,
+                style: document.getElementById('tactics-style-select')?.value,
+            });
+            if (res.ok) {
+                saveCareerState();
+                showToast(res.message, 'success');
+            }
+        };
 
         window.handleChangeFormation = (formKey) => {
             const team = getUserTeam();
@@ -2185,20 +2441,51 @@
                 }
             }
 
+            // Préstamos Activos (Cedidos y Recibidos)
+            const loansBox = document.getElementById('squad-loans-box');
+            if (loansBox) {
+                const userLoans = (state.activeLoans || []).filter((l) => l.originTeamId === team.id || l.destTeamId === team.id);
+                if (userLoans.length === 0) {
+                    loansBox.classList.add('hidden');
+                    loansBox.innerHTML = '';
+                } else {
+                    loansBox.classList.remove('hidden');
+                    loansBox.innerHTML = `
+                        <div class="text-xs font-black uppercase tracking-wider text-[#a3adff]">Préstamos Activos (${userLoans.length})</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            ${userLoans.map((l) => `
+                                <div class="px-3 py-2 rounded-xl surface-sub border border-[#262626] flex items-center justify-between gap-2 text-xs">
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-white truncate">${esc(l.position)} · ${esc(l.playerName)} <span class="text-[10px] ${l.direction === 'OUT' ? 'text-amber-300' : 'text-emerald-400'}">${l.direction === 'OUT' ? 'Cedido' : 'A préstamo'}</span></div>
+                                        <div class="text-[10px] text-gray-400 truncate">${l.direction === 'OUT' ? `En ${esc(l.destTeamName)}` : `Desde ${esc(l.originTeamName)}`} · ${l.semestersLeft} sem. restante(s)</div>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-gray-300 tabular-nums shrink-0">OVR ${l.ovrAtStart}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+
+            Engine.ensureClubCaptain(team);
             const starterSet = new Set(team.starterIds);
             const sorted = Engine.sortSquadPlayers(team.players, squadSortBy, team.starterIds);
 
             document.getElementById('squad-list-container').innerHTML = sorted.map((p) => {
+                Engine.ensurePlayerCondition(p);
                 const isStarter = starterSet.has(p.id);
+                const isCaptain = team.captainId === p.id;
+                const unavail = Engine.getPlayerUnavailableReason(p);
                 const morale = Engine.getMoraleInfo(p.morale);
                 const acad = Engine.getPlayerAcademicInfo(p);
                 const moraleColor = morale.tone === 'emerald' ? 'text-emerald-400' : morale.tone === 'sky' ? 'text-sky-400' : morale.tone === 'amber' ? 'text-amber-300' : 'text-rose-400';
+                const energyColor = p.energy >= 75 ? 'text-emerald-400' : p.energy >= 50 ? 'text-amber-300' : 'text-rose-400';
                 const secEntries = Object.entries(p.secondaryPositions || {});
                 const otherPositions = Engine.POSITIONS.filter((pos) => pos !== p.position);
                 const trainPct = p.trainingTargetPos ? (p.secondaryPositions?.[p.trainingTargetPos] ?? 25) : 0;
 
                 return `
-                    <div class="p-3.5 rounded-2xl surface-sub border border-[#262626] space-y-2.5">
+                    <div class="p-3.5 rounded-2xl surface-sub border ${unavail ? 'border-rose-500/35' : 'border-[#262626]'} space-y-2.5">
                         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                             <div class="flex items-center gap-3 min-w-0 flex-1">
                                 <input type="number" min="1" max="99" value="${p.jerseyNumber}" onchange="handleChangeJersey('${esc(p.id)}', this.value)" aria-label="Dorsal de ${esc(p.name)}" title="Cambiar dorsal"
@@ -2207,49 +2494,49 @@
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <span class="text-xs sm:text-sm font-black text-white">${esc(p.firstName)} ${esc(p.lastName)}</span>
-                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black ${isStarter ? 'bg-emerald-500/20 text-emerald-300' : 'bg-[#1c1c1c] text-gray-400'}">${isStarter ? 'TITULAR' : 'SUPLENTE'}</span>
-                                        ${p.transferListed ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[9px] font-black">EN VENTA</span>` : ''}
+                                        <span class="text-[10px] font-black ${isStarter ? 'text-emerald-400' : 'text-gray-500'}">${isStarter ? 'TITULAR' : 'SUPLENTE'}</span>
+                                        ${isCaptain ? `<span class="text-[10px] font-black text-amber-300">© CAPITÁN</span>` : ''}
+                                        ${p.loanInfo ? `<span class="text-[10px] font-bold text-[#a3adff]">· A préstamo (${p.loanInfo.semestersLeft} sem.)</span>` : ''}
+                                        ${p.transferListed ? `<span class="text-[10px] font-black text-amber-300">· EN VENTA</span>` : ''}
+                                        ${unavail ? `<span class="text-[10px] font-black text-rose-400">· ${esc(unavail)}</span>` : ''}
+                                        ${p.yellowCards > 0 ? `<span class="text-[10px] font-bold text-amber-300">· ${p.yellowCards}/3 amarillas</span>` : ''}
                                         ${acad.nearGraduation ? `<span class="text-[10px] font-bold text-amber-300">· Próximo a titularse</span>` : ''}
                                     </div>
                                     <div class="text-[11px] text-gray-400 flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
                                         <span>${p.age} años</span>
                                         <span>·</span>
-                                        <span>${esc(acad.stageLabel)} (máx. ${acad.maxYears}a)</span>
+                                        <span>${esc(acad.stageLabel)}</span>
                                         <span>·</span>
                                         <span>${esc(p.studiedCareer)}</span>
                                         <span class="${p.careerMatchValid ? 'text-emerald-400' : 'text-amber-300'} font-bold">${p.careerMatchValid ? '✓ Carrera' : '⇄ Otra carrera'}</span>
-                                        <span>· ${p.seasonsAtClub || 1} temp.</span>
+                                        <span>· <span class="${energyColor} font-bold tabular-nums">${p.energy}% energía</span></span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="flex flex-wrap items-center justify-between lg:justify-end gap-3 text-xs shrink-0">
-                                <div class="text-center px-2">
+                                <div class="text-center px-1.5">
                                     <div class="font-black text-white tabular-nums">${p.ovr}</div>
                                     <div class="text-[9px] text-gray-500 uppercase font-bold">OVR</div>
                                 </div>
-                                <div class="text-center px-2">
+                                <div class="text-center px-1.5">
                                     <div class="font-black text-emerald-400 tabular-nums">${Engine.formatClp(p.marketValueEur)}</div>
                                     <div class="text-[9px] text-gray-500 uppercase font-bold">Valor CLP</div>
                                 </div>
-                                <div class="text-center px-2">
+                                <div class="text-center px-1.5">
                                     <div class="font-bold text-gray-200 tabular-nums">${p.contractSemesters}/${acad.maxContractSemesters} sem.</div>
                                     <div class="text-[9px] text-gray-500 uppercase font-bold">Contrato</div>
                                 </div>
-                                <div class="text-center px-2">
+                                <div class="text-center px-1.5">
                                     <div class="font-black ${moraleColor} tabular-nums">${morale.value} · ${esc(morale.label)}</div>
                                     <div class="text-[9px] text-gray-500 uppercase font-bold">Ánimo</div>
                                 </div>
-                                <div class="flex items-center gap-1.5">
-                                    <button type="button" onclick="handleToggleSale('${esc(p.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] font-bold text-amber-300 transition">
-                                        ${p.transferListed ? 'Quitar venta' : 'Vender'}
-                                    </button>
-                                    <button type="button" onclick="handleRenewPlayer('${esc(p.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] font-bold text-emerald-300 transition">
-                                        Renovar
-                                    </button>
-                                    <button type="button" onclick="handleTerminatePlayer('${esc(p.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-rose-950/60 border border-[#2b2b2b] hover:border-rose-500/40 text-[11px] font-bold text-rose-300 transition">
-                                        Rescindir
-                                    </button>
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    ${!isCaptain ? `<button type="button" onclick="handleSetCaptain('${esc(p.id)}')" class="px-2 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] font-bold text-gray-300 hover:text-amber-300 transition" title="Designar capitán">Capitán</button>` : ''}
+                                    ${!p.loanInfo ? `<button type="button" onclick="handleLoanOutPlayer('${esc(p.id)}')" class="px-2 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] font-bold text-[#a3adff] transition">Ceder</button>` : ''}
+                                    ${!p.loanInfo ? `<button type="button" onclick="handleToggleSale('${esc(p.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] font-bold text-amber-300 transition">${p.transferListed ? 'Quitar venta' : 'Vender'}</button>` : ''}
+                                    <button type="button" onclick="handleRenewPlayer('${esc(p.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] font-bold text-emerald-300 transition">Renovar</button>
+                                    ${!p.loanInfo ? `<button type="button" onclick="handleTerminatePlayer('${esc(p.id)}')" class="px-2 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-rose-950/60 border border-[#2b2b2b] hover:border-rose-500/40 text-[11px] font-bold text-rose-300 transition">Rescindir</button>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -2280,6 +2567,23 @@
                 `;
             }).join('');
         }
+
+        window.handleSetCaptain = (pid) => {
+            const team = getUserTeam();
+            if (!team) return;
+            const res = Engine.setClubCaptain(team, pid);
+            saveCareerState();
+            renderAllCareerViews();
+            showToast(res.message, res.ok ? 'success' : 'error');
+        };
+
+        window.handleLoanOutPlayer = (pid) => {
+            if (!state) return;
+            const res = Engine.loanOutPlayer(state, pid, 2);
+            saveCareerState();
+            renderAllCareerViews();
+            showToast(res.message, res.ok ? 'success' : 'error');
+        };
 
         window.handleStartPositionTraining = (pid) => {
             const team = getUserTeam();
@@ -2543,6 +2847,7 @@
             }
 
             // Jugadores Recomendados por Secretaría Técnica
+            const watchSet = new Set(state.watchlist || []);
             const recBox = document.getElementById('market-recommended-box');
             if (recBox) {
                 const recs = Engine.getRecommendedMarketPlayers(state, 6);
@@ -2562,27 +2867,63 @@
                                     : 'text-emerald-400';
                             const isSameForUser = Data.validateTeamCareerMatch(p.studiedCareer, team.career);
                             const blockedByQuota = !isSameForUser && quota.atLimit;
+                            const isWatched = watchSet.has(p.id);
                             return `
                                 <div class="p-3 rounded-xl surface-sub border border-[#262626] flex flex-col justify-between gap-2.5 text-xs">
                                     <div class="space-y-1">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-[10px] font-black uppercase tracking-wider ${tagColor}">${esc(p.recommendationTag)}</span>
-                                            <span class="font-black text-white tabular-nums">OVR ${p.ovr}</span>
+                                            <div class="flex items-center gap-2">
+                                                <button type="button" onclick="handleToggleWatchlist('${esc(p.id)}')" title="${isWatched ? 'Quitar de seguimiento' : 'Añadir a seguimiento'}" class="text-xs ${isWatched ? 'text-amber-300' : 'text-gray-500 hover:text-amber-300'} transition">${isWatched ? '★' : '☆'}</button>
+                                                <span class="font-black text-white tabular-nums">OVR ${p.ovr}</span>
+                                            </div>
                                         </div>
                                         <div class="font-black text-white truncate">${esc(p.position)} · ${esc(p.name)} <span class="text-gray-500 font-semibold">(${p.age})</span></div>
                                         <div class="text-[11px] text-gray-400 truncate">${esc(p.teamName)} · ${esc(p.studiedCareer)}</div>
                                         <div class="text-[10px] ${blockedByQuota ? 'text-amber-300 font-bold' : 'text-gray-500'} leading-snug">${blockedByQuota ? 'Otra carrera · Cupo lleno (3/3)' : esc(p.recommendationReason)}</div>
                                     </div>
-                                    <div class="flex items-center justify-between gap-2 pt-2 border-t border-[#222226]">
+                                    <div class="flex items-center justify-between gap-1.5 pt-2 border-t border-[#222226]">
                                         <span class="font-black text-emerald-400 tabular-nums">${Engine.formatClp(p.estimatedCostClp)}</span>
-                                        <button type="button" onclick="handleSignMarketPlayer('${esc(p.id)}')" class="px-3 py-1.5 rounded-lg ${blockedByQuota ? 'bg-[#1c1c1c] text-amber-300 border border-amber-500/40' : actionCls} font-black text-[11px] transition">
-                                            ${blockedByQuota ? 'Cupo 3/3' : actionLabel}
-                                        </button>
+                                        <div class="flex items-center gap-1">
+                                            ${!p.isFreeAgent && !blockedByQuota ? `<button type="button" onclick="openTransferNegotiationModal('${esc(p.id)}')" class="px-2 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-gray-200 font-bold text-[11px] transition">Negociar</button>` : ''}
+                                            <button type="button" onclick="handleSignMarketPlayer('${esc(p.id)}')" class="px-2.5 py-1.5 rounded-lg ${blockedByQuota ? 'bg-[#1c1c1c] text-amber-300 border border-amber-500/40' : actionCls} font-black text-[11px] transition">
+                                                ${blockedByQuota ? 'Cupo 3/3' : actionLabel}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             `;
                         }).join('')}
                     </div>
+                `;
+            }
+
+            // Lista de Seguimiento / Ojeador
+            const watchBox = document.getElementById('market-watchlist-box');
+            if (watchBox) {
+                const items = Engine.getWatchlistSnapshot(state);
+                watchBox.innerHTML = `
+                    <div class="flex items-center justify-between gap-2 border-b border-[#262626] pb-2.5">
+                        <h3 class="text-sm font-black uppercase tracking-wider text-white">Lista de Seguimiento (${items.length})</h3>
+                        <span class="text-[11px] text-gray-500">Marca jugadores con ☆ para monitorear alertas</span>
+                    </div>
+                    ${items.length === 0
+                        ? `<p class="text-xs text-gray-500">No sigues a ningún jugador aún. Usa la estrella ☆ en el buscador o recomendados.</p>`
+                        : `<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            ${items.map((w) => `
+                                <div class="p-3 rounded-xl surface-sub border border-[#262626] flex items-center justify-between gap-2 text-xs">
+                                    <div class="min-w-0">
+                                        <div class="font-black text-white truncate">${esc(w.player.position)} · ${esc(w.player.name)} <span class="text-gray-400 font-bold">(OVR ${w.player.ovr})</span></div>
+                                        <div class="text-[10px] text-gray-400 truncate">${esc(w.clubName)} · <span class="text-amber-300 font-bold">${esc(w.alerts.join(' · '))}</span></div>
+                                    </div>
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        ${!w.inUserClub && !w.isFreeAgent ? `<button type="button" onclick="openTransferNegotiationModal('${esc(w.player.id)}')" class="px-2 py-1 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-gray-200 font-bold text-[11px]">Negociar</button>` : ''}
+                                        ${!w.inUserClub ? `<button type="button" onclick="handleSignMarketPlayer('${esc(w.player.id)}')" class="px-2.5 py-1 rounded-lg bg-[#717fff] hover:bg-[#828eff] text-white font-black text-[11px]">Fichar</button>` : ''}
+                                        <button type="button" onclick="handleToggleWatchlist('${esc(w.player.id)}')" class="px-2 py-1 rounded-lg text-gray-400 hover:text-rose-300 font-bold text-[11px]" title="Quitar">✕</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>`}
                 `;
             }
 
@@ -2670,12 +3011,14 @@
                 return;
             }
 
+            const watchSet = new Set(state.watchlist || []);
             mount.innerHTML = results.map((p) => {
                 const cost = p.isFreeAgent
                     ? Math.round((p.marketValueEur * 0.45) / 1000) * 1000
                     : Math.round((p.marketValueEur * (p.transferListed ? 1.0 : 1.12)) / 1000) * 1000;
                 const isSameForUser = Data.validateTeamCareerMatch(p.studiedCareer, team.career);
                 const blockedByQuota = !isSameForUser && quota.atLimit;
+                const isWatched = watchSet.has(p.id);
                 const actionLabel = blockedByQuota ? 'Cupo 3/3' : (win.open ? 'Fichar' : 'Pre-Acuerdo');
                 const actionCls = blockedByQuota
                     ? 'bg-[#1c1c1c] text-amber-300 border border-amber-500/40'
@@ -2683,28 +3026,134 @@
                 return `
                     <div class="p-3 rounded-xl surface-sub border border-[#262626] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                         <div class="flex items-center gap-2.5 min-w-0">
+                            <button type="button" onclick="handleToggleWatchlist('${esc(p.id)}')" title="${isWatched ? 'Quitar de seguimiento' : 'Seguir jugador'}" class="text-sm ${isWatched ? 'text-amber-300' : 'text-gray-500 hover:text-amber-300'} transition shrink-0">${isWatched ? '★' : '☆'}</button>
                             <span class="px-2 py-1 rounded-lg bg-[#1c1c1c] font-black text-[#a3adff] shrink-0">${esc(p.position)}</span>
                             <div class="min-w-0">
                                 <div class="font-black text-white truncate">${esc(p.name)} <span class="text-gray-400 font-semibold">(${p.age} años)</span></div>
                                 <div class="text-[11px] text-gray-400 truncate">${esc(p.teamName)} · ${esc(p.studiedCareer)} ${!p.isFreeAgent ? `· ${p.seasonsAtClub || 1} temp.` : ''} ${isSameForUser ? '<span class="text-emerald-400 font-bold">· Tu carrera</span>' : (blockedByQuota ? '<span class="text-amber-300 font-bold">· Otra carrera (cupo lleno)</span>' : '<span class="text-gray-500">· Otra carrera</span>')}</div>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                            <div class="text-center">
+                        <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2 shrink-0">
+                            <div class="text-center px-1">
                                 <div class="font-black text-white tabular-nums">${p.ovr}</div>
                                 <div class="text-[9px] text-gray-500 uppercase">OVR</div>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right px-1">
                                 <div class="font-black text-emerald-400 tabular-nums">${Engine.formatClp(cost)}</div>
                                 <div class="text-[9px] text-gray-500">${p.isFreeAgent ? 'Prima libre' : (win.open ? 'Traspaso CLP' : 'Pre-acuerdo CLP')}</div>
                             </div>
-                            <button type="button" onclick="handleSignMarketPlayer('${esc(p.id)}')" class="px-3.5 py-2 rounded-xl ${actionCls} font-black text-xs transition">
-                                ${actionLabel}
-                            </button>
+                            <div class="flex items-center gap-1">
+                                ${!p.isFreeAgent && !blockedByQuota ? `<button type="button" onclick="openTransferNegotiationModal('${esc(p.id)}')" class="px-2.5 py-2 rounded-xl bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-gray-200 font-bold text-[11px] transition">Negociar</button>` : ''}
+                                ${!p.isFreeAgent && !blockedByQuota ? `<button type="button" onclick="handleLoanInPlayer('${esc(p.id)}')" class="px-2.5 py-2 rounded-xl bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[#a3adff] font-bold text-[11px] transition">Préstamo</button>` : ''}
+                                <button type="button" onclick="handleSignMarketPlayer('${esc(p.id)}')" class="px-3 py-2 rounded-xl ${actionCls} font-black text-[11px] transition">
+                                    ${actionLabel}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
+        };
+
+        window.handleToggleWatchlist = (pid) => {
+            if (!state) return;
+            const res = Engine.toggleWatchlistPlayer(state, pid);
+            saveCareerState();
+            renderMarketView();
+            if (res.message) showToast(res.message, res.watched ? 'success' : 'brand');
+        };
+
+        window.handleLoanInPlayer = (pid) => {
+            if (!state) return;
+            const res = Engine.loanInMarketPlayer(state, pid, 2);
+            saveCareerState();
+            renderAllCareerViews();
+            showToast(res.message, res.ok ? 'success' : 'error');
+        };
+
+        let activeNegTargetId = null;
+
+        window.openTransferNegotiationModal = (pid) => {
+            if (!state) return;
+            const userTeam = getUserTeam();
+            let target = null;
+            let seller = null;
+            for (const t of state.teams) {
+                if (t.id === userTeam.id) continue;
+                const found = t.players.find((p) => p.id === pid);
+                if (found) { target = found; seller = t; break; }
+            }
+            if (!target || !seller) {
+                showToast('Solo puedes negociar por jugadores con club vigente.', 'error');
+                return;
+            }
+            activeNegTargetId = pid;
+            const baseVal = Number(target.marketValueEur) || Data.calculatePlayerValueEur(target);
+            const suggested = Math.max(5000, Math.round((baseVal * 0.92) / 1000) * 1000);
+
+            document.getElementById('neg-modal-title').textContent = `${target.position} · ${target.name} (OVR ${target.ovr})`;
+            document.getElementById('neg-modal-sub').textContent = `${seller.name} (${seller.division}ª Div) · ${target.studiedCareer}`;
+            document.getElementById('neg-target-val').textContent = `${Engine.formatClp(baseVal)} CLP`;
+            document.getElementById('neg-user-budget').textContent = `${Engine.formatClp(userTeam.budgetEur)} CLP`;
+            const cashInput = document.getElementById('neg-cash-input');
+            cashInput.value = Math.min(userTeam.budgetEur, suggested);
+
+            const swapSel = document.getElementById('neg-swap-select');
+            const swappable = userTeam.players.filter((p) => !p.loanInfo);
+            swapSel.innerHTML = `<option value="">Sin intercambio (solo dinero CLP)</option>` +
+                swappable.map((p) => `<option value="${esc(p.id)}">${esc(p.position)} · ${esc(p.name)} (OVR ${p.ovr} · ${Engine.formatClp(p.marketValueEur)})</option>`).join('');
+
+            const fb = document.getElementById('neg-feedback-box');
+            fb.classList.add('hidden');
+            fb.textContent = '';
+
+            document.getElementById('transfer-negotiation-modal')?.classList.remove('hidden');
+            window.updateNegPreview();
+        };
+
+        window.closeTransferNegotiationModal = () => {
+            activeNegTargetId = null;
+            document.getElementById('transfer-negotiation-modal')?.classList.add('hidden');
+        };
+
+        window.updateNegPreview = () => {
+            if (!state || !activeNegTargetId) return;
+            const userTeam = getUserTeam();
+            const cash = Math.max(0, Number(document.getElementById('neg-cash-input')?.value) || 0);
+            const swapId = document.getElementById('neg-swap-select')?.value || '';
+            const swapP = swapId ? userTeam.players.find((p) => p.id === swapId) : null;
+            const swapEst = swapP ? Math.round((Number(swapP.marketValueEur) || 0) * 0.82 / 1000) * 1000 : 0;
+            const previewEl = document.getElementById('neg-preview-line');
+            if (previewEl) {
+                previewEl.innerHTML = swapP
+                    ? `Paquete ofertado: <span class="font-black text-emerald-400 tabular-nums">${Engine.formatClp(cash)} CLP</span> + <span class="font-black text-white">${esc(swapP.name)}</span> (crédito aprox. ${Engine.formatClp(swapEst)}) · Total aprox. <span class="font-black text-[#a3adff] tabular-nums">${Engine.formatClp(cash + swapEst)}</span>.`
+                    : `Paquete ofertado: <span class="font-black text-emerald-400 tabular-nums">${Engine.formatClp(cash)} CLP</span> en efectivo.`;
+            }
+        };
+
+        window.handleSubmitCustomOffer = () => {
+            if (!state || !activeNegTargetId) return;
+            const cashOfferClp = Math.max(0, Number(document.getElementById('neg-cash-input')?.value) || 0);
+            const swapPlayerId = document.getElementById('neg-swap-select')?.value || '';
+            const res = Engine.submitNegotiatedTransferOffer(state, activeNegTargetId, { cashOfferClp, swapPlayerId });
+
+            if (res.ok) {
+                closeTransferNegotiationModal();
+                saveCareerState();
+                renderAllCareerViews();
+                showToast(res.message, 'success');
+                return;
+            }
+            const fb = document.getElementById('neg-feedback-box');
+            if (fb) {
+                fb.classList.remove('hidden');
+                fb.className = `p-3 rounded-xl border text-xs leading-relaxed ${res.outcome === 'COUNTER' ? 'border-amber-500/40 bg-amber-950/25 text-amber-200' : 'border-rose-500/40 bg-rose-950/25 text-rose-200'}`;
+                fb.textContent = res.message;
+                if (res.outcome === 'COUNTER' && typeof res.counterCashClp === 'number') {
+                    document.getElementById('neg-cash-input').value = res.counterCashClp;
+                    window.updateNegPreview();
+                }
+            }
         };
 
         window.handleSignMarketPlayer = (pid, multiplier = 1) => {
@@ -2845,6 +3294,219 @@
                 return;
             }
 
+            if (activeTableTab === 'copa') {
+                const copa = state.copa;
+                if (!copa) {
+                    mount.innerHTML = `<div class="p-6 text-center text-xs text-gray-400">La Copa Intercarreras se sortea al comenzar la temporada.</div>`;
+                    return;
+                }
+                const byId = new Map(state.teams.map((t) => [t.id, t]));
+                const champ = copa.championId ? byId.get(copa.championId) : null;
+                const pending = Engine.getPendingUserCopaMatch(state);
+                mount.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h4 class="text-sm font-black text-white">Copa Intercarreras · Temporada ${copa.season}</h4>
+                                <p class="text-[11px] text-gray-400">32 clubes de 1ª, 2ª y 3ª División en eliminación directa.</p>
+                            </div>
+                            ${champ
+                                ? `<span class="text-xs font-black text-amber-300">🏆 Campeón: ${esc(champ.name)}</span>`
+                                : pending
+                                    ? `<div class="flex items-center gap-2">
+                                        <button type="button" onclick="handlePlayCopaLive()" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 font-black text-xs transition">Jugar ${esc(pending.roundLabel)}</button>
+                                        <button type="button" onclick="handleSimCopaRound()" class="px-3 py-1.5 rounded-xl surface-sub border border-[#2b2b2b] text-white font-bold text-xs transition">Simular</button>
+                                    </div>`
+                                    : `<span class="text-xs text-gray-400">${copa.userEliminatedRound ? `Eliminado en ${esc(copa.userEliminatedRound)}` : 'En curso'}</span>`}
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            ${Engine.COPA_ROUNDS.map((rm) => {
+                                const list = copa.rounds?.[rm.key] || [];
+                                if (list.length === 0) return '';
+                                return `
+                                    <div class="space-y-1.5">
+                                        <div class="text-[11px] font-black uppercase tracking-wider text-amber-300">${esc(rm.label)}</div>
+                                        ${list.map((m) => {
+                                            const h = byId.get(m.homeId);
+                                            const a = byId.get(m.awayId);
+                                            const isUser = m.homeId === state.userTeamId || m.awayId === state.userTeamId;
+                                            const scoreTxt = m.played
+                                                ? `${m.homeScore} - ${m.awayScore}${m.homeScore === m.awayScore ? ' (P)' : ''}`
+                                                : 'Pendiente';
+                                            return `
+                                                <div class="px-3 py-2 rounded-xl surface-sub border ${isUser ? 'border-[#717fff]/60 bg-[#717fff]/10' : 'border-[#262626]'} flex items-center justify-between gap-2 text-xs">
+                                                    <div class="min-w-0 truncate">
+                                                        <span class="${m.winnerId === m.homeId ? 'font-black text-emerald-400' : 'font-bold text-white'}">${esc(h?.name || '?')}</span>
+                                                        <span class="text-gray-500 mx-1">vs</span>
+                                                        <span class="${m.winnerId === m.awayId ? 'font-black text-emerald-400' : 'font-bold text-white'}">${esc(a?.name || '?')}</span>
+                                                    </div>
+                                                    <span class="font-black tabular-nums ${m.played ? 'text-white' : 'text-gray-500'} shrink-0">${scoreTxt}</span>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (activeTableTab === 'stats') {
+                const divFilter = window._statsDivFilter || 'ALL';
+                const leaders = Engine.getDivisionPlayerLeaders(state, divFilter);
+                const { bestSeven, mvp } = Engine.buildSeasonBestSeven(state, divFilter);
+                const renderLeaderList = (title, list, statKey, suffix) => `
+                    <div class="p-3.5 rounded-2xl surface-sub border border-[#262626] space-y-2">
+                        <h5 class="text-[11px] font-black uppercase tracking-wider text-[#a3adff]">${esc(title)}</h5>
+                        ${list.length === 0
+                            ? `<p class="text-xs text-gray-500">Juega o simula fechas para ver registros.</p>`
+                            : list.map((r, i) => `
+                                <div class="flex items-center justify-between gap-2 text-xs py-1 ${i > 0 ? 'border-t border-[#222226]' : ''}">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="w-5 text-[10px] font-black text-gray-500 tabular-nums">#${i + 1}</span>
+                                        <div class="min-w-0">
+                                            <div class="font-bold ${r.isUserClub ? 'text-emerald-400' : 'text-white'} truncate">${esc(r.name)}</div>
+                                            <div class="text-[10px] text-gray-400 truncate">${esc(r.teamName)} · ${esc(r.position)}</div>
+                                        </div>
+                                    </div>
+                                    <span class="font-black text-white tabular-nums shrink-0">${r[statKey]} <span class="text-[10px] text-gray-500 font-bold">${esc(suffix)}</span></span>
+                                </div>
+                            `).join('')}
+                    </div>
+                `;
+                mount.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h4 class="text-sm font-black text-white">Estadísticas de Temporada ${state.season} & 7 Ideal</h4>
+                            <select aria-label="Filtrar división de estadísticas" onchange="setStatsDivFilter(this.value)" class="px-3 py-1.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-xs font-bold text-white">
+                                <option value="ALL" ${divFilter === 'ALL' ? 'selected' : ''}>Todo el Intercarreras</option>
+                                <option value="div1" ${divFilter === 'div1' ? 'selected' : ''}>1ª División</option>
+                                <option value="div2" ${divFilter === 'div2' ? 'selected' : ''}>2ª División</option>
+                                <option value="div3A" ${divFilter === 'div3A' ? 'selected' : ''}>3ª Div · Conf. A</option>
+                                <option value="div3B" ${divFilter === 'div3B' ? 'selected' : ''}>3ª Div · Conf. B</option>
+                            </select>
+                        </div>
+
+                        <div class="p-4 rounded-2xl surface-sub border border-[#262626] space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <h5 class="text-xs font-black uppercase tracking-wider text-emerald-400">7 Ideal del Campeonato</h5>
+                                ${mvp ? `<span class="text-xs font-black text-amber-300">MVP: ${esc(mvp.name)} (${esc(mvp.teamName)} · ${mvp.goals}G ${mvp.assists}A)</span>` : ''}
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                                ${bestSeven.map((p) => `
+                                    <div class="p-2.5 rounded-xl bg-[#151515] border ${mvp && p.id === mvp.id ? 'border-amber-400/50' : 'border-[#262626]'} text-xs">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[10px] font-black text-[#a3adff]">${esc(p.position)}</span>
+                                            <span class="font-black text-white tabular-nums">OVR ${p.ovr}</span>
+                                        </div>
+                                        <div class="font-black ${p.isUserClub ? 'text-emerald-400' : 'text-white'} truncate mt-0.5">${esc(p.name)}</div>
+                                        <div class="text-[10px] text-gray-400 truncate">${esc(p.teamName)}</div>
+                                        <div class="text-[10px] text-gray-300 tabular-nums mt-1">${p.goals}G · ${p.assists}A${p.position === 'ARQ' ? ` · ${p.cleanSheets} VI` : ''}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            ${renderLeaderList('Goleadores', leaders.scorers, 'goals', 'G')}
+                            ${renderLeaderList('Asistidores', leaders.assisters, 'assists', 'A')}
+                            ${renderLeaderList('Porterías a Cero', leaders.cleanSheets, 'cleanSheets', 'VI')}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            if (activeTableTab === 'history') {
+                const ledger = Engine.ensureDtLedger(state);
+                const stats = state.careerStats || {};
+                const achs = state.careerAchievements || [];
+                const score = Engine.computeDtCareerScore(state);
+                const totalW = ledger.stints.reduce((s, x) => s + x.wins, 0);
+                const totalD = ledger.stints.reduce((s, x) => s + x.draws, 0);
+                const totalL = ledger.stints.reduce((s, x) => s + x.losses, 0);
+                mount.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h4 class="text-sm font-black text-white">Historial & Vitrina · DT ${esc(state.dtName)}</h4>
+                                <p class="text-[11px] text-gray-400">Trayectoria completa por clubes, récords y títulos obtenidos.</p>
+                            </div>
+                            <span class="text-sm font-black text-emerald-400 tabular-nums">${score} pts de carrera</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                            <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                                <div class="text-[10px] font-bold uppercase text-gray-400">Balance Global</div>
+                                <div class="text-base font-black text-white tabular-nums mt-0.5">${totalW}G - ${totalD}E - ${totalL}P</div>
+                            </div>
+                            <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                                <div class="text-[10px] font-bold uppercase text-gray-400">Goles (GF / GC)</div>
+                                <div class="text-base font-black text-white tabular-nums mt-0.5">${ledger.totalGoalsFor || 0} / ${ledger.totalGoalsAgainst || 0}</div>
+                            </div>
+                            <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                                <div class="text-[10px] font-bold uppercase text-gray-400">Clásicos Ganados</div>
+                                <div class="text-base font-black text-amber-300 tabular-nums mt-0.5">${stats.derbyWins || 0}</div>
+                            </div>
+                            <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                                <div class="text-[10px] font-bold uppercase text-gray-400">Títulos & Logros</div>
+                                <div class="text-base font-black text-emerald-400 tabular-nums mt-0.5">${achs.length}</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                            <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                                <div class="text-[10px] font-bold uppercase text-gray-400">Mayor Goleada</div>
+                                <div class="font-black text-white mt-0.5">${ledger.biggestWin ? `${esc(ledger.biggestWin.score)} vs ${esc(ledger.biggestWin.opponentName)}` : 'Sin victorias aún'}</div>
+                                <div class="text-[10px] text-gray-400">${ledger.biggestWin ? `Temp. ${ledger.biggestWin.season} · ${esc(ledger.biggestWin.competition)}` : '—'}</div>
+                            </div>
+                            <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                                <div class="text-[10px] font-bold uppercase text-gray-400">Fichaje Más Caro</div>
+                                <div class="font-black text-white mt-0.5">${ledger.biggestSigning ? `${esc(ledger.biggestSigning.playerName)} (${Engine.formatClp(ledger.biggestSigning.feeClp)})` : 'Sin fichajes aún'}</div>
+                                <div class="text-[10px] text-gray-400">${ledger.biggestSigning ? `Desde ${esc(ledger.biggestSigning.otherClubName)} · Temp. ${ledger.biggestSigning.season}` : '—'}</div>
+                            </div>
+                            <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                                <div class="text-[10px] font-bold uppercase text-gray-400">Venta Más Alta</div>
+                                <div class="font-black text-emerald-400 mt-0.5">${ledger.biggestSale ? `${esc(ledger.biggestSale.playerName)} (${Engine.formatClp(ledger.biggestSale.feeClp)})` : 'Sin ventas aún'}</div>
+                                <div class="text-[10px] text-gray-400">${ledger.biggestSale ? `A ${esc(ledger.biggestSale.otherClubName)} · Temp. ${ledger.biggestSale.season}` : '—'}</div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <h5 class="text-xs font-black uppercase tracking-wider text-[#a3adff]">Etapas por Club</h5>
+                            <div class="space-y-1.5">
+                                ${ledger.stints.slice().reverse().map((st) => `
+                                    <div class="p-3 rounded-xl surface-sub border border-[#262626] flex flex-wrap items-center justify-between gap-2 text-xs">
+                                        <div>
+                                            <div class="font-black text-white">${esc(st.clubName)} <span class="text-[10px] font-bold text-gray-400">(${st.divisionCurrent}ª Div · Temp. ${st.seasonStart}${st.seasonEnd ? `–${st.seasonEnd}` : '–Actual'})</span></div>
+                                            ${st.trophies.length > 0 ? `<div class="text-[10px] text-amber-300 font-bold mt-0.5">${esc(st.trophies.join(' · '))}</div>` : ''}
+                                        </div>
+                                        <div class="font-bold text-gray-300 tabular-nums">${st.matches} PJ · ${st.wins}G ${st.draws}E ${st.losses}P · ${st.gf}:${st.ga}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <h5 class="text-xs font-black uppercase tracking-wider text-amber-300">Vitrina de Logros</h5>
+                            ${achs.length === 0
+                                ? `<p class="text-xs text-gray-500">Aún no registras trofeos en tu vitrina. Compite en Liga, Playoffs y Copa Intercarreras.</p>`
+                                : `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    ${achs.map((a) => `
+                                        <div class="px-3 py-2 rounded-xl surface-sub border border-amber-500/30 flex items-center justify-between gap-2 text-xs">
+                                            <span class="font-bold text-white truncate">${esc(a.title)}</span>
+                                            <span class="font-black text-emerald-400 tabular-nums shrink-0">+${a.points} pts</span>
+                                        </div>
+                                    `).join('')}
+                                </div>`}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
             // Calendario Simplificado del Usuario ("vs RIVAL" + Local/Visita)
             const team = getUserTeam();
             const divRounds = team.division === 1 ? state.calendar.div1 : team.division === 2 ? state.calendar.div2 : (team.conf === 'B' ? state.calendar.div3B : state.calendar.div3A);
@@ -2900,6 +3562,11 @@
                 </div>
             `;
         }
+
+        window.setStatsDivFilter = (divKey) => {
+            window._statsDivFilter = divKey || 'ALL';
+            renderStandingsAndCalendarView();
+        };
 
         // =================================================================
         // MOTOR EN VIVO: 2 MIN/TIEMPO + VELOCIDAD 1x/2x/4x + MAPA DE CALOR
@@ -3095,6 +3762,33 @@
         function renderLiveTacticsControls() {
             const team = getUserTeam();
             if (!team) return;
+
+            // Charla de Entretiempo (solo visible en la pausa del Medio Tiempo)
+            const talkBox = document.getElementById('live-halftime-talk-box');
+            const talkOpts = document.getElementById('live-halftime-talk-options');
+            const talkStatus = document.getElementById('live-halftime-talk-status');
+            if (talkBox && talkOpts) {
+                if (liveSession?.halftimePaused) {
+                    talkBox.classList.remove('hidden');
+                    const usedId = liveSession.halftimeTalkUsed || null;
+                    if (talkStatus) {
+                        talkStatus.textContent = usedId ? 'Charla aplicada para el 2° tiempo' : 'Elige un mensaje para el 2° tiempo';
+                    }
+                    talkOpts.innerHTML = Engine.HALFTIME_TALKS.map((t) => {
+                        const isPicked = usedId === t.id;
+                        return `
+                            <button type="button" ${usedId ? 'disabled' : ''} onclick="handleHalftimeTalk('${esc(t.id)}')"
+                                class="p-2.5 rounded-xl border text-left transition ${isPicked ? 'border-emerald-400 bg-emerald-500/15 text-white' : 'border-[#262626] bg-[#1c1c1c] hover:border-amber-400/60 text-gray-200 disabled:opacity-50'}">
+                                <div class="text-[11px] font-black">${esc(t.label)}</div>
+                                <div class="text-[10px] text-gray-400 mt-0.5 leading-snug">${esc(t.desc)}</div>
+                            </button>
+                        `;
+                    }).join('');
+                } else {
+                    talkBox.classList.add('hidden');
+                }
+            }
+
             const sel = document.getElementById('live-formation-select');
             if (sel) {
                 sel.innerHTML = Object.entries(Engine.FORMATIONS_F7).map(([k, v]) =>
@@ -3105,19 +3799,35 @@
             document.getElementById('live-starters-list').innerHTML = team.starterIds.map((id) => {
                 const p = pMap.get(id);
                 if (!p) return '';
+                Engine.ensurePlayerCondition(p);
                 const act = liveSelectedStarterId === p.id;
                 return `<button type="button" onclick="selectLiveStarter('${esc(p.id)}')" class="w-full px-2 py-1.5 rounded-lg text-[11px] text-left flex justify-between border ${act ? 'border-[#717fff] bg-[#717fff]/20 text-white' : 'border-[#262626] bg-[#1c1c1c] text-gray-200'}">
-                    <span class="truncate font-bold">${esc(p.position)} · ${esc(p.lastName)}</span><span class="font-black">${p.ovr}</span>
+                    <span class="truncate font-bold">${esc(p.position)} · ${esc(p.lastName)} <span class="text-[9px] text-gray-400">${p.energy}%</span></span><span class="font-black">${p.ovr}</span>
                 </button>`;
             }).join('');
             document.getElementById('live-bench-list').innerHTML = team.benchIds.map((id) => {
                 const p = pMap.get(id);
                 if (!p) return '';
-                return `<button type="button" onclick="swapLiveBench('${esc(p.id)}')" class="w-full px-2 py-1.5 rounded-lg text-[11px] text-left flex justify-between border border-[#262626] hover:border-emerald-400/60 bg-[#1c1c1c] text-gray-300">
+                Engine.ensurePlayerCondition(p);
+                const unavail = Engine.isPlayerUnavailable(p);
+                return `<button type="button" ${unavail ? 'disabled' : ''} onclick="swapLiveBench('${esc(p.id)}')" class="w-full px-2 py-1.5 rounded-lg text-[11px] text-left flex justify-between border ${unavail ? 'border-rose-500/30 opacity-45 cursor-not-allowed' : 'border-[#262626] hover:border-emerald-400/60'} bg-[#1c1c1c] text-gray-300">
                     <span class="truncate">${esc(p.position)} · ${esc(p.lastName)}</span><span class="font-black">${p.ovr}</span>
                 </button>`;
             }).join('');
         }
+
+        window.handleHalftimeTalk = (talkId) => {
+            if (!liveSession || !liveSession.halftimePaused || liveSession.halftimeTalkUsed) return;
+            const home = state.teams.find((t) => t.id === liveSession.timeline.homeId);
+            const away = state.teams.find((t) => t.id === liveSession.timeline.awayId);
+            const res = Engine.applyHalftimeTeamTalk(liveSession, talkId, state.userTeamId, home, away);
+            if (res.ok) {
+                liveSession = res.session;
+                renderLiveTacticsControls();
+                renderLiveMatchFrame();
+                showToast(res.message, 'success');
+            }
+        };
 
         window.toggleLivePause = () => {
             if (!liveSession || liveSession.finished || liveSession.halftimePaused) return;

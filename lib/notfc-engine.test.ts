@@ -66,6 +66,26 @@ import {
   evaluateAndGenerateDtJobOffers,
   acceptDtJobOffer,
   declineDtJobOffer,
+  setClubTactics,
+  computeTacticsModifiers,
+  applyHalftimeTeamTalk,
+  setClubCaptain,
+  getCaptainImpact,
+  signTryoutCandidate,
+  dismissTryoutSession,
+  loanOutPlayer,
+  loanInMarketPlayer,
+  processActiveLoansStep,
+  toggleWatchlistPlayer,
+  getWatchlistSnapshot,
+  submitNegotiatedTransferOffer,
+  getDivisionPlayerLeaders,
+  buildSeasonBestSeven,
+  ensureDtLedger,
+  getPendingUserCopaMatch,
+  prepareUserCopaLiveMatch,
+  simulateUserCopaRoundNow,
+  ensureAvailableStarters,
 } from '../public/notfc-engine.js';
 
 function makeSeededRng(seed = 42) {
@@ -806,5 +826,210 @@ test('Topes contractuales académicos (5a/2a/3a), titulación (24+), desarrollo 
   assert.equal(state.careerStats.totalWins, 7, 'Estadísticas del DT deben conservarse al cambiar de club');
   assert.equal(state.dtJobOffers.length, 0);
 });
+
+test('v0.2.0: tácticas, fatiga/lesiones/sanciones, charlas de entretiempo, certámenes UFRO y capitanía', () => {
+  const rng = makeSeededRng(2020);
+  const db = buildSeedDatabase(rng);
+  const state = initializeDtCareerState({
+    database: db,
+    dtName: 'DT v0.2.0',
+    selectedTeamId: 'FECSH-EFI-01',
+    rng,
+  });
+  const club = state.teams.find((t) => t.id === state.userTeamId);
+
+  // 1) Instrucciones tácticas simples
+  const tacRes = setClubTactics(club, { mentality: 'OFENSIVA', pressing: 'ALTA', style: 'DIRECTO' });
+  assert.equal(tacRes.ok, true);
+  const mod = computeTacticsModifiers(club);
+  assert.ok(mod.attackMod > 2.5, 'Mentalidad ofensiva + presión alta + directo debe elevar ataque');
+  assert.ok(mod.energyDrain >= 20, 'Presión alta debe aumentar desgaste físico');
+
+  // 2) Bloqueo de jugador lesionado/suspendido en swapStarterAndBench y reemplazo automático
+  const benchPlayer = club.players.find((p) => club.benchIds.includes(p.id));
+  benchPlayer.injuredMatches = 2;
+  const starterNonGk = club.players.find((p) => club.starterIds.includes(p.id) && p.position !== 'ARQ');
+  const blockedSwap = swapStarterAndBench(club, starterNonGk.id, benchPlayer.id);
+  assert.equal(blockedSwap.ok, false, 'No debe permitir alinear a un jugador lesionado');
+  benchPlayer.injuredMatches = 0;
+
+  starterNonGk.suspendedMatches = 1;
+  const replaced = ensureAvailableStarters(club);
+  assert.equal(replaced.length, 1);
+  assert.equal(club.starterIds.includes(starterNonGk.id), false);
+  starterNonGk.suspendedMatches = 0;
+
+  // 3) Capitanía y liderazgo
+  const newCap = club.players.find((p) => p.id !== club.captainId);
+  const capRes = setClubCaptain(club, newCap.id);
+  assert.equal(capRes.ok, true);
+  assert.equal(club.captainId, newCap.id);
+  const capImpact = getCaptainImpact(club, true);
+  assert.equal(capImpact.captain.id, newCap.id);
+
+  // 4) Charla de entretiempo en partido en vivo
+  advanceSimulationStep(state, 'next_event', rng); // PRE_SEASON_SPONSORS
+  advanceSimulationStep(state, 'next_event', rng); // MARKET_OPEN
+  const matchStep = advanceSimulationStep(state, 'next_match', rng);
+  assert.equal(matchStep.status, 'MATCH_READY');
+  const pm = state.pendingLiveMatch;
+  const home = state.teams.find((t) => t.id === pm.homeId);
+  const away = state.teams.find((t) => t.id === pm.awayId);
+  const session = {
+    matchId: pm.matchId,
+    label: pm.label,
+    allowDraw: pm.allowDraw,
+    timeline: pm.timeline,
+    minute: 25,
+    halftimePaused: true,
+  };
+  const talkRes = applyHalftimeTeamTalk(session, 'BACK_SQUAD', state.userTeamId, home, away, rng);
+  assert.equal(talkRes.ok, true);
+  assert.equal(talkRes.session.halftimeTalkUsed, 'BACK_SQUAD');
+  assert.ok(talkRes.session.timeline.events.some((e) => e.type === 'TALK'), 'Debe inyectar comentario de charla en el 2° tiempo');
+
+  // Cerrar el partido y verificar que se aplicó desgaste físico en titulares
+  commitCompletedLiveMatch(state, 2, 1, talkRes.session.timeline.events, null, rng);
+  const fatiguedStarters = club.starterIds
+    .map((id) => club.players.find((p) => p.id === id))
+    .filter((p) => p && p.energy < 100);
+  assert.ok(fatiguedStarters.length >= 1, 'Los titulares deben registrar desgaste físico tras jugar');
+
+  // 5) Evento de semana de certámenes UFRO en la línea de tiempo
+  const examEv = state.timeline.find((e) => e.type === 'EXAM_WEEK');
+  assert.ok(examEv, 'La línea de tiempo debe incluir semanas de certámenes UFRO');
+  state.timelineIndex = state.timeline.indexOf(examEv);
+  const examStep = advanceSimulationStep(state, 'next_event', rng);
+  assert.equal(examStep.status, 'DECISION_PENDING');
+  assert.equal(state.activeDecision.category, 'CERTÁMENES UFRO');
+  const examResolved = resolveDtDecision(state, 'GRANT_EXAM_LEAVE');
+  assert.equal(examResolved.ok, true);
+  assert.equal(state.activeDecision, null);
+});
+
+test('v0.2.0: mechones gratis, préstamos ida/vuelta, seguimiento y negociación con trueque', () => {
+  const rng = makeSeededRng(3030);
+  const db = buildSeedDatabase(rng);
+  const state = initializeDtCareerState({
+    database: db,
+    dtName: 'DT Mercado',
+    selectedTeamId: 'FECSH-EFI-01',
+    rng,
+  });
+  const club = state.teams.find((t) => t.id === state.userTeamId);
+
+  // 1) Captación de Mechones (estimado OVR sin exponer potencial + fichaje $0 CLP)
+  assert.ok(state.tryoutSession && state.tryoutSession.candidates.length === 4);
+  const firstCand = state.tryoutSession.candidates[0];
+  assert.ok(firstCand.estimatedOvrMin < firstCand.estimatedOvrMax);
+  assert.equal(firstCand.playerData.potential, undefined);
+  const budgetBefore = club.budgetEur;
+  const countBefore = club.players.length;
+  const tryRes = signTryoutCandidate(state, firstCand.id);
+  assert.equal(tryRes.ok, true);
+  assert.equal(club.budgetEur, budgetBefore, 'Fichar mechón de pruebas debe ser gratis ($0 CLP)');
+  assert.equal(club.players.length, countBefore + 1);
+  assert.equal(firstCand.revealedOvr, tryRes.player.ovr);
+  dismissTryoutSession(state);
+  assert.equal(state.tryoutSession.dismissed, true);
+
+  // 2) Préstamo saliente y retorno automático con posible progreso OVR
+  const toLoanOut = club.players.find((p) => p.position !== 'ARQ' && club.benchIds.includes(p.id));
+  const loRes = loanOutPlayer(state, toLoanOut.id, 1, rng);
+  assert.equal(loRes.ok, true);
+  assert.equal(club.players.some((p) => p.id === toLoanOut.id), false);
+  assert.equal(state.activeLoans.length, 1);
+
+  const returned = processActiveLoansStep(state, 'Mitad de Temporada', rng);
+  assert.equal(returned.length, 1);
+  assert.equal(club.players.some((p) => p.id === toLoanOut.id), true);
+  assert.equal(state.activeLoans.length, 0);
+
+  // 3) Préstamo entrante respetando cuota de carrera
+  const otherClub = state.teams.find((t) => t.id !== club.id && t.players.length > 11);
+  const loanTarget = otherClub.players.find((p) => p.position !== 'ARQ');
+  club.budgetEur = 900000;
+  const liRes = loanInMarketPlayer(state, loanTarget.id, 2, () => 0.1);
+  assert.equal(liRes.ok, true);
+  assert.equal(club.players.some((p) => p.id === loanTarget.id && p.loanInfo?.direction === 'IN'), true);
+
+  // 4) Lista de seguimiento con alertas vivas
+  const watchTarget = state.freeAgents[0];
+  const wOn = toggleWatchlistPlayer(state, watchTarget.id);
+  assert.equal(wOn.watched, true);
+  const snap = getWatchlistSnapshot(state);
+  assert.equal(snap.length, 1);
+  assert.ok(snap[0].alerts.includes('Agente libre disponible'));
+  const wOff = toggleWatchlistPlayer(state, watchTarget.id);
+  assert.equal(wOff.watched, false);
+
+  // 5) Negociación personalizada (CLP + trueque de jugador propio)
+  const sellerClub = state.teams.find((t) => t.id !== club.id && t.id !== otherClub.id && t.players.length > 11);
+  const negTarget = sellerClub.players.find((p) => p.position !== 'ARQ');
+  const swapOut = club.players.find((p) => p.position !== 'ARQ' && !p.loanInfo && !p.careerMatchValid)
+    || club.players.find((p) => p.position !== 'ARQ' && !p.loanInfo);
+  const lowRes = submitNegotiatedTransferOffer(state, negTarget.id, { cashOfferClp: 5000, swapPlayerId: '' }, () => 0.5);
+  assert.equal(lowRes.ok, false);
+  const fairRes = submitNegotiatedTransferOffer(state, negTarget.id, {
+    cashOfferClp: negTarget.marketValueEur,
+    swapPlayerId: swapOut.id,
+  }, () => 0.2);
+  assert.equal(fairRes.ok, true);
+  assert.equal(club.players.some((p) => p.id === negTarget.id), true);
+  assert.equal(sellerClub.players.some((p) => p.id === swapOut.id), true);
+});
+
+test('v0.2.0: Copa Intercarreras (32 clubes), Estadísticas/7 Ideal y Historial DT', () => {
+  const rng = makeSeededRng(4040);
+  const db = buildSeedDatabase(rng);
+  const state = initializeDtCareerState({
+    database: db,
+    dtName: 'DT Copero',
+    selectedTeamId: 'FECSH-EFI-01',
+    rng,
+  });
+
+  // 1) Copa Intercarreras inicializada con 32 clubes (16 cruces R32) incluyendo al usuario
+  assert.ok(state.copa);
+  assert.equal(state.copa.rounds.R32.length, 16);
+  const pending = getPendingUserCopaMatch(state);
+  assert.ok(pending && pending.roundKey === 'R32');
+
+  // Jugar llave R32 de Copa en vivo y ganarla 3-0
+  const prep = prepareUserCopaLiveMatch(state, rng);
+  assert.equal(prep.ok, true);
+  assert.equal(state.pendingLiveMatch.isCopa, true);
+  const userIsHome = state.pendingLiveMatch.homeId === state.userTeamId;
+  const commit = commitCompletedLiveMatch(state, userIsHome ? 3 : 0, userIsHome ? 0 : 3, [], null, rng);
+  assert.equal(commit.ok, true);
+  assert.equal(commit.isCopa, true);
+  assert.equal(state.copa.activeRoundIndex, 1, 'Debe avanzar a Octavos de Final (R16)');
+  assert.equal(state.copa.rounds.R16.length, 8);
+
+  // Simular las rondas restantes de Copa hasta coronar campeón
+  let guard = 0;
+  while (!state.copa.completed && guard < 6) {
+    simulateUserCopaRoundNow(state, rng);
+    guard += 1;
+  }
+  assert.equal(state.copa.completed, true);
+  assert.ok(state.copa.championId);
+
+  // 2) Simular mitad de temporada para poblar estadísticas de liga y 7 Ideal
+  advanceSimulationStep(state, 'mid_or_end', rng);
+  const leaders = getDivisionPlayerLeaders(state, 'ALL');
+  assert.ok(leaders.scorers.length > 0, 'Debe haber tabla de goleadores');
+  assert.ok(leaders.assisters.length > 0, 'Debe haber tabla de asistidores');
+  const { bestSeven, mvp } = buildSeasonBestSeven(state, 'ALL');
+  assert.equal(bestSeven.length, 7, 'El 7 Ideal debe contener exactamente 7 jugadores');
+  assert.ok(mvp && mvp.name);
+
+  // 3) Historial DT con registro de partidos, mayor goleada y etapa
+  const ledger = ensureDtLedger(state);
+  assert.ok(ledger.stints.length >= 1);
+  assert.ok(ledger.stints[0].matches > 0);
+  assert.ok(ledger.biggestWin && ledger.biggestWin.uf >= 3, 'Debe registrar la goleada 3-0 de Copa o una mayor');
+});
+
 
 

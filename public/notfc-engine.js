@@ -17,7 +17,81 @@ import {
   getTeamColorByFaculty,
 } from './notfc-data.js';
 
-export { ACADEMIC_STAGE_LIMITS, MAX_FOREIGN_CAREER_PLAYERS };
+import {
+  TACTICS_OPTIONS,
+  DEFAULT_TACTICS,
+  ensureTeamTactics,
+  setClubTactics,
+  computeTacticsModifiers,
+  ensurePlayerCondition,
+  isPlayerUnavailable,
+  getPlayerUnavailableReason,
+  ensureAvailableStarters,
+  applyPostMatchConditionAndCards,
+  recoverTeamEnergy,
+  HALFTIME_TALKS,
+  getHalftimeTalkEffect,
+  buildExamWeekDecision,
+  resolveExamWeekDecision,
+  ensureClubCaptain,
+  setClubCaptain,
+  getCaptainImpact,
+  generateFreshmenTryouts,
+  signTryoutCandidate,
+  dismissTryoutSession,
+  loanOutPlayer,
+  loanInMarketPlayer,
+  processActiveLoansStep,
+  toggleWatchlistPlayer,
+  getWatchlistSnapshot,
+  evaluateCustomTransferOffer,
+  submitCustomTransferOffer,
+  getDivisionPlayerLeaders,
+  buildSeasonBestSeven,
+  ensureDtLedger,
+  recordLedgerMatchResult,
+  recordLedgerTransfer,
+  recordLedgerClubSwitch,
+  recordLedgerTrophy,
+  COPA_ROUNDS,
+  initializeCopaIntercarreras,
+  getPendingUserCopaMatch,
+  advanceCopaRound,
+} from './notfc-v2-systems.js';
+
+export {
+  ACADEMIC_STAGE_LIMITS,
+  MAX_FOREIGN_CAREER_PLAYERS,
+  TACTICS_OPTIONS,
+  DEFAULT_TACTICS,
+  ensureTeamTactics,
+  setClubTactics,
+  computeTacticsModifiers,
+  ensurePlayerCondition,
+  isPlayerUnavailable,
+  getPlayerUnavailableReason,
+  ensureAvailableStarters,
+  HALFTIME_TALKS,
+  getHalftimeTalkEffect,
+  ensureClubCaptain,
+  setClubCaptain,
+  getCaptainImpact,
+  generateFreshmenTryouts,
+  signTryoutCandidate,
+  dismissTryoutSession,
+  loanOutPlayer,
+  loanInMarketPlayer,
+  processActiveLoansStep,
+  toggleWatchlistPlayer,
+  getWatchlistSnapshot,
+  evaluateCustomTransferOffer,
+  getDivisionPlayerLeaders,
+  buildSeasonBestSeven,
+  ensureDtLedger,
+  COPA_ROUNDS,
+  initializeCopaIntercarreras,
+  getPendingUserCopaMatch,
+};
 export const POSITIONS = ['ARQ', 'DEF', 'MED', 'DEL'];
 
 export const FORMATIONS_F7 = {
@@ -610,6 +684,18 @@ export function buildLinearTimeline(userTeam, teams, calendar, seasonNumber = 1)
         minor: false,
       });
     }
+    if (r === 5) {
+      pushEv({
+        id: `S${seasonNumber}_EXAM_WEEK_1`,
+        type: 'EXAM_WEEK',
+        semester: 1,
+        dateLabel: '11 May',
+        title: 'Semana de Certámenes · 1° Semestre UFRO',
+        desc: 'Varios jugadores rinden evaluaciones clave. Decide si les das permiso académico o los convocas igual.',
+        blocking: true,
+        minor: false,
+      });
+    }
     pushEv({
       id: `S${seasonNumber}_ROUND_${r}`,
       type: 'MATCHDAY',
@@ -658,6 +744,18 @@ export function buildLinearTimeline(userTeam, teams, calendar, seasonNumber = 1)
         dateLabel: '14 Sep',
         title: 'Cierre Definitivo del Mercado Anual',
         desc: 'Última oportunidad para fichar refuerzos antes del sprint final.',
+        blocking: true,
+        minor: false,
+      });
+    }
+    if (r === 11) {
+      pushEv({
+        id: `S${seasonNumber}_EXAM_WEEK_2`,
+        type: 'EXAM_WEEK',
+        semester: 2,
+        dateLabel: '05 Oct',
+        title: 'Semana de Certámenes · 2° Semestre UFRO',
+        desc: 'Recta final del año académico: decide entre cuidar el rendimiento académico o exigir al máximo en cancha.',
         blocking: true,
         minor: false,
       });
@@ -745,7 +843,7 @@ export function buildLinearTimeline(userTeam, teams, calendar, seasonNumber = 1)
 // 2. SIMULACIÓN RÁPIDA DE PARTIDOS IA + MOTOR EN VIVO (2 MIN/TIEMPO)
 // =========================================================================
 
-export function computeTeamMatchStrength(team, opponentId = null) {
+export function computeTeamMatchStrength(team, opponentId = null, options = {}) {
   const starters = (team?.starterIds || [])
     .map((id) => (team?.players || []).find((p) => p.id === id))
     .filter(Boolean);
@@ -753,23 +851,36 @@ export function computeTeamMatchStrength(team, opponentId = null) {
   if (active.length === 0) return Number(team?.baseOvr) || 64;
 
   const slots = getFormationSlots(team?.formation);
-  const avgOvr = active.reduce((s, p, idx) => s + getPlayerEffectiveOvr(p, slots[idx] || p.position), 0) / active.length;
+  const avgOvr = active.reduce((s, p, idx) => {
+    const eff = getPlayerEffectiveOvr(p, slots[idx] || p.position);
+    const energy = typeof p.energy === 'number' ? p.energy : 100;
+    const fatiguePenalty = energy < 40 ? 4.5 : energy < 58 ? 2.0 : 0;
+    return s + (eff - fatiguePenalty);
+  }, 0) / active.length;
+
   const avgMorale = active.reduce((s, p) => s + (Number(p.morale) || 70), 0) / active.length;
   const formation = FORMATIONS_F7[team?.formation] || FORMATIONS_F7['1-2-3-1'];
   const moraleFactor = (avgMorale - 68) * 0.11;
-  const isDerbyMatch = opponentId && (team?.derby === opponentId || (opponentId && team?.derbyName === opponentId));
+  const isDerbyMatch = Boolean(opponentId && (team?.derby === opponentId || (opponentId && team?.derbyName === opponentId)));
   const derbyBoost = isDerbyMatch ? 1.8 : 0;
   const formBonus = formation.counts.DEL >= 2 ? 0.8 : 0;
-  return avgOvr + moraleFactor + derbyBoost + formBonus;
+  const tacMod = computeTacticsModifiers(team);
+  const capImpact = getCaptainImpact(team, isDerbyMatch || Boolean(options.isBigMatch));
+  return avgOvr + moraleFactor + derbyBoost + formBonus + tacMod.overallMod + capImpact.clutchBonus;
 }
 
 export function simulateMatchQuick(homeTeam, awayTeam, allowDraw = true, rng = Math.random) {
-  const hs = computeTeamMatchStrength(homeTeam, awayTeam?.id) + 1.2;
-  const as = computeTeamMatchStrength(awayTeam, homeTeam?.id);
+  const isBigMatch = !allowDraw;
+  const hTac = computeTacticsModifiers(homeTeam);
+  const aTac = computeTacticsModifiers(awayTeam);
+  const hs = computeTeamMatchStrength(homeTeam, awayTeam?.id, { isBigMatch }) + 1.2;
+  const as = computeTeamMatchStrength(awayTeam, homeTeam?.id, { isBigMatch });
   const diff = clamp((hs - as) / 10, -1.8, 1.8);
 
-  const expHome = clamp(1.75 + diff * 0.72, 0.4, 4.4);
-  const expAway = clamp(1.55 - diff * 0.65, 0.4, 4.2);
+  const tempoBoostH = (hTac.attackMod - aTac.defenseMod) * 0.12;
+  const tempoBoostA = (aTac.attackMod - hTac.defenseMod) * 0.12;
+  const expHome = clamp(1.75 + diff * 0.72 + tempoBoostH, 0.4, 4.5);
+  const expAway = clamp(1.55 - diff * 0.65 + tempoBoostA, 0.4, 4.3);
 
   const sampleGoals = (lambda) => {
     let g = 0;
@@ -817,9 +928,13 @@ export function generateLiveMatchTimeline({
   initialHomeGoals = 0,
   initialAwayGoals = 0,
   existingEvents = [],
+  homeHalftimeBonus = 0,
+  awayHalftimeBonus = 0,
+  halftimeTalkText = '',
 }) {
-  const hs = computeTeamMatchStrength(homeTeam, awayTeam?.id) + 1.1;
-  const as = computeTeamMatchStrength(awayTeam, homeTeam?.id);
+  const isBigMatch = !allowDraw;
+  const hs = computeTeamMatchStrength(homeTeam, awayTeam?.id, { isBigMatch }) + 1.1 + (Number(homeHalftimeBonus) || 0);
+  const as = computeTeamMatchStrength(awayTeam, homeTeam?.id, { isBigMatch }) + (Number(awayHalftimeBonus) || 0);
   const diff = clamp((hs - as) / 12, -1.4, 1.4);
 
   const getStarters = (team) => {
@@ -855,6 +970,15 @@ export function generateLiveMatchTimeline({
   for (let m = fromMinute; m <= 50; m += 1) {
     const half = m <= GAME_MINUTES_PER_HALF ? 1 : 2;
     if (m === 26 && !events.some((e) => e.minute === 26 && e.type === 'SECOND_HALF')) {
+      if (halftimeTalkText) {
+        events.push({
+          minute: 26,
+          half: 2,
+          type: 'TALK',
+          zone: { x: 50, y: 50, team: 'home', intensity: 0.75 },
+          text: halftimeTalkText,
+        });
+      }
       events.push({
         minute: 26,
         half: 2,
@@ -865,8 +989,10 @@ export function generateLiveMatchTimeline({
     }
 
     const roll = rng();
-    const homeGoalProb = clamp(0.036 + diff * 0.015, 0.014, 0.075);
-    const awayGoalProb = clamp(0.033 - diff * 0.014, 0.014, 0.070);
+    const hTac = computeTacticsModifiers(homeTeam);
+    const aTac = computeTacticsModifiers(awayTeam);
+    const homeGoalProb = clamp(0.036 + diff * 0.015 + (hTac.attackMod - aTac.defenseMod) * 0.0025, 0.014, 0.080);
+    const awayGoalProb = clamp(0.033 - diff * 0.014 + (aTac.attackMod - hTac.defenseMod) * 0.0025, 0.014, 0.076);
 
     if (roll < homeGoalProb) {
       const scorer = pickWeightedPlayer(
@@ -1039,6 +1165,58 @@ export function resimulateLiveMatchSession(session, currentMinute, homeTeam, awa
   return {
     ...session,
     timeline: rebuilt,
+  };
+}
+
+export function applyHalftimeTeamTalk(session, talkId, userTeamId, homeTeam, awayTeam, rng = Math.random) {
+  if (!session || !homeTeam || !awayTeam) return { ok: false, session, message: 'Sesión de partido inválida.' };
+  const kept = (session.timeline?.events || []).filter((e) => e.minute <= 25);
+  let hg = 0;
+  let ag = 0;
+  for (const ev of kept) {
+    if (ev.type === 'GOAL') {
+      if (ev.teamId === homeTeam.id) hg += 1;
+      else ag += 1;
+    }
+  }
+  const userIsHome = homeTeam.id === userTeamId;
+  const scoreDiff = userIsHome ? (hg - ag) : (ag - hg);
+  const effect = getHalftimeTalkEffect(talkId, scoreDiff);
+
+  const userTeam = userIsHome ? homeTeam : awayTeam;
+  const starterSet = new Set(userTeam.starterIds || []);
+  for (const p of userTeam.players || []) {
+    if (!starterSet.has(p.id)) continue;
+    ensurePlayerCondition(p);
+    p.morale = clamp((p.morale || 70) + effect.moraleDelta, 15, 100);
+    p.energy = clamp(p.energy + effect.energyDelta, 15, 100);
+  }
+
+  const rebuilt = generateLiveMatchTimeline({
+    matchId: session.matchId,
+    homeTeam,
+    awayTeam,
+    label: session.label,
+    allowDraw: session.allowDraw,
+    rng,
+    fromMinute: 26,
+    initialHomeGoals: hg,
+    initialAwayGoals: ag,
+    existingEvents: kept,
+    homeHalftimeBonus: userIsHome ? effect.totalDelta : 0,
+    awayHalftimeBonus: userIsHome ? 0 : effect.totalDelta,
+    halftimeTalkText: effect.commentary,
+  });
+
+  return {
+    ok: true,
+    effect,
+    session: {
+      ...session,
+      halftimeTalkUsed: effect.id,
+      timeline: rebuilt,
+    },
+    message: effect.commentary,
   };
 }
 
@@ -1438,17 +1616,25 @@ export function initializeDtCareerState({
   customClubInput = null,
   rng = Math.random,
 }) {
-  const clonedTeams = database.teams.map((t) => ({
-    ...t,
-    isUserClub: false,
-    players: (t.players || []).map((p) => sanitizePlayerPublic(p)),
-    starterIds: [...(t.starterIds || [])],
-    benchIds: [...(t.benchIds || [])],
-  }));
+  const clonedTeams = database.teams.map((t) => {
+    const team = {
+      ...t,
+      isUserClub: false,
+      tactics: { ...DEFAULT_TACTICS },
+      players: (t.players || []).map((p) => ensurePlayerCondition(sanitizePlayerPublic(p))),
+      starterIds: [...(t.starterIds || [])],
+      benchIds: [...(t.benchIds || [])],
+    };
+    ensureClubCaptain(team);
+    return team;
+  });
 
   let userTeam = null;
   if (customClubInput) {
     const created = createCustomClubFromScratch(customClubInput, rng);
+    created.tactics = { ...DEFAULT_TACTICS };
+    (created.players || []).forEach(ensurePlayerCondition);
+    ensureClubCaptain(created);
     // Reemplazar al último equipo de esa conferencia en 3ª División para mantener exactos 21+21 equipos
     const conf = created.conf;
     let replaceIdx = -1;
@@ -1469,7 +1655,7 @@ export function initializeDtCareerState({
     userTeam.isUserClub = true;
   }
 
-  const freeAgents = (database.freeAgents || []).map((p) => sanitizePlayerPublic(p));
+  const freeAgents = (database.freeAgents || []).map((p) => ensurePlayerCondition(sanitizePlayerPublic(p)));
   const calendar = generateSeasonCalendar(clonedTeams);
   const standings = {
     div1: createStandingsTable(clonedTeams.filter((t) => t.division === 1)),
@@ -1483,7 +1669,7 @@ export function initializeDtCareerState({
   const news = generateSeedNewsFeed(userTeam, clonedTeams, 1, rng);
 
   const careerState = {
-    version: 2,
+    version: 3,
     dtName: String(dtName || 'DT Universitario').trim(),
     userTeamId: userTeam.id,
     season: 1,
@@ -1511,6 +1697,11 @@ export function initializeDtCareerState({
     dtJobOffers: [],
     activeSponsors: [],
     sponsorSession: null,
+    tryoutSession: null,
+    activeLoans: [],
+    watchlist: [],
+    dtLedger: null,
+    copa: null,
     careerAchievements: [],
     careerStats: {
       seasonsPlayed: 0,
@@ -1526,7 +1717,10 @@ export function initializeDtCareerState({
     news,
     careerHistory: [],
   };
+  ensureDtLedger(careerState);
   careerState.sponsorSession = generatePreseasonSponsorOffers(careerState, rng);
+  careerState.tryoutSession = generateFreshmenTryouts(careerState, rng);
+  careerState.copa = initializeCopaIntercarreras(careerState, rng);
   return careerState;
 }
 
@@ -1848,6 +2042,9 @@ export function buildInteractiveDtDecision(state, eventObj, rng = Math.random) {
 export function resolveDtDecision(state, optionId) {
   const dec = state.activeDecision;
   if (!dec) return { ok: false, message: 'No hay decisión pendiente.' };
+  if (dec.category === 'CERTÁMENES UFRO') {
+    return resolveExamWeekDecision(state, optionId);
+  }
   const userTeam = state.teams.find((t) => t.id === state.userTeamId);
 
   let summary = '';
@@ -1940,7 +2137,7 @@ function ensureCareerStats(state) {
   return state.careerStats;
 }
 
-function recordUserMatchStats(state, home, away, hg, ag) {
+function recordUserMatchStats(state, home, away, hg, ag, meta = {}) {
   const stats = ensureCareerStats(state);
   const userTeam = state.teams.find((t) => t.id === state.userTeamId);
   if (!userTeam || (!home && !away)) return;
@@ -1956,40 +2153,63 @@ function recordUserMatchStats(state, home, away, hg, ag) {
     const isDerby = Boolean(opp && userTeam.derby && (userTeam.derby === opp.id || normalizeTextKey(userTeam.derby) === normalizeTextKey(opp.name)));
     if (isDerby) stats.derbyWins += 1;
   }
+  recordLedgerMatchResult(state, home, away, hg, ag, meta);
   advanceUserPositionTraining(state, new Set(userTeam.starterIds || []));
 }
 
-function commitFixtureResult(state, divKey, fixture, hg, ag, rng) {
+function commitFixtureResult(state, divKey, fixture, hg, ag, rng, options = {}) {
   fixture.homeScore = hg;
   fixture.awayScore = ag;
   fixture.played = true;
   state.standings[divKey] = applyMatchToStandings(state.standings[divKey], fixture.homeId, fixture.awayId, hg, ag);
 
-  // Actualizar participación básica de jugadores IA para mantener stats y ánimos vivos
   const home = state.teams.find((t) => t.id === fixture.homeId);
   const away = state.teams.find((t) => t.id === fixture.awayId);
   const bumpStats = (team, goals, conceded, won) => {
     if (!team) return;
     const starterSet = new Set(team.starterIds || []);
+    const capShield = !won && goals < conceded ? getCaptainImpact(team, false).lossMoraleShield : 0;
     (team.players || []).forEach((p) => {
+      ensurePlayerCondition(p);
       if (starterSet.has(p.id)) {
         p.stats.matches += 1;
-        p.stats.ratingSum += won ? 7.3 : 6.2;
+        p.stats.ratingSum += won ? 7.3 : (goals === conceded ? 6.6 : 6.1);
         if (conceded === 0 && p.position === 'ARQ') p.stats.cleanSheets += 1;
-        p.morale = clamp(p.morale + (won ? 2 : -1), 15, 100);
+        const deltaMorale = won ? 2 : (goals === conceded ? 0 : Math.min(0, -1 + capShield));
+        p.morale = clamp(p.morale + deltaMorale, 15, 100);
       } else {
-        p.morale = clamp(p.morale + (p.ovr >= 68 ? -3 : -1), 15, 100);
+        p.morale = clamp(p.morale + (p.ovr >= 68 ? -2 : -1), 15, 100);
       }
     });
-    if (goals > 0 && team.players.length > 0) {
+    if (!options.skipRandomGoals && goals > 0 && team.players.length > 0) {
       const scorerPool = team.players.filter((p) => starterSet.has(p.id) && p.position !== 'ARQ');
       if (scorerPool.length > 0) {
         for (let g = 0; g < goals; g += 1) {
           const sc = pickFrom(scorerPool, rng);
           sc.stats.goals += 1;
+          // Atribuir asistencia realista en partidos simulados
+          const assistPool = scorerPool.filter((p) => p.id !== sc.id);
+          if (assistPool.length > 0 && rng() < 0.78) {
+            const asst = pickFrom(assistPool, rng);
+            asst.stats.assists += 1;
+          }
           sc.marketValueEur = calculatePlayerValueEur(sc);
         }
       }
+    }
+    const condReport = applyPostMatchConditionAndCards(team, starterSet, rng);
+    if (team.id === state.userTeamId && (condReport.injuries.length > 0 || condReport.suspensions.length > 0)) {
+      const parts = [
+        ...condReport.injuries.map((x) => `${x.player.name} lesionado (${x.matches} fecha${x.matches > 1 ? 's' : ''})`),
+        ...condReport.suspensions.map((x) => `${x.player.name} suspendido por 3 amarillas`),
+      ];
+      state.news = [{
+        id: `news_med_${team.id}_${Date.now()}_${Math.floor(rng() * 999)}`,
+        dateLabel: 'Parte Médico',
+        category: 'Plantel',
+        headline: `Bajas confirmadas en ${team.name}`,
+        body: parts.join(' · '),
+      }, ...(state.news || [])].slice(0, 28);
     }
   };
   bumpStats(home, hg, ag, hg > ag);
@@ -2148,12 +2368,14 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
     if (ev.type === 'MIDSEASON_BREAK') {
       state.semester = 2;
       state.marketOpen = true;
-      // Reducir contratos en 1 semestre al completar el Semestre 1
+      // Reducir contratos en 1 semestre al completar el Semestre 1 y recuperar energía
       state.teams.forEach((t) => {
         t.players.forEach((p) => {
           p.contractSemesters = Math.max(0, (p.contractSemesters || 1) - 1);
         });
+        recoverTeamEnergy(t, 28);
       });
+      processActiveLoansStep(state, 'Mitad de Temporada', rng);
       processPendingIncomingTransfers(state, 'Mitad de Temporada');
       processSponsorInstallments(state, 'SEMESTRAL', ev.dateLabel);
       processSponsorInstallments(state, 'MENSUAL', ev.dateLabel);
@@ -2167,11 +2389,32 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
         dateLabel: ev.dateLabel,
         category: 'TEMPORADA',
         headline: `Mitad de Temporada ${state.season}: se abre el mercado de invierno`,
-        body: 'Los clubes ajustan sus planteles y reciben nuevas propuestas comerciales para el segundo semestre.',
+        body: 'Los clubes ajustan sus planteles, regresan préstamos de 1 semestre y llegan nuevas propuestas comerciales.',
       }, ...(state.news || [])].slice(0, 28);
 
       if (mode === 'next_event' || (mode === 'mid_or_end' && targetSemester === 1)) {
         return { status: 'MIDSEASON_REACHED', event: ev, message: 'Llegaste a mitad de temporada.' };
+      }
+      continue;
+    }
+
+    if (ev.type === 'EXAM_WEEK') {
+      ev.done = true;
+      state.timelineIndex += 1;
+      if (mode === 'next_event') {
+        state.activeDecision = buildExamWeekDecision(state, ev, rng);
+        return { status: 'DECISION_PENDING', event: ev, decision: state.activeDecision };
+      }
+      // En simulación rápida aplicar desgaste leve automático
+      const ut = state.teams.find((t) => t.id === state.userTeamId);
+      if (ut) {
+        (ut.starterIds || []).slice(0, 2).forEach((sid) => {
+          const pl = ut.players.find((p) => p.id === sid);
+          if (pl) {
+            ensurePlayerCondition(pl);
+            pl.energy = clamp(pl.energy - 10, 25, 100);
+          }
+        });
       }
       continue;
     }
@@ -2190,9 +2433,11 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
       if ([2, 4, 8, 10].includes(ev.round)) {
         processSponsorInstallments(state, 'MENSUAL', ev.dateLabel);
       }
+      const userTeam = state.teams.find((t) => t.id === state.userTeamId);
+      if (userTeam) ensureAvailableStarters(userTeam);
+
       if (ev.hasUserMatch && (mode === 'next_event' || mode === 'next_match')) {
         // Prepara partido en vivo para el DT
-        const userTeam = state.teams.find((t) => t.id === state.userTeamId);
         const divRounds = userTeam.division === 1 ? state.calendar.div1 : userTeam.division === 2 ? state.calendar.div2 : (userTeam.conf === 'B' ? state.calendar.div3B : state.calendar.div3A);
         const roundObj = divRounds.find((r) => r.round === ev.round);
         const fixture = roundObj?.matches.find((m) => m.id === ev.userMatchId);
@@ -2216,6 +2461,7 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
             label: timeline.label,
             allowDraw: true,
             isPostseason: false,
+            isCopa: false,
             timeline,
           };
           return { status: 'MATCH_READY', event: ev, liveMatch: state.pendingLiveMatch };
@@ -2223,6 +2469,19 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
       }
       // Simular toda la fecha (incluido usuario si está en avance masivo mid_or_end)
       simulateAiMatchesForRound(state, ev.round, null, rng);
+      if (!ev.hasUserMatch && userTeam) recoverTeamEnergy(userTeam, 18);
+
+      // Avanzar ronda de Copa Intercarreras automáticamente en fechas clave si corresponde
+      if (state.copa && !state.copa.completed) {
+        const activeMeta = COPA_ROUNDS[state.copa.activeRoundIndex];
+        if (activeMeta && ev.round >= activeMeta.triggerRound) {
+          const pendingUserCopa = getPendingUserCopaMatch(state);
+          if (!pendingUserCopa || mode === 'mid_or_end') {
+            advanceCopaRound(state, rng, { simulateMatchFn: simulateMatchQuick });
+          }
+        }
+      }
+
       ev.done = true;
       state.timelineIndex += 1;
       if (mode === 'next_event' && !ev.hasUserMatch) {
@@ -2233,6 +2492,10 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
 
     if (ev.type === 'POSTSEASON_PHASE') {
       if (ev.phase === 'INIT') {
+        // Cerrar cualquier ronda pendiente de Copa Intercarreras antes de postemporada
+        while (state.copa && !state.copa.completed) {
+          advanceCopaRound(state, rng, { simulateMatchFn: simulateMatchQuick });
+        }
         state.postseason = initializePostseasonStructure(state, rng);
         ev.done = true;
         state.timelineIndex += 1;
@@ -2287,42 +2550,121 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
   return { status: 'SEASON_ENDED', message: 'Temporada completada.' };
 }
 
+export function prepareUserCopaLiveMatch(state, rng = Math.random) {
+  if (!state) return { ok: false, message: 'Estado inválido.' };
+  const pending = getPendingUserCopaMatch(state);
+  if (!pending) return { ok: false, message: 'No tienes un partido pendiente en Copa Intercarreras.' };
+  const home = state.teams.find((t) => t.id === pending.match.homeId);
+  const away = state.teams.find((t) => t.id === pending.match.awayId);
+  if (!home || !away) return { ok: false, message: 'Equipos de Copa no encontrados.' };
+  const userTeam = state.teams.find((t) => t.id === state.userTeamId);
+  if (userTeam) ensureAvailableStarters(userTeam);
+
+  const timeline = generateLiveMatchTimeline({
+    matchId: pending.match.id,
+    homeTeam: home,
+    awayTeam: away,
+    label: `Copa Intercarreras · ${pending.roundLabel}`,
+    allowDraw: false,
+    rng,
+  });
+
+  state.pendingLiveMatch = {
+    eventId: `COPA_${pending.roundKey}`,
+    round: pending.triggerRound,
+    matchId: pending.match.id,
+    homeId: home.id,
+    awayId: away.id,
+    label: timeline.label,
+    allowDraw: false,
+    isPostseason: false,
+    isCopa: true,
+    copaRoundKey: pending.roundKey,
+    timeline,
+  };
+  return { ok: true, liveMatch: state.pendingLiveMatch };
+}
+
+export function simulateUserCopaRoundNow(state, rng = Math.random) {
+  if (!state?.copa || state.copa.completed) {
+    return { ok: false, message: 'La Copa Intercarreras ya finalizó esta temporada.' };
+  }
+  const userTeam = state.teams.find((t) => t.id === state.userTeamId);
+  if (userTeam) ensureAvailableStarters(userTeam);
+  return advanceCopaRound(state, rng, {
+    simulateMatchFn: simulateMatchQuick,
+    onUserMatchFinished: ({ home, away, hg, ag }) => {
+      const stats = ensureCareerStats(state);
+      stats.totalMatches += 1;
+      const won = (home.id === state.userTeamId && hg > ag) || (away.id === state.userTeamId && ag > hg);
+      if (won) stats.totalWins += 1;
+    },
+  });
+}
+
 export function commitCompletedLiveMatch(state, finalHomeScore, finalAwayScore, timelineEvents = [], penWinner = null, rng = Math.random) {
   const pm = state.pendingLiveMatch;
   if (!pm) return { ok: false };
 
   const userTeam = state.teams.find((t) => t.id === state.userTeamId);
+  const home = state.teams.find((t) => t.id === pm.homeId);
+  const away = state.teams.find((t) => t.id === pm.awayId);
+
+  // Aplicar goles y asistencias exactos del partido jugado en vivo
+  const applyLiveScorers = () => {
+    const scoreMap = new Map();
+    const assistMap = new Map();
+    for (const ev of timelineEvents || []) {
+      if (ev.type === 'GOAL') {
+        if (ev.scorerId) scoreMap.set(ev.scorerId, (scoreMap.get(ev.scorerId) || 0) + 1);
+        if (ev.assisterId) assistMap.set(ev.assisterId, (assistMap.get(ev.assisterId) || 0) + 1);
+      }
+    }
+    for (const club of [home, away].filter(Boolean)) {
+      for (const p of club.players || []) {
+        const g = scoreMap.get(p.id) || 0;
+        const a = assistMap.get(p.id) || 0;
+        if (g > 0) p.stats.goals += g;
+        if (a > 0) p.stats.assists += a;
+        if (g > 0 || a > 0) p.morale = clamp(p.morale + 3, 15, 100);
+        p.marketValueEur = calculatePlayerValueEur(p);
+      }
+    }
+  };
+
+  if (pm.isCopa) {
+    applyLiveScorers();
+    const res = advanceCopaRound(state, rng, {
+      simulateMatchFn: simulateMatchQuick,
+      userMatchOverride: {
+        matchId: pm.matchId,
+        hg: finalHomeScore,
+        ag: finalAwayScore,
+        penWinner,
+      },
+      onUserMatchFinished: ({ userWon }) => {
+        const stats = ensureCareerStats(state);
+        stats.totalMatches += 1;
+        if (userWon) stats.totalWins += 1;
+        if (userTeam) {
+          applyPostMatchConditionAndCards(userTeam, new Set(userTeam.starterIds || []), rng);
+        }
+      },
+    });
+    state.pendingLiveMatch = null;
+    return { ok: true, isCopa: true, matchBonus: res?.userResult?.prize || 0, penWinner, copaResult: res };
+  }
+
   const divKey = userTeam.division === 1 ? 'div1' : userTeam.division === 2 ? 'div2' : (userTeam.conf === 'B' ? 'div3B' : 'div3A');
   const roundObj = state.calendar[divKey]?.find((r) => r.round === pm.round);
   const fixture = roundObj?.matches.find((m) => m.id === pm.matchId);
 
   if (fixture) {
-    commitFixtureResult(state, divKey, fixture, finalHomeScore, finalAwayScore, rng);
+    commitFixtureResult(state, divKey, fixture, finalHomeScore, finalAwayScore, rng, { skipRandomGoals: true });
   }
+  applyLiveScorers();
   // Simular el resto de partidos de esa misma fecha
   simulateAiMatchesForRound(state, pm.round, pm.matchId, rng);
-
-  // Aplicar goles, asistencias y ánimo detallado al partido jugado en vivo
-  const home = state.teams.find((t) => t.id === pm.homeId);
-  const away = state.teams.find((t) => t.id === pm.awayId);
-  const scoreMap = new Map();
-  const assistMap = new Map();
-  for (const ev of timelineEvents || []) {
-    if (ev.type === 'GOAL') {
-      if (ev.scorerId) scoreMap.set(ev.scorerId, (scoreMap.get(ev.scorerId) || 0) + 1);
-      if (ev.assisterId) assistMap.set(ev.assisterId, (assistMap.get(ev.assisterId) || 0) + 1);
-    }
-  }
-  for (const club of [home, away].filter(Boolean)) {
-    for (const p of club.players || []) {
-      const g = scoreMap.get(p.id) || 0;
-      const a = assistMap.get(p.id) || 0;
-      if (g > 0) p.stats.goals += g;
-      if (a > 0) p.stats.assists += a;
-      if (g > 0 || a > 0) p.morale = clamp(p.morale + 3, 15, 100);
-      p.marketValueEur = calculatePlayerValueEur(p);
-    }
-  }
 
   // Premio económico por recaudación/resultado al usuario
   const userGoals = pm.homeId === userTeam.id ? finalHomeScore : finalAwayScore;
@@ -2376,6 +2718,9 @@ export function swapStarterAndBench(club, starterId, benchId) {
   const starterP = club.players.find((p) => p.id === starterId);
   const benchP = club.players.find((p) => p.id === benchId);
   if (!starterP || !benchP) return { ok: false, message: 'Jugador no encontrado.' };
+  if (isPlayerUnavailable(benchP)) {
+    return { ok: false, message: `${benchP.name} no está habilitado: ${getPlayerUnavailableReason(benchP)}.` };
+  }
 
   const newStarters = [...club.starterIds];
   newStarters[sIdx] = benchId;
@@ -2626,6 +2971,15 @@ export function acceptIncomingSaleOffer(state, offerId) {
 
   // Eliminar todas las ofertas activas por ese jugador
   state.incomingSaleOffers = state.incomingSaleOffers.filter((o) => o.playerId !== target.id);
+  if (userClub.captainId === target.id) ensureClubCaptain(userClub);
+  recordLedgerTransfer(state, 'SALE', {
+    playerName: target.name,
+    position: target.position,
+    ovr: target.ovr,
+    feeClp: offer.amountClp,
+    otherClubName: buyer?.name || offer.buyerTeamName,
+    season: state.season || 1,
+  });
 
   state.news = [{
     id: `news_sold_${target.id}_${Date.now()}`,
@@ -3545,6 +3899,15 @@ export function signMarketPlayer(state, playerId, optionsOrRng = {}, maybeRng = 
     userClub.budgetEur -= neg.fee;
     seller.budgetEur += neg.fee;
 
+    recordLedgerTransfer(state, 'SIGNING', {
+      playerName: p.name,
+      position: p.position,
+      ovr: p.ovr,
+      feeClp: neg.fee,
+      otherClubName: seller.name,
+      season: state.season || 1,
+    });
+
     if (win.open) {
       seller.players.splice(pIdx, 1);
       seller.starterIds = seller.starterIds.filter((id) => id !== p.id);
@@ -3582,6 +3945,14 @@ export function signMarketPlayer(state, playerId, optionsOrRng = {}, maybeRng = 
   return { ok: false, message: 'Jugador no disponible en el mercado.' };
 }
 
+export function submitNegotiatedTransferOffer(state, playerId, payload = {}, rng = Math.random) {
+  const win = getTransferWindowState(state);
+  return submitCustomTransferOffer(state, playerId, payload, rng, {
+    isWindowOpen: () => win.open,
+    nextWindowLabel: win.nextWindowLabel,
+  });
+}
+
 // =========================================================================
 // 7D. LOGROS, PUNTAJE Y RANKING DE CARRERAS DT
 // =========================================================================
@@ -3597,6 +3968,7 @@ export function recordSeasonAchievementsAndStats(state) {
   const pushAch = (title, points, division) => {
     const item = { season: state.season, title, points, division };
     state.careerAchievements.push(item);
+    recordLedgerTrophy(state, title, { isCopa: false });
     added.push(item);
   };
 
@@ -3950,6 +4322,9 @@ export function acceptDtJobOffer(state, offerId, rng = Math.random) {
   if (prevClub) prevClub.isUserClub = false;
   newClub.isUserClub = true;
   state.userTeamId = newClub.id;
+  ensureClubCaptain(newClub);
+  ensureTeamTactics(newClub);
+  recordLedgerClubSwitch(state, prevClub, newClub);
   state.dtJobOffers = [];
   state.incomingSaleOffers = [];
   state.pendingIncomingTransfers = [];
@@ -4009,6 +4384,7 @@ export function startNextSeason(state, rng = Math.random) {
   }
 
   recordSeasonAchievementsAndStats(state);
+  processActiveLoansStep(state, 'Pretemporada', rng);
   processPendingIncomingTransfers(state, 'Pretemporada');
 
   const po = state.postseason;
@@ -4077,6 +4453,10 @@ export function startNextSeason(state, rng = Math.random) {
     const acadRes = advancePlayerAcademicYear(fa, rng);
     if (acadRes.graduated) return false;
     fa.ovr = clamp((fa.ovr || 60) + ovrDelta, 52, 92);
+    fa.energy = 100;
+    fa.injuredMatches = 0;
+    fa.suspendedMatches = 0;
+    fa.yellowCards = 0;
     fa.marketValueEur = calculatePlayerValueEur(fa);
     return true;
   });
@@ -4104,6 +4484,10 @@ export function startNextSeason(state, rng = Math.random) {
       p.seasonsAtClub = (p.seasonsAtClub || 1) + 1;
       p.contractSemesters = Math.max(0, (p.contractSemesters || 1) - 1);
       p.ovr = clamp((p.ovr || 62) + ovrDelta, 52, 92);
+      p.energy = 100;
+      p.injuredMatches = 0;
+      p.suspendedMatches = 0;
+      p.yellowCards = 0;
       p.stats = { matches: 0, goals: 0, assists: 0, cleanSheets: 0, mvpCount: 0, ratingSum: 0 };
       p.marketValueEur = calculatePlayerValueEur(p);
 
@@ -4124,7 +4508,7 @@ export function startNextSeason(state, rng = Math.random) {
 
     team.players = kept;
     while (team.players.length < 13) {
-      const filler = sanitizePlayerPublic(createSquadPlayer({
+      const filler = ensurePlayerCondition(sanitizePlayerPublic(createSquadPlayer({
         id: `${team.id}_YTH_${state.season + 1}_${team.players.length + 1}`,
         teamId: team.id,
         age: rng() < 0.7 ? 18 : 19,
@@ -4138,12 +4522,13 @@ export function startNextSeason(state, rng = Math.random) {
         jerseyNumber: team.players.length + 1,
         contractSemesters: 4,
         rng,
-      }));
+      })));
       team.players.push(filler);
     }
     team.starterIds = team.starterIds.filter((id) => team.players.some((p) => p.id === id));
     team.benchIds = team.players.filter((p) => !team.starterIds.includes(p.id)).map((p) => p.id);
     refillStarterSlotIfNeeded(team);
+    ensureClubCaptain(team);
   }
 
   // Generar camada anual de nuevos ingresos en TODAS las carreras UFRO (Agentes Libres + 3ª División)
@@ -4162,6 +4547,12 @@ export function startNextSeason(state, rng = Math.random) {
   state.dtJobOffers = [];
   state.activeSponsors = [];
   state.sponsorSession = generatePreseasonSponsorOffers(state, rng);
+  state.tryoutSession = generateFreshmenTryouts(state, rng);
+  state.copa = initializeCopaIntercarreras(state, rng);
+  const ledger = ensureDtLedger(state);
+  if (ledger?.stints?.length > 0) {
+    ledger.stints[ledger.stints.length - 1].divisionCurrent = userTeam.division;
+  }
   state.calendar = generateSeasonCalendar(state.teams);
   state.standings = {
     div1: createStandingsTable(state.teams.filter((t) => t.division === 1)),
