@@ -37,8 +37,17 @@ import {
   advanceUserPositionTraining,
   submitSponsorProposal,
   processSponsorInstallments,
+  computeSponsorEvaluationProfile,
+  generateCommercialOffers,
+  getCommercialAgreementsSummary,
   getTransferWindowState,
   processPendingIncomingTransfers,
+  FORMATIONS_F7,
+  getFormationLayout,
+  getClubBoardExpectations,
+  swapStartersOrder,
+  matchesPlayerSearchQuery,
+  getRecommendedMarketPlayers,
   recordSeasonAchievementsAndStats,
   computeDtCareerScore,
   buildNotFcRankingEntry,
@@ -405,7 +414,17 @@ test('Patrocinios de pretemporada, moneda CLP, ventanas con pre-acuerdos, resist
   const club = state.teams.find((t) => t.id === state.userTeamId);
   const initialBudget = club.budgetEur;
 
-  // 1) Patrocinios: rechazo con rng alto (0.99) consume propuesta sin dinero; aceptación con rng bajo (0.01) acredita cuota 1
+  // 1) Patrocinios: perfil de evaluación (OVR, reputación histórica, rendimiento reciente), rechazo y aceptación con resumen CLP
+  const profile = computeSponsorEvaluationProfile(state);
+  assert.ok(profile.teamOvr >= 60);
+  assert.ok(profile.historicalReputation >= 18 && profile.historicalReputation <= 98);
+  assert.ok(profile.recentPerformance >= 16 && profile.recentPerformance <= 98);
+
+  const midOffers = generateCommercialOffers(state, rng, 'MID_SEASON');
+  assert.equal(midOffers.offers.length, 6);
+  assert.ok(midOffers.offers.some((o) => o.kind === 'MARCA' && o.frequency === 'MENSUAL'));
+  assert.ok(midOffers.offers.some((o) => o.kind === 'DIRECCION_CARRERA' && o.frequency === 'SEMESTRAL'));
+
   const offers = state.sponsorSession.offers;
   const rejectRes = submitSponsorProposal(state, offers[0].id, () => 0.99);
   assert.equal(rejectRes.ok, false);
@@ -420,6 +439,11 @@ test('Patrocinios de pretemporada, moneda CLP, ventanas con pre-acuerdos, resist
   const paid = processSponsorInstallments(state, 'MENSUAL', 'Fecha 2');
   assert.equal(paid, mensualOffer.amountPerInstallment);
   assert.equal(club.budgetEur, initialBudget + mensualOffer.amountPerInstallment * 2);
+
+  const summary = getCommercialAgreementsSummary(state);
+  assert.equal(summary.activeCount, 1);
+  assert.equal(summary.collectedClp, mensualOffer.amountPerInstallment * 2);
+  assert.equal(summary.remainingClp, mensualOffer.amountPerInstallment * (mensualOffer.installmentsTotal - 2));
 
   // 2) Resistencia de salida para jugador de carrera / antigüedad en su club
   const loyalTarget = state.teams
@@ -475,3 +499,90 @@ test('Patrocinios de pretemporada, moneda CLP, ventanas con pre-acuerdos, resist
   assert.equal(rankEntry.score, score);
   assert.ok(rankEntry.trophyList.length >= 1);
 });
+
+test('8 esquemas F7 con coordenadas, swap en cancha, exigencias directiva, zonas mapa de calor, búsqueda flexible y recomendaciones', () => {
+  const rng = makeSeededRng(707);
+  const db = buildSeedDatabase(rng);
+  const state = initializeDtCareerState({
+    database: db,
+    dtName: 'DT Analista',
+    selectedTeamId: 'MED-MED-01',
+    rng,
+  });
+
+  // 1) 8 esquemas F7 con 7 coordenadas normalizadas cada uno
+  const formKeys = Object.keys(FORMATIONS_F7);
+  assert.equal(formKeys.length, 8);
+  for (const key of formKeys) {
+    const layout = getFormationLayout(key);
+    assert.equal(layout.length, 7, `${key} debe tener 7 titulares`);
+    assert.equal(layout[0].role, 'ARQ');
+    for (const c of layout) {
+      assert.ok(c.x >= 0 && c.x <= 100 && c.y >= 0 && c.y <= 100);
+    }
+  }
+
+  // 2) Intercambio directo de dos titulares en cancha (swapStartersOrder)
+  const club = state.teams.find((t) => t.id === state.userTeamId);
+  const s1 = club.starterIds[1];
+  const s2 = club.starterIds[2];
+  const swapOrder = swapStartersOrder(club, s1, s2);
+  assert.equal(swapOrder.ok, true);
+  assert.equal(club.starterIds[1], s2);
+  assert.equal(club.starterIds[2], s1);
+
+  // 3) Exigencias de la directiva antes de firmar
+  const d1Board = getClubBoardExpectations(club);
+  assert.ok(d1Board.primary.length > 10);
+  assert.ok(Array.isArray(d1Board.secondary) && d1Board.secondary.length >= 1);
+  assert.ok(['Alta', 'Media', 'Baja'].includes(d1Board.pressure));
+
+  // 4) Búsqueda flexible con dos nombres y con/sin tilde ("Ángel Francisco Soto")
+  const samplePlayer = {
+    id: 'P_ANGEL_TEST',
+    name: 'Ángel Francisco Soto',
+    firstName: 'Ángel Francisco',
+    lastName: 'Soto',
+    studiedCareer: 'Ingeniería Civil Informática',
+    position: 'MED',
+    age: 21,
+    ovr: 76,
+    morale: 42,
+    marketValueEur: 120000,
+    transferListed: false,
+  };
+  assert.equal(matchesPlayerSearchQuery(samplePlayer, 'Ángel Soto'), true);
+  assert.equal(matchesPlayerSearchQuery(samplePlayer, 'Angel Soto'), true);
+  assert.equal(matchesPlayerSearchQuery(samplePlayer, 'soto angel'), true);
+  assert.equal(matchesPlayerSearchQuery(samplePlayer, 'Francisco Soto'), true);
+  assert.equal(matchesPlayerSearchQuery(samplePlayer, 'Pedro Perez'), false);
+
+  // Inyectar jugador en agente libre para validar searchMarketPlayers end-to-end
+  state.freeAgents.unshift(samplePlayer);
+  const foundNoAccent = searchMarketPlayers(state, { query: 'Angel Soto' });
+  assert.ok(foundNoAccent.some((p) => p.id === 'P_ANGEL_TEST'));
+  const foundWithAccent = searchMarketPlayers(state, { query: 'Ángel Soto' });
+  assert.ok(foundWithAccent.some((p) => p.id === 'P_ANGEL_TEST'));
+
+  // 5) Jugadores recomendados (sin exponer potencial)
+  const recs = getRecommendedMarketPlayers(state, 6);
+  assert.ok(recs.length >= 3 && recs.length <= 6);
+  for (const r of recs) {
+    assert.ok(['Fichaje Bomba', 'Descontento', 'Mejora tu XI'].includes(r.recommendationTag));
+    assert.ok(r.recommendationReason && r.recommendationReason.length > 5);
+    assert.ok(r.estimatedCostClp > 0);
+    assert.equal(r.potential, undefined);
+  }
+
+  // 6) Noticias iniciales dinámicas y zonas de mapa de calor en partido en vivo
+  assert.ok(Array.isArray(state.news) && state.news.length >= 3);
+  assert.ok(state.news.some((n) => n.headline.includes(club.name)));
+  advanceSimulationStep(state, 'next_event', rng);
+  advanceSimulationStep(state, 'next_event', rng);
+  const matchReady = advanceSimulationStep(state, 'next_match', rng);
+  assert.equal(matchReady.status, 'MATCH_READY');
+  const events = state.pendingLiveMatch.timeline.events;
+  assert.ok(events.length >= 5);
+  assert.equal(events.every((e) => e.zone && Number.isFinite(e.zone.x) && Number.isFinite(e.zone.y)), true);
+});
+

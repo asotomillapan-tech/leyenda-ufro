@@ -16,10 +16,110 @@ import {
 export const POSITIONS = ['ARQ', 'DEF', 'MED', 'DEL'];
 
 export const FORMATIONS_F7 = {
-  '1-2-3-1': { label: '1-2-3-1 Equilibrada', counts: { ARQ: 1, DEF: 2, MED: 3, DEL: 1 } },
-  '1-3-2-1': { label: '1-3-2-1 Sólida', counts: { ARQ: 1, DEF: 3, MED: 2, DEL: 1 } },
-  '1-2-2-2': { label: '1-2-2-2 Ofensiva', counts: { ARQ: 1, DEF: 2, MED: 2, DEL: 2 } },
-  '1-3-1-2': { label: '1-3-1-2 Contragolpe', counts: { ARQ: 1, DEF: 3, MED: 1, DEL: 2 } },
+  '1-2-3-1': {
+    label: '1-2-3-1 Equilibrada',
+    counts: { ARQ: 1, DEF: 2, MED: 3, DEL: 1 },
+    coords: [
+      { role: 'ARQ', x: 50, y: 88 },
+      { role: 'DEF', x: 30, y: 70 },
+      { role: 'DEF', x: 70, y: 70 },
+      { role: 'MED', x: 20, y: 46 },
+      { role: 'MED', x: 50, y: 48 },
+      { role: 'MED', x: 80, y: 46 },
+      { role: 'DEL', x: 50, y: 20 },
+    ],
+  },
+  '1-3-2-1': {
+    label: '1-3-2-1 Sólida',
+    counts: { ARQ: 1, DEF: 3, MED: 2, DEL: 1 },
+    coords: [
+      { role: 'ARQ', x: 50, y: 88 },
+      { role: 'DEF', x: 22, y: 70 },
+      { role: 'DEF', x: 50, y: 72 },
+      { role: 'DEF', x: 78, y: 70 },
+      { role: 'MED', x: 34, y: 46 },
+      { role: 'MED', x: 66, y: 46 },
+      { role: 'DEL', x: 50, y: 20 },
+    ],
+  },
+  '1-2-2-2': {
+    label: '1-2-2-2 Ofensiva',
+    counts: { ARQ: 1, DEF: 2, MED: 2, DEL: 2 },
+    coords: [
+      { role: 'ARQ', x: 50, y: 88 },
+      { role: 'DEF', x: 30, y: 70 },
+      { role: 'DEF', x: 70, y: 70 },
+      { role: 'MED', x: 30, y: 46 },
+      { role: 'MED', x: 70, y: 46 },
+      { role: 'DEL', x: 34, y: 21 },
+      { role: 'DEL', x: 66, y: 21 },
+    ],
+  },
+  '1-3-1-2': {
+    label: '1-3-1-2 Contragolpe',
+    counts: { ARQ: 1, DEF: 3, MED: 1, DEL: 2 },
+    coords: [
+      { role: 'ARQ', x: 50, y: 88 },
+      { role: 'DEF', x: 22, y: 70 },
+      { role: 'DEF', x: 50, y: 72 },
+      { role: 'DEF', x: 78, y: 70 },
+      { role: 'MED', x: 50, y: 48 },
+      { role: 'DEL', x: 34, y: 21 },
+      { role: 'DEL', x: 66, y: 21 },
+    ],
+  },
+  '1-2-1-3': {
+    label: '1-2-1-3 Tridente',
+    counts: { ARQ: 1, DEF: 2, MED: 1, DEL: 3 },
+    coords: [
+      { role: 'ARQ', x: 50, y: 88 },
+      { role: 'DEF', x: 32, y: 71 },
+      { role: 'DEF', x: 68, y: 71 },
+      { role: 'MED', x: 50, y: 50 },
+      { role: 'DEL', x: 20, y: 24 },
+      { role: 'DEL', x: 50, y: 18 },
+      { role: 'DEL', x: 80, y: 24 },
+    ],
+  },
+  '1-1-3-2': {
+    label: '1-1-3-2 Presión Alta',
+    counts: { ARQ: 1, DEF: 1, MED: 3, DEL: 2 },
+    coords: [
+      { role: 'ARQ', x: 50, y: 88 },
+      { role: 'DEF', x: 50, y: 72 },
+      { role: 'MED', x: 20, y: 48 },
+      { role: 'MED', x: 50, y: 50 },
+      { role: 'MED', x: 80, y: 48 },
+      { role: 'DEL', x: 35, y: 21 },
+      { role: 'DEL', x: 65, y: 21 },
+    ],
+  },
+  '1-4-1-1': {
+    label: '1-4-1-1 Bloque Bajo',
+    counts: { ARQ: 1, DEF: 4, MED: 1, DEL: 1 },
+    coords: [
+      { role: 'ARQ', x: 50, y: 88 },
+      { role: 'DEF', x: 16, y: 68 },
+      { role: 'DEF', x: 38, y: 72 },
+      { role: 'DEF', x: 62, y: 72 },
+      { role: 'DEF', x: 84, y: 68 },
+      { role: 'MED', x: 50, y: 47 },
+      { role: 'DEL', x: 50, y: 20 },
+    ],
+  },
+  '1-1-4-1': {
+    label: '1-1-4-1 Posesión',
+    counts: { ARQ: 1, DEF: 1, MED: 4, DEL: 1 },
+    coords: [
+      { role: 'ARQ', x: 50, y: 88 },
+      { role: 'DEF', x: 50, y: 72 },
+      { role: 'MED', x: 16, y: 46 },
+      { role: 'MED', x: 38, y: 50 },
+      { role: 'MED', x: 62, y: 50 },
+      { role: 'MED', x: 84, y: 46 },
+      { role: 'DEL', x: 50, y: 20 },
+    ],
+  },
 };
 
 export const HALF_REAL_SECONDS = 120; // Cada tiempo dura exactamente 2 minutos reales (120s)
@@ -36,14 +136,93 @@ export function formatClp(amount) {
 
 export const formatEuro = formatClp;
 
+export function getFormationLayout(formationKey = '1-2-3-1') {
+  return (FORMATIONS_F7[formationKey] || FORMATIONS_F7['1-2-3-1']).coords;
+}
+
 export function getFormationSlots(formationKey = '1-2-3-1') {
-  const counts = (FORMATIONS_F7[formationKey] || FORMATIONS_F7['1-2-3-1']).counts;
-  return [
-    ...Array(counts.ARQ || 1).fill('ARQ'),
-    ...Array(counts.DEF || 2).fill('DEF'),
-    ...Array(counts.MED || 3).fill('MED'),
-    ...Array(counts.DEL || 1).fill('DEL'),
-  ];
+  const layout = getFormationLayout(formationKey);
+  return layout.map((c) => c.role);
+}
+
+export function getClubBoardExpectations(club) {
+  if (!club) return { primary: 'Competir dignamente', secondary: [], pressure: 'Media' };
+  const div = Number(club.division) || 3;
+  const ovr = getTeamAverageOvr(club);
+  const ach = normalizeTextKey(club.achievements || '');
+  const hasTitles = ach && !ach.includes('sin titulos') && !ach.includes('sin logros') && !ach.includes('fundado desde cero');
+
+  if (div === 1) {
+    if (ovr >= 78 || hasTitles) {
+      return {
+        primary: 'Pelear el título y asegurar Top 4 directo a Cuartos',
+        secondary: [
+          'Mantener finanzas positivas en CLP al cierre del año',
+          club.derby ? 'Ganar el clásico universitario de la temporada' : 'Sostener al menos 60% de identidad de carrera',
+        ],
+        pressure: 'Alta',
+      };
+    }
+    if (ovr >= 74) {
+      return {
+        primary: 'Clasificar a Playoffs (puestos 5° a 12°)',
+        secondary: [
+          'Evitar la zona de Liguilla de descenso (16° a 18°)',
+          'Subir el OVR medio del equipo titular',
+        ],
+        pressure: 'Media',
+      };
+    }
+    return {
+      primary: 'Asegurar la permanencia en 1ª División',
+      secondary: [
+        'Evitar el descenso directo (19°)',
+        'Cerrar al menos 1 acuerdo comercial en la temporada',
+      ],
+      pressure: 'Media',
+    };
+  }
+
+  if (div === 2) {
+    if (ovr >= 72 || hasTitles) {
+      return {
+        primary: 'Pelear el ascenso a 1ª División (Top 4 / Playoffs)',
+        secondary: [
+          'Terminar entre los 8 primeros para esperar en Cuartos',
+          'Potenciar figuras de la carrera sin descuidar el ánimo',
+        ],
+        pressure: 'Alta',
+      };
+    }
+    return {
+      primary: 'Meternos en Playoffs de 2ª División (Top 18)',
+      secondary: [
+        'Alejarse de la Liguilla de descenso (21° a 24°)',
+        'Consolidar una base titular estable',
+      ],
+      pressure: 'Media',
+    };
+  }
+
+  // 3ª División
+  if (ovr >= 63) {
+    return {
+      primary: 'Clasificar entre los 4 mejores de la Conferencia',
+      secondary: [
+        'Pelear los 2 cupos de ascenso directo en la Liguilla Final',
+        'Construir identidad de plantel y caja con patrocinios',
+      ],
+      pressure: 'Media',
+    };
+  }
+  return {
+    primary: 'Consolidar el proyecto en mitad alta de la Conferencia',
+    secondary: [
+      'Sumar refuerzos clave o agentes libres en pretemporada',
+      'Mantener alta la moral del camarín',
+    ],
+    pressure: 'Baja',
+  };
 }
 
 export function getPlayerEffectiveOvr(player, rolePos = null) {
@@ -573,15 +752,18 @@ export function generateLiveMatchTimeline({
 
   const isDerby = Boolean(homeTeam?.derby && homeTeam.derby === awayTeam?.id);
 
+  const randIn = (min, max) => Math.round(min + rng() * (max - min));
+
   if (fromMinute === 1) {
     events.push({
       minute: 1,
       half: 1,
       type: 'KICKOFF',
       teamId: homeTeam.id,
+      zone: { x: 50, y: 50, team: 'home', intensity: 0.7 },
       text: isDerby
-        ? `¡Pitazo inicial en la cancha UFRO! Clásico universitario caliente entre ${homeTeam.name} y ${awayTeam.name}.`
-        : `¡Comienza el partido de Fútbol 7! ${homeTeam.name} mueve el balón ante ${awayTeam.name}.`,
+        ? `Pitazo inicial en la UFRO. Clásico intenso entre ${homeTeam.name} y ${awayTeam.name}.`
+        : `Comienza el partido: ${homeTeam.name} mueve el balón ante ${awayTeam.name}.`,
     });
   }
 
@@ -592,7 +774,8 @@ export function generateLiveMatchTimeline({
         minute: 26,
         half: 2,
         type: 'SECOND_HALF',
-        text: `Arranca el 2° Tiempo (${hg}-${ag}). Todo se define en los últimos 25 minutos.`,
+        zone: { x: 50, y: 50, team: 'away', intensity: 0.65 },
+        text: `Arranca el 2° tiempo (${hg}-${ag}). Últimos 25 minutos en juego.`,
       });
     }
 
@@ -620,7 +803,8 @@ export function generateLiveMatchTimeline({
         scorerId: scorer?.id || null,
         assisterId: assister?.id || null,
         scoreAfter: `${hg}-${ag}`,
-        text: `⚽ ¡GOOOOL de ${homeTeam.name}! ${scorer?.name || 'Delantero'} define cruzado${assister ? ` tras gran pase de ${assister.name}` : ''} (${hg}-${ag}).`,
+        zone: { x: randIn(84, 93), y: randIn(32, 68), team: 'home', intensity: 1.0 },
+        text: `⚽ ¡Gol de ${homeTeam.name}! ${scorer?.name || 'El delantero'} define cruzado${assister ? ` tras pase de ${assister.name}` : ''} (${hg}-${ag}).`,
       });
     } else if (roll < homeGoalProb + awayGoalProb) {
       const scorer = pickWeightedPlayer(
@@ -642,9 +826,10 @@ export function generateLiveMatchTimeline({
         scorerId: scorer?.id || null,
         assisterId: assister?.id || null,
         scoreAfter: `${hg}-${ag}`,
-        text: `⚽ Gol de ${awayTeam.name}. ${scorer?.name || 'Atacante'} no perdona frente al arco${assister ? ` (asistencia de ${assister.name})` : ''} (${hg}-${ag}).`,
+        zone: { x: randIn(7, 16), y: randIn(32, 68), team: 'away', intensity: 1.0 },
+        text: `⚽ Gol de ${awayTeam.name}. ${scorer?.name || 'El atacante'} no falla en el área${assister ? ` (asistencia de ${assister.name})` : ''} (${hg}-${ag}).`,
       });
-    } else if (roll < homeGoalProb + awayGoalProb + 0.085) {
+    } else if (roll < homeGoalProb + awayGoalProb + 0.09) {
       const atkHome = rng() < clamp(0.5 + diff * 0.12, 0.3, 0.7);
       const shooterTeam = atkHome ? homeTeam : awayTeam;
       const gkTeam = atkHome ? awayTeam : homeTeam;
@@ -655,9 +840,10 @@ export function generateLiveMatchTimeline({
         half,
         type: 'SAVE',
         teamId: gkTeam.id,
-        text: `🧤 ¡Atajadón! ${shooter?.name || shooterTeam.name} probó al ángulo, pero ${gk?.name || 'el arquero'} voló para salvar a ${gkTeam.name}.`,
+        zone: { x: atkHome ? randIn(78, 90) : randIn(10, 22), y: randIn(25, 75), team: atkHome ? 'home' : 'away', intensity: 0.85 },
+        text: `🧤 Atajada clave: ${shooter?.name || shooterTeam.name} remató al palo largo y ${gk?.name || 'el arquero'} salvó a ${gkTeam.name}.`,
       });
-    } else if (roll < homeGoalProb + awayGoalProb + 0.125) {
+    } else if (roll < homeGoalProb + awayGoalProb + 0.13) {
       const cardHome = rng() < 0.5;
       const cTeam = cardHome ? homeTeam : awayTeam;
       const cPlayer = pickWeightedPlayer(cardHome ? homeStarters : awayStarters, (p) => (p.position === 'DEF' ? 4 : 2), rng);
@@ -666,15 +852,33 @@ export function generateLiveMatchTimeline({
         half,
         type: 'CARD',
         teamId: cTeam.id,
-        text: `🟨 Tarjeta amarilla para ${cPlayer?.name || 'un defensor'} (${cTeam.name}) por cortar un contragolpe.`,
+        zone: { x: cardHome ? randIn(25, 55) : randIn(45, 75), y: randIn(16, 84), team: cardHome ? 'home' : 'away', intensity: 0.65 },
+        text: `🟨 Amarilla para ${cPlayer?.name || 'un defensor'} (${cTeam.name}) por cortar un avance.`,
+      });
+    } else if (roll < homeGoalProb + awayGoalProb + 0.28) {
+      const atkHome = rng() < clamp(0.5 + diff * 0.14, 0.28, 0.72);
+      const teamOnBall = atkHome ? homeTeam : awayTeam;
+      const creator = pickWeightedPlayer(atkHome ? homeStarters : awayStarters, (p) => (p.position === 'MED' ? 5 : p.position === 'DEL' ? 3 : 2), rng);
+      const flank = rng() < 0.34 ? 'banda izquierda' : rng() < 0.68 ? 'banda derecha' : 'zona central';
+      const yCoord = flank === 'banda izquierda' ? randIn(12, 30) : flank === 'banda derecha' ? randIn(70, 88) : randIn(36, 64);
+      const xCoord = atkHome ? randIn(52, 82) : randIn(18, 48);
+      events.push({
+        minute: m,
+        half,
+        type: 'PLAY',
+        teamId: teamOnBall.id,
+        zone: { x: xCoord, y: yCoord, team: atkHome ? 'home' : 'away', intensity: 0.55 },
+        text: `${teamOnBall.name} carga por ${flank} con ${creator?.name || 'su volante'}.`,
       });
     } else if (m === 12 || m === 38) {
       const dominator = hs >= as ? homeTeam : awayTeam;
+      const domHome = dominator.id === homeTeam.id;
       events.push({
         minute: m,
         half,
         type: 'COMMENT',
-        text: `📣 Tramo intenso en la cancha sintética UFRO. ${dominator.name} presiona alto buscando espacios.`,
+        zone: { x: domHome ? randIn(54, 72) : randIn(28, 46), y: randIn(28, 72), team: domHome ? 'home' : 'away', intensity: 0.5 },
+        text: `${dominator.name} adelanta líneas y controla el ritmo en mediocampo.`,
       });
     }
   }
@@ -1248,65 +1452,162 @@ function pickFrom(arr, rng) {
 }
 
 export function generateSeedNewsFeed(userTeam, teams, season = 1, rng = Math.random) {
-  const rivals = teams.filter((t) => t.division === userTeam.division && t.id !== userTeam.id);
-  const r1 = rivals[0] || userTeam;
-  const r2 = rivals[1] || userTeam;
+  const rivals = teams
+    .filter((t) => t.division === userTeam.division && t.id !== userTeam.id)
+    .sort((a, b) => getTeamAverageOvr(b) - getTeamAverageOvr(a));
+  const contender = rivals[0] || userTeam;
+  const derbyTeam = userTeam.derby
+    ? teams.find((t) => t.id === userTeam.derby || normalizeTextKey(t.name) === normalizeTextKey(userTeam.derby))
+    : rivals[1];
   const star = [...(userTeam.players || [])].sort((a, b) => b.ovr - a.ovr)[0];
+  const exp = getClubBoardExpectations(userTeam);
 
   return [
     {
       id: `news_init_1_${season}`,
       dateLabel: '02 Mar',
-      category: 'DT',
-      headline: `${userTeam.name} oficializa a su nuevo DT para la Temporada ${season}`,
-      body: `La directiva de ${userTeam.career} apuesta fuerte con presupuesto de ${formatClp(userTeam.budgetEur)} CLP y busca protagonismo en ${userTeam.division}ª División.`,
+      category: 'Directiva',
+      headline: `${userTeam.name} presenta su proyecto: "${exp.primary}"`,
+      body: `La coordinación de ${userTeam.career} oficializó al cuerpo técnico con ${formatClp(userTeam.budgetEur)} CLP en caja para la Temporada ${season}.`,
     },
     {
       id: `news_init_2_${season}`,
-      dateLabel: '09 Mar',
-      category: 'MERCADO',
-      headline: `Rumores en el campus: ${r1.name} sondea refuerzos de última hora`,
-      body: `Varios agentes libres de distintas carreras están siendo observados antes del cierre de listas de la 1ª Rueda.`,
+      dateLabel: '05 Mar',
+      category: 'Previa',
+      headline: `${contender.name} parte como favorito en ${userTeam.division}ª División`,
+      body: `Con promedio OVR ${getTeamAverageOvr(contender)}, aparece como el rival a vencer en la lucha por los primeros puestos.`,
     },
     {
       id: `news_init_3_${season}`,
-      dateLabel: '09 Mar',
-      category: 'FIGURA',
-      headline: `${star?.name || 'El referente'} lidera las prácticas de ${userTeam.name} (OVR ${star?.ovr || 70})`,
-      body: `En ${r2.name} ya analizan cómo frenar su juego asociado en Fútbol 7.`,
+      dateLabel: '07 Mar',
+      category: 'Camarín',
+      headline: `${star?.name || 'El referente'} encabeza la pretemporada de ${userTeam.name}`,
+      body: derbyTeam
+        ? `El plantel ya mira de reojo el cruce ante ${derbyTeam.name}, uno de los duelos más esperados del torneo.`
+        : `El equipo afina detalles tácticos en Fútbol 7 antes del debut oficial.`,
     },
   ];
 }
 
 export function generateRoundNewsAndAiTransfers(state, roundNum, rng = Math.random) {
   const userTeam = state.teams.find((t) => t.id === state.userTeamId);
+  if (!userTeam) return;
+  const dateLabel = SEASON_ROUND_DATES[roundNum - 1] || `Fecha ${roundNum}`;
+  const divKey = userTeam.division === 1 ? 'div1' : userTeam.division === 2 ? 'div2' : (userTeam.conf === 'B' ? 'div3B' : 'div3A');
+  const divRounds = state.calendar?.[divKey] || [];
+  const roundObj = divRounds.find((r) => r.round === roundNum);
+  const byId = new Map(state.teams.map((t) => [t.id, t]));
   const newItems = [];
+
+  // 1) Crónica real de la fecha: buscar golpe de la jornada (sorpresa o goleada)
+  const playedMatches = (roundObj?.matches || []).filter((m) => m.played && m.homeId !== userTeam.id && m.awayId !== userTeam.id);
+  if (playedMatches.length > 0) {
+    let featured = null;
+    let bestStory = -1;
+    let isUpset = false;
+    for (const m of playedMatches) {
+      const h = byId.get(m.homeId);
+      const a = byId.get(m.awayId);
+      if (!h || !a) continue;
+      const hOvr = getTeamAverageOvr(h);
+      const aOvr = getTeamAverageOvr(a);
+      const gd = Math.abs((m.homeScore || 0) - (m.awayScore || 0));
+      const upset = (m.homeScore > m.awayScore && hOvr + 3 <= aOvr) || (m.awayScore > m.homeScore && aOvr + 3 <= hOvr);
+      const scoreWeight = (upset ? 12 : 0) + gd * 3 + ((m.homeScore || 0) + (m.awayScore || 0));
+      if (scoreWeight > bestStory) {
+        bestStory = scoreWeight;
+        featured = { m, h, a };
+        isUpset = upset;
+      }
+    }
+    if (featured) {
+      const { m, h, a } = featured;
+      const winner = m.homeScore > m.awayScore ? h : m.awayScore > m.homeScore ? a : null;
+      const loser = winner ? (winner.id === h.id ? a : h) : null;
+      const starW = winner ? [...(winner.players || [])].sort((x, y) => (y.stats?.goals || 0) - (x.stats?.goals || 0) || y.ovr - x.ovr)[0] : null;
+      if (isUpset && winner) {
+        newItems.push({
+          id: `news_r${roundNum}_upset_${Date.now()}`,
+          dateLabel,
+          category: 'Sorpresa',
+          headline: `Batacazo en Fecha ${roundNum}: ${winner.name} bajó a ${loser.name} (${m.homeScore}-${m.awayScore})`,
+          body: `${starW?.name || 'La figura del partido'} lideró un triunfo inesperado que sacude la tabla de ${userTeam.division}ª División.`,
+        });
+      } else if (winner && Math.abs(m.homeScore - m.awayScore) >= 3) {
+        newItems.push({
+          id: `news_r${roundNum}_thrash_${Date.now()}`,
+          dateLabel,
+          category: 'Crónica',
+          headline: `Exhibición de ${winner.name}: goleó ${m.homeScore}-${m.awayScore} a ${loser.name}`,
+          body: `Actuación contundente en cancha sintética con ${starW?.name || 'su ataque'} en gran nivel.`,
+        });
+      } else {
+        newItems.push({
+          id: `news_r${roundNum}_res_${Date.now()}`,
+          dateLabel,
+          category: 'Crónica',
+          headline: winner
+            ? `${winner.name} suma de a tres ante ${loser.name} (${m.homeScore}-${m.awayScore})`
+            : `Reparto de puntos entre ${h.name} y ${a.name} (${m.homeScore}-${m.awayScore})`,
+          body: `Duelo parejo en la Fecha ${roundNum} que deja la pelea por Playoffs al rojo vivo.`,
+        });
+      }
+    }
+  }
+
+  // 2) Nota dinámica de tabla, goleador o camarín (alternando para evitar repetición)
+  const sortedTable = sortStandings(state.standings?.[divKey] || []);
+  const leader = sortedTable[0];
   const sameDiv = state.teams.filter((t) => t.division === userTeam.division && t.id !== userTeam.id);
-  if (sameDiv.length >= 2) {
-    const a = pickFrom(sameDiv, rng);
-    const b = pickFrom(sameDiv.filter((x) => x.id !== a.id), rng) || a;
-    const starA = [...(a.players || [])].sort((x, y) => y.ovr - x.ovr)[0];
-    if (rng() < 0.55) {
+  const storyRoll = rng();
+
+  if (leader && leader.pj >= 2 && storyRoll < 0.36) {
+    const runner = sortedTable[1];
+    const gap = runner ? leader.pts - runner.pts : 0;
+    newItems.push({
+      id: `news_r${roundNum}_table_${Date.now()}`,
+      dateLabel,
+      category: 'Tabla',
+      headline: gap >= 3
+        ? `${leader.teamName} se escapa en la punta con ${leader.pts} puntos`
+        : `Pelea cerrada en la cima: ${leader.teamName} lidera con ${leader.pts} pts`,
+      body: runner
+        ? `${runner.teamName} lo persigue de cerca (${runner.pts} pts) tras ${leader.pj} fechas disputadas.`
+        : `Campaña sólida en el arranque de ${userTeam.division}ª División.`,
+    });
+  } else if (storyRoll < 0.7 && sameDiv.length > 0) {
+    const topScorerPool = sameDiv
+      .flatMap((t) => (t.players || []).map((p) => ({ ...p, clubName: t.name })))
+      .filter((p) => (p.stats?.goals || 0) >= 1)
+      .sort((a, b) => (b.stats?.goals || 0) - (a.stats?.goals || 0) || b.ovr - a.ovr);
+    const hotPlayer = topScorerPool[0];
+    if (hotPlayer) {
       newItems.push({
-        id: `news_r${roundNum}_mvp_${Date.now()}_${Math.floor(rng() * 999)}`,
-        dateLabel: SEASON_ROUND_DATES[roundNum - 1] || `Fecha ${roundNum}`,
-        category: 'MVP',
-        headline: `${starA?.name || 'Figura'} elegido MVP de la Fecha ${roundNum} tras brillar en ${a.name}`,
-        body: `Su actuación dejó hablando a todo el Complejo Andrés Bello; ${b.name} ya sigue su pista para el próximo mercado.`,
+        id: `news_r${roundNum}_scorer_${Date.now()}`,
+        dateLabel,
+        category: 'Figura',
+        headline: `${hotPlayer.name} (${hotPlayer.clubName}) ya suma ${hotPlayer.stats.goals} goles en el torneo`,
+        body: `Su efectividad frente al arco despierta el interés de varios clubes de ${userTeam.division}ª División.`,
       });
-    } else {
+    }
+  } else if (sameDiv.length > 0) {
+    const restless = sameDiv
+      .flatMap((t) => (t.players || []).map((p) => ({ ...p, clubName: t.name })))
+      .filter((p) => (p.morale || 70) <= 55)
+      .sort((a, b) => a.morale - b.morale)[0];
+    if (restless) {
       newItems.push({
-        id: `news_r${roundNum}_rumor_${Date.now()}_${Math.floor(rng() * 999)}`,
-        dateLabel: SEASON_ROUND_DATES[roundNum - 1] || `Fecha ${roundNum}`,
-        category: 'FICHAJES',
-        headline: `Movimiento en los pastos: ${a.name} y ${b.name} preguntan por agentes libres`,
-        body: `Con la tabla apretada, los DTs buscan subir el promedio OVR sin descuidar la química de carrera.`,
+        id: `news_r${roundNum}_morale_${Date.now()}`,
+        dateLabel,
+        category: 'Mercado',
+        headline: `Inquietud en ${restless.clubName}: ${restless.name} evaluaría cambiar de aires`,
+        body: `El ${restless.position} (${restless.ovr} OVR) no está conforme con su protagonismo y podría escuchar ofertas.`,
       });
     }
   }
 
-  // Pequeña probabilidad de fichaje IA real entre club y agente libre cuando mercado está abierto
-  if (state.marketOpen && state.freeAgents.length > 0 && rng() < 0.45 && sameDiv.length > 0) {
+  // 3) Fichaje IA real entre club y agente libre cuando mercado está abierto
+  if (state.marketOpen && state.freeAgents.length > 0 && rng() < 0.4 && sameDiv.length > 0) {
     const buyer = pickFrom(sameDiv, rng);
     const targetIdx = Math.floor(rng() * state.freeAgents.length);
     const fa = state.freeAgents[targetIdx];
@@ -1314,16 +1615,17 @@ export function generateRoundNewsAndAiTransfers(state, roundNum, rng = Math.rand
       state.freeAgents.splice(targetIdx, 1);
       fa.teamId = buyer.id;
       fa.contractSemesters = 3;
+      fa.seasonsAtClub = 1;
       fa.careerMatchValid = validateTeamCareerMatch(fa.studiedCareer, buyer.career);
       buyer.players.push(fa);
       buyer.benchIds.push(fa.id);
       buyer.budgetEur -= fa.marketValueEur;
       newItems.push({
         id: `news_ai_sign_${roundNum}_${fa.id}`,
-        dateLabel: SEASON_ROUND_DATES[roundNum - 1] || `Fecha ${roundNum}`,
-        category: 'FICHAJE OFICIAL',
-        headline: `¡Oficial! ${fa.name} (${fa.ovr} OVR) ficha por ${buyer.name}`,
-        body: `El jugador proveniente de ${fa.studiedCareer} acordó contrato por 3 semestres por ${formatEuro(fa.marketValueEur)}.`,
+        dateLabel,
+        category: 'Fichaje',
+        headline: `${buyer.name} incorpora a ${fa.name} (${fa.position} · ${fa.ovr} OVR)`,
+        body: `Llega libre desde ${fa.studiedCareer} con contrato por 3 semestres (${formatClp(fa.marketValueEur)} CLP).`,
       });
     }
   }
@@ -1716,6 +2018,7 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
       processPendingIncomingTransfers(state, 'Mitad de Temporada');
       processSponsorInstallments(state, 'SEMESTRAL', ev.dateLabel);
       processSponsorInstallments(state, 'MENSUAL', ev.dateLabel);
+      state.sponsorSession = generatePreseasonSponsorOffers(state, rng, 'MID_SEASON');
       ev.done = true;
       state.timelineIndex += 1;
       state.news = [{
@@ -1723,7 +2026,7 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
         dateLabel: ev.dateLabel,
         category: 'TEMPORADA',
         headline: `Mitad de Temporada ${state.season}: se abre el mercado de invierno`,
-        body: 'Los clubes ajustan sus planteles de cara al segundo semestre.',
+        body: 'Los clubes ajustan sus planteles y reciben nuevas propuestas comerciales para el segundo semestre.',
       }, ...(state.news || [])].slice(0, 28);
 
       if (mode === 'next_event' || (mode === 'mid_or_end' && targetSemester === 1)) {
@@ -1947,6 +2250,20 @@ export function swapStarterAndBench(club, starterId, benchId) {
   return { ok: true, message: `${benchP.name} entra por ${starterP.name}.` };
 }
 
+export function swapStartersOrder(club, starterIdA, starterIdB) {
+  if (!club || starterIdA === starterIdB) return { ok: false, message: 'Selecciona dos titulares distintos.' };
+  const idxA = (club.starterIds || []).indexOf(starterIdA);
+  const idxB = (club.starterIds || []).indexOf(starterIdB);
+  if (idxA === -1 || idxB === -1) return { ok: false, message: 'Titulares no encontrados.' };
+  const next = [...club.starterIds];
+  next[idxA] = starterIdB;
+  next[idxB] = starterIdA;
+  club.starterIds = next;
+  const pA = club.players.find((p) => p.id === starterIdA);
+  const pB = club.players.find((p) => p.id === starterIdB);
+  return { ok: true, message: `${pA?.name || 'Titular'} intercambió zona con ${pB?.name || 'Titular'}.` };
+}
+
 export function startPlayerPositionTraining(club, playerId, targetPos) {
   if (!club || !POSITIONS.includes(targetPos)) {
     return { ok: false, message: 'Posición destino inválida.' };
@@ -2139,19 +2456,102 @@ export function getSquadCareerMatchRatio(team) {
   return matched / players.length;
 }
 
-export function generatePreseasonSponsorOffers(state, rng = Math.random) {
+function parseClubHistoricalPrestige(achievementsText = '', division = 3) {
+  const txt = normalizeTextKey(achievementsText);
+  let score = division === 1 ? 56 : division === 2 ? 38 : 22;
+  if (!txt || txt.includes('sin titulos') || txt.includes('sin logros') || txt.includes('fundado desde cero')) {
+    return clamp(score, 15, 95);
+  }
+  if (txt.includes('pentacampeon') || txt.includes('tetracampeon')) score += 28;
+  else if (txt.includes('tricampeon')) score += 22;
+  else if (txt.includes('bicampeon')) score += 16;
+  else if (txt.includes('campeon') || txt.includes('titulo') || txt.includes('copa')) score += 11;
+  if (txt.includes('ascenso') || txt.includes('fenaude') || txt.includes('ldes') || txt.includes('nacional')) score += 8;
+  return clamp(score, 15, 95);
+}
+
+export function computeSponsorEvaluationProfile(state) {
   const userTeam = state?.teams?.find((t) => t.id === state.userTeamId);
-  if (!userTeam) return { season: state?.season || 1, proposalsLeft: 3, maxProposals: 3, offers: [] };
+  if (!userTeam) {
+    return {
+      teamOvr: 65,
+      historicalReputation: 40,
+      recentPerformance: 50,
+      careerIdentityPct: 70,
+      reputationLabel: 'En desarrollo',
+      formLabel: 'Sin partidos aún',
+    };
+  }
 
   const stats = ensureCareerStats(state);
-  const avgOvr = getTeamAverageOvr(userTeam);
+  const teamOvr = getTeamAverageOvr(userTeam);
   const div = Number(userTeam.division) || 3;
-  const careerRatio = getSquadCareerMatchRatio(userTeam);
-  const winRate = stats.totalMatches > 0 ? (stats.totalWins / stats.totalMatches) : 0.5;
-  const trophyBonus = (stats.titlesDiv1 * 18 + stats.titlesDiv2 * 12 + stats.titlesDiv3 * 8 + stats.promotions * 8);
+  const careerIdentityPct = Math.round(getSquadCareerMatchRatio(userTeam) * 100);
 
-  const scale = div === 1 ? 1.55 : div === 2 ? 1.12 : 0.78;
-  const perfBoost = clamp((avgOvr - 62) * 1.4 + (winRate - 0.45) * 35 + trophyBonus, -12, 34);
+  // Reputación Histórica: palmarés previo del club + división + títulos/ascensos logrados en la carrera DT
+  const basePrestige = parseClubHistoricalPrestige(userTeam.achievements, div);
+  const dtLegacyBonus =
+    (stats.titlesDiv1 * 18) +
+    (stats.titlesDiv2 * 13) +
+    (stats.titlesDiv3 * 9) +
+    (stats.promotions * 8) +
+    (stats.runnerUps * 5) +
+    Math.min(12, stats.seasonsPlayed * 3);
+  const historicalReputation = Math.round(clamp(basePrestige + dtLegacyBonus, 18, 98));
+  const reputationLabel =
+    historicalReputation >= 80 ? 'Potencia Histórica' :
+    historicalReputation >= 60 ? 'Tradición Competitiva' :
+    historicalReputation >= 40 ? 'Club Consolidado' : 'Proyecto Emergente';
+
+  // Rendimiento Reciente: tabla actual en la división + rendimiento acumulado como DT
+  const divKey = div === 1 ? 'div1' : div === 2 ? 'div2' : (userTeam.conf === 'B' ? 'div3B' : 'div3A');
+  const rows = sortStandings(state.standings?.[divKey] || []);
+  const rowIdx = rows.findIndex((r) => r.teamId === userTeam.id);
+  const row = rowIdx >= 0 ? rows[rowIdx] : null;
+  const totalTeams = Math.max(2, rows.length || 19);
+
+  let recentPerformance = 50;
+  let formLabel = 'Pretemporada · Sin partidos';
+  if (row && row.pj > 0) {
+    const ptsRate = row.pts / (row.pj * 3); // 0..1
+    const posBonus = (1 - (rowIdx / Math.max(1, totalTeams - 1))) * 26; // 0..26
+    const dgBonus = clamp(row.dg * 1.4, -10, 14);
+    const careerWinBonus = stats.totalMatches > 0 ? ((stats.totalWins / stats.totalMatches) - 0.5) * 18 : 0;
+    recentPerformance = Math.round(clamp(28 + ptsRate * 48 + posBonus + dgBonus + careerWinBonus, 16, 98));
+    formLabel = `${rowIdx + 1}° lugar · ${row.pg}G-${row.pe}E-${row.pp}P`;
+  } else if (stats.totalMatches > 0) {
+    const winRate = stats.totalWins / stats.totalMatches;
+    recentPerformance = Math.round(clamp(32 + winRate * 56, 20, 95));
+    formLabel = `Histórico DT: ${Math.round(winRate * 100)}% victorias`;
+  }
+
+  return {
+    teamOvr,
+    historicalReputation,
+    recentPerformance,
+    careerIdentityPct,
+    reputationLabel,
+    formLabel,
+  };
+}
+
+export function generatePreseasonSponsorOffers(state, rng = Math.random, cycle = 'PRE_SEASON') {
+  const userTeam = state?.teams?.find((t) => t.id === state.userTeamId);
+  const profile = computeSponsorEvaluationProfile(state);
+  if (!userTeam) {
+    return { season: state?.season || 1, cycle, proposalsLeft: 3, maxProposals: 3, profile, offers: [] };
+  }
+
+  const div = Number(userTeam.division) || 3;
+  const careerRatio = profile.careerIdentityPct / 100;
+  const isMidseason = cycle === 'MID_SEASON';
+  const scale = (div === 1 ? 1.55 : div === 2 ? 1.12 : 0.78) * (isMidseason ? 0.85 : 1);
+
+  const ovrFactor = (profile.teamOvr - 64) * 1.35;
+  const repFactor = (profile.historicalReputation - 50) * 0.42;
+  const perfFactor = (profile.recentPerformance - 50) * 0.48;
+  const monthlyInstallments = isMidseason ? 3 : 6;
+  const semestralInstallments = isMidseason ? 1 : 2;
 
   const catalog = [
     {
@@ -2159,71 +2559,102 @@ export function generatePreseasonSponsorOffers(state, rng = Math.random) {
       sponsorName: `Dirección de Carrera · ${userTeam.career}`,
       kind: 'DIRECCION_CARRERA',
       frequency: 'SEMESTRAL',
-      baseInstallment: Math.round((52000 * scale + careerRatio * 18000) / 1000) * 1000,
-      installmentsTotal: 2,
-      baseChance: 58 + (careerRatio * 24) + (perfBoost * 0.45),
-      requirementLabel: `Valora identidad (${Math.round(careerRatio * 100)}% alumnos de la carrera)`,
+      baseInstallment: Math.round((52000 * scale + careerRatio * 18000 + profile.historicalReputation * 180) / 1000) * 1000,
+      installmentsTotal: semestralInstallments,
+      baseChance: 52 + (careerRatio * 24) + (repFactor * 0.7) + (ovrFactor * 0.35),
+      requirementLabel: `Identidad de carrera (${profile.careerIdentityPct}%) + reputación institucional`,
     },
     {
       code: 'FACULTAD_CEE',
       sponsorName: `Centro de Estudiantes y Facultad ${userTeam.facultyKey || 'UFRO'}`,
       kind: 'DIRECCION_CARRERA',
       frequency: 'MENSUAL',
-      baseInstallment: Math.round((16500 * scale + (avgOvr - 58) * 350) / 500) * 500,
-      installmentsTotal: 6,
-      baseChance: 62 + (careerRatio * 15) + (perfBoost * 0.5),
-      requirementLabel: 'Premia regularidad y proyección estudiantil',
+      baseInstallment: Math.round((16500 * scale + (profile.teamOvr - 58) * 350 + profile.recentPerformance * 90) / 500) * 500,
+      installmentsTotal: monthlyInstallments,
+      baseChance: 58 + (careerRatio * 14) + (perfFactor * 0.65) + (ovrFactor * 0.35),
+      requirementLabel: `Premia rendimiento reciente (${profile.recentPerformance}/100) e identidad`,
+    },
+    {
+      code: 'DIR_DEPORTES',
+      sponsorName: `Fondo Deportivo Dirección ${userTeam.career}`,
+      kind: 'DIRECCION_CARRERA',
+      frequency: 'SEMESTRAL',
+      baseInstallment: Math.round((46000 * scale + profile.recentPerformance * 240) / 1000) * 1000,
+      installmentsTotal: semestralInstallments,
+      baseChance: 48 + (perfFactor * 0.75) + (repFactor * 0.55) + (careerRatio * 14),
+      requirementLabel: `Evalúa rendimiento reciente (${profile.formLabel}) y reputación`,
     },
     {
       code: 'MARCA_SPORTLAB',
       sponsorName: 'SportLab Temuco Indumentaria',
       kind: 'MARCA',
       frequency: 'MENSUAL',
-      baseInstallment: Math.round((21000 * scale + Math.max(0, avgOvr - 64) * 700) / 500) * 500,
-      installmentsTotal: 6,
-      baseChance: 44 + ((avgOvr - 65) * 1.8) + (perfBoost * 0.65),
-      requirementLabel: `Exige OVR competitivo (actual ${avgOvr})`,
+      baseInstallment: Math.round((21000 * scale + Math.max(0, profile.teamOvr - 64) * 750) / 500) * 500,
+      installmentsTotal: monthlyInstallments,
+      baseChance: 42 + ovrFactor + (perfFactor * 0.6) + (repFactor * 0.35),
+      requirementLabel: `Exige OVR competitivo (${profile.teamOvr}) y buen momento`,
     },
     {
       code: 'MARCA_KINEFIT',
       sponsorName: 'Clínica KineFit & Recuperación',
       kind: 'MARCA',
       frequency: 'SEMESTRAL',
-      baseInstallment: Math.round((68000 * scale + trophyBonus * 500) / 1000) * 1000,
-      installmentsTotal: 2,
-      baseChance: 38 + ((4 - div) * 9) + (perfBoost * 0.75),
-      requirementLabel: 'Prioriza división alta, títulos y rendimiento reciente',
+      baseInstallment: Math.round((68000 * scale + profile.historicalReputation * 280) / 1000) * 1000,
+      installmentsTotal: semestralInstallments,
+      baseChance: 34 + repFactor + (ovrFactor * 0.65) + (perfFactor * 0.55),
+      requirementLabel: `Prioriza reputación histórica (${profile.historicalReputation}/100) y OVR`,
     },
     {
       code: 'MARCA_CAMPUS',
       sponsorName: 'Pizzería El Campus & Hidratación',
       kind: 'MARCA',
       frequency: 'MENSUAL',
-      baseInstallment: Math.round((13000 * scale + rng() * 2500) / 500) * 500,
-      installmentsTotal: 6,
-      baseChance: 72 + (perfBoost * 0.3),
-      requirementLabel: 'Acuerdo accesible para sumar caja mes a mes',
+      baseInstallment: Math.round((13500 * scale + rng() * 2500) / 500) * 500,
+      installmentsTotal: monthlyInstallments,
+      baseChance: 70 + (perfFactor * 0.4) + (ovrFactor * 0.25),
+      requirementLabel: 'Acuerdo comercial accesible para sumar liquidez mensual en CLP',
     },
   ];
 
   const offers = catalog.map((item, idx) => ({
-    id: `SPON_S${state.season}_${item.code}_${idx}`,
+    id: `SPON_S${state.season}_${cycle}_${item.code}_${idx}`,
     sponsorName: item.sponsorName,
     kind: item.kind,
     frequency: item.frequency,
     amountPerInstallment: Math.max(6000, item.baseInstallment),
     installmentsTotal: item.installmentsTotal,
     totalPotentialClp: Math.max(6000, item.baseInstallment) * item.installmentsTotal,
-    acceptanceChance: Math.round(clamp(item.baseChance, 22, 95)),
+    acceptanceChance: Math.round(clamp(item.baseChance, 20, 96)),
     requirementLabel: item.requirementLabel,
     status: 'AVAILABLE',
   }));
 
   return {
     season: state.season,
-    proposalsLeft: 3,
-    maxProposals: 3,
+    cycle,
+    proposalsLeft: isMidseason ? 2 : 3,
+    maxProposals: isMidseason ? 2 : 3,
+    profile,
     offers,
+  };
+}
+
+export const generateCommercialOffers = generatePreseasonSponsorOffers;
+
+export function getCommercialAgreementsSummary(state) {
+  const active = (state?.activeSponsors || []).filter((s) => s.season === state.season);
+  let collectedClp = 0;
+  let remainingClp = 0;
+  for (const s of active) {
+    collectedClp += (Number(s.installmentsPaid) || 0) * (Number(s.amountPerInstallment) || 0);
+    const pendingInstallments = Math.max(0, (Number(s.installmentsTotal) || 0) - (Number(s.installmentsPaid) || 0));
+    remainingClp += pendingInstallments * (Number(s.amountPerInstallment) || 0);
+  }
+  return {
+    activeCount: active.length,
+    collectedClp,
+    remainingClp,
+    totalCommittedClp: collectedClp + remainingClp,
   };
 }
 
@@ -2236,7 +2667,7 @@ export function submitSponsorProposal(state, offerId, rng = Math.random) {
   }
   const session = state.sponsorSession;
   if (session.proposalsLeft <= 0) {
-    return { ok: false, message: 'Ya utilizaste tus 3 propuestas comerciales de esta pretemporada.' };
+    return { ok: false, message: 'Ya utilizaste todas las propuestas comerciales disponibles en este ciclo.' };
   }
   const offer = session.offers.find((o) => o.id === offerId);
   if (!offer) return { ok: false, message: 'Oferta comercial no encontrada.' };
@@ -2275,7 +2706,7 @@ export function submitSponsorProposal(state, offerId, rng = Math.random) {
 
   state.news = [{
     id: `news_sponsor_${offer.id}`,
-    dateLabel: 'Pretemporada',
+    dateLabel: getNextEvent(state)?.dateLabel || 'Acuerdo Comercial',
     category: 'PATROCINIO',
     headline: `${userTeam.name} firma acuerdo ${offer.frequency.toLowerCase()} con ${offer.sponsorName}`,
     body: `Ingreso de ${formatClp(offer.amountPerInstallment)} CLP por cuota (${offer.installmentsTotal} cuotas totales).`,
@@ -2481,6 +2912,17 @@ export function processPendingIncomingTransfers(state, windowLabel = 'Ventana de
   return arrived;
 }
 
+export function matchesPlayerSearchQuery(player, query, extraText = '') {
+  const qNorm = normalizeTextKey(query);
+  if (!qNorm) return true;
+  const tokens = qNorm.split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return true;
+  const hay = normalizeTextKey(
+    `${player?.name || ''} ${player?.firstName || ''} ${player?.lastName || ''} ${player?.studiedCareer || ''} ${extraText || ''}`
+  );
+  return tokens.every((tok) => hay.includes(tok));
+}
+
 export function searchMarketPlayers(state, filters = {}) {
   const {
     teamId = 'ALL',
@@ -2494,7 +2936,6 @@ export function searchMarketPlayers(state, filters = {}) {
     query = '',
   } = filters;
 
-  const qNorm = normalizeTextKey(query);
   const careerNorm = studiedCareer && studiedCareer !== 'ALL' ? normalizeTextKey(studiedCareer) : '';
 
   const pool = [];
@@ -2530,13 +2971,102 @@ export function searchMarketPlayers(state, filters = {}) {
       if (p.age < minAge || p.age > maxAge) return false;
       if (p.ovr < minOvr || p.ovr > maxOvr) return false;
       if (careerNorm && normalizeTextKey(p.studiedCareer) !== careerNorm) return false;
-      if (qNorm) {
-        const hay = normalizeTextKey(`${p.name} ${p.studiedCareer} ${p.teamName}`);
-        if (!hay.includes(qNorm)) return false;
-      }
+      if (query && !matchesPlayerSearchQuery(p, query, p.teamName)) return false;
       return true;
     })
     .sort((a, b) => b.ovr - a.ovr || a.marketValueEur - b.marketValueEur);
+}
+
+export function getRecommendedMarketPlayers(state, limit = 6) {
+  const userClub = state?.teams?.find((t) => t.id === state.userTeamId);
+  if (!userClub) return [];
+
+  const teamAvg = getTeamAverageOvr(userClub);
+  const slots = getFormationSlots(userClub.formation);
+  const pMap = new Map((userClub.players || []).map((p) => [p.id, p]));
+  const starters = (userClub.starterIds || []).map((id) => pMap.get(id)).filter(Boolean);
+
+  // Detectar la posición más débil del 7 titular actual
+  let weakestPos = 'MED';
+  let weakestOvr = 99;
+  starters.forEach((p, idx) => {
+    const slot = slots[idx] || p.position;
+    const eff = getPlayerEffectiveOvr(p, slot);
+    if (eff < weakestOvr) {
+      weakestOvr = eff;
+      weakestPos = slot;
+    }
+  });
+
+  const allMarket = searchMarketPlayers(state, {});
+  const estimateCost = (p) => (
+    p.isFreeAgent
+      ? Math.round((p.marketValueEur * 0.45) / 1000) * 1000
+      : Math.round((p.marketValueEur * (p.transferListed ? 1.0 : 1.18)) / 1000) * 1000
+  );
+
+  const picked = [];
+  const usedIds = new Set();
+  const pushRec = (player, tag, reason) => {
+    if (!player || usedIds.has(player.id) || picked.length >= limit) return;
+    usedIds.add(player.id);
+    picked.push({
+      ...sanitizePlayerPublic(player),
+      estimatedCostClp: estimateCost(player),
+      recommendationTag: tag,
+      recommendationReason: reason,
+    });
+  };
+
+  // 1) Fichaje Bomba (top OVR destacado sobre el nivel del plantel)
+  const bombaCandidates = allMarket
+    .filter((p) => p.ovr >= Math.max(76, teamAvg + 4))
+    .sort((a, b) => b.ovr - a.ovr);
+  bombaCandidates.slice(0, 2).forEach((p) => {
+    pushRec(p, 'Fichaje Bomba', `Salto de jerarquía (${p.ovr} OVR) para marcar diferencias.`);
+  });
+
+  // 2) Descontento en su club o transferible (oportunidad de mercado)
+  const unhappyCandidates = allMarket
+    .filter((p) => !p.isFreeAgent && (p.transferListed || (Number(p.morale) || 70) <= 55))
+    .sort((a, b) => (a.morale || 70) - (b.morale || 70) || b.ovr - a.ovr);
+  unhappyCandidates.slice(0, 2).forEach((p) => {
+    pushRec(
+      p,
+      'Descontento',
+      p.transferListed ? `Transferible en ${p.teamName} · salida accesible.` : `Bajo ánimo (${p.morale}/100) en ${p.teamName}.`
+    );
+  });
+
+  // 3) Mejora tu XI (refuerza el puesto más débil o supera tu promedio dentro/cerca del presupuesto)
+  const upgradeCandidates = allMarket
+    .filter((p) => !usedIds.has(p.id) && (p.position === weakestPos || p.ovr >= teamAvg + 1))
+    .sort((a, b) => {
+      const aAff = estimateCost(a) <= userClub.budgetEur ? 1 : 0;
+      const bAff = estimateCost(b) <= userClub.budgetEur ? 1 : 0;
+      const aPos = a.position === weakestPos ? 1 : 0;
+      const bPos = b.position === weakestPos ? 1 : 0;
+      return (bAff - aAff) || (bPos - aPos) || (b.ovr - a.ovr);
+    });
+  for (const p of upgradeCandidates) {
+    if (picked.length >= limit) break;
+    const isWeakSlot = p.position === weakestPos;
+    pushRec(
+      p,
+      'Mejora tu XI',
+      isWeakSlot
+        ? `Refuerza tu puesto más flojo (${weakestPos} · actual ${weakestOvr}).`
+        : `Eleva el promedio del equipo (${p.ovr} vs ${teamAvg} OVR).`
+    );
+  }
+
+  // Fallback si faltan huecos (ej. agentes libres útiles)
+  for (const p of allMarket) {
+    if (picked.length >= limit) break;
+    pushRec(p, 'Mejora tu XI', `Alternativa competitiva (${p.ovr} OVR) en ${p.position}.`);
+  }
+
+  return picked;
 }
 
 export function signMarketPlayer(state, playerId, optionsOrRng = {}, maybeRng = Math.random) {

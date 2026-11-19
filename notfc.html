@@ -242,25 +242,63 @@
         </div>
     </div>
 
-    <!-- MODAL PARTIDO EN VIVO (2 MINUTOS POR TIEMPO + PAUSA TÁCTICA + MEDIO TIEMPO INDEFINIDO) -->
+    <!-- MODAL VISTA PREVIA DE CLUB ANTES DE FIRMAR -->
+    <div id="club-preview-modal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="surface-card border-[#2b2b2b] rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl animate-pop space-y-4 my-auto">
+            <div class="flex items-start justify-between gap-3 border-b border-[#262626] pb-3.5">
+                <div id="club-preview-header" class="flex items-center gap-3.5 min-w-0"></div>
+                <button type="button" onclick="closeClubPreviewModal()" aria-label="Cerrar vista previa" class="w-8 h-8 rounded-xl bg-[#151515] hover:bg-[#242424] border border-[#2b2b2b] text-gray-400 hover:text-white font-bold text-sm shrink-0 transition">
+                    ✕
+                </button>
+            </div>
+
+            <div id="club-preview-metrics" class="grid grid-cols-3 gap-2 text-center"></div>
+
+            <div id="club-preview-board" class="p-3.5 rounded-2xl surface-sub border border-[#262626] space-y-2"></div>
+
+            <div class="space-y-2">
+                <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                    <span>Plantilla Actual</span>
+                    <span id="club-preview-squad-count" class="text-gray-500 tabular-nums"></span>
+                </div>
+                <div id="club-preview-squad" class="max-h-60 overflow-y-auto space-y-1.5 pr-1"></div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-[#262626]">
+                <button type="button" onclick="closeClubPreviewModal()" class="px-4 py-2.5 rounded-xl bg-[#151515] hover:bg-[#222222] border border-[#2b2b2b] text-xs font-bold text-gray-300 transition">
+                    Volver
+                </button>
+                <button type="button" id="btn-confirm-sign-club" onclick="confirmSignWithPreviewClub()" class="px-5 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg shadow-[#717fff]/25 transition">
+                    Firmar con este Club →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARTIDO EN VIVO (2 MINUTOS POR TIEMPO + VELOCIDAD + MAPA DE CALOR) -->
     <div id="live-match-modal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-        <div class="surface-card border-[#717fff]/45 rounded-3xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl animate-pop space-y-4 my-auto">
-            <!-- Marcador & Reloj -->
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#262626] pb-3">
+        <div class="surface-card border-[#717fff]/45 rounded-3xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl animate-pop space-y-3.5 my-auto">
+            <!-- Marcador & Reloj & Velocidad -->
+            <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-[#262626] pb-3">
                 <div>
                     <span id="live-match-label" class="text-[10px] font-black uppercase tracking-widest text-[#8b96ff]">Intercarreras F7</span>
                     <div id="live-match-phase-badge" class="text-xs font-bold text-emerald-300 mt-0.5">1° Tiempo · En juego</div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span id="live-real-clock" class="px-2.5 py-1 rounded-lg surface-sub text-xs font-mono font-black text-gray-200 tabular-nums">02:00</span>
-                    <button type="button" id="btn-live-pause" onclick="toggleLivePause()" class="px-3.5 py-2 rounded-xl bg-[#717fff]/20 hover:bg-[#717fff]/30 border border-[#717fff]/45 text-xs font-black text-white transition">
-                        ⏸ Pausar / Táctica
+                <div class="flex flex-wrap items-center gap-2">
+                    <span id="live-real-clock" class="px-2.5 py-1.5 rounded-lg surface-sub text-xs font-mono font-black text-gray-200 tabular-nums">02:00</span>
+                    <div id="live-speed-controls" class="inline-flex items-center p-0.5 rounded-xl bg-[#151515] border border-[#2b2b2b]" role="group" aria-label="Velocidad de simulación">
+                        <button type="button" data-speed="1" onclick="setLiveSpeed(1)" class="live-speed-btn px-2.5 py-1 rounded-lg bg-[#717fff] text-white text-[11px] font-black transition">1x</button>
+                        <button type="button" data-speed="2" onclick="setLiveSpeed(2)" class="live-speed-btn px-2.5 py-1 rounded-lg text-gray-400 hover:text-white text-[11px] font-bold transition">2x</button>
+                        <button type="button" data-speed="4" onclick="setLiveSpeed(4)" class="live-speed-btn px-2.5 py-1 rounded-lg text-gray-400 hover:text-white text-[11px] font-bold transition">4x</button>
+                    </div>
+                    <button type="button" id="btn-live-pause" onclick="toggleLivePause()" class="px-3.5 py-1.5 rounded-xl bg-[#717fff]/20 hover:bg-[#717fff]/30 border border-[#717fff]/45 text-xs font-black text-white transition">
+                        ⏸ Pausar
                     </button>
                 </div>
             </div>
 
             <!-- Scoreboard -->
-            <div class="grid grid-cols-11 items-center gap-2 p-4 rounded-2xl surface-sub border border-[#262626]">
+            <div class="grid grid-cols-11 items-center gap-2 p-3.5 rounded-2xl surface-sub border border-[#262626]">
                 <div class="col-span-4 flex items-center justify-end gap-2.5 text-right min-w-0">
                     <span id="live-home-name" class="text-sm sm:text-base font-black text-white truncate">Local</span>
                     <div id="live-home-badge" class="shrink-0"></div>
@@ -276,19 +314,76 @@
             </div>
 
             <!-- Barra de Tiempo -->
-            <div class="w-full h-2 bg-[#151515] rounded-full overflow-hidden border border-[#262626]">
+            <div class="w-full h-1.5 bg-[#151515] rounded-full overflow-hidden border border-[#262626]">
                 <div id="live-progress-bar" class="h-full bg-gradient-to-r from-[#717fff] to-emerald-400 transition-all duration-300" style="width: 2%"></div>
+            </div>
+
+            <!-- Mapa de Calor de Jugadas en Cancha -->
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    <span>Mapa de Calor · Zonas de Juego</span>
+                    <span id="live-heatmap-caption" class="text-[#a3adff] normal-case font-semibold truncate max-w-[60%] text-right">Inicio en círculo central</span>
+                </div>
+                <div class="relative rounded-2xl overflow-hidden border border-emerald-500/20 bg-[#0d2218]">
+                    <svg id="live-pitch-heatmap" viewBox="0 0 560 170" class="w-full aspect-[560/170] max-h-48 block" role="img" aria-label="Mapa de calor de zonas de juego en la cancha">
+                        <defs>
+                            <radialGradient id="heat-home-grad" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#34d399" stop-opacity="0.72" />
+                                <stop offset="55%" stop-color="#10b981" stop-opacity="0.32" />
+                                <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+                            </radialGradient>
+                            <radialGradient id="heat-away-grad" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#8b96ff" stop-opacity="0.75" />
+                                <stop offset="55%" stop-color="#717fff" stop-opacity="0.34" />
+                                <stop offset="100%" stop-color="#717fff" stop-opacity="0" />
+                            </radialGradient>
+                            <radialGradient id="heat-hot-grad" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.88" />
+                                <stop offset="50%" stop-color="#f97316" stop-opacity="0.42" />
+                                <stop offset="100%" stop-color="#f97316" stop-opacity="0" />
+                            </radialGradient>
+                        </defs>
+                        <!-- Bandas sutiles de césped -->
+                        <rect x="0" y="0" width="560" height="170" fill="#0d2218" />
+                        <rect x="56" y="0" width="56" height="170" fill="#10291d" />
+                        <rect x="168" y="0" width="56" height="170" fill="#10291d" />
+                        <rect x="280" y="0" width="56" height="170" fill="#10291d" />
+                        <rect x="392" y="0" width="56" height="170" fill="#10291d" />
+                        <rect x="504" y="0" width="56" height="170" fill="#10291d" />
+                        <!-- Demarcación cancha F7 -->
+                        <g stroke="rgba(255,255,255,0.22)" stroke-width="1.4" fill="none">
+                            <rect x="12" y="10" width="536" height="150" rx="4" />
+                            <line x1="280" y1="10" x2="280" y2="160" />
+                            <circle cx="280" cy="85" r="28" />
+                            <circle cx="280" cy="85" r="2.4" fill="rgba(255,255,255,0.35)" />
+                            <!-- Área izquierda (Local defiende) -->
+                            <rect x="12" y="40" width="68" height="90" />
+                            <rect x="12" y="60" width="24" height="50" />
+                            <!-- Área derecha (Visita defiende) -->
+                            <rect x="480" y="40" width="68" height="90" />
+                            <rect x="524" y="60" width="24" height="50" />
+                        </g>
+                        <!-- Zonas acumuladas del mapa de calor -->
+                        <g id="live-heatmap-blobs"></g>
+                        <!-- Indicador de última jugada -->
+                        <g id="live-heatmap-latest"></g>
+                    </svg>
+                    <div class="pointer-events-none absolute inset-x-3 bottom-1.5 flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-white/50">
+                        <span id="live-pitch-home-side">← Arco Local</span>
+                        <span id="live-pitch-away-side">Arco Visita →</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Banner Medio Tiempo Indefinido / Pausa Táctica -->
             <div id="live-tactics-drawer" class="hidden p-4 rounded-2xl bg-[#151515] border border-[#717fff]/50 space-y-3 animate-pop">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                        <h4 id="live-drawer-title" class="text-sm font-black text-white">Pausa Táctica del DT</h4>
-                        <p id="live-drawer-sub" class="text-xs text-gray-400">Ajusta tu esquema o realiza cambios. El reloj permanece detenido.</p>
+                        <h4 id="live-drawer-title" class="text-sm font-black text-white">Pausa Táctica</h4>
+                        <p id="live-drawer-sub" class="text-xs text-gray-400">Ajusta el esquema o haz cambios con el reloj detenido.</p>
                     </div>
-                    <button type="button" id="btn-live-resume" onclick="resumeLiveMatch()" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs transition shadow-lg">
-                        ▶ Reanudar Partido
+                    <button type="button" id="btn-live-resume" onclick="resumeLiveMatch()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs transition shadow-lg">
+                        ▶ Reanudar
                     </button>
                 </div>
 
@@ -298,8 +393,8 @@
                         <select id="live-formation-select" onchange="changeLiveFormation(this.value)" class="w-full px-3 py-2 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] text-xs font-bold text-white focus:outline-none focus:border-[#717fff]"></select>
                     </div>
                     <div class="sm:col-span-8 space-y-1.5">
-                        <div class="text-[11px] font-bold text-gray-400 uppercase">Sustitución Rápida (Toca un Titular y luego un Suplente)</div>
-                        <div class="grid grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
+                        <div class="text-[11px] font-bold text-gray-400 uppercase">Cambio rápido (Titular → Suplente)</div>
+                        <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
                             <div id="live-starters-list" class="space-y-1"></div>
                             <div id="live-bench-list" class="space-y-1"></div>
                         </div>
@@ -309,17 +404,17 @@
 
             <!-- Narración en Texto -->
             <div class="space-y-1.5">
-                <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400">
                     <span>Relato Minuto a Minuto</span>
-                    <span class="text-gray-500">Cada tiempo dura 2:00 min reales</span>
+                    <span class="text-gray-500">2:00 por tiempo (1x)</span>
                 </div>
-                <div id="live-commentary-feed" class="h-56 overflow-y-auto rounded-2xl surface-sub border border-[#262626] p-3.5 space-y-2 text-xs"></div>
+                <div id="live-commentary-feed" class="h-44 overflow-y-auto rounded-2xl surface-sub border border-[#262626] p-3 space-y-1.5 text-xs"></div>
             </div>
 
             <!-- Pie de Modal al Terminar -->
             <div id="live-match-footer" class="hidden flex justify-end pt-1">
-                <button type="button" id="btn-live-finish" onclick="finalizeLiveMatchModal()" class="px-6 py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
-                    Confirmar Resultado y Volver al Club →
+                <button type="button" id="btn-live-finish" onclick="finalizeLiveMatchModal()" class="px-6 py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg transition">
+                    Finalizar y Volver al Club →
                 </button>
             </div>
         </div>
@@ -333,65 +428,44 @@
         <!-- ================================================================ -->
         <section id="lobby-screen" class="space-y-5">
             <div class="surface-card rounded-3xl p-5 sm:p-6 space-y-4 shadow-xl">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="space-y-1.5">
-                        <span class="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-[#717fff]/15 text-[#8b96ff] border border-[#717fff]/35">
-                            Director Técnico · 1ª (19) · 2ª (26) · 3ª (42)
-                        </span>
-                        <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">NOT F.C · Modo Carrera de DT</h2>
-                        <p class="text-xs sm:text-sm text-gray-400 max-w-2xl">
-                            Asume la dirección técnica de un club oficial del Intercarreras UFRO con su plantel real o funda un equipo desde cero en Tercera División.
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div class="space-y-1">
+                        <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Carrera de DT</h2>
+                        <p class="text-xs sm:text-sm text-gray-400">
+                            Elige un club del Intercarreras para revisar su plantel y exigencias, o funda uno nuevo en 3ª División.
                         </p>
                     </div>
-                    <div class="w-full md:w-64 shrink-0 space-y-1.5">
-                        <label for="input-dt-name" class="block text-[11px] font-bold uppercase text-gray-400">Nombre del DT</label>
+                    <div class="w-full md:w-60 shrink-0 space-y-1">
+                        <label for="input-dt-name" class="block text-[10px] font-bold uppercase tracking-wider text-gray-400">Nombre del DT</label>
                         <input type="text" id="input-dt-name" value="Profe UFRO" maxlength="28" placeholder="Tu nombre de DT"
-                            class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm font-bold text-white focus:outline-none focus:border-[#717fff]">
-                    </div>
-                </div>
-
-                <!-- Estado conexión Google Sheets -->
-                <div id="sheets-status-bar" class="rounded-2xl surface-sub border border-[#262626] p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                    <div id="sheets-status-text" class="text-gray-300">Cargando base de datos Intercarreras...</div>
-                    <button type="button" onclick="toggleSheetUrlEditor()" class="px-3 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-[11px] font-bold text-[#a3adff] transition self-start sm:self-auto shrink-0">
-                        Configurar enlace Google Sheets
-                    </button>
-                </div>
-
-                <div id="sheets-url-editor" class="hidden rounded-2xl surface-sub border border-[#717fff]/35 p-3 space-y-2">
-                    <label for="input-sheet-url" class="block text-[11px] font-bold text-gray-400">Enlace pubhtml de Google Sheets (pestañas F7-EQUIPOS*, F7-JUGADORES*, CARRERAS-UFRO)</label>
-                    <div class="flex flex-col sm:flex-row gap-2">
-                        <input type="url" id="input-sheet-url" class="flex-1 px-3 py-2 rounded-xl bg-[#1c1c1c] border border-[#2b2b2b] text-xs text-white focus:outline-none focus:border-[#717fff]">
-                        <button type="button" onclick="reloadDatabaseFromCustomUrl()" class="px-4 py-2 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition shrink-0">
-                            Cargar Sheet
-                        </button>
+                            class="w-full px-3.5 py-2 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm font-bold text-white focus:outline-none focus:border-[#717fff]">
                     </div>
                 </div>
 
                 <!-- Selector Modo: Elegir Club Existente vs Crear Desde 0 -->
-                <div class="grid grid-cols-2 gap-2 p-1 rounded-2xl surface-sub border border-[#262626]">
+                <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl surface-sub border border-[#262626]">
                     <button type="button" id="tab-lobby-existing" onclick="switchLobbyMode('existing')" class="py-2.5 px-3 rounded-xl bg-[#717fff] text-white font-black text-xs transition">
-                        🏛️ Elegir Club Existente (87)
+                        Elegir Club (87)
                     </button>
                     <button type="button" id="tab-lobby-create" onclick="switchLobbyMode('create')" class="py-2.5 px-3 rounded-xl text-gray-400 hover:text-white font-bold text-xs transition">
-                        🛡️ Crear Club desde 0 (3ª Div)
+                        Crear Club (3ª Div)
                     </button>
                 </div>
             </div>
 
             <!-- OPCIÓN A: ELEGIR CLUB EXISTENTE -->
             <div id="lobby-existing-panel" class="space-y-4">
-                <div class="surface-card rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                <div class="surface-card rounded-2xl p-3.5 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
                     <input type="text" id="filter-club-search" oninput="renderLobbyClubs()" placeholder="Buscar club o carrera..."
-                        class="flex-1 px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-xs text-white focus:outline-none focus:border-[#717fff]">
+                        class="flex-1 px-3.5 py-2 rounded-xl bg-[#151515] border border-[#2b2b2b] text-xs text-white focus:outline-none focus:border-[#717fff]">
                     <div class="flex flex-wrap gap-1.5">
                         <button type="button" data-div-filter="ALL" onclick="setLobbyDivFilter('ALL')" class="div-filter-btn px-3 py-2 rounded-xl bg-[#717fff] text-white text-xs font-black transition">Todas</button>
-                        <button type="button" data-div-filter="1" onclick="setLobbyDivFilter('1')" class="div-filter-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">1ª Div (19)</button>
-                        <button type="button" data-div-filter="2" onclick="setLobbyDivFilter('2')" class="div-filter-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">2ª Div (26)</button>
-                        <button type="button" data-div-filter="3" onclick="setLobbyDivFilter('3')" class="div-filter-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">3ª Div (42)</button>
+                        <button type="button" data-div-filter="1" onclick="setLobbyDivFilter('1')" class="div-filter-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">1ª (19)</button>
+                        <button type="button" data-div-filter="2" onclick="setLobbyDivFilter('2')" class="div-filter-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">2ª (26)</button>
+                        <button type="button" data-div-filter="3" onclick="setLobbyDivFilter('3')" class="div-filter-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">3ª (42)</button>
                     </div>
                 </div>
-                <div id="lobby-clubs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+                <div id="lobby-clubs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
             </div>
 
             <!-- OPCIÓN B: CREAR CLUB DESDE 0 -->
@@ -399,26 +473,26 @@
                 <form onsubmit="handleCreateCustomClub(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-3">
                         <div>
-                            <label for="custom-club-name" class="block text-xs font-bold text-gray-400 mb-1">Nombre del Nuevo Club</label>
+                            <label for="custom-club-name" class="block text-xs font-bold text-gray-400 mb-1">Nombre del Club</label>
                             <input type="text" id="custom-club-name" required maxlength="30" placeholder="Ej: Atlético Araucanía"
                                 class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label for="custom-club-code" class="block text-xs font-bold text-gray-400 mb-1">Sigla (3-4 letras)</label>
+                                <label for="custom-club-code" class="block text-xs font-bold text-gray-400 mb-1">Sigla</label>
                                 <input type="text" id="custom-club-code" required maxlength="4" value="ARA"
                                     class="w-full px-3.5 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white uppercase focus:outline-none focus:border-[#717fff]">
                             </div>
                             <div>
-                                <label for="custom-club-conf" class="block text-xs font-bold text-gray-400 mb-1">Conferencia 3ª Div</label>
+                                <label for="custom-club-conf" class="block text-xs font-bold text-gray-400 mb-1">Conferencia</label>
                                 <select id="custom-club-conf" class="w-full px-3 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
-                                    <option value="A">Conferencia A (21 eq.)</option>
-                                    <option value="B">Conferencia B (21 eq.)</option>
+                                    <option value="A">Conferencia A</option>
+                                    <option value="B">Conferencia B</option>
                                 </select>
                             </div>
                         </div>
                         <div>
-                            <label for="custom-club-career" class="block text-xs font-bold text-gray-400 mb-1">Carrera UFRO que representa</label>
+                            <label for="custom-club-career" class="block text-xs font-bold text-gray-400 mb-1">Carrera UFRO</label>
                             <select id="custom-club-career" onchange="updateCustomBudgetPreview()" class="w-full px-3 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]"></select>
                         </div>
                     </div>
@@ -426,52 +500,40 @@
                     <div class="space-y-3 flex flex-col justify-between">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label for="custom-club-formation" class="block text-xs font-bold text-gray-400 mb-1">Formación F7 Inicial</label>
-                                <select id="custom-club-formation" class="w-full px-3 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]">
-                                    <option value="1-2-3-1">1-2-3-1 Equilibrada</option>
-                                    <option value="1-3-2-1">1-3-2-1 Sólida</option>
-                                    <option value="1-2-2-2">1-2-2-2 Ofensiva</option>
-                                    <option value="1-3-1-2">1-3-1-2 Contragolpe</option>
-                                </select>
+                                <label for="custom-club-formation" class="block text-xs font-bold text-gray-400 mb-1">Formación F7</label>
+                                <select id="custom-club-formation" class="w-full px-3 py-2.5 rounded-xl bg-[#151515] border border-[#2b2b2b] text-sm text-white focus:outline-none focus:border-[#717fff]"></select>
                             </div>
                             <div>
-                                <label for="custom-club-color" class="block text-xs font-bold text-gray-400 mb-1">Color Principal</label>
+                                <label for="custom-club-color" class="block text-xs font-bold text-gray-400 mb-1">Color</label>
                                 <input type="color" id="custom-club-color" value="#717fff" class="w-full h-10 p-1 rounded-xl bg-[#151515] border border-[#2b2b2b] cursor-pointer">
                             </div>
                         </div>
 
-                        <div class="p-4 rounded-2xl surface-sub border border-[#262626] space-y-1.5 text-xs">
+                        <div class="p-3.5 rounded-2xl surface-sub border border-[#262626] space-y-1.5 text-xs">
                             <div class="flex justify-between">
-                                <span class="text-gray-400">Categoría de inicio:</span>
-                                <span class="font-black text-[#a3adff]">3ª División (desde 0)</span>
+                                <span class="text-gray-400">Inicio</span>
+                                <span class="font-bold text-[#a3adff]">3ª División · 14 jugadores</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-400">Plantel inicial:</span>
-                                <span class="font-bold text-white">14 jugadores inventados</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Presupuesto estimado:</span>
+                                <span class="text-gray-400">Presupuesto inicial</span>
                                 <span id="custom-budget-preview" class="font-black text-emerald-400 tabular-nums">$145.000 CLP</span>
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full py-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition">
-                            🛡️ Fundar Club y Comenzar Carrera
+                        <button type="submit" class="w-full py-3 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-sm shadow-lg shadow-[#717fff]/25 transition">
+                            Fundar Club y Comenzar →
                         </button>
                     </div>
                 </form>
             </div>
 
             <!-- RANKING DE CARRERAS DT (LOCAL + GLOBAL) -->
-            <div id="lobby-ranking-section" class="surface-card rounded-3xl p-5 sm:p-6 space-y-3 shadow-xl">
+            <div id="lobby-ranking-section" class="surface-card rounded-3xl p-5 space-y-3 shadow-xl">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-[#262626] pb-3">
-                    <div>
-                        <h3 class="text-sm font-black uppercase tracking-wider text-white">🏆 Ranking de Carreras DT · NOT F.C</h3>
-                        <p class="text-[11px] text-gray-400">Club dirigido, DT, puntaje total y logros obtenidos en las temporadas.</p>
-                    </div>
+                    <h3 class="text-sm font-black uppercase tracking-wider text-white">Ranking de Carreras</h3>
                     <div class="flex gap-1.5 p-1 rounded-xl surface-sub border border-[#262626] self-start sm:self-auto">
-                        <button type="button" id="tab-rank-global" onclick="switchRankingScope('global')" class="px-3 py-1.5 rounded-lg bg-[#717fff] text-white font-black text-[11px] transition">🌍 Global</button>
-                        <button type="button" id="tab-rank-local" onclick="switchRankingScope('local')" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white font-bold text-[11px] transition">🏛️ Local</button>
+                        <button type="button" id="tab-rank-global" onclick="switchRankingScope('global')" class="px-3 py-1 rounded-lg bg-[#717fff] text-white font-black text-[11px] transition">Global</button>
+                        <button type="button" id="tab-rank-local" onclick="switchRankingScope('local')" class="px-3 py-1 rounded-lg text-gray-400 hover:text-white font-bold text-[11px] transition">Local</button>
                     </div>
                 </div>
                 <div id="notfc-ranking-list" class="space-y-2"></div>
@@ -498,83 +560,110 @@
             <div id="menu-principal" class="career-panel space-y-4">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
                     <!-- Columna Simulación & Eventos -->
-                    <div class="lg:col-span-5 space-y-4">
+                    <div class="lg:col-span-5 space-y-3.5">
                         <!-- Siguiente Partido -->
-                        <div id="next-match-card" class="surface-card rounded-2xl p-4 sm:p-5 space-y-3 border-[#717fff]/35"></div>
+                        <div id="next-match-card" class="surface-card rounded-2xl p-4 space-y-3 border-[#717fff]/35"></div>
 
                         <!-- Controles de Simulación -->
-                        <div class="surface-card rounded-2xl p-4 sm:p-5 space-y-3">
+                        <div class="surface-card rounded-2xl p-4 space-y-2.5">
                             <div class="flex items-center justify-between">
-                                <h3 class="text-xs font-black uppercase tracking-wider text-gray-400">Simular Temporada</h3>
-                                <span id="sim-semester-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/15 text-[#a3adff] border border-[#717fff]/30">Semestre 1</span>
+                                <h3 class="text-[11px] font-black uppercase tracking-wider text-gray-400">Simular</h3>
+                                <span id="sim-semester-badge" class="text-[11px] font-bold text-[#a3adff]">Semestre 1</span>
                             </div>
                             <div class="space-y-2">
-                                <button type="button" id="btn-sim-next-event" onclick="handleSimulate('next_event')" class="w-full py-3 px-4 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg shadow-[#717fff]/20 transition text-left flex items-center justify-between">
-                                    <span>⏭ Avanzar hasta el siguiente evento</span>
+                                <button type="button" id="btn-sim-next-event" onclick="handleSimulate('next_event')" class="w-full py-2.5 px-3.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs shadow-lg shadow-[#717fff]/20 transition text-left flex items-center justify-between">
+                                    <span>Avanzar al siguiente evento</span>
                                     <span id="next-event-date-tag" class="text-[10px] opacity-85"></span>
                                 </button>
-                                <button type="button" id="btn-sim-next-match" onclick="handleSimulate('next_match')" class="w-full py-2.5 px-4 rounded-xl surface-sub hover:bg-[#242424] border border-[#2b2b2b] text-white font-bold text-xs transition text-left flex items-center justify-between">
-                                    <span>⚽ Avanzar hasta el siguiente partido</span>
-                                    <span class="text-[10px] text-gray-400">Salta menores</span>
+                                <button type="button" id="btn-sim-next-match" onclick="handleSimulate('next_match')" class="w-full py-2.5 px-3.5 rounded-xl surface-sub hover:bg-[#242424] border border-[#2b2b2b] text-white font-bold text-xs transition text-left flex items-center justify-between">
+                                    <span>Avanzar al siguiente partido</span>
+                                    <span class="text-[10px] text-gray-500">Salta menores</span>
                                 </button>
-                                <button type="button" id="btn-sim-mid-end" onclick="handleSimulate('mid_or_end')" class="w-full py-2.5 px-4 rounded-xl surface-sub hover:bg-[#242424] border border-[#2b2b2b] text-[#a3adff] font-bold text-xs transition text-left">
-                                    ⏩ Avanzar hasta mitad de temporada
+                                <button type="button" id="btn-sim-mid-end" onclick="handleSimulate('mid_or_end')" class="w-full py-2.5 px-3.5 rounded-xl surface-sub hover:bg-[#242424] border border-[#2b2b2b] text-[#a3adff] font-bold text-xs transition text-left">
+                                    Avanzar hasta mitad de temporada
                                 </button>
-                                <button type="button" id="btn-start-next-season" onclick="handleStartNextSeason()" class="hidden w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs transition shadow-lg">
-                                    🏆 Comenzar Siguiente Temporada (Aplicar Ascensos y Descensos)
+                                <button type="button" id="btn-start-next-season" onclick="handleStartNextSeason()" class="hidden w-full py-2.5 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs transition shadow-lg">
+                                    Comenzar Siguiente Temporada →
                                 </button>
                             </div>
                         </div>
 
                         <!-- Decisión Interactiva / Pretemporada Patrocinios / Visor de Evento -->
-                        <div id="dt-decision-card" class="surface-card rounded-2xl p-4 sm:p-5 space-y-3"></div>
+                        <div id="dt-decision-card" class="surface-card rounded-2xl p-4 space-y-3"></div>
 
                         <!-- Resumen Puntaje & Ranking DT -->
-                        <div id="dt-ranking-card" class="surface-card rounded-2xl p-4 sm:p-5 space-y-2.5"></div>
+                        <div id="dt-ranking-card" class="surface-card rounded-2xl p-4 space-y-2"></div>
                     </div>
 
                     <!-- Columna Noticias del Intercarreras & Próximos Hitos -->
-                    <div class="lg:col-span-7 space-y-4">
-                        <div class="surface-card rounded-2xl p-4 sm:p-5 space-y-3">
+                    <div class="lg:col-span-7 space-y-3.5">
+                        <div class="surface-card rounded-2xl p-4 space-y-3">
                             <div class="flex items-center justify-between border-b border-[#262626] pb-2.5">
-                                <h3 class="text-sm font-black uppercase tracking-wider text-white">📰 Noticias del Intercarreras</h3>
-                                <span class="text-[11px] text-gray-500">Fichajes · Resultados · MVP · Rumores</span>
+                                <h3 class="text-xs font-black uppercase tracking-wider text-white">Noticias del Intercarreras</h3>
+                                <span class="text-[10px] text-gray-500 uppercase font-bold">Actualidad</span>
                             </div>
                             <div id="news-feed-list" class="space-y-2.5 max-h-[520px] overflow-y-auto pr-1"></div>
                         </div>
 
-                        <div class="surface-card rounded-2xl p-4 sm:p-5 space-y-2.5">
-                            <h3 class="text-xs font-black uppercase tracking-wider text-gray-400">📅 Próximos Eventos en el Calendario</h3>
+                        <div class="surface-card rounded-2xl p-4 space-y-2">
+                            <h3 class="text-[11px] font-black uppercase tracking-wider text-gray-400">Agenda Próxima</h3>
                             <div id="upcoming-events-strip" class="space-y-1.5"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- MENÚ 2: TÁCTICA -->
+            <!-- MENÚ 2: TÁCTICA (PIZARRA VISUAL EN CANCHA + 8 ESQUEMAS) -->
             <div id="menu-tactica" class="career-panel hidden space-y-4">
                 <div class="surface-card rounded-2xl p-4 sm:p-5 space-y-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#262626] pb-3">
                         <div>
-                            <h3 class="text-sm font-black uppercase tracking-wider text-white">Pizarra Táctica Fútbol 7</h3>
-                            <p class="text-xs text-gray-400">Selecciona un esquema y toca un titular y luego un suplente para intercambiarlos.</p>
+                            <h3 class="text-sm font-black uppercase tracking-wider text-white">Pizarra Táctica F7</h3>
+                            <p class="text-[11px] text-gray-400">Toca un titular en cancha y luego otro jugador (cancha o banco) para intercambiar.</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <label for="tactics-formation-select" class="text-xs font-bold text-gray-400">Esquema:</label>
+                            <label for="tactics-formation-select" class="text-[11px] font-bold text-gray-400 uppercase">Esquema</label>
                             <select id="tactics-formation-select" onchange="handleChangeFormation(this.value)" class="px-3 py-2 rounded-xl bg-[#151515] border border-[#2b2b2b] text-xs font-black text-white focus:outline-none focus:border-[#717fff]"></select>
                         </div>
                     </div>
 
                     <div id="tactics-swap-hint" class="hidden px-3.5 py-2 rounded-xl bg-[#717fff]/15 border border-[#717fff]/40 text-xs font-bold text-[#d0d5ff]"></div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
                         <div class="lg:col-span-7 space-y-2">
-                            <div class="text-xs font-black uppercase tracking-wider text-emerald-400">7 Titulares en Cancha</div>
-                            <div id="tactics-starters-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+                            <div class="flex items-center justify-between text-[11px] font-black uppercase tracking-wider">
+                                <span class="text-emerald-400">7 Titulares en Cancha</span>
+                                <span id="tactics-xi-ovr" class="text-gray-400 tabular-nums"></span>
+                            </div>
+                            <div id="tactics-pitch-board" class="relative w-full aspect-[4/5] sm:aspect-[16/13] max-h-[520px] rounded-2xl overflow-hidden border border-emerald-500/25 bg-[#0d2419] shadow-inner select-none">
+                                <svg viewBox="0 0 400 440" preserveAspectRatio="none" class="absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true">
+                                    <!-- Franjas suaves de césped -->
+                                    <rect x="0" y="0" width="400" height="440" fill="#0d2419" />
+                                    <rect x="0" y="44" width="400" height="44" fill="#102b1e" />
+                                    <rect x="0" y="132" width="400" height="44" fill="#102b1e" />
+                                    <rect x="0" y="220" width="400" height="44" fill="#102b1e" />
+                                    <rect x="0" y="308" width="400" height="44" fill="#102b1e" />
+                                    <rect x="0" y="396" width="400" height="44" fill="#102b1e" />
+                                    <!-- Líneas reglamentarias -->
+                                    <g stroke="rgba(255,255,255,0.2)" stroke-width="1.6" fill="none">
+                                        <rect x="16" y="16" width="368" height="408" rx="6" />
+                                        <line x1="16" y1="220" x2="384" y2="220" />
+                                        <circle cx="200" cy="220" r="46" />
+                                        <circle cx="200" cy="220" r="3" fill="rgba(255,255,255,0.35)" />
+                                        <!-- Área rival (arriba) -->
+                                        <rect x="108" y="16" width="184" height="62" />
+                                        <rect x="154" y="16" width="92" height="24" />
+                                        <!-- Área propia (abajo) -->
+                                        <rect x="108" y="362" width="184" height="62" />
+                                        <rect x="154" y="400" width="92" height="24" />
+                                    </g>
+                                </svg>
+                                <div id="tactics-pitch-players" class="absolute inset-0"></div>
+                            </div>
                         </div>
                         <div class="lg:col-span-5 space-y-2">
-                            <div class="text-xs font-black uppercase tracking-wider text-gray-400">Banco de Suplentes</div>
-                            <div id="tactics-bench-list" class="space-y-1.5"></div>
+                            <div class="text-[11px] font-black uppercase tracking-wider text-gray-400">Banco de Suplentes</div>
+                            <div id="tactics-bench-list" class="space-y-1.5 max-h-[520px] overflow-y-auto pr-1"></div>
                         </div>
                     </div>
                 </div>
@@ -584,11 +673,8 @@
             <div id="menu-plantilla" class="career-panel hidden space-y-4">
                 <div class="surface-card rounded-2xl p-4 sm:p-5 space-y-3">
                     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#262626] pb-3">
-                        <div>
-                            <h3 class="text-sm font-black uppercase tracking-wider text-white">Plantilla Oficial</h3>
-                            <p class="text-xs text-gray-400">Dorsales, contratos, ánimo, reconversión de 2ª posición y ventas en CLP. (Solo OVR visible).</p>
-                        </div>
-                        <span id="squad-count-badge" class="px-3 py-1 rounded-full surface-sub text-xs font-bold text-[#a3adff] tabular-nums"></span>
+                        <h3 class="text-sm font-black uppercase tracking-wider text-white">Plantilla</h3>
+                        <span id="squad-count-badge" class="text-xs font-bold text-[#a3adff] tabular-nums"></span>
                     </div>
                     <div id="squad-list-container" class="space-y-2"></div>
                 </div>
@@ -598,15 +684,15 @@
             <div id="menu-mercado" class="career-panel hidden space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div class="surface-card rounded-2xl p-4">
-                        <div class="text-[10px] font-black uppercase text-gray-400">Presupuesto de Fichajes (CLP)</div>
+                        <div class="text-[10px] font-black uppercase text-gray-400">Presupuesto (CLP)</div>
                         <div id="market-budget-val" class="text-2xl font-black text-emerald-400 mt-1 tabular-nums">$0</div>
                     </div>
                     <div class="surface-card rounded-2xl p-4">
-                        <div class="text-[10px] font-black uppercase text-gray-400">Valor del Plantel (CLP)</div>
+                        <div class="text-[10px] font-black uppercase text-gray-400">Valor del Plantel</div>
                         <div id="market-squad-val" class="text-2xl font-black text-white mt-1 tabular-nums">$0</div>
                     </div>
                     <div class="surface-card rounded-2xl p-4">
-                        <div class="text-[10px] font-black uppercase text-gray-400">Ventana de Transferencias</div>
+                        <div class="text-[10px] font-black uppercase text-gray-400">Ventana de Pases</div>
                         <div id="market-window-status" class="text-sm sm:text-base font-black text-[#a3adff] mt-1">Abierta</div>
                     </div>
                 </div>
@@ -614,23 +700,26 @@
                 <!-- Acuerdos Comerciales & Patrocinios -->
                 <div id="market-sponsors-box" class="surface-card rounded-2xl p-4 sm:p-5 space-y-3"></div>
 
+                <!-- Jugadores Recomendados -->
+                <div id="market-recommended-box" class="surface-card rounded-2xl p-4 sm:p-5 space-y-3"></div>
+
                 <!-- Pre-Acuerdos Pendientes -->
                 <div id="market-pending-transfers-box" class="hidden surface-card rounded-2xl p-4 sm:p-5 space-y-2.5 border-[#717fff]/35"></div>
 
                 <!-- Aviso de Negociación / Contraoferta -->
                 <div id="market-negotiation-box" class="hidden surface-card rounded-2xl p-4 border-amber-500/50 bg-amber-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3"></div>
 
-                <div class="surface-card rounded-2xl p-4 sm:p-5 space-y-4">
+                <div class="surface-card rounded-2xl p-4 sm:p-5 space-y-3.5">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <h3 class="text-sm font-black uppercase tracking-wider text-white">🔍 Buscar Jugadores y Agentes Libres</h3>
-                        <label class="inline-flex items-center gap-2 text-xs font-bold text-gray-200 cursor-pointer">
+                        <h3 class="text-sm font-black uppercase tracking-wider text-white">Buscar Jugadores</h3>
+                        <label class="inline-flex items-center gap-2 text-xs font-bold text-gray-300 cursor-pointer">
                             <input type="checkbox" id="filter-free-agents" onchange="renderMarketSearch()" class="rounded border-[#2b2b2b] bg-[#151515] text-[#717fff]">
                             Solo Agentes Libres
                         </label>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 items-end">
-                        <input type="text" id="filter-market-query" oninput="renderMarketSearch()" placeholder="Nombre o apellido..."
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 items-end">
+                        <input type="text" id="filter-market-query" oninput="renderMarketSearch()" placeholder="Nombre o apellido (sin tilde sirve)..."
                             class="px-3 py-2 rounded-xl bg-[#151515] border border-[#2b2b2b] text-xs text-white focus:outline-none focus:border-[#717fff]">
                         <select id="filter-market-team" onchange="renderMarketSearch()" class="px-3 py-2 rounded-xl bg-[#151515] border border-[#2b2b2b] text-xs text-white focus:outline-none focus:border-[#717fff]"></select>
                         <select id="filter-market-career" onchange="renderMarketSearch()" class="px-3 py-2 rounded-xl bg-[#151515] border border-[#2b2b2b] text-xs text-white focus:outline-none focus:border-[#717fff]"></select>
@@ -675,12 +764,12 @@
             <div id="menu-tablas" class="career-panel hidden space-y-4 min-w-0 max-w-full">
                 <div class="surface-card rounded-2xl p-4 sm:p-5 space-y-4 min-w-0 max-w-full overflow-hidden">
                     <div class="flex flex-wrap gap-1.5 border-b border-[#262626] pb-3">
-                        <button type="button" data-table-tab="div1" onclick="switchStandingsSubTab('div1')" class="table-subtab-btn px-3 py-2 rounded-xl bg-[#717fff] text-white text-xs font-black transition">1ª División (19)</button>
-                        <button type="button" data-table-tab="div2" onclick="switchStandingsSubTab('div2')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">2ª División (26)</button>
-                        <button type="button" data-table-tab="div3A" onclick="switchStandingsSubTab('div3A')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">3ª Conf. A (21)</button>
-                        <button type="button" data-table-tab="div3B" onclick="switchStandingsSubTab('div3B')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">3ª Conf. B (21)</button>
-                        <button type="button" data-table-tab="postseason" onclick="switchStandingsSubTab('postseason')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">Playoffs y Liguillas</button>
-                        <button type="button" data-table-tab="calendar" onclick="switchStandingsSubTab('calendar')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">📅 Calendario Lineal</button>
+                        <button type="button" data-table-tab="div1" onclick="switchStandingsSubTab('div1')" class="table-subtab-btn px-3 py-2 rounded-xl bg-[#717fff] text-white text-xs font-black transition">1ª Div</button>
+                        <button type="button" data-table-tab="div2" onclick="switchStandingsSubTab('div2')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">2ª Div</button>
+                        <button type="button" data-table-tab="div3A" onclick="switchStandingsSubTab('div3A')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">3ª Conf. A</button>
+                        <button type="button" data-table-tab="div3B" onclick="switchStandingsSubTab('div3B')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">3ª Conf. B</button>
+                        <button type="button" data-table-tab="postseason" onclick="switchStandingsSubTab('postseason')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">Playoffs</button>
+                        <button type="button" data-table-tab="calendar" onclick="switchStandingsSubTab('calendar')" class="table-subtab-btn px-3 py-2 rounded-xl surface-sub text-gray-300 text-xs font-bold transition">Calendario</button>
                     </div>
                     <div id="standings-content-mount" class="min-w-0 max-w-full"></div>
                 </div>
@@ -745,6 +834,7 @@
         let activeRankingScope = 'global';
         let globalRankingDocs = [];
         let lastNegotiationPrompt = null;
+        let previewClubId = null;
 
         // Live Match runtime
         let liveSession = null;
@@ -1203,34 +1293,19 @@
             } catch {
                 database = Data.buildSeedDatabase();
             }
-            updateSheetsStatusBanner();
             populateLobbyCareerSelect();
+            populateCustomFormationSelect();
             renderLobbyClubs();
         }
 
-        function updateSheetsStatusBanner() {
-            const textEl = document.getElementById('sheets-status-text');
-            const inputEl = document.getElementById('input-sheet-url');
-            if (!database || !textEl) return;
-            if (inputEl && !inputEl.value) inputEl.value = database.sheetUrl || Data.DEFAULT_NOTFC_SHEET_URL;
-            if (database.source === 'google_sheets_live') {
-                const totalPlayers = database.teams.reduce((sum, t) => sum + t.players.length, 0) + (database.freeAgents?.length || 0);
-                textEl.innerHTML = `<span class="text-emerald-400 font-black">● Google Sheets en vivo</span> · ${database.teams.length} equipos, ${totalPlayers} jugadores y ${database.carrerasUfro.length} carreras cargadas.`;
-            } else {
-                textEl.innerHTML = `<span class="text-amber-300 font-bold">● Base UFRO integrada (${database.teams.length} clubes)</span> · <span class="text-gray-400">${esc(database.sheetError || 'Enlace Google Sheets devolvió 404; cuando se republique cargará automático.')}</span>`;
-            }
+        function populateCustomFormationSelect() {
+            const sel = document.getElementById('custom-club-formation');
+            if (!sel) return;
+            const current = sel.value || '1-2-3-1';
+            sel.innerHTML = Object.entries(Engine.FORMATIONS_F7).map(([k, v]) =>
+                `<option value="${esc(k)}" ${current === k ? 'selected' : ''}>${esc(v.label)}</option>`
+            ).join('');
         }
-
-        window.toggleSheetUrlEditor = () => {
-            document.getElementById('sheets-url-editor')?.classList.toggle('hidden');
-        };
-
-        window.reloadDatabaseFromCustomUrl = async () => {
-            const url = document.getElementById('input-sheet-url')?.value.trim();
-            if (!url) return;
-            showToast('Consultando Google Sheets...');
-            await loadDatabase(url);
-        };
 
         function populateLobbyCareerSelect() {
             const sel = document.getElementById('custom-club-career');
@@ -1279,48 +1354,125 @@
         window.renderLobbyClubs = () => {
             const grid = document.getElementById('lobby-clubs-grid');
             if (!grid || !database) return;
-            const q = Data.normalizeTextKey(document.getElementById('filter-club-search')?.value || '');
+            const rawQ = Data.normalizeTextKey(document.getElementById('filter-club-search')?.value || '');
+            const qTokens = rawQ ? rawQ.split(/\s+/).filter(Boolean) : [];
             const filtered = database.teams.filter((t) => {
                 if (lobbyDivFilter !== 'ALL' && String(t.division) !== lobbyDivFilter) return false;
-                if (q && !Data.normalizeTextKey(`${t.name} ${t.career} ${t.faculty}`).includes(q)) return false;
+                if (qTokens.length > 0) {
+                    const hay = Data.normalizeTextKey(`${t.name} ${t.career} ${t.faculty}`);
+                    if (!qTokens.every((tok) => hay.includes(tok))) return false;
+                }
                 return true;
             });
-            const teamById = new Map(database.teams.map((t) => [t.id, t]));
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-6 text-center text-xs text-gray-500">No se encontraron clubes con ese filtro.</div>`;
+                return;
+            }
 
             grid.innerHTML = filtered.map((t) => {
                 const avg = Engine.getTeamAverageOvr(t);
-                const rival = t.derby ? (teamById.get(t.derby) || { name: t.derby }) : null;
-                const divText = t.division === 3 ? `3ª Div · Conf. ${t.conf || 'A'}` : `${t.division}ª División`;
+                const divText = t.division === 3 ? `3ª · Conf. ${t.conf || 'A'}` : `${t.division}ª División`;
                 return `
                     <article class="surface-card rounded-2xl p-4 flex flex-col justify-between gap-3 hover:border-[#717fff]/60 transition">
                         <div class="flex items-start gap-3">
-                            ${renderBadgeHTML(t, 'w-12 h-12')}
+                            ${renderBadgeHTML(t, 'w-11 h-11')}
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center justify-between gap-2">
-                                    <span class="text-[10px] font-black uppercase tracking-wider text-[#a3adff]">${esc(divText)}</span>
-                                    <span class="px-2 py-0.5 rounded-md surface-sub text-[10px] font-black text-white tabular-nums">OVR ${avg}</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#a3adff]">${esc(divText)}</span>
+                                    <span class="text-[11px] font-black text-white tabular-nums">OVR ${avg}</span>
                                 </div>
                                 <h3 class="text-sm font-black text-white truncate mt-0.5">${esc(t.name)}</h3>
                                 <p class="text-[11px] text-gray-400 truncate">${esc(t.career)}</p>
                             </div>
                         </div>
-                        <div class="p-2.5 rounded-xl surface-sub text-[11px] space-y-1">
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Presupuesto:</span>
-                                <span class="font-black text-emerald-400 tabular-nums">${Engine.formatClp(t.budgetEur)} CLP</span>
-                            </div>
-                            <div class="flex justify-between gap-2">
-                                <span class="text-gray-500 shrink-0">Logros:</span>
-                                <span class="text-gray-300 truncate">${esc(t.achievements)}</span>
-                            </div>
-                            ${rival ? `<div class="flex justify-between gap-2"><span class="text-gray-500 shrink-0">Derby:</span><span class="text-amber-300 truncate">${esc(rival.name)}</span></div>` : ''}
+                        <div class="flex items-center justify-between text-[11px] pt-2 border-t border-[#262626]">
+                            <span class="text-gray-500">Presupuesto</span>
+                            <span class="font-black text-emerald-400 tabular-nums">${Engine.formatClp(t.budgetEur)} CLP</span>
                         </div>
-                        <button type="button" onclick="startWithExistingClub('${esc(t.id)}')" class="w-full py-2.5 rounded-xl bg-[#717fff] hover:bg-[#828eff] text-white font-black text-xs transition">
-                            Dirigir este Club →
+                        <button type="button" onclick="openClubPreviewModal('${esc(t.id)}')" class="w-full py-2 rounded-xl bg-[#242428] hover:bg-[#717fff] text-white font-bold text-xs transition">
+                            Ver plantel y exigencias →
                         </button>
                     </article>
                 `;
             }).join('');
+        };
+
+        window.openClubPreviewModal = (teamId) => {
+            if (!database) return;
+            const club = database.teams.find((t) => t.id === teamId);
+            if (!club) return;
+            previewClubId = club.id;
+
+            const avg = Engine.getTeamAverageOvr(club);
+            const divText = club.division === 3 ? `3ª División · Conf. ${club.conf || 'A'}` : `${club.division}ª División`;
+            const rival = club.derby ? (database.teams.find((x) => x.id === club.derby) || { name: club.derby }) : null;
+            const board = Engine.getClubBoardExpectations(club);
+
+            document.getElementById('club-preview-header').innerHTML = `
+                ${renderBadgeHTML(club, 'w-14 h-14')}
+                <div class="min-w-0">
+                    <div class="text-[10px] font-black uppercase tracking-wider text-[#a3adff]">${esc(divText)}</div>
+                    <h3 class="text-lg sm:text-xl font-black text-white truncate">${esc(club.name)}</h3>
+                    <p class="text-xs text-gray-400 truncate">${esc(club.career)}${rival ? ` · Clásico vs ${esc(rival.name)}` : ''}</p>
+                </div>
+            `;
+
+            document.getElementById('club-preview-metrics').innerHTML = `
+                <div class="p-2.5 rounded-xl surface-sub">
+                    <div class="text-sm font-black text-white tabular-nums">${avg}</div>
+                    <div class="text-[10px] text-gray-500 uppercase font-bold">OVR Medio</div>
+                </div>
+                <div class="p-2.5 rounded-xl surface-sub">
+                    <div class="text-sm font-black text-emerald-400 tabular-nums">${Engine.formatClp(club.budgetEur)}</div>
+                    <div class="text-[10px] text-gray-500 uppercase font-bold">Presupuesto CLP</div>
+                </div>
+                <div class="p-2.5 rounded-xl surface-sub">
+                    <div class="text-sm font-black text-amber-300">${esc(board.pressure)}</div>
+                    <div class="text-[10px] text-gray-500 uppercase font-bold">Exigencia</div>
+                </div>
+            `;
+
+            document.getElementById('club-preview-board').innerHTML = `
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-[#a3adff]">Exigencias de la Directiva</span>
+                    <span class="text-[10px] font-bold text-gray-500 truncate">${esc(club.achievements || 'Temporada regular')}</span>
+                </div>
+                <div class="text-xs sm:text-sm font-black text-white">${esc(board.primary)}</div>
+                <ul class="space-y-1 text-[11px] text-gray-400">
+                    ${(board.secondary || []).map((goal) => `<li class="flex items-start gap-1.5"><span class="text-[#717fff] font-black">•</span><span>${esc(goal)}</span></li>`).join('')}
+                </ul>
+            `;
+
+            const posOrder = { ARQ: 0, DEF: 1, MED: 2, DEL: 3 };
+            const squad = [...(club.players || [])].sort((a, b) => (posOrder[a.position] ?? 9) - (posOrder[b.position] ?? 9) || b.ovr - a.ovr);
+            document.getElementById('club-preview-squad-count').textContent = `${squad.length} jugadores`;
+            document.getElementById('club-preview-squad').innerHTML = squad.map((p) => `
+                <div class="px-3 py-2 rounded-xl surface-sub border border-[#262626] flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-9 text-center py-0.5 rounded bg-[#1c1c1c] text-[10px] font-black text-[#a3adff] shrink-0">${esc(p.position)}</span>
+                        <div class="min-w-0">
+                            <div class="font-bold text-white truncate">${esc(p.name)}</div>
+                            <div class="text-[10px] text-gray-500 truncate">${p.age} años · ${esc(p.studiedCareer)}</div>
+                        </div>
+                    </div>
+                    <span class="font-black text-white tabular-nums shrink-0">${p.ovr}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('club-preview-modal')?.classList.remove('hidden');
+        };
+
+        window.closeClubPreviewModal = () => {
+            previewClubId = null;
+            document.getElementById('club-preview-modal')?.classList.add('hidden');
+        };
+
+        window.confirmSignWithPreviewClub = () => {
+            if (!previewClubId) return;
+            const idToSign = previewClubId;
+            window.closeClubPreviewModal();
+            window.startWithExistingClub(idToSign);
         };
 
         window.startWithExistingClub = (teamId) => {
@@ -1334,7 +1486,7 @@
                     : (state.teams.find((t) => t.id === state.userTeamId)?.conf === 'B' ? 'div3B' : 'div3A');
             saveCareerState();
             enterCareerDashboard();
-            showToast('¡Carrera de DT iniciada!', 'success');
+            showToast('¡Contrato firmado! Carrera de DT iniciada.', 'success');
         };
 
         window.handleCreateCustomClub = (e) => {
@@ -1427,28 +1579,24 @@
             if (banner) {
                 banner.innerHTML = `
                     <div class="flex items-center gap-3.5 min-w-0">
-                        ${renderBadgeHTML(team, 'w-12 h-12')}
+                        ${renderBadgeHTML(team, 'w-11 h-11')}
                         <div class="min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <h2 class="text-lg font-black text-white truncate">${esc(team.name)}</h2>
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#717fff]/20 text-[#a3adff] border border-[#717fff]/35">${esc(divLabel)}</span>
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold surface-sub text-gray-300">Temp. ${state.season} · Sem. ${state.semester}</span>
-                            </div>
-                            <p class="text-xs text-gray-400 truncate">DT ${esc(state.dtName)} · ${esc(team.career)}</p>
+                            <h2 class="text-base sm:text-lg font-black text-white truncate">${esc(team.name)}</h2>
+                            <p class="text-[11px] text-gray-400 truncate">${esc(divLabel)} · Temp. ${state.season} Sem. ${state.semester} · DT ${esc(state.dtName)}</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-2 text-center shrink-0">
-                        <div class="px-3 py-2 rounded-xl surface-sub">
-                            <div class="text-xs font-black text-white tabular-nums">OVR ${avg}</div>
-                            <div class="text-[9px] text-gray-500 uppercase font-bold">Plantel (${team.players.length})</div>
+                        <div class="px-3 py-1.5 rounded-xl surface-sub">
+                            <div class="text-xs font-black text-white tabular-nums">${avg}</div>
+                            <div class="text-[9px] text-gray-500 uppercase font-bold">OVR</div>
                         </div>
-                        <div class="px-3 py-2 rounded-xl surface-sub">
+                        <div class="px-3 py-1.5 rounded-xl surface-sub">
                             <div class="text-xs font-black text-emerald-400 tabular-nums">${Engine.formatClp(team.budgetEur)}</div>
                             <div class="text-[9px] text-gray-500 uppercase font-bold">Caja CLP</div>
                         </div>
-                        <div class="px-3 py-2 rounded-xl surface-sub">
+                        <div class="px-3 py-1.5 rounded-xl surface-sub">
                             <div class="text-xs font-black text-[#a3adff] tabular-nums">${ev ? esc(ev.dateLabel) : 'Fin'}</div>
-                            <div class="text-[9px] text-gray-500 uppercase font-bold">Fecha Actual</div>
+                            <div class="text-[9px] text-gray-500 uppercase font-bold">Fecha</div>
                         </div>
                     </div>
                 `;
@@ -1520,8 +1668,8 @@
             const midEndBtn = document.getElementById('btn-sim-mid-end');
             if (midEndBtn) {
                 midEndBtn.textContent = state.semester === 1
-                    ? '⏩ Avanzar hasta mitad de temporada'
-                    : '⏩ Avanzar hasta final de temporada';
+                    ? 'Avanzar hasta mitad de temporada'
+                    : 'Avanzar hasta final de temporada';
             }
 
             const nextSeasonBtn = document.getElementById('btn-start-next-season');
@@ -1540,9 +1688,9 @@
                 if (state.activeDecision) {
                     const d = state.activeDecision;
                     decBox.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/35">${esc(d.category)}</span>
-                            <span class="text-[11px] text-gray-400">${esc(d.dateLabel)}</span>
+                        <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-wider">
+                            <span class="text-amber-300">${esc(d.category)}</span>
+                            <span class="text-gray-500">${esc(d.dateLabel)}</span>
                         </div>
                         <h4 class="text-sm font-black text-white">${esc(d.title)}</h4>
                         <p class="text-xs text-gray-300 leading-relaxed">${esc(d.desc)}</p>
@@ -1557,26 +1705,23 @@
                 } else if (nextEv && nextEv.type === 'PRE_SEASON_SPONSORS' && state.sponsorSession) {
                     const ss = state.sponsorSession;
                     decBox.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/35">PATROCINIOS PRETEMPORADA</span>
-                            <span class="text-[11px] font-black text-[#a3adff] tabular-nums">${ss.proposalsLeft}/${ss.maxProposals} propuestas</span>
+                        <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-wider">
+                            <span class="text-emerald-400">Acuerdos Pretemporada</span>
+                            <span class="text-[#a3adff] tabular-nums">${ss.proposalsLeft}/${ss.maxProposals} propuestas</span>
                         </div>
-                        <h4 class="text-sm font-black text-white">Acuerdos Comerciales · Temp. ${state.season}</h4>
-                        <p class="text-xs text-gray-400 leading-relaxed">Envía propuestas a marcas locales o Dirección de Carrera. Aceptan según tu OVR, división, identidad de carrera e historial.</p>
-                        <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
                             ${ss.offers.map((o) => {
-                                const badgeKind = o.kind === 'DIRECCION_CARRERA' ? 'Carrera/Facultad' : 'Marca';
+                                const badgeKind = o.kind === 'DIRECCION_CARRERA' ? 'Carrera' : 'Marca';
                                 const statusBtn = o.status === 'ACCEPTED'
-                                    ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 text-[10px] font-black">✓ Firmado</span>`
+                                    ? `<span class="text-emerald-400 text-[10px] font-black shrink-0">Firmado</span>`
                                     : o.status === 'REJECTED'
-                                        ? `<span class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 text-[10px] font-black">✕ Rechazado</span>`
+                                        ? `<span class="text-rose-400 text-[10px] font-black shrink-0">Rechazado</span>`
                                         : `<button type="button" onclick="handleSponsorProposal('${esc(o.id)}')" ${ss.proposalsLeft <= 0 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg bg-[#717fff] hover:bg-[#828eff] disabled:opacity-40 text-white font-black text-[11px] transition shrink-0">Enviar (${o.acceptanceChance}%)</button>`;
                                 return `
                                     <div class="p-2.5 rounded-xl surface-sub border border-[#262626] flex items-center justify-between gap-2 text-xs">
                                         <div class="min-w-0">
-                                            <div class="font-black text-white truncate">${esc(o.sponsorName)}</div>
-                                            <div class="text-[10px] text-gray-400 truncate">${badgeKind} · ${o.frequency} · <span class="text-emerald-400 font-bold">${Engine.formatClp(o.amountPerInstallment)} CLP/cuota</span></div>
-                                            <div class="text-[10px] text-gray-500 truncate">${esc(o.requirementLabel)}</div>
+                                            <div class="font-bold text-white truncate">${esc(o.sponsorName)}</div>
+                                            <div class="text-[10px] text-gray-400 truncate">${badgeKind} · ${o.frequency} · <span class="text-emerald-400 font-bold">${Engine.formatClp(o.amountPerInstallment)}</span></div>
                                         </div>
                                         ${statusBtn}
                                     </div>
@@ -1584,14 +1729,14 @@
                             }).join('')}
                         </div>
                         <button type="button" onclick="handleFinishPreseasonSponsors()" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-xs transition">
-                            Cerrar Rondas de Patrocinio y Avanzar →
+                            Continuar al Torneo →
                         </button>
                     `;
                 } else if (nextEv) {
                     decBox.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-black uppercase tracking-wider text-[#8b96ff]">Evento Siguiente en Agenda</span>
-                            <span class="text-[11px] text-gray-400">${esc(nextEv.dateLabel)}</span>
+                        <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-wider">
+                            <span class="text-[#8b96ff]">Próximo Evento</span>
+                            <span class="text-gray-500">${esc(nextEv.dateLabel)}</span>
                         </div>
                         <h4 class="text-sm font-black text-white">${esc(nextEv.title)}</h4>
                         <p class="text-xs text-gray-400 leading-relaxed">${esc(nextEv.desc)}</p>
@@ -1714,8 +1859,16 @@
         };
 
         // =================================================================
-        // MENÚ 2: TÁCTICA (CON ROLES SECUNDARIOS Y PENALIZACIÓN DE OVR)
+        // MENÚ 2: TÁCTICA (PIZARRA VISUAL EN CANCHA + 8 ESQUEMAS)
         // =================================================================
+        function getShortPitchName(player) {
+            if (!player) return '';
+            const last = String(player.lastName || '').trim();
+            if (last) return last.split(/\s+/)[0];
+            const parts = String(player.name || '').trim().split(/\s+/);
+            return parts[parts.length - 1] || parts[0] || '';
+        }
+
         function renderTacticsView() {
             const team = getUserTeam();
             if (!team) return;
@@ -1731,7 +1884,7 @@
                 if (selectedTacticsStarterId) {
                     const p = team.players.find((x) => x.id === selectedTacticsStarterId);
                     hintEl.classList.remove('hidden');
-                    hintEl.textContent = `Titular seleccionado: ${p?.name || ''} (${p?.position}). Ahora toca un jugador del banco para hacer el cambio.`;
+                    hintEl.textContent = `Seleccionado: ${p?.name || ''} (${p?.position}). Toca otro titular en la cancha para moverlo o un suplente del banco para cambiarlo.`;
                 } else {
                     hintEl.classList.add('hidden');
                 }
@@ -1740,42 +1893,55 @@
             const pMap = new Map(team.players.map((p) => [p.id, p]));
             const starters = team.starterIds.map((id) => pMap.get(id)).filter(Boolean);
             const bench = team.benchIds.map((id) => pMap.get(id)).filter(Boolean);
-            const slots = Engine.getFormationSlots(team.formation);
+            const layout = Engine.getFormationLayout(team.formation);
 
-            document.getElementById('tactics-starters-grid').innerHTML = starters.map((p, idx) => {
-                const isSelected = selectedTacticsStarterId === p.id;
-                const slotPos = slots[idx] || p.position;
-                const effOvr = Engine.getPlayerEffectiveOvr(p, slotPos);
-                const outOfPos = slotPos !== p.position;
-                const secPct = p.secondaryPositions?.[slotPos];
-                const posMeta = outOfPos
-                    ? (typeof secPct === 'number' ? `2ª Pos ${secPct}%` : 'Sin adaptar')
-                    : 'Natural';
-                return `
-                    <button type="button" onclick="selectTacticsStarter('${esc(p.id)}')" class="p-3 rounded-xl surface-sub border text-left flex items-center justify-between gap-2 transition ${isSelected ? 'border-[#717fff] bg-[#717fff]/15' : 'border-[#262626] hover:border-[#717fff]/50'}">
-                        <div class="flex items-center gap-2.5 min-w-0">
-                            <span class="w-9 h-9 rounded-lg bg-[#1c1c1c] border ${outOfPos ? 'border-amber-500/40 text-amber-300' : 'border-[#2b2b2b] text-[#a3adff]'} flex flex-col items-center justify-center text-[10px] font-black shrink-0">
-                                <span>${esc(slotPos)}</span>
-                                ${outOfPos ? `<span class="text-[8px] text-gray-400 leading-none">(${esc(p.position)})</span>` : ''}
+            let effSum = 0;
+            const pitchMount = document.getElementById('tactics-pitch-players');
+            if (pitchMount) {
+                pitchMount.innerHTML = starters.map((p, idx) => {
+                    const coord = layout[idx] || { role: p.position, x: 50, y: 50 };
+                    const slotPos = coord.role || p.position;
+                    const effOvr = Engine.getPlayerEffectiveOvr(p, slotPos);
+                    effSum += effOvr;
+                    const isSelected = selectedTacticsStarterId === p.id;
+                    const outOfPos = slotPos !== p.position;
+                    const shortName = getShortPitchName(p);
+                    const ringCls = isSelected
+                        ? 'border-[#717fff] bg-[#717fff] text-white ring-4 ring-[#717fff]/35 scale-105'
+                        : outOfPos
+                            ? 'border-amber-400/80 bg-[#1a1a1d]/95 text-amber-300 hover:border-amber-300'
+                            : 'border-emerald-400/70 bg-[#151518]/95 text-white hover:border-[#717fff]';
+                    const titleTip = `${p.name} · Rol ${slotPos} (Nat. ${p.position}) · OVR efectivo ${effOvr}`;
+
+                    return `
+                        <button type="button" onclick="selectTacticsStarter('${esc(p.id)}')" title="${esc(titleTip)}"
+                            style="left: ${coord.x}%; top: ${coord.y}%;"
+                            class="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1 group focus:outline-none z-10 transition-transform">
+                            <span class="w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 flex flex-col items-center justify-center shadow-lg transition ${ringCls}">
+                                <span class="text-xs sm:text-sm font-black leading-none tabular-nums">${effOvr}</span>
+                                <span class="text-[8px] font-black uppercase tracking-wider leading-none mt-0.5 ${isSelected ? 'text-white/90' : outOfPos ? 'text-amber-300' : 'text-emerald-300'}">${esc(slotPos)}</span>
                             </span>
-                            <div class="min-w-0">
-                                <div class="text-xs font-black text-white truncate">#${p.jerseyNumber} ${esc(p.name)}</div>
-                                <div class="text-[10px] ${outOfPos ? 'text-amber-300' : 'text-gray-400'} truncate">${esc(posMeta)} · ${esc(p.studiedCareer)}</div>
-                            </div>
-                        </div>
-                        <div class="text-right shrink-0">
-                            <span class="px-2 py-1 rounded-lg ${effOvr < p.ovr ? 'bg-amber-500/20 text-amber-300' : 'bg-[#717fff]/20 text-[#a3adff]'} text-xs font-black tabular-nums">${effOvr}</span>
-                            ${effOvr < p.ovr ? `<div class="text-[9px] text-gray-500 mt-0.5">Nat. ${p.ovr}</div>` : ''}
-                        </div>
-                    </button>
-                `;
-            }).join('');
+                            <span class="px-2 py-0.5 rounded-md bg-black/80 border border-white/10 text-[10px] sm:text-[11px] font-bold text-white whitespace-nowrap max-w-[92px] truncate shadow">
+                                ${esc(shortName)}
+                            </span>
+                        </button>
+                    `;
+                }).join('');
+            }
+
+            const xiOvrEl = document.getElementById('tactics-xi-ovr');
+            if (xiOvrEl && starters.length > 0) {
+                xiOvrEl.textContent = `Media titular: ${Math.round(effSum / starters.length)}`;
+            }
 
             document.getElementById('tactics-bench-list').innerHTML = bench.map((p) => `
-                <button type="button" onclick="swapWithBench('${esc(p.id)}')" class="w-full p-2.5 rounded-xl surface-sub border border-[#262626] hover:border-emerald-400/60 text-left flex items-center justify-between gap-2 transition">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="w-7 h-7 rounded-lg bg-[#1c1c1c] flex items-center justify-center text-[10px] font-black text-gray-300 shrink-0">${esc(p.position)}</span>
-                        <span class="text-xs font-bold text-gray-200 truncate">#${p.jerseyNumber} ${esc(p.name)}</span>
+                <button type="button" onclick="swapWithBench('${esc(p.id)}')" class="w-full px-3 py-2.5 rounded-xl surface-sub border border-[#262626] hover:border-emerald-400/60 text-left flex items-center justify-between gap-2 transition">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-8 h-7 rounded-lg bg-[#1c1c1c] flex items-center justify-center text-[10px] font-black text-[#a3adff] shrink-0">${esc(p.position)}</span>
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-gray-100 truncate">#${p.jerseyNumber} ${esc(p.name)}</div>
+                            <div class="text-[10px] text-gray-500 truncate">${p.age} años</div>
+                        </div>
                     </div>
                     <span class="text-xs font-black text-white tabular-nums shrink-0">${p.ovr}</span>
                 </button>
@@ -1787,21 +1953,41 @@
             if (!team) return;
             const res = Engine.setClubFormation(team, formKey);
             if (res.ok) {
+                selectedTacticsStarterId = null;
                 saveCareerState();
                 renderTacticsView();
-                showToast(`Formación actualizada a ${formKey}`, 'success');
+                showToast(`Esquema actualizado a ${formKey}`, 'success');
             }
         };
 
         window.selectTacticsStarter = (id) => {
-            selectedTacticsStarterId = selectedTacticsStarterId === id ? null : id;
-            renderTacticsView();
+            const team = getUserTeam();
+            if (!team) return;
+            if (!selectedTacticsStarterId) {
+                selectedTacticsStarterId = id;
+                renderTacticsView();
+                return;
+            }
+            if (selectedTacticsStarterId === id) {
+                selectedTacticsStarterId = null;
+                renderTacticsView();
+                return;
+            }
+            const res = Engine.swapStartersOrder(team, selectedTacticsStarterId, id);
+            selectedTacticsStarterId = null;
+            if (res.ok) {
+                saveCareerState();
+                renderTacticsView();
+                showToast(res.message, 'success');
+            } else {
+                renderTacticsView();
+            }
         };
 
         window.swapWithBench = (benchId) => {
             const team = getUserTeam();
             if (!team || !selectedTacticsStarterId) {
-                showToast('Primero selecciona un titular para reemplazar.');
+                showToast('Selecciona primero un titular en la cancha.');
                 return;
             }
             const res = Engine.swapStarterAndBench(team, selectedTacticsStarterId, benchId);
@@ -2008,48 +2194,180 @@
             // Acuerdos Comerciales / Patrocinios
             const spBox = document.getElementById('market-sponsors-box');
             if (spBox) {
-                const active = (state.activeSponsors || []).filter((s) => s.season === state.season);
+                if (!state.sponsorSession) {
+                    state.sponsorSession = Engine.generatePreseasonSponsorOffers(state, Math.random, state.semester === 2 ? 'MID_SEASON' : 'PRE_SEASON');
+                }
                 const ss = state.sponsorSession;
-                const canSendPreseason = ss && ss.proposalsLeft > 0 && win.code === 'PRE_SEASON';
+                const active = (state.activeSponsors || []).filter((s) => s.season === state.season);
+                const profile = Engine.computeSponsorEvaluationProfile(state);
+                const summary = Engine.getCommercialAgreementsSummary(state);
+
+                const kindFilter = window._sponsorKindFilter || 'ALL';
+                const freqFilter = window._sponsorFreqFilter || 'ALL';
+                const filteredOffers = (ss?.offers || []).filter((o) => {
+                    if (kindFilter !== 'ALL' && o.kind !== kindFilter) return false;
+                    if (freqFilter !== 'ALL' && o.frequency !== freqFilter) return false;
+                    return true;
+                });
+
+                const cycleTitle = ss?.cycle === 'MID_SEASON' ? 'Ciclo 2° Semestre' : 'Ciclo Pretemporada';
+
                 spBox.innerHTML = `
-                    <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#262626] pb-3">
                         <div>
-                            <h3 class="text-sm font-black uppercase tracking-wider text-white">💼 Acuerdos Comerciales & Patrocinios</h3>
-                            <p class="text-[11px] text-gray-400">Ingresos mensuales o semestrales con marcas o Dirección de Carrera.</p>
+                            <h3 class="text-sm font-black uppercase tracking-wider text-white">💼 Gestión de Acuerdos Comerciales</h3>
+                            <p class="text-[11px] text-gray-400">Propuestas mensuales o semestrales de marcas y Direcciones de Carrera en pesos chilenos (CLP).</p>
                         </div>
-                        ${ss ? `<span class="text-[11px] font-black text-[#a3adff]">${ss.proposalsLeft}/${ss.maxProposals} propuestas disp.</span>` : ''}
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-full surface-sub text-[10px] font-black text-gray-300 border border-[#2b2b2b]">${esc(cycleTitle)}</span>
+                            <span class="px-2.5 py-1 rounded-full bg-[#717fff]/15 border border-[#717fff]/35 text-[11px] font-black text-[#a3adff] tabular-nums">${ss?.proposalsLeft ?? 0}/${ss?.maxProposals ?? 3} propuestas</span>
+                        </div>
                     </div>
-                    ${active.length > 0 ? `
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            ${active.map((s) => `
-                                <div class="p-3 rounded-xl surface-sub border border-emerald-500/30 flex items-center justify-between gap-2 text-xs">
-                                    <div class="min-w-0">
-                                        <div class="font-black text-white truncate">${esc(s.sponsorName)}</div>
-                                        <div class="text-[10px] text-gray-400">${esc(s.frequency)} · Cuotas ${s.installmentsPaid}/${s.installmentsTotal}</div>
-                                    </div>
-                                    <span class="font-black text-emerald-400 tabular-nums shrink-0">+${Engine.formatClp(s.amountPerInstallment)}</span>
-                                </div>
-                            `).join('')}
+
+                    <!-- Variables de evaluación comercial -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                            <div class="text-[10px] font-bold uppercase text-gray-400">OVR del Equipo</div>
+                            <div class="flex items-baseline justify-between mt-0.5">
+                                <span class="text-base font-black text-white tabular-nums">${profile.teamOvr}</span>
+                                <span class="text-[10px] text-[#a3adff] font-bold">${profile.careerIdentityPct}% carrera</span>
+                            </div>
                         </div>
-                    ` : '<p class="text-xs text-gray-500">No hay patrocinios activos esta temporada.</p>'}
-                    ${canSendPreseason ? `
-                        <div class="pt-2 border-t border-[#262626] space-y-2">
-                            <div class="text-[11px] font-bold text-[#a3adff] uppercase">Propuestas de Pretemporada Disponibles:</div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                ${ss.offers.map((o) => `
-                                    <div class="p-2.5 rounded-xl surface-sub border border-[#262626] flex items-center justify-between gap-2 text-xs">
+                        <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                            <div class="text-[10px] font-bold uppercase text-gray-400">Reputación Histórica</div>
+                            <div class="flex items-baseline justify-between mt-0.5">
+                                <span class="text-base font-black text-amber-300 tabular-nums">${profile.historicalReputation}/100</span>
+                                <span class="text-[10px] text-gray-400 truncate ml-2">${esc(profile.reputationLabel)}</span>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-xl surface-sub border border-[#262626]">
+                            <div class="text-[10px] font-bold uppercase text-gray-400">Rendimiento Reciente</div>
+                            <div class="flex items-baseline justify-between mt-0.5">
+                                <span class="text-base font-black text-emerald-400 tabular-nums">${profile.recentPerformance}/100</span>
+                                <span class="text-[10px] text-gray-400 truncate ml-2">${esc(profile.formLabel)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resumen financiero comercial -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                        <div class="px-3 py-2 rounded-xl bg-[#151515] border border-[#262626] flex items-center justify-between">
+                            <span class="text-gray-400 font-bold">Acuerdos activos:</span>
+                            <span class="font-black text-white tabular-nums">${summary.activeCount}</span>
+                        </div>
+                        <div class="px-3 py-2 rounded-xl bg-[#151515] border border-[#262626] flex items-center justify-between">
+                            <span class="text-gray-400 font-bold">Cobrado temp.:</span>
+                            <span class="font-black text-emerald-400 tabular-nums">+${Engine.formatClp(summary.collectedClp)}</span>
+                        </div>
+                        <div class="px-3 py-2 rounded-xl bg-[#151515] border border-[#262626] flex items-center justify-between">
+                            <span class="text-gray-400 font-bold">Cuotas por cobrar:</span>
+                            <span class="font-black text-[#a3adff] tabular-nums">+${Engine.formatClp(summary.remainingClp)}</span>
+                        </div>
+                    </div>
+
+                    ${active.length > 0 ? `
+                        <div class="space-y-2">
+                            <div class="text-[11px] font-black uppercase text-emerald-400">Contratos Vigentes (${active.length})</div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                ${active.map((s) => `
+                                    <div class="p-3 rounded-xl surface-sub border border-emerald-500/30 flex items-center justify-between gap-2 text-xs">
                                         <div class="min-w-0">
-                                            <div class="font-black text-white truncate">${esc(o.sponsorName)}</div>
-                                            <div class="text-[10px] text-gray-400">${o.frequency} · ${Engine.formatClp(o.amountPerInstallment)}/cuota · Prob. ${o.acceptanceChance}%</div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="px-1.5 py-0.5 rounded bg-[#1c1c1c] text-[9px] font-black text-gray-300">${s.kind === 'MARCA' ? 'Marca' : 'Dir. Carrera'}</span>
+                                                <span class="font-black text-white truncate">${esc(s.sponsorName)}</span>
+                                            </div>
+                                            <div class="text-[10px] text-gray-400 mt-0.5">${esc(s.frequency)} · Cuotas pagadas ${s.installmentsPaid}/${s.installmentsTotal}</div>
                                         </div>
-                                        ${o.status === 'AVAILABLE'
-                                            ? `<button type="button" onclick="handleSponsorProposal('${esc(o.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#717fff] hover:bg-[#828eff] text-white font-black text-[11px] shrink-0">Proponer</button>`
-                                            : `<span class="text-[10px] font-black ${o.status === 'ACCEPTED' ? 'text-emerald-400' : 'text-rose-400'}">${o.status === 'ACCEPTED' ? 'Firmado' : 'Rechazado'}</span>`}
+                                        <span class="font-black text-emerald-400 tabular-nums shrink-0">+${Engine.formatClp(s.amountPerInstallment)} CLP</span>
                                     </div>
                                 `).join('')}
                             </div>
                         </div>
-                    ` : ''}
+                    ` : '<p class="text-xs text-gray-500">Aún no tienes contratos comerciales activos esta temporada.</p>'}
+
+                    <!-- Filtros y Catálogo de Propuestas -->
+                    <div class="pt-2 border-t border-[#262626] space-y-2.5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="text-[11px] font-black uppercase text-[#a3adff]">Propuestas Disponibles para Enviar</span>
+                            <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                                <select aria-label="Filtrar entidad comercial" onchange="setSponsorFilters(this.value, window._sponsorFreqFilter || 'ALL')" class="px-2.5 py-1 rounded-lg bg-[#151515] border border-[#2b2b2b] text-white font-bold">
+                                    <option value="ALL" ${kindFilter === 'ALL' ? 'selected' : ''}>Todas las entidades</option>
+                                    <option value="MARCA" ${kindFilter === 'MARCA' ? 'selected' : ''}>Marcas</option>
+                                    <option value="DIRECCION_CARRERA" ${kindFilter === 'DIRECCION_CARRERA' ? 'selected' : ''}>Dirección de Carrera / Facultad</option>
+                                </select>
+                                <select aria-label="Filtrar frecuencia comercial" onchange="setSponsorFilters(window._sponsorKindFilter || 'ALL', this.value)" class="px-2.5 py-1 rounded-lg bg-[#151515] border border-[#2b2b2b] text-white font-bold">
+                                    <option value="ALL" ${freqFilter === 'ALL' ? 'selected' : ''}>Mensual y Semestral</option>
+                                    <option value="MENSUAL" ${freqFilter === 'MENSUAL' ? 'selected' : ''}>Solo Mensual</option>
+                                    <option value="SEMESTRAL" ${freqFilter === 'SEMESTRAL' ? 'selected' : ''}>Solo Semestral</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                            ${filteredOffers.length === 0 ? '<div class="col-span-full p-4 text-center text-xs text-gray-500">No hay propuestas comerciales para esos filtros.</div>' : filteredOffers.map((o) => {
+                                const canSend = o.status === 'AVAILABLE' && (ss?.proposalsLeft ?? 0) > 0;
+                                const chanceTone = o.acceptanceChance >= 70 ? 'text-emerald-400' : o.acceptanceChance >= 50 ? 'text-amber-300' : 'text-rose-300';
+                                return `
+                                    <div class="p-3 rounded-xl surface-sub border border-[#262626] flex items-center justify-between gap-2.5 text-xs">
+                                        <div class="min-w-0 space-y-0.5">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="px-1.5 py-0.5 rounded bg-[#1c1c1c] text-[9px] font-black ${o.kind === 'MARCA' ? 'text-amber-300' : 'text-[#a3adff]'}">${o.kind === 'MARCA' ? 'Marca' : 'Dir. Carrera'}</span>
+                                                <span class="px-1.5 py-0.5 rounded bg-[#1c1c1c] text-[9px] font-black text-gray-300">${esc(o.frequency)}</span>
+                                            </div>
+                                            <div class="font-black text-white truncate">${esc(o.sponsorName)}</div>
+                                            <div class="text-[11px] font-bold text-emerald-400 tabular-nums">+${Engine.formatClp(o.amountPerInstallment)} CLP/cuota <span class="text-gray-400 font-normal">(${o.installmentsTotal}x · Total ${Engine.formatClp(o.totalPotentialClp)} CLP)</span></div>
+                                            <div class="text-[10px] text-gray-400 truncate">${esc(o.requirementLabel)} · <span class="font-black ${chanceTone}">Aceptación ${o.acceptanceChance}%</span></div>
+                                        </div>
+                                        ${o.status === 'AVAILABLE'
+                                            ? `<button type="button" ${canSend ? '' : 'disabled'} onclick="handleSponsorProposal('${esc(o.id)}')" class="px-3 py-2 rounded-xl ${canSend ? 'bg-[#717fff] hover:bg-[#828eff] text-white' : 'bg-[#1c1c1c] text-gray-500 cursor-not-allowed'} font-black text-[11px] shrink-0 transition">Proponer</button>`
+                                            : `<span class="px-2.5 py-1 rounded-lg bg-[#1c1c1c] text-[10px] font-black shrink-0 ${o.status === 'ACCEPTED' ? 'text-emerald-400' : 'text-rose-400'}">${o.status === 'ACCEPTED' ? 'Firmado' : 'Rechazado'}</span>`}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Jugadores Recomendados por Secretaría Técnica
+            const recBox = document.getElementById('market-recommended-box');
+            if (recBox) {
+                const recs = Engine.getRecommendedMarketPlayers(state, 6);
+                const actionLabel = win.open ? 'Fichar' : 'Pre-Acuerdo';
+                const actionCls = win.open ? 'bg-[#717fff] hover:bg-[#828eff] text-white' : 'bg-amber-500 hover:bg-amber-400 text-gray-950';
+                recBox.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#262626] pb-2.5">
+                        <h3 class="text-sm font-black uppercase tracking-wider text-white">Recomendados para tu Club</h3>
+                        <span class="text-[11px] text-gray-500">Oportunidades · Mejoras · Bombas</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        ${recs.length === 0 ? '<div class="col-span-full text-xs text-gray-500 py-3">Sin recomendaciones disponibles ahora.</div>' : recs.map((p) => {
+                            const tagColor = p.recommendationTag === 'Fichaje Bomba'
+                                ? 'text-amber-300'
+                                : p.recommendationTag === 'Descontento'
+                                    ? 'text-rose-300'
+                                    : 'text-emerald-400';
+                            return `
+                                <div class="p-3 rounded-xl surface-sub border border-[#262626] flex flex-col justify-between gap-2.5 text-xs">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-[10px] font-black uppercase tracking-wider ${tagColor}">${esc(p.recommendationTag)}</span>
+                                            <span class="font-black text-white tabular-nums">OVR ${p.ovr}</span>
+                                        </div>
+                                        <div class="font-black text-white truncate">${esc(p.position)} · ${esc(p.name)} <span class="text-gray-500 font-semibold">(${p.age})</span></div>
+                                        <div class="text-[11px] text-gray-400 truncate">${esc(p.teamName)}</div>
+                                        <div class="text-[10px] text-gray-500 leading-snug">${esc(p.recommendationReason)}</div>
+                                    </div>
+                                    <div class="flex items-center justify-between gap-2 pt-2 border-t border-[#222226]">
+                                        <span class="font-black text-emerald-400 tabular-nums">${Engine.formatClp(p.estimatedCostClp)}</span>
+                                        <button type="button" onclick="handleSignMarketPlayer('${esc(p.id)}')" class="px-3 py-1.5 rounded-lg ${actionCls} font-black text-[11px] transition">
+                                            ${actionLabel}
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 `;
             }
 
@@ -2102,6 +2420,12 @@
 
             window.renderMarketSearch();
         }
+
+        window.setSponsorFilters = (kind, freq) => {
+            window._sponsorKindFilter = kind || 'ALL';
+            window._sponsorFreqFilter = freq || 'ALL';
+            renderMarketView();
+        };
 
         window.dismissNegotiationPrompt = () => {
             lastNegotiationPrompt = null;
@@ -2300,28 +2624,55 @@
                 return;
             }
 
-            // Calendario Lineal del Usuario
+            // Calendario Simplificado del Usuario ("vs RIVAL" + Local/Visita)
             const team = getUserTeam();
             const divRounds = team.division === 1 ? state.calendar.div1 : team.division === 2 ? state.calendar.div2 : (team.conf === 'B' ? state.calendar.div3B : state.calendar.div3A);
             const byId = new Map(state.teams.map((t) => [t.id, t]));
             mount.innerHTML = `
                 <div class="space-y-2">
                     <div class="flex items-center justify-between mb-2">
-                        <h4 class="text-xs font-black uppercase text-gray-300">Calendario de ${esc(team.name)} (${team.division}ª Div)</h4>
-                        <button type="button" onclick="switchCareerMenu('tactica')" class="px-3 py-1.5 rounded-lg bg-[#717fff]/20 text-[#a3adff] text-[11px] font-bold">Ajustar Táctica</button>
+                        <h4 class="text-xs font-black uppercase tracking-wider text-gray-300">Calendario · ${esc(team.name)}</h4>
+                        <button type="button" onclick="switchCareerMenu('tactica')" class="px-3 py-1.5 rounded-lg bg-[#717fff]/20 hover:bg-[#717fff]/30 text-[#a3adff] text-[11px] font-bold transition">Ir a Táctica</button>
+                    </div>
+                    <div class="grid grid-cols-12 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                        <span class="col-span-3 sm:col-span-2">Fecha</span>
+                        <span class="col-span-5 sm:col-span-6">Partido</span>
+                        <span class="col-span-2 text-center">Condición</span>
+                        <span class="col-span-2 text-right">Resultado</span>
                     </div>
                     ${divRounds.map((r) => {
                         const m = r.matches.find((x) => x.homeId === team.id || x.awayId === team.id);
                         if (!m) {
-                            return `<div class="px-3.5 py-2.5 rounded-xl surface-sub flex justify-between text-xs text-gray-500"><span>Fecha ${r.round} (${esc(r.dateLabel)})</span><span>Jornada libre</span></div>`;
+                            return `
+                                <div class="grid grid-cols-12 items-center px-3.5 py-2.5 rounded-xl surface-sub text-xs text-gray-500">
+                                    <span class="col-span-3 sm:col-span-2 font-bold tabular-nums">F${r.round} · ${esc(r.dateLabel)}</span>
+                                    <span class="col-span-9 sm:col-span-10">Fecha libre</span>
+                                </div>
+                            `;
                         }
-                        const h = byId.get(m.homeId);
-                        const a = byId.get(m.awayId);
+                        const isHome = m.homeId === team.id;
+                        const rival = byId.get(isHome ? m.awayId : m.homeId);
+                        const isDerby = Boolean(rival && team.derby && (team.derby === rival.id || Data.normalizeTextKey(team.derby) === Data.normalizeTextKey(rival.name)));
+                        const userGoals = isHome ? m.homeScore : m.awayScore;
+                        const rivalGoals = isHome ? m.awayScore : m.homeScore;
+                        const scoreTone = !m.played
+                            ? 'text-gray-500'
+                            : userGoals > rivalGoals
+                                ? 'text-emerald-400'
+                                : userGoals < rivalGoals
+                                    ? 'text-rose-400'
+                                    : 'text-amber-300';
+                        const scoreText = m.played ? `${userGoals} - ${rivalGoals}` : '—';
                         return `
-                            <div class="px-3.5 py-2.5 rounded-xl surface-sub flex items-center justify-between gap-2 text-xs">
-                                <span class="px-2 py-0.5 rounded bg-[#1c1c1c] text-[10px] font-black text-[#a3adff] shrink-0">F${r.round} · ${esc(r.dateLabel)}</span>
-                                <span class="font-bold text-white truncate flex-1 text-center">${esc(h?.name)} vs ${esc(a?.name)}</span>
-                                <span class="font-black tabular-nums ${m.played ? 'text-emerald-400' : 'text-gray-400'} shrink-0">${m.played ? `${m.homeScore} - ${m.awayScore}` : 'Pendiente'}</span>
+                            <div class="grid grid-cols-12 items-center gap-2 px-3.5 py-2.5 rounded-xl surface-sub border border-[#262626] text-xs">
+                                <span class="col-span-3 sm:col-span-2 text-[11px] font-bold text-gray-400 tabular-nums truncate">F${r.round} · ${esc(r.dateLabel)}</span>
+                                <div class="col-span-5 sm:col-span-6 flex items-center gap-1.5 min-w-0">
+                                    <span class="text-gray-500 font-bold shrink-0">vs</span>
+                                    <span class="font-black text-white truncate">${esc(rival?.name || 'Rival')}</span>
+                                    ${isDerby ? '<span class="text-[9px] font-black uppercase text-amber-300 shrink-0">Clásico</span>' : ''}
+                                </div>
+                                <span class="col-span-2 text-center text-[11px] font-black ${isHome ? 'text-emerald-400' : 'text-[#a3adff]'}">${isHome ? 'Local' : 'Visita'}</span>
+                                <span class="col-span-2 text-right font-black tabular-nums ${scoreTone}">${scoreText}</span>
                             </div>
                         `;
                     }).join('')}
@@ -2330,8 +2681,28 @@
         }
 
         // =================================================================
-        // MOTOR EN VIVO: 2 MINUTOS POR TIEMPO + PAUSA + MEDIO TIEMPO
+        // MOTOR EN VIVO: 2 MIN/TIEMPO + VELOCIDAD 1x/2x/4x + MAPA DE CALOR
         // =================================================================
+        function updateLiveSpeedButtons() {
+            const activeSpd = liveSession?.speed || 1;
+            document.querySelectorAll('.live-speed-btn').forEach((btn) => {
+                const val = Number(btn.getAttribute('data-speed'));
+                btn.className = val === activeSpd
+                    ? 'live-speed-btn px-2.5 py-1 rounded-lg bg-[#717fff] text-white text-[11px] font-black transition'
+                    : 'live-speed-btn px-2.5 py-1 rounded-lg text-gray-400 hover:text-white text-[11px] font-bold transition';
+            });
+        }
+
+        window.setLiveSpeed = (speed) => {
+            if (!liveSession) return;
+            const valid = [1, 2, 4].includes(Number(speed)) ? Number(speed) : 1;
+            liveSession.speed = valid;
+            updateLiveSpeedButtons();
+            if (!liveSession.finished) {
+                startLiveTimerLoop();
+            }
+        };
+
         window.openLiveMatchModal = () => {
             if (!state || !state.pendingLiveMatch) return;
             const pm = state.pendingLiveMatch;
@@ -2345,7 +2716,8 @@
                 timeline: pm.timeline,
                 minute: 1,
                 half: 1,
-                secondsLeftInHalf: Engine.HALF_REAL_SECONDS, // 120s por tiempo
+                speed: 1,
+                secondsLeftInHalf: Engine.HALF_REAL_SECONDS, // 120s por tiempo a 1x
                 paused: false,
                 halftimePaused: false,
                 finished: false,
@@ -2357,17 +2729,23 @@
             document.getElementById('live-away-name').textContent = away?.name || 'Visita';
             document.getElementById('live-home-badge').innerHTML = renderBadgeHTML(home, 'w-10 h-10');
             document.getElementById('live-away-badge').innerHTML = renderBadgeHTML(away, 'w-10 h-10');
+            const homeSideEl = document.getElementById('live-pitch-home-side');
+            const awaySideEl = document.getElementById('live-pitch-away-side');
+            if (homeSideEl) homeSideEl.textContent = `← ${home?.name || 'Local'}`;
+            if (awaySideEl) awaySideEl.textContent = `${away?.name || 'Visita'} →`;
             document.getElementById('live-match-footer')?.classList.add('hidden');
             document.getElementById('live-tactics-drawer')?.classList.add('hidden');
             document.getElementById('live-match-modal')?.classList.remove('hidden');
 
+            updateLiveSpeedButtons();
             renderLiveMatchFrame();
             startLiveTimerLoop();
         };
 
         function startLiveTimerLoop() {
             clearInterval(liveTimer);
-            // 120 segundos reales por tiempo de 25 minutos -> 1 tick real cada 1 segundo (avanza el reloj 2:00 -> 0:00)
+            const speed = liveSession?.speed || 1;
+            const tickMs = Math.max(120, Math.round(1000 / speed));
             liveTimer = setInterval(() => {
                 if (!liveSession || liveSession.paused || liveSession.halftimePaused || liveSession.finished) return;
                 liveSession.secondsLeftInHalf = Math.max(0, liveSession.secondsLeftInHalf - 1);
@@ -2379,7 +2757,7 @@
                     liveSession.minute = 25;
                     liveSession.halftimePaused = true;
                     liveSession.paused = true;
-                    openLiveTacticsDrawer('Medio Tiempo · Pausa Indefinida', 'Realiza cambios o ajusta el esquema. El 2° tiempo comenzará solo cuando tú lo decidas.', '▶ Iniciar 2° Tiempo');
+                    openLiveTacticsDrawer('Medio Tiempo', 'Ajusta el esquema o haz cambios antes de reanudar el 2° tiempo.', '▶ Iniciar 2° Tiempo');
                 } else if (liveSession.half === 2 && liveSession.secondsLeftInHalf === 0) {
                     liveSession.minute = 50;
                     liveSession.finished = true;
@@ -2388,7 +2766,7 @@
                     document.getElementById('live-match-footer')?.classList.remove('hidden');
                 }
                 renderLiveMatchFrame();
-            }, 1000);
+            }, tickMs);
         }
 
         function formatClockMMSS(sec) {
@@ -2396,6 +2774,52 @@
             const mm = String(Math.floor(s / 60)).padStart(2, '0');
             const ss = String(s % 60).padStart(2, '0');
             return `${mm}:${ss}`;
+        }
+
+        function describePitchZone(zone, evType) {
+            if (!zone) return 'Juego en disputa';
+            const x = Number(zone.x) || 50;
+            const y = Number(zone.y) || 50;
+            const sector = x <= 24 ? 'Área local' : x >= 76 ? 'Área visitante' : x <= 44 ? 'Campo local' : x >= 56 ? 'Campo rival' : 'Mediocampo';
+            const lane = y <= 30 ? 'banda superior' : y >= 70 ? 'banda inferior' : 'carril central';
+            const action = evType === 'GOAL' ? 'Gol' : evType === 'SAVE' ? 'Atajada' : evType === 'CARD' ? 'Falta' : 'Jugada';
+            return `${action} · ${sector} (${lane})`;
+        }
+
+        function renderLivePitchHeatmap(visibleEvents) {
+            const blobsEl = document.getElementById('live-heatmap-blobs');
+            const latestEl = document.getElementById('live-heatmap-latest');
+            const captionEl = document.getElementById('live-heatmap-caption');
+            if (!blobsEl || !latestEl) return;
+
+            const zoned = (visibleEvents || []).filter((e) => e && e.zone);
+            if (zoned.length === 0) {
+                blobsEl.innerHTML = `<circle cx="280" cy="85" r="32" fill="url(#heat-home-grad)" opacity="0.55" />`;
+                latestEl.innerHTML = `<circle cx="280" cy="85" r="6" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.6" />`;
+                if (captionEl) captionEl.textContent = 'Inicio en círculo central';
+                return;
+            }
+
+            blobsEl.innerHTML = zoned.map((ev) => {
+                const cx = (12 + (Number(ev.zone.x) || 50) * 5.36).toFixed(1);
+                const cy = (10 + (Number(ev.zone.y) || 50) * 1.5).toFixed(1);
+                const intensity = Number(ev.zone.intensity) || 0.6;
+                const isHot = ev.type === 'GOAL' || ev.type === 'SAVE';
+                const radius = (isHot ? 40 : 28 + intensity * 18).toFixed(1);
+                const gradId = isHot ? 'heat-hot-grad' : ev.zone.team === 'home' ? 'heat-home-grad' : 'heat-away-grad';
+                const opacity = isHot ? '0.84' : (0.38 + intensity * 0.34).toFixed(2);
+                return `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="url(#${gradId})" opacity="${opacity}" />`;
+            }).join('');
+
+            const last = zoned[zoned.length - 1];
+            const lx = (12 + (Number(last.zone.x) || 50) * 5.36).toFixed(1);
+            const ly = (10 + (Number(last.zone.y) || 50) * 1.5).toFixed(1);
+            const strokeColor = last.type === 'GOAL' ? '#fbbf24' : last.zone.team === 'home' ? '#34d399' : '#a3adff';
+            latestEl.innerHTML = `
+                <circle cx="${lx}" cy="${ly}" r="12" fill="none" stroke="${strokeColor}" stroke-width="1.6" stroke-dasharray="3 2" opacity="0.9" />
+                <circle cx="${lx}" cy="${ly}" r="3.5" fill="${strokeColor}" />
+            `;
+            if (captionEl) captionEl.textContent = describePitchZone(last.zone, last.type);
         }
 
         function renderLiveMatchFrame() {
@@ -2413,19 +2837,21 @@
                 phaseBadge.className = 'text-xs font-black text-emerald-400 mt-0.5';
                 if (pauseBtn) pauseBtn.classList.add('hidden');
             } else if (liveSession.halftimePaused) {
-                phaseBadge.textContent = 'Medio Tiempo · Pausa Indefinida';
+                phaseBadge.textContent = 'Medio Tiempo · Pausa';
                 phaseBadge.className = 'text-xs font-black text-amber-300 mt-0.5';
                 if (pauseBtn) pauseBtn.classList.add('hidden');
             } else {
                 if (pauseBtn) pauseBtn.classList.remove('hidden');
                 phaseBadge.textContent = liveSession.paused
-                    ? `${liveSession.half}° Tiempo · PAUSADO`
-                    : `${liveSession.half}° Tiempo · En juego`;
+                    ? `${liveSession.half}° Tiempo · Pausado`
+                    : `${liveSession.half}° Tiempo · En juego (${liveSession.speed || 1}x)`;
                 phaseBadge.className = liveSession.paused ? 'text-xs font-black text-amber-300 mt-0.5' : 'text-xs font-bold text-emerald-300 mt-0.5';
-                if (pauseBtn) pauseBtn.textContent = liveSession.paused ? '▶ Reanudar' : '⏸ Pausar / Táctica';
+                if (pauseBtn) pauseBtn.textContent = liveSession.paused ? '▶ Reanudar' : '⏸ Pausar';
             }
 
             const visibleEvents = (liveSession.timeline?.events || []).filter((e) => e.minute <= liveSession.minute);
+            renderLivePitchHeatmap(visibleEvents);
+
             const feed = document.getElementById('live-commentary-feed');
             if (feed) {
                 feed.innerHTML = visibleEvents.slice().reverse().map((ev) => {
