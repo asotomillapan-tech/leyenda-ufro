@@ -51,6 +51,21 @@ import {
   recordSeasonAchievementsAndStats,
   computeDtCareerScore,
   buildNotFcRankingEntry,
+  ACADEMIC_STAGE_LIMITS,
+  MAX_FOREIGN_CAREER_PLAYERS,
+  sortSquadPlayers,
+  getForeignCareerQuotaStatus,
+  getPlayerAcademicInfo,
+  generateIncomingSaleOffers,
+  acceptIncomingSaleOffer,
+  counterIncomingSaleOffer,
+  rejectIncomingSaleOffer,
+  computeAnnualOvrDelta,
+  advancePlayerAcademicYear,
+  generateAnnualYouthIntake,
+  evaluateAndGenerateDtJobOffers,
+  acceptDtJobOffer,
+  declineDtJobOffer,
 } from '../public/notfc-engine.js';
 
 function makeSeededRng(seed = 42) {
@@ -585,4 +600,211 @@ test('8 esquemas F7 con coordenadas, swap en cancha, exigencias directiva, zonas
   assert.ok(events.length >= 5);
   assert.equal(events.every((e) => e.zone && Number.isFinite(e.zone.x) && Number.isFinite(e.zone.y)), true);
 });
+
+test('Ordenar plantilla (posición, media, valor), ventas con ofertas/contraoferta y cupo máx. 3 jugadores de otra carrera', () => {
+  const rng = makeSeededRng(808);
+  const db = buildSeedDatabase(rng);
+  const state = initializeDtCareerState({
+    database: db,
+    dtName: 'DT Reglamento',
+    selectedTeamId: 'MED-MED-01',
+    rng,
+  });
+  const club = state.teams.find((t) => t.id === state.userTeamId);
+  assert.ok(club);
+
+  // 1) Ordenar plantilla por posición, media y valor
+  const byPos = sortSquadPlayers(club.players, 'position', club.starterIds);
+  const posRank = { ARQ: 0, DEF: 1, MED: 2, DEL: 3 };
+  for (let i = 1; i < byPos.length; i += 1) {
+    assert.ok(posRank[byPos[i - 1].position] <= posRank[byPos[i].position]);
+  }
+  const byOvr = sortSquadPlayers(club.players, 'ovr', club.starterIds);
+  for (let i = 1; i < byOvr.length; i += 1) {
+    assert.ok(byOvr[i - 1].ovr >= byOvr[i].ovr);
+  }
+  const byVal = sortSquadPlayers(club.players, 'value', club.starterIds);
+  for (let i = 1; i < byVal.length; i += 1) {
+    assert.ok(byVal[i - 1].marketValueEur >= byVal[i].marketValueEur);
+  }
+
+  // 2) Poner en venta genera oferta -> contraoferta aceptada -> aceptar venta acredita CLP y traspasa jugador
+  const sellCandidate = club.players.find((p) => p.position !== 'ARQ');
+  assert.ok(sellCandidate);
+  const listRes = toggleTransferListPlayer(club, sellCandidate.id, state, rng);
+  assert.equal(listRes.ok, true);
+  assert.equal(listRes.transferListed, true);
+  assert.ok(state.incomingSaleOffers.length >= 1, 'Debe generarse al menos una oferta al poner jugador en venta');
+
+  const offer = state.incomingSaleOffers[0];
+  const initialOfferAmount = offer.amountClp;
+  const counterTarget = Math.min(offer.maxWillingClp, initialOfferAmount + 4000);
+  const counterRes = counterIncomingSaleOffer(state, offer.id, counterTarget);
+  assert.equal(counterRes.ok, true);
+  assert.equal(counterRes.outcome, 'ACCEPTED_COUNTER');
+  assert.equal(offer.amountClp, counterTarget);
+
+  const budgetBeforeSale = club.budgetEur;
+  const buyerClub = state.teams.find((t) => t.id === offer.buyerTeamId);
+  const saleRes = acceptIncomingSaleOffer(state, offer.id);
+  assert.equal(saleRes.ok, true);
+  assert.equal(club.budgetEur, budgetBeforeSale + counterTarget);
+  assert.equal(club.players.some((p) => p.id === sellCandidate.id), false);
+  assert.equal(buyerClub.players.some((p) => p.id === sellCandidate.id), true);
+
+  // 2b) Contraoferta excesiva hace que el comprador se retire, y rechazar quita oferta
+  const sell2 = club.players.find((p) => p.position !== 'ARQ');
+  toggleTransferListPlayer(club, sell2.id, state, rng);
+  const offer2 = state.incomingSaleOffers.find((o) => o.playerId === sell2.id);
+  assert.ok(offer2);
+  const walkAway = counterIncomingSaleOffer(state, offer2.id, offer2.maxWillingClp * 2);
+  assert.equal(walkAway.ok, false);
+  assert.equal(walkAway.outcome, 'WITHDRAWN');
+  const regen = generateIncomingSaleOffers(state, rng, { triggeredPlayerId: sell2.id });
+  assert.ok(regen.length >= 1);
+  const rejRes = rejectIncomingSaleOffer(state, regen[0].id);
+  assert.equal(rejRes.ok, true);
+
+  // 3) Reglamento: máximo 3 jugadores de otra carrera en el plantel
+  assert.equal(MAX_FOREIGN_CAREER_PLAYERS, 3);
+  const seedQuota = getForeignCareerQuotaStatus(club);
+  assert.ok(seedQuota.currentCount <= 3, `Plantel inicial no debe superar 3 foráneos (actual ${seedQuota.currentCount})`);
+
+  // Llenar exactamente a 3 jugadores de otra carrera
+  let foreigns = club.players.filter((p) => p.studiedCareer !== club.career).length;
+  for (const p of club.players) {
+    if (foreigns >= 3) break;
+    if (p.studiedCareer === club.career) {
+      p.studiedCareer = 'Derecho';
+      p.careerMatchValid = false;
+      foreigns += 1;
+    }
+  }
+  const fullQuota = getForeignCareerQuotaStatus(club);
+  assert.equal(fullQuota.atLimit, true);
+  assert.equal(fullQuota.totalCount, 3);
+
+  club.budgetEur = 2000000;
+  // Intentar fichar a un 4° jugador de otra carrera debe ser bloqueado
+  const foreignFa = {
+    id: 'FA_FOREIGN_BLOCK',
+    name: 'Tomás Foráneo',
+    firstName: 'Tomás',
+    lastName: 'Foráneo',
+    age: 20,
+    position: 'MED',
+    ovr: 74,
+    studiedCareer: 'Ingeniería Comercial',
+    marketValueEur: 80000,
+    academicStage: 'PREGRADO',
+    academicYearsCompleted: 1,
+  };
+  const sameCareerFa = {
+    id: 'FA_SAME_ALLOW',
+    name: 'Lucas Medicina',
+    firstName: 'Lucas',
+    lastName: 'Medicina',
+    age: 20,
+    position: 'DEL',
+    ovr: 74,
+    studiedCareer: club.career,
+    marketValueEur: 80000,
+    academicStage: 'PREGRADO',
+    academicYearsCompleted: 1,
+  };
+  state.freeAgents.unshift(foreignFa, sameCareerFa);
+
+  const blockedRes = signMarketPlayer(state, foreignFa.id, {}, rng);
+  assert.equal(blockedRes.ok, false);
+  assert.equal(blockedRes.blockedByCareerQuota, true);
+
+  // Fichar a uno de la misma carrera SÍ debe estar permitido aunque cupo esté 3/3
+  const allowedRes = signMarketPlayer(state, sameCareerFa.id, {}, rng);
+  assert.equal(allowedRes.ok, true);
+  assert.equal(club.players.some((p) => p.id === sameCareerFa.id), true);
+});
+
+test('Topes contractuales académicos (5a/2a/3a), titulación (24+), desarrollo juvenil, camada anual en todas las carreras y ofertas DT', () => {
+  const rng = makeSeededRng(909);
+  const db = buildSeedDatabase(rng);
+  const state = initializeDtCareerState({
+    database: db,
+    dtName: 'DT Exitoso',
+    selectedTeamId: 'MED-KIN-01',
+    rng,
+  });
+  const club = state.teams.find((t) => t.id === state.userTeamId);
+  club.budgetEur = 2000000;
+
+  // 1) Topes contractuales por etapa académica: Pregrado 5a (10 sem), Magíster 2a (4 sem), Doctorado 3a (6 sem)
+  assert.equal(ACADEMIC_STAGE_LIMITS.PREGRADO.maxSemesters, 10);
+  assert.equal(ACADEMIC_STAGE_LIMITS.MAGISTER.maxSemesters, 4);
+  assert.equal(ACADEMIC_STAGE_LIMITS.DOCTORADO.maxSemesters, 6);
+
+  const pMag = club.players[1];
+  pMag.academicStage = 'MAGISTER';
+  pMag.academicYearsCompleted = 0;
+  pMag.contractSemesters = 4;
+  pMag.morale = 80;
+  assert.equal(getPlayerAcademicInfo(pMag).maxContractSemesters, 4);
+  const capMagRes = renewPlayerContract(state, pMag.id);
+  assert.equal(capMagRes.ok, false, 'Magíster no puede exceder 4 semestres (2 años)');
+
+  const pDoc = club.players[2];
+  pDoc.academicStage = 'DOCTORADO';
+  pDoc.academicYearsCompleted = 0;
+  pDoc.contractSemesters = 5;
+  pDoc.morale = 80;
+  const renDoc = renewPlayerContract(state, pDoc.id);
+  assert.equal(renDoc.ok, true);
+  assert.equal(pDoc.contractSemesters, 6, 'Doctorado debe topar en 6 semestres (3 años)');
+  assert.equal(renewPlayerContract(state, pDoc.id).ok, false);
+
+  // 2) Progresión OVR juvenil superior a veteranos
+  let youngGainSum = 0;
+  let vetGainSum = 0;
+  const sampleRng = makeSeededRng(1234);
+  for (let i = 0; i < 40; i += 1) {
+    youngGainSum += computeAnnualOvrDelta({ age: 19, stats: { matches: 8, goals: 3, assists: 2, ratingSum: 59 } }, sampleRng);
+    vetGainSum += computeAnnualOvrDelta({ age: 27, stats: { matches: 8, goals: 1, assists: 1, ratingSum: 54 } }, sampleRng);
+  }
+  assert.ok(youngGainSum > vetGainSum + 40, `Jóvenes deben progresar mucho más rápido (${youngGainSum} vs ${vetGainSum})`);
+
+  // 3) Titulación al superar 24 años / completar etapa
+  const seniorGrad = { age: 25, academicStage: 'PREGRADO', academicYearsCompleted: 4, contractSemesters: 2 };
+  const gradOutcome = advancePlayerAcademicYear(seniorGrad, () => 0.1);
+  assert.equal(gradOutcome.graduated, true);
+
+  const docGrad = { age: 27, academicStage: 'DOCTORADO', academicYearsCompleted: 2, contractSemesters: 2 };
+  assert.equal(advancePlayerAcademicYear(docGrad, () => 0.99).graduated, true);
+
+  // 4) Generación anual de nuevos jugadores en todas las carreras (sin exponer potencial)
+  const intake = generateAnnualYouthIntake(state, rng);
+  assert.ok(intake.totalGenerated >= state.carrerasUfro.length, 'Debe generar al menos 1 nuevo jugador por carrera UFRO');
+  assert.ok(intake.toFreeAgents > 0, 'Deben ingresar nuevos jugadores a Agentes Libres');
+  assert.ok(intake.toDiv3 > 0, 'Deben ingresar nuevos jugadores a clubes de 3ª División');
+  assert.equal(state.freeAgents.every((fa) => fa.potential === undefined), true);
+
+  // 5) Ofertas de otros equipos para el DT cuando hace una buena campaña + aceptar cambia de club conservando stats
+  state.careerStats.totalMatches = 8;
+  state.careerStats.totalWins = 7;
+  const offers = evaluateAndGenerateDtJobOffers(state, rng, 'MID_SEASON');
+  assert.ok(offers.length >= 1, 'Buen rendimiento debe generar ofertas de otros clubes para el DT');
+  assert.equal(offers.every((o) => o.clubId !== club.id), true);
+
+  if (offers.length >= 2) {
+    const decRes = declineDtJobOffer(state, offers[1].id);
+    assert.equal(decRes.ok, true);
+  }
+
+  const chosenOffer = state.dtJobOffers[0];
+  const prevClubId = state.userTeamId;
+  const accDt = acceptDtJobOffer(state, chosenOffer.id, rng);
+  assert.equal(accDt.ok, true);
+  assert.equal(state.userTeamId, chosenOffer.clubId);
+  assert.notEqual(state.userTeamId, prevClubId);
+  assert.equal(state.careerStats.totalWins, 7, 'Estadísticas del DT deben conservarse al cambiar de club');
+  assert.equal(state.dtJobOffers.length, 0);
+});
+
 

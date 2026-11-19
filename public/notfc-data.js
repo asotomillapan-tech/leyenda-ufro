@@ -330,6 +330,45 @@ function randomBirthDateForAge(age, rng = Math.random) {
   return `${day}/${month}/${year}`;
 }
 
+export const ACADEMIC_STAGE_LIMITS = {
+  PREGRADO: { label: 'Pregrado', maxYears: 5, maxSemesters: 10 },
+  MAGISTER: { label: 'Magíster', maxYears: 2, maxSemesters: 4 },
+  DOCTORADO: { label: 'Doctorado', maxYears: 3, maxSemesters: 6 },
+};
+
+export const MAX_FOREIGN_CAREER_PLAYERS = 3;
+
+export function inferAcademicProfileFromAge(age, rng = Math.random) {
+  const a = Math.max(17, Math.min(34, Number(age) || 20));
+  if (a <= 22) {
+    return {
+      academicStage: 'PREGRADO',
+      academicYearsCompleted: Math.max(0, Math.min(4, a - 18)),
+    };
+  }
+  if (a === 23) {
+    return rng() < 0.72
+      ? { academicStage: 'PREGRADO', academicYearsCompleted: 4 }
+      : { academicStage: 'MAGISTER', academicYearsCompleted: 0 };
+  }
+  if (a <= 25) {
+    return rng() < 0.55
+      ? { academicStage: 'MAGISTER', academicYearsCompleted: Math.min(1, a - 24) }
+      : { academicStage: 'PREGRADO', academicYearsCompleted: 4 };
+  }
+  return {
+    academicStage: 'DOCTORADO',
+    academicYearsCompleted: Math.max(0, Math.min(2, a - 26)),
+  };
+}
+
+export function getRemainingAcademicSemesters(player) {
+  const stageKey = ACADEMIC_STAGE_LIMITS[player?.academicStage] ? player.academicStage : 'PREGRADO';
+  const stage = ACADEMIC_STAGE_LIMITS[stageKey];
+  const yearsDone = Math.max(0, Number(player?.academicYearsCompleted) || 0);
+  return Math.max(1, (stage.maxYears - yearsDone) * 2);
+}
+
 export function createSquadPlayer({
   id,
   teamId,
@@ -344,6 +383,8 @@ export function createSquadPlayer({
   secondaryPositions,
   trainingTargetPos = null,
   seasonsAtClub,
+  academicStage,
+  academicYearsCompleted,
   ovr,
   jerseyNumber,
   contractSemesters,
@@ -355,7 +396,7 @@ export function createSquadPlayer({
     ? Math.max(17, Math.min(34, Number(age)))
     : birthDate
       ? computeAgeFromBirthDate(birthDate, 2026)
-      : Math.floor(18 + rng() * 7);
+      : Math.floor(18 + rng() * 6);
   const resolvedBirth = birthDate || randomBirthDateForAge(resolvedAge, rng);
   const resolvedOvr = Math.max(52, Math.min(90, Math.round(Number(ovr) || (58 + rng() * 18))));
   const fName = String(firstName || FIRST_NAMES[Math.floor(rng() * FIRST_NAMES.length)]).trim();
@@ -370,6 +411,22 @@ export function createSquadPlayer({
       ? Math.max(1, Number(seasonsAtClub))
       : Math.max(1, Math.min(5, Math.floor((resolvedAge - 17) / 2) + 1));
 
+  const inferredAcad = inferAcademicProfileFromAge(resolvedAge, rng);
+  const resolvedStage = ACADEMIC_STAGE_LIMITS[academicStage] ? academicStage : inferredAcad.academicStage;
+  const stageMaxYears = ACADEMIC_STAGE_LIMITS[resolvedStage].maxYears;
+  const resolvedYearsCompleted = Number.isFinite(Number(academicYearsCompleted))
+    ? Math.max(0, Math.min(stageMaxYears - 1, Number(academicYearsCompleted)))
+    : inferredAcad.academicYearsCompleted;
+
+  const maxSemForStage = Math.max(2, ACADEMIC_STAGE_LIMITS[resolvedStage].maxSemesters);
+  const initialMax = Math.max(1, Math.min(4, maxSemForStage - 2));
+  const defaultContract = teamId === 'FREE_AGENT'
+    ? 0
+    : Math.min(initialMax, Math.floor(rng() * 3) + 2);
+  const resolvedContract = Number.isFinite(Number(contractSemesters))
+    ? (teamId === 'FREE_AGENT' ? 0 : Math.max(1, Math.min(maxSemForStage, Number(contractSemesters))))
+    : defaultContract;
+
   const player = {
     id: id || makePlayerId(Math.floor(rng() * 100000)),
     teamId: teamId || 'FREE_AGENT',
@@ -378,6 +435,8 @@ export function createSquadPlayer({
     name: `${fName} ${lName}`,
     birthDate: resolvedBirth,
     age: resolvedAge,
+    academicStage: resolvedStage,
+    academicYearsCompleted: resolvedYearsCompleted,
     studiedCareer: resolvedCareer,
     careerMatchValid,
     position: ['ARQ', 'DEF', 'MED', 'DEL'].includes(position) ? position : 'MED',
@@ -387,7 +446,7 @@ export function createSquadPlayer({
     pendingTransferToTeamId: null,
     ovr: resolvedOvr,
     jerseyNumber: Number(jerseyNumber) || 1,
-    contractSemesters: Number.isFinite(Number(contractSemesters)) ? Math.max(1, Number(contractSemesters)) : (Math.floor(rng() * 5) + 2),
+    contractSemesters: resolvedContract,
     morale: Number.isFinite(Number(morale)) ? Math.max(15, Math.min(100, Number(morale))) : (Math.floor(rng() * 24) + 68),
     transferListed: Boolean(transferListed),
     stats: {
@@ -408,6 +467,7 @@ export function generateSeedSquadForTeam(team, rng = Math.random, idPrefix = '')
   const jerseys = [1, 12, 2, 3, 4, 5, 6, 8, 10, 14, 15, 7, 9, 11];
   const base = Number(team.baseOvr) || (team.division === 1 ? 76 : team.division === 2 ? 69 : 61);
   const usedNames = new Set();
+  let foreignCount = 0;
 
   return layout.map((pos, idx) => {
     let fName = FIRST_NAMES[Math.floor(rng() * FIRST_NAMES.length)];
@@ -423,10 +483,15 @@ export function generateSeedSquadForTeam(team, rng = Math.random, idPrefix = '')
     const isStarterTier = idx === 0 || (idx >= 2 && idx <= 4) || (idx >= 6 && idx <= 8) || (idx >= 11 && idx <= 12);
     const delta = isStarterTier ? Math.round(rng() * 5 - 1) : Math.round(rng() * 6 - 7);
     const ovr = Math.max(54, Math.min(89, base + delta));
-    const matchesClubCareer = rng() < 0.78;
-    const studiedCareer = matchesClubCareer
-      ? team.career
-      : CARRERAS_UFRO[Math.floor(rng() * CARRERAS_UFRO.length)];
+
+    let studiedCareer = team.career;
+    if (foreignCount < MAX_FOREIGN_CAREER_PLAYERS && rng() < 0.16) {
+      const otherCareer = CARRERAS_UFRO[Math.floor(rng() * CARRERAS_UFRO.length)];
+      if (!validateTeamCareerMatch(otherCareer, team.career)) {
+        studiedCareer = otherCareer;
+        foreignCount += 1;
+      }
+    }
 
     return createSquadPlayer({
       id: `${idPrefix || team.id}_P${String(idx + 1).padStart(2, '0')}`,
@@ -438,7 +503,6 @@ export function generateSeedSquadForTeam(team, rng = Math.random, idPrefix = '')
       position: pos,
       ovr,
       jerseyNumber: jerseys[idx],
-      contractSemesters: Math.floor(rng() * 5) + 2,
       morale: Math.floor(rng() * 22) + 70,
       rng,
     });

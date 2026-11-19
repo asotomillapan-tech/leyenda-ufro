@@ -588,6 +588,9 @@
                             </div>
                         </div>
 
+                        <!-- Ofertas de otros clubes para el DT -->
+                        <div id="dt-job-offers-card" class="hidden surface-card rounded-2xl p-4 space-y-3 border-emerald-500/40"></div>
+
                         <!-- Decisión Interactiva / Pretemporada Patrocinios / Visor de Evento -->
                         <div id="dt-decision-card" class="surface-card rounded-2xl p-4 space-y-3"></div>
 
@@ -671,18 +674,28 @@
 
             <!-- MENÚ 3: PLANTILLA -->
             <div id="menu-plantilla" class="career-panel hidden space-y-4">
-                <div class="surface-card rounded-2xl p-4 sm:p-5 space-y-3">
-                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#262626] pb-3">
-                        <h3 class="text-sm font-black uppercase tracking-wider text-white">Plantilla</h3>
-                        <span id="squad-count-badge" class="text-xs font-bold text-[#a3adff] tabular-nums"></span>
+                <div class="surface-card rounded-2xl p-4 sm:p-5 space-y-3.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-[#262626] pb-3">
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <h3 class="text-sm font-black uppercase tracking-wider text-white">Plantilla</h3>
+                            <span id="squad-count-badge" class="text-xs font-bold text-[#a3adff] tabular-nums"></span>
+                            <span id="squad-career-quota-badge" class="text-xs font-bold text-gray-400 tabular-nums"></span>
+                        </div>
+                        <div class="flex items-center gap-1 p-1 rounded-xl surface-sub border border-[#262626] self-start sm:self-auto" role="group" aria-label="Ordenar plantilla">
+                            <button type="button" data-squad-sort="default" onclick="setSquadSort('default')" class="squad-sort-btn px-2.5 py-1 rounded-lg bg-[#717fff] text-white text-[11px] font-black transition">Titulares</button>
+                            <button type="button" data-squad-sort="position" onclick="setSquadSort('position')" class="squad-sort-btn px-2.5 py-1 rounded-lg text-gray-400 hover:text-white text-[11px] font-bold transition">Posición</button>
+                            <button type="button" data-squad-sort="ovr" onclick="setSquadSort('ovr')" class="squad-sort-btn px-2.5 py-1 rounded-lg text-gray-400 hover:text-white text-[11px] font-bold transition">Media</button>
+                            <button type="button" data-squad-sort="value" onclick="setSquadSort('value')" class="squad-sort-btn px-2.5 py-1 rounded-lg text-gray-400 hover:text-white text-[11px] font-bold transition">Valor</button>
+                        </div>
                     </div>
+                    <div id="squad-sale-offers-box" class="hidden space-y-2.5 pb-3 border-b border-[#262626]"></div>
                     <div id="squad-list-container" class="space-y-2"></div>
                 </div>
             </div>
 
             <!-- MENÚ 4: PRESUPUESTO Y MERCADO -->
             <div id="menu-mercado" class="career-panel hidden space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     <div class="surface-card rounded-2xl p-4">
                         <div class="text-[10px] font-black uppercase text-gray-400">Presupuesto (CLP)</div>
                         <div id="market-budget-val" class="text-2xl font-black text-emerald-400 mt-1 tabular-nums">$0</div>
@@ -694,6 +707,11 @@
                     <div class="surface-card rounded-2xl p-4">
                         <div class="text-[10px] font-black uppercase text-gray-400">Ventana de Pases</div>
                         <div id="market-window-status" class="text-sm sm:text-base font-black text-[#a3adff] mt-1">Abierta</div>
+                    </div>
+                    <div class="surface-card rounded-2xl p-4">
+                        <div class="text-[10px] font-black uppercase text-gray-400">Cupos Otra Carrera</div>
+                        <div id="market-quota-val" class="text-2xl font-black text-white mt-1 tabular-nums">0 / 3</div>
+                        <div id="market-quota-sub" class="text-[10px] text-gray-400 mt-0.5">Máximo 3 por reglamento</div>
                     </div>
                 </div>
 
@@ -831,6 +849,7 @@
         let lobbyMode = 'existing';
         let lobbyDivFilter = 'ALL';
         let selectedTacticsStarterId = null;
+        let squadSortBy = 'default';
         let activeRankingScope = 'global';
         let globalRankingDocs = [];
         let lastNegotiationPrompt = null;
@@ -1248,6 +1267,8 @@
         function hydrateLoadedState(parsed) {
             if (!Array.isArray(parsed.activeSponsors)) parsed.activeSponsors = [];
             if (!Array.isArray(parsed.pendingIncomingTransfers)) parsed.pendingIncomingTransfers = [];
+            if (!Array.isArray(parsed.incomingSaleOffers)) parsed.incomingSaleOffers = [];
+            if (!Array.isArray(parsed.dtJobOffers)) parsed.dtJobOffers = [];
             if (!Array.isArray(parsed.careerAchievements)) parsed.careerAchievements = [];
             if (!parsed.careerStats) {
                 parsed.careerStats = { seasonsPlayed: 0, totalMatches: 0, totalWins: 0, derbyWins: 0, titlesDiv1: 0, titlesDiv2: 0, titlesDiv3: 0, promotions: 0, runnerUps: 0 };
@@ -1258,6 +1279,11 @@
                     if (!p.secondaryPositions || typeof p.secondaryPositions !== 'object') p.secondaryPositions = {};
                     if (p.trainingTargetPos === undefined) p.trainingTargetPos = null;
                     if (!Number.isFinite(Number(p.seasonsAtClub))) p.seasonsAtClub = 1;
+                    if (!p.academicStage || !Data.ACADEMIC_STAGE_LIMITS[p.academicStage]) {
+                        const inf = Data.inferAcademicProfileFromAge(p.age || 20, () => 0.5);
+                        p.academicStage = inf.academicStage;
+                        p.academicYearsCompleted = inf.academicYearsCompleted;
+                    }
                 }
             }
             return parsed;
@@ -1682,6 +1708,53 @@
                 nextSeasonBtn.classList.toggle('hidden', !state.seasonCompleted);
             }
 
+            // Ofertas de otros clubes para el DT
+            const dtOffersBox = document.getElementById('dt-job-offers-card');
+            if (dtOffersBox) {
+                const jobOffers = state.dtJobOffers || [];
+                if (jobOffers.length === 0) {
+                    dtOffersBox.classList.add('hidden');
+                    dtOffersBox.innerHTML = '';
+                } else {
+                    dtOffersBox.classList.remove('hidden');
+                    dtOffersBox.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400">Ofertas para Dirigir Otros Clubes</span>
+                            <span class="text-[10px] font-bold text-gray-400 tabular-nums">${jobOffers.length} disponible(s)</span>
+                        </div>
+                        <div class="space-y-2">
+                            ${jobOffers.map((o) => {
+                                const targetClub = state.teams.find((t) => t.id === o.clubId) || { name: o.clubName, color: '#717fff' };
+                                const divTxt = o.division === 3 ? `3ª · Conf. ${o.conf || 'A'}` : `${o.division}ª División`;
+                                return `
+                                    <div class="p-3 rounded-xl surface-sub border border-[#262626] space-y-2 text-xs">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                ${renderBadgeHTML(targetClub, 'w-9 h-9')}
+                                                <div class="min-w-0">
+                                                    <div class="font-black text-white truncate">${esc(o.clubName)}</div>
+                                                    <div class="text-[10px] text-gray-400 truncate">${esc(divTxt)} · OVR ${o.clubOvr} · Caja ${Engine.formatClp(o.budgetClp)}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-[11px] text-gray-300 leading-snug">${esc(o.reason)}</div>
+                                        <div class="text-[10px] text-[#a3adff] font-bold">Meta directiva: ${esc(o.boardGoal)}</div>
+                                        <div class="flex items-center gap-2 pt-0.5">
+                                            <button type="button" onclick="handleAcceptDtOffer('${esc(o.id)}')" class="flex-1 py-2 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-[11px] transition">
+                                                Aceptar y Dirigir
+                                            </button>
+                                            <button type="button" onclick="handleDeclineDtOffer('${esc(o.id)}')" class="py-2 px-3 rounded-lg bg-[#1c1c1c] hover:bg-[#242424] border border-[#2b2b2b] text-gray-300 font-bold text-[11px] transition">
+                                                Rechazar
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }
+            }
+
             // Decision / Pretemporada Patrocinios / Current Event Box
             const decBox = document.getElementById('dt-decision-card');
             if (decBox) {
@@ -1755,6 +1828,7 @@
                 const score = Engine.computeDtCareerScore(state);
                 const achs = state.careerAchievements || [];
                 const pendingCount = (state.pendingIncomingTransfers || []).length;
+                const saleOfferCount = (state.incomingSaleOffers || []).length;
                 rankCard.innerHTML = `
                     <div class="flex items-center justify-between gap-2">
                         <div>
@@ -1766,7 +1840,8 @@
                         </button>
                     </div>
                     ${achs.length > 0 ? `<div class="flex flex-wrap gap-1 pt-1">${achs.slice(-3).map((a) => `<span class="px-2 py-0.5 rounded-lg surface-sub text-[10px] text-amber-300 font-bold">${esc(a.title)}</span>`).join('')}</div>` : '<p class="text-[11px] text-gray-500">Gana clásicos, partidos o campeonatos para escalar en el ranking.</p>'}
-                    ${pendingCount > 0 ? `<div class="text-[11px] text-[#a3adff] font-bold">📝 ${pendingCount} pre-acuerdo(s) listo(s) para llegar en la próxima ventana.</div>` : ''}
+                    ${saleOfferCount > 0 ? `<button type="button" onclick="switchCareerMenu('plantilla')" class="w-full text-left text-[11px] text-amber-300 hover:text-amber-200 font-bold transition">Ofertas de venta pendientes (${saleOfferCount}) · Revisar en Plantilla →</button>` : ''}
+                    ${pendingCount > 0 ? `<div class="text-[11px] text-[#a3adff] font-bold">${pendingCount} pre-acuerdo(s) listo(s) para llegar en la próxima ventana.</div>` : ''}
                 `;
             }
 
@@ -1844,6 +1919,33 @@
             saveCareerState();
             renderAllCareerViews();
             if (res.message) showToast(res.message, 'success');
+        };
+
+        window.handleAcceptDtOffer = (offerId) => {
+            if (!state) return;
+            const res = Engine.acceptDtJobOffer(state, offerId);
+            if (!res.ok) {
+                showToast(res.message, 'error');
+                return;
+            }
+            const newClub = res.newClub;
+            if (newClub) {
+                activeTableTab = newClub.division === 1 ? 'div1' : newClub.division === 2 ? 'div2' : (newClub.conf === 'B' ? 'div3B' : 'div3A');
+            }
+            selectedTacticsStarterId = null;
+            lastNegotiationPrompt = null;
+            populateMarketFilters();
+            saveCareerState();
+            renderAllCareerViews();
+            showToast(res.message, 'success');
+        };
+
+        window.handleDeclineDtOffer = (offerId) => {
+            if (!state) return;
+            const res = Engine.declineDtJobOffer(state, offerId);
+            saveCareerState();
+            renderAllCareerViews();
+            showToast(res.message, res.ok ? 'brand' : 'error');
         };
 
         window.handleStartNextSeason = () => {
@@ -2004,23 +2106,92 @@
         };
 
         // =================================================================
-        // MENÚ 3: PLANTILLA (INCLUYE RECONVERSIÓN / 2ª POSICIÓN)
+        // MENÚ 3: PLANTILLA (ORDENAR + OFERTAS DE VENTA + ETAPA ACADÉMICA)
         // =================================================================
+        window.setSquadSort = (mode) => {
+            squadSortBy = ['default', 'position', 'ovr', 'value'].includes(mode) ? mode : 'default';
+            renderSquadView();
+        };
+
         function renderSquadView() {
             const team = getUserTeam();
             if (!team) return;
             document.getElementById('squad-count-badge').textContent = `${team.players.length} jugadores`;
-            const starterSet = new Set(team.starterIds);
-            const sorted = [...team.players].sort((a, b) => {
-                const sa = starterSet.has(a.id) ? 0 : 1;
-                const sb = starterSet.has(b.id) ? 0 : 1;
-                if (sa !== sb) return sa - sb;
-                return b.ovr - a.ovr;
+
+            const quota = Engine.getForeignCareerQuotaStatus(team, state.pendingIncomingTransfers);
+            const quotaEl = document.getElementById('squad-career-quota-badge');
+            if (quotaEl) {
+                quotaEl.textContent = `· Otra carrera: ${quota.totalCount}/${quota.max}`;
+                quotaEl.className = `text-xs font-bold tabular-nums ${quota.atLimit ? 'text-amber-300' : 'text-gray-400'}`;
+            }
+
+            document.querySelectorAll('.squad-sort-btn').forEach((btn) => {
+                const isAct = btn.getAttribute('data-squad-sort') === squadSortBy;
+                btn.className = isAct
+                    ? 'squad-sort-btn px-2.5 py-1 rounded-lg bg-[#717fff] text-white text-[11px] font-black transition'
+                    : 'squad-sort-btn px-2.5 py-1 rounded-lg text-gray-400 hover:text-white text-[11px] font-bold transition';
             });
+
+            // Ofertas entrantes por jugadores en lista de venta
+            const saleBox = document.getElementById('squad-sale-offers-box');
+            if (saleBox) {
+                const offers = (state.incomingSaleOffers || []).filter((o) => o.status === 'PENDING');
+                if (offers.length === 0) {
+                    saleBox.classList.add('hidden');
+                    saleBox.innerHTML = '';
+                } else {
+                    saleBox.classList.remove('hidden');
+                    saleBox.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="text-xs font-black uppercase tracking-wider text-amber-300">Ofertas Recibidas (${offers.length})</h4>
+                            <span class="text-[11px] text-gray-400">Acepta, solicita más dinero o rechaza</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                            ${offers.map((o) => {
+                                const suggestedCounter = Math.round((o.amountClp * 1.15) / 1000) * 1000;
+                                return `
+                                    <div class="p-3 rounded-xl surface-sub border border-amber-500/35 space-y-2 text-xs">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="min-w-0">
+                                                <div class="font-black text-white truncate">${esc(o.playerPos)} · ${esc(o.playerName)} <span class="text-gray-400 font-bold">(OVR ${o.playerOvr})</span></div>
+                                                <div class="text-[11px] text-gray-400 truncate">Oferta de <span class="text-white font-bold">${esc(o.buyerTeamName)}</span> (${o.buyerDivision}ª Div)</div>
+                                            </div>
+                                            <div class="text-right shrink-0">
+                                                <div class="text-sm font-black text-emerald-400 tabular-nums">${Engine.formatClp(o.amountClp)}</div>
+                                                <div class="text-[9px] text-gray-500 uppercase font-bold">CLP ofrecidos</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-[11px] text-gray-300 leading-snug">${esc(o.lastMessage)}</div>
+                                        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                                            <button type="button" onclick="handleAcceptSaleOffer('${esc(o.id)}')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-black text-[11px] transition">
+                                                Aceptar venta
+                                            </button>
+                                            <div class="flex items-center gap-1 flex-1 min-w-[165px]">
+                                                <input type="number" id="sale-counter-${esc(o.id)}" min="${o.amountClp + 1000}" step="1000" value="${suggestedCounter}" aria-label="Contraoferta CLP por ${esc(o.playerName)}"
+                                                    class="w-full px-2.5 py-1.5 rounded-lg bg-[#151515] border border-[#2b2b2b] text-[11px] font-bold text-white tabular-nums focus:outline-none focus:border-[#717fff]">
+                                                <button type="button" onclick="handleCounterSaleOffer('${esc(o.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#717fff] hover:bg-[#828eff] text-white font-black text-[11px] transition shrink-0">
+                                                    Pedir más
+                                                </button>
+                                            </div>
+                                            <button type="button" onclick="handleRejectSaleOffer('${esc(o.id)}')" class="px-2.5 py-1.5 rounded-lg bg-[#1c1c1c] hover:bg-rose-950/60 border border-[#2b2b2b] text-gray-300 hover:text-rose-200 font-bold text-[11px] transition">
+                                                Rechazar
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }
+            }
+
+            const starterSet = new Set(team.starterIds);
+            const sorted = Engine.sortSquadPlayers(team.players, squadSortBy, team.starterIds);
 
             document.getElementById('squad-list-container').innerHTML = sorted.map((p) => {
                 const isStarter = starterSet.has(p.id);
                 const morale = Engine.getMoraleInfo(p.morale);
+                const acad = Engine.getPlayerAcademicInfo(p);
                 const moraleColor = morale.tone === 'emerald' ? 'text-emerald-400' : morale.tone === 'sky' ? 'text-sky-400' : morale.tone === 'amber' ? 'text-amber-300' : 'text-rose-400';
                 const secEntries = Object.entries(p.secondaryPositions || {});
                 const otherPositions = Engine.POSITIONS.filter((pos) => pos !== p.position);
@@ -2038,13 +2209,16 @@
                                         <span class="text-xs sm:text-sm font-black text-white">${esc(p.firstName)} ${esc(p.lastName)}</span>
                                         <span class="px-1.5 py-0.5 rounded text-[9px] font-black ${isStarter ? 'bg-emerald-500/20 text-emerald-300' : 'bg-[#1c1c1c] text-gray-400'}">${isStarter ? 'TITULAR' : 'SUPLENTE'}</span>
                                         ${p.transferListed ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[9px] font-black">EN VENTA</span>` : ''}
+                                        ${acad.nearGraduation ? `<span class="text-[10px] font-bold text-amber-300">· Próximo a titularse</span>` : ''}
                                     </div>
-                                    <div class="text-[11px] text-gray-400 flex flex-wrap gap-x-2.5 gap-y-0.5 mt-0.5">
+                                    <div class="text-[11px] text-gray-400 flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
                                         <span>${p.age} años</span>
                                         <span>·</span>
+                                        <span>${esc(acad.stageLabel)} (máx. ${acad.maxYears}a)</span>
+                                        <span>·</span>
                                         <span>${esc(p.studiedCareer)}</span>
-                                        <span class="${p.careerMatchValid ? 'text-emerald-400' : 'text-amber-300'} font-bold">${p.careerMatchValid ? '✓ Misma carrera' : '⇄ Otra carrera'}</span>
-                                        <span>· ${p.seasonsAtClub || 1} temp. en club</span>
+                                        <span class="${p.careerMatchValid ? 'text-emerald-400' : 'text-amber-300'} font-bold">${p.careerMatchValid ? '✓ Carrera' : '⇄ Otra carrera'}</span>
+                                        <span>· ${p.seasonsAtClub || 1} temp.</span>
                                     </div>
                                 </div>
                             </div>
@@ -2059,7 +2233,7 @@
                                     <div class="text-[9px] text-gray-500 uppercase font-bold">Valor CLP</div>
                                 </div>
                                 <div class="text-center px-2">
-                                    <div class="font-bold text-gray-200 tabular-nums">${p.contractSemesters} sem.</div>
+                                    <div class="font-bold text-gray-200 tabular-nums">${p.contractSemesters}/${acad.maxContractSemesters} sem.</div>
                                     <div class="text-[9px] text-gray-500 uppercase font-bold">Contrato</div>
                                 </div>
                                 <div class="text-center px-2">
@@ -2143,9 +2317,35 @@
 
         window.handleToggleSale = (pid) => {
             const team = getUserTeam();
-            const res = Engine.toggleTransferListPlayer(team, pid);
+            const res = Engine.toggleTransferListPlayer(team, pid, state);
             saveCareerState();
-            renderSquadView();
+            renderAllCareerViews();
+            showToast(res.message, res.newOffers?.length > 0 ? 'success' : 'brand');
+        };
+
+        window.handleAcceptSaleOffer = (offerId) => {
+            if (!state) return;
+            const res = Engine.acceptIncomingSaleOffer(state, offerId);
+            saveCareerState();
+            renderAllCareerViews();
+            showToast(res.message, res.ok ? 'success' : 'error');
+        };
+
+        window.handleCounterSaleOffer = (offerId) => {
+            if (!state) return;
+            const input = document.getElementById(`sale-counter-${offerId}`);
+            const requestedAmount = Number(input?.value) || 0;
+            const res = Engine.counterIncomingSaleOffer(state, offerId, requestedAmount);
+            saveCareerState();
+            renderAllCareerViews();
+            showToast(res.message, res.ok ? 'success' : 'error');
+        };
+
+        window.handleRejectSaleOffer = (offerId) => {
+            if (!state) return;
+            const res = Engine.rejectIncomingSaleOffer(state, offerId);
+            saveCareerState();
+            renderAllCareerViews();
             showToast(res.message, 'brand');
         };
 
@@ -2185,11 +2385,24 @@
             const team = getUserTeam();
             if (!team) return;
             const win = Engine.getTransferWindowState(state);
+            const quota = Engine.getForeignCareerQuotaStatus(team, state.pendingIncomingTransfers);
             document.getElementById('market-budget-val').textContent = Engine.formatClp(team.budgetEur);
             document.getElementById('market-squad-val').textContent = Engine.formatClp(Engine.getSquadValuationEur(team));
             const statusEl = document.getElementById('market-window-status');
             statusEl.textContent = win.label;
             statusEl.className = `text-sm sm:text-base font-black mt-1 ${win.open ? 'text-emerald-400' : 'text-amber-300'}`;
+
+            const qValEl = document.getElementById('market-quota-val');
+            const qSubEl = document.getElementById('market-quota-sub');
+            if (qValEl) {
+                qValEl.textContent = `${quota.totalCount} / ${quota.max}`;
+                qValEl.className = `text-2xl font-black mt-1 tabular-nums ${quota.atLimit ? 'text-amber-300' : 'text-white'}`;
+            }
+            if (qSubEl) {
+                qSubEl.textContent = quota.atLimit
+                    ? 'Cupo lleno · Solo jugadores de tu carrera'
+                    : `Quedan ${quota.remaining} cupo(s) de otra carrera`;
+            }
 
             // Acuerdos Comerciales / Patrocinios
             const spBox = document.getElementById('market-sponsors-box');
@@ -2347,6 +2560,8 @@
                                 : p.recommendationTag === 'Descontento'
                                     ? 'text-rose-300'
                                     : 'text-emerald-400';
+                            const isSameForUser = Data.validateTeamCareerMatch(p.studiedCareer, team.career);
+                            const blockedByQuota = !isSameForUser && quota.atLimit;
                             return `
                                 <div class="p-3 rounded-xl surface-sub border border-[#262626] flex flex-col justify-between gap-2.5 text-xs">
                                     <div class="space-y-1">
@@ -2355,13 +2570,13 @@
                                             <span class="font-black text-white tabular-nums">OVR ${p.ovr}</span>
                                         </div>
                                         <div class="font-black text-white truncate">${esc(p.position)} · ${esc(p.name)} <span class="text-gray-500 font-semibold">(${p.age})</span></div>
-                                        <div class="text-[11px] text-gray-400 truncate">${esc(p.teamName)}</div>
-                                        <div class="text-[10px] text-gray-500 leading-snug">${esc(p.recommendationReason)}</div>
+                                        <div class="text-[11px] text-gray-400 truncate">${esc(p.teamName)} · ${esc(p.studiedCareer)}</div>
+                                        <div class="text-[10px] ${blockedByQuota ? 'text-amber-300 font-bold' : 'text-gray-500'} leading-snug">${blockedByQuota ? 'Otra carrera · Cupo lleno (3/3)' : esc(p.recommendationReason)}</div>
                                     </div>
                                     <div class="flex items-center justify-between gap-2 pt-2 border-t border-[#222226]">
                                         <span class="font-black text-emerald-400 tabular-nums">${Engine.formatClp(p.estimatedCostClp)}</span>
-                                        <button type="button" onclick="handleSignMarketPlayer('${esc(p.id)}')" class="px-3 py-1.5 rounded-lg ${actionCls} font-black text-[11px] transition">
-                                            ${actionLabel}
+                                        <button type="button" onclick="handleSignMarketPlayer('${esc(p.id)}')" class="px-3 py-1.5 rounded-lg ${blockedByQuota ? 'bg-[#1c1c1c] text-amber-300 border border-amber-500/40' : actionCls} font-black text-[11px] transition">
+                                            ${blockedByQuota ? 'Cupo 3/3' : actionLabel}
                                         </button>
                                     </div>
                                 </div>
@@ -2434,8 +2649,10 @@
 
         window.renderMarketSearch = () => {
             const mount = document.getElementById('market-results-list');
-            if (!mount || !state) return;
+            const team = getUserTeam();
+            if (!mount || !state || !team) return;
             const win = Engine.getTransferWindowState(state);
+            const quota = Engine.getForeignCareerQuotaStatus(team, state.pendingIncomingTransfers);
             const results = Engine.searchMarketPlayers(state, {
                 query: document.getElementById('filter-market-query')?.value || '',
                 teamId: document.getElementById('filter-market-team')?.value || 'ALL',
@@ -2456,16 +2673,20 @@
             mount.innerHTML = results.map((p) => {
                 const cost = p.isFreeAgent
                     ? Math.round((p.marketValueEur * 0.45) / 1000) * 1000
-                    : Math.round((p.marketValueEur * (p.transferListed ? 1.0 : 1.18)) / 1000) * 1000;
-                const actionLabel = win.open ? 'Fichar' : 'Pre-Acuerdo';
-                const actionCls = win.open ? 'bg-[#717fff] hover:bg-[#828eff]' : 'bg-amber-500 hover:bg-amber-400 text-gray-950';
+                    : Math.round((p.marketValueEur * (p.transferListed ? 1.0 : 1.12)) / 1000) * 1000;
+                const isSameForUser = Data.validateTeamCareerMatch(p.studiedCareer, team.career);
+                const blockedByQuota = !isSameForUser && quota.atLimit;
+                const actionLabel = blockedByQuota ? 'Cupo 3/3' : (win.open ? 'Fichar' : 'Pre-Acuerdo');
+                const actionCls = blockedByQuota
+                    ? 'bg-[#1c1c1c] text-amber-300 border border-amber-500/40'
+                    : (win.open ? 'bg-[#717fff] hover:bg-[#828eff] text-white' : 'bg-amber-500 hover:bg-amber-400 text-gray-950');
                 return `
                     <div class="p-3 rounded-xl surface-sub border border-[#262626] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
                         <div class="flex items-center gap-2.5 min-w-0">
                             <span class="px-2 py-1 rounded-lg bg-[#1c1c1c] font-black text-[#a3adff] shrink-0">${esc(p.position)}</span>
                             <div class="min-w-0">
                                 <div class="font-black text-white truncate">${esc(p.name)} <span class="text-gray-400 font-semibold">(${p.age} años)</span></div>
-                                <div class="text-[11px] text-gray-400 truncate">${esc(p.teamName)} · ${esc(p.studiedCareer)} ${!p.isFreeAgent ? `· ${p.seasonsAtClub || 1} temp.` : ''} ${p.careerMatchValid ? '<span class="text-emerald-400 font-bold">· De su carrera</span>' : ''}</div>
+                                <div class="text-[11px] text-gray-400 truncate">${esc(p.teamName)} · ${esc(p.studiedCareer)} ${!p.isFreeAgent ? `· ${p.seasonsAtClub || 1} temp.` : ''} ${isSameForUser ? '<span class="text-emerald-400 font-bold">· Tu carrera</span>' : (blockedByQuota ? '<span class="text-amber-300 font-bold">· Otra carrera (cupo lleno)</span>' : '<span class="text-gray-500">· Otra carrera</span>')}</div>
                             </div>
                         </div>
                         <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
@@ -2477,7 +2698,7 @@
                                 <div class="font-black text-emerald-400 tabular-nums">${Engine.formatClp(cost)}</div>
                                 <div class="text-[9px] text-gray-500">${p.isFreeAgent ? 'Prima libre' : (win.open ? 'Traspaso CLP' : 'Pre-acuerdo CLP')}</div>
                             </div>
-                            <button type="button" onclick="handleSignMarketPlayer('${esc(p.id)}')" class="px-3.5 py-2 rounded-xl ${actionCls} text-white font-black text-xs transition">
+                            <button type="button" onclick="handleSignMarketPlayer('${esc(p.id)}')" class="px-3.5 py-2 rounded-xl ${actionCls} font-black text-xs transition">
                                 ${actionLabel}
                             </button>
                         </div>

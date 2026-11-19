@@ -4,6 +4,10 @@
 
 import {
   CARRERAS_UFRO,
+  ACADEMIC_STAGE_LIMITS,
+  MAX_FOREIGN_CAREER_PLAYERS,
+  inferAcademicProfileFromAge,
+  getRemainingAcademicSemesters,
   calculateInitialClubBudget,
   calculatePlayerValueEur,
   createSquadPlayer,
@@ -13,6 +17,7 @@ import {
   getTeamColorByFaculty,
 } from './notfc-data.js';
 
+export { ACADEMIC_STAGE_LIMITS, MAX_FOREIGN_CAREER_PLAYERS };
 export const POSITIONS = ['ARQ', 'DEF', 'MED', 'DEL'];
 
 export const FORMATIONS_F7 = {
@@ -273,6 +278,86 @@ export function getTeamAverageOvr(team) {
 
 export function getSquadValuationEur(team) {
   return (team?.players || []).reduce((acc, p) => acc + (Number(p.marketValueEur) || calculatePlayerValueEur(p)), 0);
+}
+
+export function sortSquadPlayers(players = [], sortBy = 'default', starterIds = []) {
+  const starterSet = new Set(starterIds || []);
+  const posOrder = { ARQ: 0, DEF: 1, MED: 2, DEL: 3 };
+  return [...players].sort((a, b) => {
+    if (sortBy === 'position') {
+      const pa = posOrder[a.position] ?? 9;
+      const pb = posOrder[b.position] ?? 9;
+      if (pa !== pb) return pa - pb;
+      return (b.ovr || 0) - (a.ovr || 0);
+    }
+    if (sortBy === 'ovr') {
+      if ((b.ovr || 0) !== (a.ovr || 0)) return (b.ovr || 0) - (a.ovr || 0);
+      return (b.marketValueEur || 0) - (a.marketValueEur || 0);
+    }
+    if (sortBy === 'value') {
+      const va = Number(a.marketValueEur) || calculatePlayerValueEur(a);
+      const vb = Number(b.marketValueEur) || calculatePlayerValueEur(b);
+      if (vb !== va) return vb - va;
+      return (b.ovr || 0) - (a.ovr || 0);
+    }
+    const sa = starterSet.has(a.id) ? 0 : 1;
+    const sb = starterSet.has(b.id) ? 0 : 1;
+    if (sa !== sb) return sa - sb;
+    return (b.ovr || 0) - (a.ovr || 0);
+  });
+}
+
+export function getForeignCareerQuotaStatus(club, pendingIncomingTransfers = []) {
+  if (!club) {
+    return { currentCount: 0, pendingCount: 0, totalCount: 0, max: MAX_FOREIGN_CAREER_PLAYERS, remaining: MAX_FOREIGN_CAREER_PLAYERS, atLimit: false };
+  }
+  const currentCount = (club.players || []).filter((p) => !validateTeamCareerMatch(p.studiedCareer, club.career)).length;
+  const pendingCount = (pendingIncomingTransfers || []).filter((item) => {
+    const sc = item?.player?.studiedCareer;
+    return sc && !validateTeamCareerMatch(sc, club.career);
+  }).length;
+  const totalCount = currentCount + pendingCount;
+  return {
+    currentCount,
+    pendingCount,
+    totalCount,
+    max: MAX_FOREIGN_CAREER_PLAYERS,
+    remaining: Math.max(0, MAX_FOREIGN_CAREER_PLAYERS - totalCount),
+    atLimit: totalCount >= MAX_FOREIGN_CAREER_PLAYERS,
+  };
+}
+
+export function getPlayerAcademicInfo(player) {
+  if (!player) {
+    return {
+      stageKey: 'PREGRADO',
+      stageLabel: 'Pregrado',
+      yearsCompleted: 0,
+      maxYears: 5,
+      maxContractSemesters: 10,
+      remainingSemesters: 10,
+      nearGraduation: false,
+    };
+  }
+  const inferred = inferAcademicProfileFromAge(player.age || 20, () => 0.5);
+  const stageKey = ACADEMIC_STAGE_LIMITS[player.academicStage] ? player.academicStage : inferred.academicStage;
+  const stage = ACADEMIC_STAGE_LIMITS[stageKey];
+  const yearsCompleted = Number.isFinite(Number(player.academicYearsCompleted))
+    ? Math.max(0, Math.min(stage.maxYears, Number(player.academicYearsCompleted)))
+    : inferred.academicYearsCompleted;
+  const remainingSemesters = getRemainingAcademicSemesters({ academicStage: stageKey, academicYearsCompleted: yearsCompleted });
+  const maxContractSemesters = stage.maxSemesters;
+  const age = Number(player.age) || 20;
+  const nearGraduation = age >= 24 || yearsCompleted >= stage.maxYears - 1;
+  return {
+    stageKey,
+    stageLabel: stage.label,
+    yearsCompleted,
+    maxYears: stage.maxYears,
+    maxContractSemesters,
+    remainingSemesters,
+    nearGraduation,
+  };
 }
 
 // =========================================================================
@@ -1422,6 +1507,8 @@ export function initializeDtCareerState({
     activeDecision: null,
     pendingLiveMatch: null,
     pendingIncomingTransfers: [],
+    incomingSaleOffers: [],
+    dtJobOffers: [],
     activeSponsors: [],
     sponsorSession: null,
     careerAchievements: [],
@@ -1606,15 +1693,19 @@ export function generateRoundNewsAndAiTransfers(state, roundNum, rng = Math.rand
     }
   }
 
-  // 3) Fichaje IA real entre club y agente libre cuando mercado está abierto
-  if (state.marketOpen && state.freeAgents.length > 0 && rng() < 0.4 && sameDiv.length > 0) {
+  // 3) Mercado IA más dinámico: fichajes de agentes libres + traspasos entre clubes IA (respetando máx. 3 otra carrera)
+  if (state.freeAgents.length > 0 && rng() < 0.68 && sameDiv.length > 0) {
     const buyer = pickFrom(sameDiv, rng);
-    const targetIdx = Math.floor(rng() * state.freeAgents.length);
-    const fa = state.freeAgents[targetIdx];
-    if (fa && buyer.budgetEur >= fa.marketValueEur && buyer.players.length < 18) {
-      state.freeAgents.splice(targetIdx, 1);
+    const buyerQuota = getForeignCareerQuotaStatus(buyer);
+    const eligibleFaIdx = state.freeAgents.findIndex((fa) => {
+      if (!fa || buyer.budgetEur < fa.marketValueEur) return false;
+      const sameCar = validateTeamCareerMatch(fa.studiedCareer, buyer.career);
+      return sameCar || !buyerQuota.atLimit;
+    });
+    if (eligibleFaIdx !== -1 && buyer.players.length < 18) {
+      const [fa] = state.freeAgents.splice(eligibleFaIdx, 1);
       fa.teamId = buyer.id;
-      fa.contractSemesters = 3;
+      fa.contractSemesters = Math.min(4, getPlayerAcademicInfo(fa).maxContractSemesters);
       fa.seasonsAtClub = 1;
       fa.careerMatchValid = validateTeamCareerMatch(fa.studiedCareer, buyer.career);
       buyer.players.push(fa);
@@ -1625,10 +1716,56 @@ export function generateRoundNewsAndAiTransfers(state, roundNum, rng = Math.rand
         dateLabel,
         category: 'Fichaje',
         headline: `${buyer.name} incorpora a ${fa.name} (${fa.position} · ${fa.ovr} OVR)`,
-        body: `Llega libre desde ${fa.studiedCareer} con contrato por 3 semestres (${formatClp(fa.marketValueEur)} CLP).`,
+        body: `Llega libre desde ${fa.studiedCareer} con contrato por ${fa.contractSemesters} semestres (${formatClp(fa.marketValueEur)} CLP).`,
       });
     }
   }
+
+  // Traspaso directo entre dos clubes IA para darle vida al mercado
+  if (state.marketOpen && rng() < 0.55 && sameDiv.length >= 2) {
+    const buyer = pickFrom(sameDiv, rng);
+    const seller = pickFrom(sameDiv.filter((t) => t.id !== buyer.id && t.players.length > 12), rng);
+    if (buyer && seller && buyer.players.length < 18) {
+      const buyerQuota = getForeignCareerQuotaStatus(buyer);
+      const candidates = seller.players.filter((p) => {
+        if (p.pendingTransferToTeamId) return false;
+        if (p.position === 'ARQ' && seller.players.filter((x) => x.position === 'ARQ').length <= 1) return false;
+        const fee = Math.round((p.marketValueEur * 1.1) / 1000) * 1000;
+        if (buyer.budgetEur < fee) return false;
+        const sameCar = validateTeamCareerMatch(p.studiedCareer, buyer.career);
+        return sameCar || !buyerQuota.atLimit;
+      });
+      if (candidates.length > 0) {
+        const moved = pickFrom(candidates, rng);
+        const fee = Math.round((moved.marketValueEur * 1.1) / 1000) * 1000;
+        const idx = seller.players.findIndex((x) => x.id === moved.id);
+        if (idx !== -1) {
+          seller.players.splice(idx, 1);
+          seller.starterIds = seller.starterIds.filter((id) => id !== moved.id);
+          seller.benchIds = seller.benchIds.filter((id) => id !== moved.id);
+          refillStarterSlotIfNeeded(seller);
+          moved.teamId = buyer.id;
+          moved.seasonsAtClub = 1;
+          moved.contractSemesters = Math.min(4, getPlayerAcademicInfo(moved).maxContractSemesters);
+          moved.careerMatchValid = validateTeamCareerMatch(moved.studiedCareer, buyer.career);
+          buyer.players.push(moved);
+          buyer.benchIds.push(moved.id);
+          buyer.budgetEur -= fee;
+          seller.budgetEur += fee;
+          newItems.push({
+            id: `news_ai_trf_${roundNum}_${moved.id}`,
+            dateLabel,
+            category: 'Traspaso',
+            headline: `Movimiento en ${userTeam.division}ª: ${moved.name} pasa de ${seller.name} a ${buyer.name}`,
+            body: `Acuerdo cerrado por ${formatClp(fee)} CLP (${moved.position} · ${moved.ovr} OVR).`,
+          });
+        }
+      }
+    }
+  }
+
+  // Generar ofertas reales por jugadores del usuario puestos en lista de venta
+  generateIncomingSaleOffers(state, rng, { dateLabel });
 
   state.news = [...newItems, ...(state.news || [])].slice(0, 28);
 }
@@ -1797,6 +1934,8 @@ function ensureCareerStats(state) {
   }
   if (!Array.isArray(state.careerAchievements)) state.careerAchievements = [];
   if (!Array.isArray(state.pendingIncomingTransfers)) state.pendingIncomingTransfers = [];
+  if (!Array.isArray(state.incomingSaleOffers)) state.incomingSaleOffers = [];
+  if (!Array.isArray(state.dtJobOffers)) state.dtJobOffers = [];
   if (!Array.isArray(state.activeSponsors)) state.activeSponsors = [];
   return state.careerStats;
 }
@@ -2019,6 +2158,8 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
       processSponsorInstallments(state, 'SEMESTRAL', ev.dateLabel);
       processSponsorInstallments(state, 'MENSUAL', ev.dateLabel);
       state.sponsorSession = generatePreseasonSponsorOffers(state, rng, 'MID_SEASON');
+      generateIncomingSaleOffers(state, rng, { dateLabel: ev.dateLabel });
+      evaluateAndGenerateDtJobOffers(state, rng, 'MID_SEASON');
       ev.done = true;
       state.timelineIndex += 1;
       state.news = [{
@@ -2117,6 +2258,8 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
         state.marketOpen = true;
         processPendingIncomingTransfers(state, 'Postemporada');
         recordSeasonAchievementsAndStats(state);
+        generateIncomingSaleOffers(state, rng, { dateLabel: ev.dateLabel });
+        evaluateAndGenerateDtJobOffers(state, rng, 'SEASON_END');
         const d1Champ = state.teams.find((t) => t.id === state.postseason?.div1?.championId);
         const d2Champ = state.teams.find((t) => t.id === state.postseason?.div2?.championId);
         const d3Champ = state.teams.find((t) => t.id === state.postseason?.div3?.championId);
@@ -2140,6 +2283,7 @@ export function advanceSimulationStep(state, mode = 'next_event', rng = Math.ran
   state.marketOpen = true;
   processPendingIncomingTransfers(state, 'Postemporada');
   recordSeasonAchievementsAndStats(state);
+  evaluateAndGenerateDtJobOffers(state, rng, 'SEASON_END');
   return { status: 'SEASON_ENDED', message: 'Temporada completada.' };
 }
 
@@ -2355,14 +2499,236 @@ export function advanceUserPositionTraining(state, starterSet = null) {
   return completed;
 }
 
-export function toggleTransferListPlayer(club, playerId) {
+export function generateIncomingSaleOffers(state, rng = Math.random, opts = {}) {
+  if (!state) return [];
+  ensureCareerStats(state);
+  const userClub = state.teams.find((t) => t.id === state.userTeamId);
+  if (!userClub) return [];
+
+  // Limpiar ofertas huérfanas de jugadores que ya salieron o dejaron de estar en venta
+  state.incomingSaleOffers = (state.incomingSaleOffers || []).filter((o) => {
+    if (o.status !== 'PENDING') return false;
+    const pl = userClub.players.find((p) => p.id === o.playerId);
+    return Boolean(pl && pl.transferListed);
+  });
+
+  const dateLabel = opts.dateLabel || getNextEvent(state)?.dateLabel || 'Mercado';
+  const listed = (userClub.players || []).filter((p) => p.transferListed);
+  const targets = opts.triggeredPlayerId
+    ? listed.filter((p) => p.id === opts.triggeredPlayerId)
+    : listed;
+
+  const created = [];
+  for (const player of targets) {
+    const existingForPlayer = state.incomingSaleOffers.filter((o) => o.playerId === player.id);
+    if (existingForPlayer.length >= 2) continue;
+    if (!opts.triggeredPlayerId && existingForPlayer.length >= 1 && rng() > 0.35) continue;
+
+    const alreadyBiddingIds = new Set(existingForPlayer.map((o) => o.buyerTeamId));
+    const baseVal = Number(player.marketValueEur) || calculatePlayerValueEur(player);
+
+    const eligibleClubs = state.teams.filter((t) => {
+      if (t.id === userClub.id || alreadyBiddingIds.has(t.id)) return false;
+      if ((t.players || []).length >= 20) return false;
+      const sameCar = validateTeamCareerMatch(player.studiedCareer, t.career);
+      if (!sameCar && getForeignCareerQuotaStatus(t).atLimit) return false;
+      return true;
+    });
+    if (eligibleClubs.length === 0) continue;
+
+    // Priorizar clubes de misma carrera o con presupuesto cómodo y nivel acorde
+    const ranked = [...eligibleClubs].sort((a, b) => {
+      const aAff = a.budgetEur >= baseVal * 0.9 ? 1 : 0;
+      const bAff = b.budgetEur >= baseVal * 0.9 ? 1 : 0;
+      const aCar = validateTeamCareerMatch(player.studiedCareer, a.career) ? 1 : 0;
+      const bCar = validateTeamCareerMatch(player.studiedCareer, b.career) ? 1 : 0;
+      const aDiv = Math.abs(a.division - userClub.division);
+      const bDiv = Math.abs(b.division - userClub.division);
+      return (bAff - aAff) || (bCar - aCar) || (aDiv - bDiv) || (b.budgetEur - a.budgetEur);
+    });
+
+    const topPool = ranked.slice(0, Math.min(6, ranked.length));
+    const buyer = pickFrom(topPool, rng);
+    if (!buyer) continue;
+
+    const initialMult = 0.95 + rng() * 0.22; // 95% a 117% del valor de mercado
+    const amountClp = Math.max(8000, Math.round((baseVal * initialMult) / 1000) * 1000);
+    const maxWillingClp = Math.max(
+      amountClp + 4000,
+      Math.round((amountClp * (1.16 + rng() * 0.22)) / 1000) * 1000
+    );
+
+    const offer = {
+      id: `SALE_${player.id}_${buyer.id}_${Date.now()}_${Math.floor(rng() * 999)}`,
+      playerId: player.id,
+      playerName: player.name,
+      playerPos: player.position,
+      playerOvr: player.ovr,
+      playerValueClp: baseVal,
+      buyerTeamId: buyer.id,
+      buyerTeamName: buyer.name,
+      buyerDivision: buyer.division,
+      amountClp,
+      maxWillingClp,
+      counterCount: 0,
+      maxCounters: 2,
+      status: 'PENDING',
+      dateLabel,
+      lastMessage: `${buyer.name} (${buyer.division}ª Div) envió una oferta formal por ${player.name}.`,
+    };
+    state.incomingSaleOffers.unshift(offer);
+    created.push(offer);
+  }
+
+  return created;
+}
+
+export function acceptIncomingSaleOffer(state, offerId) {
+  if (!state) return { ok: false, message: 'Estado inválido.' };
+  ensureCareerStats(state);
+  const userClub = state.teams.find((t) => t.id === state.userTeamId);
+  const oIdx = (state.incomingSaleOffers || []).findIndex((o) => o.id === offerId && o.status === 'PENDING');
+  if (!userClub || oIdx === -1) return { ok: false, message: 'Oferta de venta no encontrada.' };
+
+  const offer = state.incomingSaleOffers[oIdx];
+  if (userClub.players.length <= 9) {
+    return { ok: false, message: 'Necesitas al menos 9 jugadores en plantel para competir en F7.' };
+  }
+  const pIdx = userClub.players.findIndex((p) => p.id === offer.playerId);
+  if (pIdx === -1) {
+    state.incomingSaleOffers.splice(oIdx, 1);
+    return { ok: false, message: 'El jugador ya no pertenece a tu plantel.' };
+  }
+  const target = userClub.players[pIdx];
+  const isOnlyArq = target.position === 'ARQ' && userClub.players.filter((p) => p.position === 'ARQ').length <= 1;
+  if (isOnlyArq) {
+    return { ok: false, message: 'No puedes vender al único arquero del plantel.' };
+  }
+
+  const buyer = state.teams.find((t) => t.id === offer.buyerTeamId);
+  userClub.players.splice(pIdx, 1);
+  userClub.starterIds = userClub.starterIds.filter((id) => id !== target.id);
+  userClub.benchIds = userClub.benchIds.filter((id) => id !== target.id);
+  refillStarterSlotIfNeeded(userClub);
+  userClub.budgetEur += offer.amountClp;
+
+  if (buyer) {
+    target.teamId = buyer.id;
+    target.transferListed = false;
+    target.seasonsAtClub = 1;
+    target.contractSemesters = Math.min(4, getPlayerAcademicInfo(target).maxContractSemesters);
+    target.careerMatchValid = validateTeamCareerMatch(target.studiedCareer, buyer.career);
+    target.morale = clamp((target.morale || 70) + 10, 40, 100);
+    buyer.players.push(target);
+    buyer.benchIds.push(target.id);
+    buyer.budgetEur = Math.max(0, buyer.budgetEur - offer.amountClp);
+  }
+
+  // Eliminar todas las ofertas activas por ese jugador
+  state.incomingSaleOffers = state.incomingSaleOffers.filter((o) => o.playerId !== target.id);
+
+  state.news = [{
+    id: `news_sold_${target.id}_${Date.now()}`,
+    dateLabel: offer.dateLabel || getNextEvent(state)?.dateLabel || 'Traspaso',
+    category: 'Venta',
+    headline: `${userClub.name} vende a ${target.name} a ${buyer?.name || offer.buyerTeamName}`,
+    body: `Operación cerrada por ${formatClp(offer.amountClp)} CLP. Los fondos ya están disponibles en caja.`,
+  }, ...(state.news || [])].slice(0, 28);
+
+  return {
+    ok: true,
+    amountClp: offer.amountClp,
+    playerName: target.name,
+    buyerName: buyer?.name || offer.buyerTeamName,
+    message: `¡Venta cerrada! ${target.name} pasó a ${buyer?.name || offer.buyerTeamName} por ${formatClp(offer.amountClp)} CLP.`,
+  };
+}
+
+export function counterIncomingSaleOffer(state, offerId, requestedAmountClp) {
+  if (!state) return { ok: false, message: 'Estado inválido.' };
+  ensureCareerStats(state);
+  const oIdx = (state.incomingSaleOffers || []).findIndex((o) => o.id === offerId && o.status === 'PENDING');
+  if (oIdx === -1) return { ok: false, message: 'Oferta de venta no encontrada.' };
+
+  const offer = state.incomingSaleOffers[oIdx];
+  const req = Math.round((Number(requestedAmountClp) || 0) / 1000) * 1000;
+  if (req <= offer.amountClp) {
+    return { ok: false, outcome: 'INVALID', message: `Ingresa un monto mayor a la oferta actual (${formatClp(offer.amountClp)} CLP).` };
+  }
+
+  offer.counterCount = (offer.counterCount || 0) + 1;
+
+  if (req <= offer.maxWillingClp) {
+    offer.amountClp = req;
+    offer.lastMessage = `¡${offer.buyerTeamName} aceptó subir a ${formatClp(req)} CLP! Puedes aceptar la venta ahora.`;
+    return {
+      ok: true,
+      outcome: 'ACCEPTED_COUNTER',
+      offer,
+      message: `${offer.buyerTeamName} aceptó tu contraoferta y subió a ${formatClp(req)} CLP.`,
+    };
+  }
+
+  if (req <= offer.maxWillingClp * 1.18 && offer.counterCount < (offer.maxCounters || 2)) {
+    const improved = Math.max(
+      offer.amountClp + 2000,
+      Math.round(((offer.amountClp + offer.maxWillingClp) / 2) / 1000) * 1000
+    );
+    offer.amountClp = Math.min(offer.maxWillingClp, improved);
+    offer.lastMessage = `${offer.buyerTeamName} no alcanza ${formatClp(req)}, pero mejora su oferta final a ${formatClp(offer.amountClp)} CLP.`;
+    return {
+      ok: true,
+      outcome: 'IMPROVED_BID',
+      offer,
+      message: `${offer.buyerTeamName} contrapropuso ${formatClp(offer.amountClp)} CLP.`,
+    };
+  }
+
+  // Demanda demasiado alta o demasiadas rondas: el comprador se retira
+  state.incomingSaleOffers.splice(oIdx, 1);
+  return {
+    ok: false,
+    outcome: 'WITHDRAWN',
+    message: `${offer.buyerTeamName} se retiró de la negociación al considerar excesivos los ${formatClp(req)} CLP.`,
+  };
+}
+
+export function rejectIncomingSaleOffer(state, offerId) {
+  if (!state) return { ok: false, message: 'Estado inválido.' };
+  ensureCareerStats(state);
+  const oIdx = (state.incomingSaleOffers || []).findIndex((o) => o.id === offerId);
+  if (oIdx === -1) return { ok: false, message: 'Oferta no encontrada.' };
+  const [removed] = state.incomingSaleOffers.splice(oIdx, 1);
+  const userClub = state.teams.find((t) => t.id === state.userTeamId);
+  const pl = userClub?.players?.find((p) => p.id === removed.playerId);
+  if (pl) pl.morale = clamp((pl.morale || 70) + 2, 15, 100);
+  return { ok: true, message: `Rechazaste la oferta de ${removed.buyerTeamName} por ${removed.playerName}.` };
+}
+
+export function toggleTransferListPlayer(club, playerId, state = null, rng = Math.random) {
   const p = club.players.find((x) => x.id === playerId);
   if (!p) return { ok: false, message: 'Jugador no encontrado.' };
   p.transferListed = !p.transferListed;
+
+  let newOffers = [];
+  if (state) {
+    ensureCareerStats(state);
+    if (p.transferListed) {
+      newOffers = generateIncomingSaleOffers(state, rng, { triggeredPlayerId: playerId });
+    } else {
+      state.incomingSaleOffers = (state.incomingSaleOffers || []).filter((o) => o.playerId !== playerId);
+    }
+  }
+
   return {
     ok: true,
     transferListed: p.transferListed,
-    message: p.transferListed ? `${p.name} puesto en lista de venta.` : `${p.name} retirado del mercado.`,
+    newOffers,
+    message: p.transferListed
+      ? (newOffers.length > 0
+        ? `${p.name} puesto en venta: llegó oferta inicial de ${newOffers[0].buyerTeamName} (${formatClp(newOffers[0].amountClp)}).`
+        : `${p.name} puesto en lista de venta. Llegarán ofertas en las próximas jornadas.`)
+      : `${p.name} retirado del mercado.`,
   };
 }
 
@@ -2410,6 +2776,10 @@ export function terminatePlayerContract(state, playerId) {
   club.benchIds = club.benchIds.filter((id) => id !== target.id);
   refillStarterSlotIfNeeded(club);
 
+  if (Array.isArray(state.incomingSaleOffers)) {
+    state.incomingSaleOffers = state.incomingSaleOffers.filter((o) => o.playerId !== target.id);
+  }
+
   target.teamId = 'FREE_AGENT';
   target.transferListed = false;
   target.contractSemesters = 0;
@@ -2432,16 +2802,26 @@ export function renewPlayerContract(state, playerId) {
   if (player.morale < 42) {
     return { ok: false, message: `${player.name} está muy descontento (${player.morale}/100) y rechaza renovar ahora.` };
   }
+  const acad = getPlayerAcademicInfo(player);
+  const curSem = Number(player.contractSemesters) || 1;
+  if (curSem >= acad.maxContractSemesters) {
+    return {
+      ok: false,
+      message: `${player.name} alcanzó el máximo contractual de ${acad.stageLabel} (${acad.maxYears} años / ${acad.maxContractSemesters} semestres).`,
+    };
+  }
   const renewalFee = Math.round((player.marketValueEur * 0.12) / 1000) * 1000;
   if (club.budgetEur < renewalFee) {
     return { ok: false, message: `Presupuesto insuficiente (requiere ${formatClp(renewalFee)} CLP).` };
   }
+  const added = Math.min(2, acad.maxContractSemesters - curSem);
   club.budgetEur -= renewalFee;
-  player.contractSemesters = (player.contractSemesters || 1) + 2;
+  player.contractSemesters = curSem + added;
   player.morale = clamp(player.morale + 10, 15, 100);
   return {
     ok: true,
-    message: `Contrato de ${player.name} renovado (+2 semestres) por ${formatClp(renewalFee)} CLP.`,
+    addedSemesters: added,
+    message: `Contrato de ${player.name} renovado (+${added} sem. · máx. ${acad.stageLabel} ${acad.maxContractSemesters} sem.) por ${formatClp(renewalFee)} CLP.`,
   };
 }
 
@@ -2796,19 +3176,19 @@ export function evaluateTransferNegotiation(state, player, seller, offerMultipli
     return { ok: true, fee, boostedFee: Math.round((fee * 1.25) / 1000) * 1000 };
   }
 
-  const fee = Math.round((player.marketValueEur * (player.transferListed ? 1.0 : 1.18) * offerMultiplier) / 1000) * 1000;
+  const fee = Math.round((player.marketValueEur * (player.transferListed ? 0.98 : 1.12) * offerMultiplier) / 1000) * 1000;
   const boostedFee = Math.round((fee * 1.25) / 1000) * 1000;
   const tenure = Number(player.seasonsAtClub || 1);
   const sameCareer = Boolean(player.careerMatchValid);
   const listed = Boolean(player.transferListed);
-  const unhappy = Number(player.morale || 70) < 48;
+  const unhappy = Number(player.morale || 70) < 56;
 
-  // 1) Evaluación del Club vendedor
+  // 1) Evaluación del Club vendedor (más abierto a negociar para un mercado ágil)
   if (!listed && offerMultiplier < 1.2) {
     const clubReluctance = clamp(
-      0.16 + (sameCareer ? 0.14 : 0) + (tenure >= 3 ? 0.14 : 0) + (player.ovr >= 74 ? 0.14 : 0) - ((offerMultiplier - 1) * 0.6),
-      0.04,
-      0.72
+      0.05 + (sameCareer ? 0.06 : 0) + (tenure >= 3 ? 0.08 : 0) + (player.ovr >= 78 ? 0.08 : 0) - ((offerMultiplier - 1) * 0.85),
+      0.02,
+      0.34
     );
     if (rng() < clubReluctance) {
       return {
@@ -2817,31 +3197,29 @@ export function evaluateTransferNegotiation(state, player, seller, offerMultipli
         fee,
         boostedFee,
         canRetryWithBoost: true,
-        message: `${seller.name} rechazó la oferta por ${player.name} (pieza clave en su club). Mejora la oferta (+25%: ${formatClp(boostedFee)} CLP).`,
+        message: `${seller.name} pidió un esfuerzo mayor por ${player.name}. Mejora la oferta (+25%: ${formatClp(boostedFee)} CLP).`,
       };
     }
   }
 
-  // 2) Evaluación del Jugador (su carrera o antigüedad en el club pesan fuerte)
-  if (!unhappy && !listed && (sameCareer || tenure >= 3)) {
+  // 2) Evaluación del Jugador (solo referentes con arraigo fuerte ponen trabas; el resto negocia con fluidez)
+  if (!unhappy && !listed && ((sameCareer && tenure >= 3) || tenure >= 4)) {
     const playerReluctance = clamp(
-      (sameCareer ? 0.28 : 0.08) + (tenure >= 3 ? (tenure * 0.07) : 0) + ((player.morale || 70) >= 75 ? 0.12 : 0) - ((offerMultiplier - 1) * 1.1),
-      0.05,
-      0.85
+      (sameCareer ? 0.12 : 0.04) + (tenure >= 3 ? (tenure - 2) * 0.05 : 0) + ((player.morale || 70) >= 82 ? 0.06 : 0) - ((offerMultiplier - 1) * 1.3),
+      0.02,
+      0.38
     );
     if (rng() < playerReluctance) {
       const motive = sameCareer && tenure >= 3
-        ? `lleva ${tenure} temporadas en ${seller.name} y defiende su propia carrera`
-        : sameCareer
-          ? `prefiere seguir jugando por su carrera (${player.studiedCareer})`
-          : `lleva ${tenure} temporadas consolidado en ${seller.name}`;
+        ? `lleva ${tenure} temporadas en ${seller.name} y representa a su carrera`
+        : `lleva ${tenure} temporadas consolidado en ${seller.name}`;
       return {
         ok: false,
         rejectedBy: 'PLAYER',
         fee,
         boostedFee,
         canRetryWithBoost: true,
-        message: `${player.name} rechazó el traspaso: ${motive}. Puedes intentar convencerlo con una oferta mejorada (${formatClp(boostedFee)} CLP).`,
+        message: `${player.name} dudó del traspaso (${motive}). Puedes convencerlo mejorando la oferta (${formatClp(boostedFee)} CLP).`,
       };
     }
   }
@@ -2858,11 +3236,14 @@ function finalizeIncomingPlayerTransfer(state, incoming, windowLabel = 'Ventana'
   let jersey = incoming.jerseyNumber || 1;
   while (usedJerseys.has(jersey)) jersey = (jersey % 99) + 1;
 
+  const acad = getPlayerAcademicInfo(incoming);
+  const newContractSem = Math.max(2, Math.min(4, acad.maxContractSemesters));
+
   const joined = sanitizePlayerPublic({
     ...incoming,
     teamId: userClub.id,
     jerseyNumber: jersey,
-    contractSemesters: 4,
+    contractSemesters: newContractSem,
     seasonsAtClub: 1,
     morale: 84,
     transferListed: false,
@@ -3082,11 +3463,20 @@ export function signMarketPlayer(state, playerId, optionsOrRng = {}, maybeRng = 
   }
 
   const win = getTransferWindowState(state);
+  const quota = getForeignCareerQuotaStatus(userClub, state.pendingIncomingTransfers);
 
   // Buscar en agentes libres
   const faIdx = state.freeAgents.findIndex((p) => p.id === playerId);
   if (faIdx !== -1) {
     const p = state.freeAgents[faIdx];
+    const isSameCareer = validateTeamCareerMatch(p.studiedCareer, userClub.career);
+    if (!isSameCareer && quota.atLimit) {
+      return {
+        ok: false,
+        blockedByCareerQuota: true,
+        message: `Reglamento Intercarreras: máximo ${MAX_FOREIGN_CAREER_PLAYERS} jugadores de otra carrera en tu plantel (${quota.totalCount}/${MAX_FOREIGN_CAREER_PLAYERS} ocupados).`,
+      };
+    }
     const signingFee = Math.round((p.marketValueEur * 0.45 * offerMultiplier) / 1000) * 1000;
     if (userClub.budgetEur < signingFee) {
       return { ok: false, message: `Presupuesto insuficiente (${formatClp(signingFee)} CLP necesarios).` };
@@ -3133,6 +3523,15 @@ export function signMarketPlayer(state, playerId, optionsOrRng = {}, maybeRng = 
     const p = seller.players[pIdx];
     if (p.pendingTransferToTeamId) {
       return { ok: false, message: `${p.name} ya tiene un pre-acuerdo firmado para la próxima ventana.` };
+    }
+
+    const isSameCareer = validateTeamCareerMatch(p.studiedCareer, userClub.career);
+    if (!isSameCareer && quota.atLimit) {
+      return {
+        ok: false,
+        blockedByCareerQuota: true,
+        message: `Reglamento Intercarreras: máximo ${MAX_FOREIGN_CAREER_PLAYERS} jugadores de otra carrera en tu plantel (${quota.totalCount}/${MAX_FOREIGN_CAREER_PLAYERS} ocupados).`,
+      };
     }
 
     const neg = evaluateTransferNegotiation(state, p, seller, offerMultiplier, rng);
@@ -3294,8 +3693,315 @@ export function buildNotFcRankingEntry(state, cloudMeta = {}) {
 }
 
 // =========================================================================
-// 8. CAMBIO DE TEMPORADA (ASCENSOS, DESCENSOS, CONTRATOS Y SALIDAS)
+// 8. DESARROLLO JUVENIL, TITULACIÓN (24+), GENERACIÓN ANUAL Y OFERTAS DT
 // =========================================================================
+
+export function computeAnnualOvrDelta(player, rng = Math.random) {
+  const age = Number(player?.age) || 21;
+  const st = player?.stats || {};
+  const matches = Number(st.matches) || 0;
+  const contrib = (Number(st.goals) || 0) + (Number(st.assists) || 0) + (Number(st.cleanSheets) || 0);
+  const avgRating = matches > 0 ? (Number(st.ratingSum) || matches * 6.5) / matches : 6.4;
+  const perfBonus = (matches >= 5 ? 1 : 0) + ((contrib >= 3 || avgRating >= 7.1) ? 1 : 0);
+
+  if (age <= 20) {
+    // Los más jóvenes tienen mucho margen y progresan rápido
+    const base = rng() < 0.25 ? 3 : rng() < 0.78 ? 2 : 1;
+    return clamp(base + perfBonus, 1, 5);
+  }
+  if (age <= 22) {
+    const base = rng() < 0.45 ? 2 : rng() < 0.88 ? 1 : 0;
+    return clamp(base + (perfBonus >= 1 ? 1 : 0), 0, 3);
+  }
+  if (age <= 24) {
+    const base = rng() < 0.55 ? 1 : 0;
+    return clamp(base + (perfBonus >= 2 ? 1 : 0), 0, 2);
+  }
+  if (age <= 26) {
+    return rng() < 0.22 ? 1 : rng() < 0.85 ? 0 : -1;
+  }
+  return rng() < 0.48 ? -1 : 0;
+}
+
+export function advancePlayerAcademicYear(player, rng = Math.random) {
+  const acad = getPlayerAcademicInfo(player);
+  player.age = Math.min(34, (Number(player.age) || 20) + 1);
+  player.academicStage = acad.stageKey;
+  player.academicYearsCompleted = acad.yearsCompleted + 1;
+
+  // Umbral de los 24 años + topes académicos: 5 años pregrado, 2 magíster, 3 doctorado
+  if (player.academicStage === 'PREGRADO') {
+    if (player.age >= 24) {
+      const gradProb = player.age >= 26 ? 1.0 : player.age === 25 ? 0.78 : player.academicYearsCompleted >= 5 ? 0.68 : 0.48;
+      if (rng() < gradProb) {
+        return { graduated: true, degreeLabel: 'Pregrado' };
+      }
+      if (player.academicYearsCompleted >= ACADEMIC_STAGE_LIMITS.PREGRADO.maxYears) {
+        player.academicStage = 'MAGISTER';
+        player.academicYearsCompleted = 0;
+      }
+    } else if (player.academicYearsCompleted >= ACADEMIC_STAGE_LIMITS.PREGRADO.maxYears) {
+      player.academicStage = 'MAGISTER';
+      player.academicYearsCompleted = 0;
+    }
+  } else if (player.academicStage === 'MAGISTER') {
+    if (player.academicYearsCompleted >= ACADEMIC_STAGE_LIMITS.MAGISTER.maxYears || player.age >= 26) {
+      if (player.age >= 27 || rng() < 0.7) {
+        return { graduated: true, degreeLabel: 'Magíster' };
+      }
+      player.academicStage = 'DOCTORADO';
+      player.academicYearsCompleted = 0;
+    }
+  } else if (player.academicStage === 'DOCTORADO') {
+    if (player.academicYearsCompleted >= ACADEMIC_STAGE_LIMITS.DOCTORADO.maxYears || player.age >= 28) {
+      return { graduated: true, degreeLabel: 'Doctorado' };
+    }
+  }
+
+  const nextAcad = getPlayerAcademicInfo(player);
+  if (player.contractSemesters > nextAcad.maxContractSemesters) {
+    player.contractSemesters = nextAcad.maxContractSemesters;
+  }
+  return { graduated: false, degreeLabel: nextAcad.stageLabel };
+}
+
+export function generateAnnualYouthIntake(state, rng = Math.random) {
+  if (!state) return { totalGenerated: 0, toFreeAgents: 0, toDiv3: 0, standout: null };
+  const careers = Array.isArray(state.carrerasUfro) && state.carrerasUfro.length > 0 ? state.carrerasUfro : CARRERAS_UFRO;
+  const seasonTag = (state.season || 1) + 1;
+  const div3Teams = (state.teams || []).filter((t) => t.division === 3);
+
+  let totalGenerated = 0;
+  let toFreeAgents = 0;
+  let toDiv3 = 0;
+  let standout = null;
+
+  careers.forEach((career, cIdx) => {
+    // 1 o 2 nuevos ingresos por carrera cada año
+    const count = rng() < 0.35 ? 2 : 1;
+    const matchingDiv3 = div3Teams.filter((t) => validateTeamCareerMatch(career, t.career) && (t.players || []).length < 17);
+
+    for (let k = 0; k < count; k += 1) {
+      const roll = rng();
+      // Distribución variable: futuras estrellas (10%), promesas (26%), normales (64%)
+      const ovr = roll < 0.10
+        ? Math.round(73 + rng() * 7)
+        : roll < 0.36
+          ? Math.round(65 + rng() * 7)
+          : Math.round(54 + rng() * 10);
+      const pos = POSITIONS[Math.floor(rng() * POSITIONS.length)];
+      const age = rng() < 0.68 ? 18 : 19;
+
+      const assignToDiv3Club = matchingDiv3.length > 0 && rng() < 0.42;
+      const targetClub = assignToDiv3Club ? pickFrom(matchingDiv3, rng) : null;
+
+      const rookie = sanitizePlayerPublic(createSquadPlayer({
+        id: `NEW_S${seasonTag}_C${cIdx}_${k}_${Math.floor(rng() * 9999)}`,
+        teamId: targetClub ? targetClub.id : 'FREE_AGENT',
+        age,
+        academicStage: 'PREGRADO',
+        academicYearsCompleted: 0,
+        studiedCareer: career,
+        clubCareer: targetClub ? targetClub.career : '',
+        position: pos,
+        ovr,
+        seasonsAtClub: targetClub ? 1 : 0,
+        jerseyNumber: targetClub ? Math.min(99, targetClub.players.length + 1) : ((cIdx + k) % 30) + 1,
+        contractSemesters: targetClub ? 4 : 0,
+        morale: 80,
+        rng,
+      }));
+
+      if (targetClub) {
+        const usedJ = new Set(targetClub.players.map((x) => x.jerseyNumber));
+        let j = rookie.jerseyNumber;
+        while (usedJ.has(j)) j = (j % 99) + 1;
+        rookie.jerseyNumber = j;
+        targetClub.players.push(rookie);
+        targetClub.benchIds.push(rookie.id);
+        toDiv3 += 1;
+      } else {
+        state.freeAgents.unshift(rookie);
+        toFreeAgents += 1;
+      }
+
+      totalGenerated += 1;
+      if (!standout || rookie.ovr > standout.ovr) {
+        standout = {
+          name: rookie.name,
+          ovr: rookie.ovr,
+          position: rookie.position,
+          career,
+          destination: targetClub ? `${targetClub.name} (3ª Div)` : 'Agentes Libres',
+        };
+      }
+    }
+  });
+
+  // Mantener pool de agentes libres fresco y manejable (máx. 105, priorizando jóvenes y mejor OVR)
+  if (state.freeAgents.length > 105) {
+    state.freeAgents = [...state.freeAgents]
+      .sort((a, b) => ((a.age <= 20 ? 6 : 0) + b.ovr) - ((b.age <= 20 ? 6 : 0) + a.ovr))
+      .slice(0, 105);
+  }
+
+  return { totalGenerated, toFreeAgents, toDiv3, standout };
+}
+
+export function evaluateAndGenerateDtJobOffers(state, rng = Math.random, trigger = 'SEASON_END') {
+  if (!state) return [];
+  ensureCareerStats(state);
+  const userTeam = state.teams.find((t) => t.id === state.userTeamId);
+  if (!userTeam) return [];
+
+  const profile = computeSponsorEvaluationProfile(state);
+  const stats = state.careerStats;
+  const divKey = userTeam.division === 1 ? 'div1' : userTeam.division === 2 ? 'div2' : (userTeam.conf === 'B' ? 'div3B' : 'div3A');
+  const standings = sortStandings(state.standings?.[divKey] || []);
+  const rank = standings.findIndex((r) => r.teamId === userTeam.id) + 1;
+  const winRate = stats.totalMatches > 0 ? stats.totalWins / stats.totalMatches : 0;
+
+  const wonBigHonors = Boolean(
+    state.postseason && (
+      state.postseason.div1?.championId === userTeam.id ||
+      state.postseason.div2?.championId === userTeam.id ||
+      state.postseason.div3?.championId === userTeam.id ||
+      state.postseason.div3?.runnerUpId === userTeam.id
+    )
+  );
+
+  const doingWell =
+    wonBigHonors ||
+    profile.recentPerformance >= 70 ||
+    (rank > 0 && rank <= 4 && stats.totalMatches >= 4) ||
+    (stats.totalMatches >= 5 && winRate >= 0.60);
+
+  if (!doingWell) {
+    state.dtJobOffers = [];
+    return [];
+  }
+
+  // Seleccionar 1 a 3 clubes atractivos interesados en el DT
+  const userAvg = getTeamAverageOvr(userTeam);
+  const candidates = state.teams
+    .filter((t) => t.id !== userTeam.id)
+    .map((t) => {
+      const ovr = getTeamAverageOvr(t);
+      const stepUp = (userTeam.division - t.division) * 18 + (ovr - userAvg) * 1.4 + (t.budgetEur / 65000);
+      return { team: t, ovr, score: stepUp + rng() * 14 };
+    })
+    .filter((x) => {
+      if (userTeam.division === 3) return x.team.division <= 2 || x.ovr >= userAvg + 2;
+      if (userTeam.division === 2) return x.team.division === 1 || x.ovr >= userAvg + 1;
+      return x.team.division === 1 && x.ovr >= userAvg - 3;
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const pool = candidates.length > 0 ? candidates : state.teams.filter((t) => t.id !== userTeam.id).slice(0, 4).map((t) => ({ team: t, ovr: getTeamAverageOvr(t), score: 0 }));
+  const count = Math.min(pool.length, wonBigHonors || profile.recentPerformance >= 74 ? 3 : 2);
+  const picked = pool.slice(0, count);
+
+  const offers = picked.map(({ team, ovr }, idx) => {
+    const exp = getClubBoardExpectations(team);
+    const reason = wonBigHonors
+      ? 'Tu campaña histórica en Postemporada despertó el interés inmediato de su directiva.'
+      : team.division < userTeam.division
+        ? `Quieren dar el salto contigo tras tu gran rendimiento (${profile.formLabel}).`
+        : `Buscan un DT probado en el campus (${profile.formLabel}) para liderar su proyecto.`;
+    return {
+      id: `DTOFFER_S${state.season}_${trigger}_${team.id}_${idx}`,
+      clubId: team.id,
+      clubName: team.name,
+      division: team.division,
+      conf: team.conf || null,
+      career: team.career,
+      clubOvr: ovr,
+      budgetClp: team.budgetEur,
+      boardGoal: exp.primary,
+      reason,
+      trigger,
+      dateLabel: getNextEvent(state)?.dateLabel || (trigger === 'MID_SEASON' ? 'Mitad Temp.' : 'Cierre Temp.'),
+    };
+  });
+
+  state.dtJobOffers = offers;
+  if (offers.length > 0) {
+    state.news = [{
+      id: `news_dtoffers_${state.season}_${trigger}_${Date.now()}`,
+      dateLabel: offers[0].dateLabel,
+      category: 'Bancas',
+      headline: `DT ${state.dtName} cotizado: ${offers.map((o) => o.clubName).join(' y ')} lo quieren en su banca`,
+      body: `Tu rendimiento con ${userTeam.name} generó ${offers.length} oferta(s) formal(es) para cambiar de club.`,
+    }, ...(state.news || [])].slice(0, 28);
+  }
+  return offers;
+}
+
+export function acceptDtJobOffer(state, offerId, rng = Math.random) {
+  if (!state) return { ok: false, message: 'Estado inválido.' };
+  ensureCareerStats(state);
+  const offer = (state.dtJobOffers || []).find((o) => o.id === offerId);
+  if (!offer) return { ok: false, message: 'Oferta de dirección técnica no encontrada.' };
+
+  const prevClub = state.teams.find((t) => t.id === state.userTeamId);
+  const newClub = state.teams.find((t) => t.id === offer.clubId);
+  if (!newClub) return { ok: false, message: 'Club destino no encontrado.' };
+
+  if (prevClub) prevClub.isUserClub = false;
+  newClub.isUserClub = true;
+  state.userTeamId = newClub.id;
+  state.dtJobOffers = [];
+  state.incomingSaleOffers = [];
+  state.pendingIncomingTransfers = [];
+  state.activeSponsors = [];
+  state.activeDecision = null;
+  state.pendingLiveMatch = null;
+
+  // Reconstruir línea de tiempo del nuevo club conservando exactamente el progreso de la temporada si estamos a mitad de año
+  if (!state.seasonCompleted) {
+    const oldCurrentEv = getNextEvent(state);
+    const newTimeline = buildLinearTimeline(newClub, state.teams, state.calendar, state.season);
+    let alignedIdx = 0;
+    if (oldCurrentEv) {
+      const exactMatch = newTimeline.findIndex((e) => e.id === oldCurrentEv.id);
+      if (exactMatch !== -1) {
+        alignedIdx = exactMatch;
+      } else {
+        alignedIdx = Math.min(state.timelineIndex, newTimeline.length - 1);
+      }
+    }
+    newTimeline.forEach((ev, i) => {
+      ev.done = i < alignedIdx;
+    });
+    state.timeline = newTimeline;
+    state.timelineIndex = alignedIdx;
+  }
+
+  state.sponsorSession = generatePreseasonSponsorOffers(state, rng, state.semester === 2 ? 'MID_SEASON' : 'PRE_SEASON');
+
+  state.news = [{
+    id: `news_dtmove_${newClub.id}_${Date.now()}`,
+    dateLabel: offer.dateLabel || 'Fichaje DT',
+    category: 'Bancas',
+    headline: `¡Oficial! DT ${state.dtName} asume en ${newClub.name} (${newClub.division}ª Div)`,
+    body: `Deja ${prevClub?.name || 'su club anterior'} para tomar las riendas de ${newClub.name} con ${formatClp(newClub.budgetEur)} CLP de presupuesto.`,
+  }, ...(state.news || [])].slice(0, 28);
+
+  return {
+    ok: true,
+    newClub,
+    message: `¡Bienvenido a ${newClub.name}! Asumiste como nuevo DT en ${newClub.division}ª División.`,
+  };
+}
+
+export function declineDtJobOffer(state, offerId) {
+  if (!state) return { ok: false, message: 'Estado inválido.' };
+  ensureCareerStats(state);
+  const idx = (state.dtJobOffers || []).findIndex((o) => o.id === offerId);
+  if (idx === -1) return { ok: false, message: 'Oferta no encontrada.' };
+  const [declined] = state.dtJobOffers.splice(idx, 1);
+  return { ok: true, message: `Rechazaste la propuesta de ${declined.clubName} y continúas en tu club actual.` };
+}
 
 export function startNextSeason(state, rng = Math.random) {
   if (!state.seasonCompleted || !state.postseason) {
@@ -3365,56 +4071,83 @@ export function startNextSeason(state, rng = Math.random) {
     t.conf = idx < 21 ? 'A' : 'B';
   });
 
-  // Envejecer plantel, incrementar temporadas en club, revisar salidas + premio temporada
+  // Envejecer agentes libres y titular a los que superen el umbral
+  state.freeAgents = (state.freeAgents || []).filter((fa) => {
+    const ovrDelta = computeAnnualOvrDelta(fa, rng);
+    const acadRes = advancePlayerAcademicYear(fa, rng);
+    if (acadRes.graduated) return false;
+    fa.ovr = clamp((fa.ovr || 60) + ovrDelta, 52, 92);
+    fa.marketValueEur = calculatePlayerValueEur(fa);
+    return true;
+  });
+
+  // Envejecer planteles, progresión juvenil de OVR, titulaciones (24+), contratos y salidas
   const departures = [];
+  const graduatedUserPlayers = [];
   for (const team of state.teams) {
     const prize = team.division === 1 ? 110000 : team.division === 2 ? 70000 : 40000;
     team.budgetEur += prize;
 
     const kept = [];
     for (const p of team.players) {
-      p.age = Math.min(34, (p.age || 21) + 1);
+      // Calcular desarrollo de OVR ANTES de resetear estadísticas de la temporada
+      const ovrDelta = computeAnnualOvrDelta(p, rng);
+      const acadRes = advancePlayerAcademicYear(p, rng);
+
+      if (acadRes.graduated) {
+        if (team.isUserClub) {
+          graduatedUserPlayers.push({ name: p.name, position: p.position, ovr: p.ovr, degree: acadRes.degreeLabel });
+        }
+        continue;
+      }
+
       p.seasonsAtClub = (p.seasonsAtClub || 1) + 1;
       p.contractSemesters = Math.max(0, (p.contractSemesters || 1) - 1);
+      p.ovr = clamp((p.ovr || 62) + ovrDelta, 52, 92);
       p.stats = { matches: 0, goals: 0, assists: 0, cleanSheets: 0, mvpCount: 0, ratingSum: 0 };
+      p.marketValueEur = calculatePlayerValueEur(p);
 
       const wantsExit = (p.morale < 42 || p.contractSemesters === 0) && kept.length >= 10;
       if (team.isUserClub && wantsExit && rng() < 0.7) {
         p.teamId = 'FREE_AGENT';
         p.seasonsAtClub = 0;
+        p.contractSemesters = 0;
         state.freeAgents.unshift(sanitizePlayerPublic(p));
         departures.push(p.name);
         continue;
       }
       if (!team.isUserClub && p.contractSemesters === 0) {
-        p.contractSemesters = 2;
+        p.contractSemesters = Math.min(2, getPlayerAcademicInfo(p).maxContractSemesters);
       }
-      // Leve progresión natural por edad/ritmo (sin exponer potencial)
-      const delta = p.age <= 22 ? (rng() < 0.55 ? 1 : 0) : p.age >= 29 ? (rng() < 0.35 ? -1 : 0) : 0;
-      p.ovr = clamp(p.ovr + delta, 52, 92);
-      p.marketValueEur = calculatePlayerValueEur(p);
       kept.push(p);
     }
 
     team.players = kept;
     while (team.players.length < 13) {
-      const filler = createSquadPlayer({
+      const filler = sanitizePlayerPublic(createSquadPlayer({
         id: `${team.id}_YTH_${state.season + 1}_${team.players.length + 1}`,
         teamId: team.id,
+        age: rng() < 0.7 ? 18 : 19,
+        academicStage: 'PREGRADO',
+        academicYearsCompleted: 0,
         studiedCareer: team.career,
         clubCareer: team.career,
         position: POSITIONS[team.players.length % 4],
         seasonsAtClub: 1,
-        ovr: team.division === 1 ? 66 : team.division === 2 ? 60 : 55,
+        ovr: team.division === 1 ? 66 : team.division === 2 ? 60 : 56,
         jerseyNumber: team.players.length + 1,
+        contractSemesters: 4,
         rng,
-      });
+      }));
       team.players.push(filler);
     }
     team.starterIds = team.starterIds.filter((id) => team.players.some((p) => p.id === id));
     team.benchIds = team.players.filter((p) => !team.starterIds.includes(p.id)).map((p) => p.id);
     refillStarterSlotIfNeeded(team);
   }
+
+  // Generar camada anual de nuevos ingresos en TODAS las carreras UFRO (Agentes Libres + 3ª División)
+  const youthIntake = generateAnnualYouthIntake(state, rng);
 
   state.season += 1;
   state.semester = 1;
@@ -3425,6 +4158,8 @@ export function startNextSeason(state, rng = Math.random) {
   state.postseason = null;
   state.activeDecision = null;
   state.pendingLiveMatch = null;
+  state.incomingSaleOffers = [];
+  state.dtJobOffers = [];
   state.activeSponsors = [];
   state.sponsorSession = generatePreseasonSponsorOffers(state, rng);
   state.calendar = generateSeasonCalendar(state.teams);
@@ -3436,17 +4171,33 @@ export function startNextSeason(state, rng = Math.random) {
   };
   state.timeline = buildLinearTimeline(userTeam, state.teams, state.calendar, state.season);
 
+  const gradNote = graduatedUserPlayers.length > 0
+    ? ` Se titularon: ${graduatedUserPlayers.map((g) => `${g.name} (${g.degree})`).join(', ')}.`
+    : '';
   const depNote = departures.length > 0
-    ? `Salidas en ${userTeam.name} por fin de contrato o bajo ánimo: ${departures.join(', ')}.`
-    : 'El plantel base renovó compromiso para la nueva campaña.';
+    ? `Salidas por fin de contrato o ánimo: ${departures.join(', ')}.`
+    : 'El plantel base mantiene compromiso para la nueva campaña.';
 
-  state.news = [{
-    id: `news_newseason_${state.season}`,
-    dateLabel: '02 Mar',
-    category: 'NUEVA TEMPORADA',
-    headline: `Arranca la Temporada ${state.season} · ${userTeam.name} en ${userTeam.division}ª División`,
-    body: `${depNote} Ya puedes enviar propuestas de patrocinio antes del torneo.`,
-  }, ...(state.news || [])].slice(0, 28);
+  const seasonNews = [
+    {
+      id: `news_newseason_${state.season}`,
+      dateLabel: '02 Mar',
+      category: 'Nueva Temporada',
+      headline: `Arranca la Temporada ${state.season} · ${userTeam.name} en ${userTeam.division}ª División`,
+      body: `${depNote}${gradNote}`,
+    },
+  ];
+  if (youthIntake.standout) {
+    seasonNews.unshift({
+      id: `news_intake_${state.season}`,
+      dateLabel: '01 Mar',
+      category: 'Nuevos Ingresos',
+      headline: `Generación ${state.season}: ${youthIntake.totalGenerated} mechones ingresan al Intercarreras`,
+      body: `Destaca ${youthIntake.standout.name} (${youthIntake.standout.position} · ${youthIntake.standout.ovr} OVR, ${youthIntake.standout.career}) en ${youthIntake.standout.destination}.`,
+    });
+  }
 
-  return { ok: true, season: state.season, departures };
+  state.news = [...seasonNews, ...(state.news || [])].slice(0, 28);
+
+  return { ok: true, season: state.season, departures, graduatedUserPlayers, youthIntake };
 }
